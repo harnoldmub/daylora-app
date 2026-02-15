@@ -99,29 +99,37 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                     </div>
                     <div className="ml-auto flex items-center gap-3">
                         <span className="text-xs text-muted-foreground">Projet</span>
-                    </select>
-                    {weddings.find(w => w.id === weddingId) && (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-2 border-primary/20 hover:border-primary/40 text-primary"
-                            onClick={() => {
-                                const w = weddings.find(w => w.id === weddingId);
-                                if (w) window.open(`/${w.slug}`, "_blank");
-                            }}
+                        <select
+                            className="h-9 rounded-md border border-border bg-background px-3 text-sm"
+                            value={weddingId}
+                            onChange={(e) => setLocation(`/app/${e.target.value}/dashboard`)}
                         >
-                            <ExternalLink className="h-4 w-4" />
-                            <span className="hidden sm:inline">Voir le site</span>
-                        </Button>
-                    )}
+                            {weddings.map((w) => (
+                                <option key={w.id} value={w.id}>{w.title}</option>
+                            ))}
+                        </select>
+                        {weddings.find(w => w.id === weddingId) && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2 border-primary/20 hover:border-primary/40 text-primary"
+                                onClick={() => {
+                                    const w = weddings.find(w => w.id === weddingId);
+                                    if (w) window.open(`/${w.slug}`, "_blank");
+                                }}
+                            >
+                                <ExternalLink className="h-4 w-4" />
+                                <span className="hidden sm:inline">Voir le site</span>
+                            </Button>
+                        )}
+                    </div>
+                </header>
+                <div className="flex-1 p-8 overflow-y-auto">
+                    <div className="max-w-6xl mx-auto">
+                        {children}
+                    </div>
                 </div>
-            </header>
-            <div className="flex-1 p-8 overflow-y-auto">
-                <div className="max-w-6xl mx-auto">
-                    {children}
-                </div>
-            </div>
-        </main>
+            </main>
         </div >
     );
 }

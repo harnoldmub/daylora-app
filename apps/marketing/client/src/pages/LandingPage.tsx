@@ -485,38 +485,39 @@ export default function LandingPage() {
                   </Button>
                 </a>
               </div>
+            </div>
 
-              <div className="p-10 rounded-[2.5rem] bg-primary relative overflow-hidden space-y-8 flex flex-col justify-between shadow-[0_20px_60px_-15px_rgba(200,169,106,0.2)]">
-                <div className="absolute top-4 right-6 px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold uppercase tracking-tighter text-white">Recommandé</div>
-                <div className="space-y-6">
-                  <div className="text-white/80 font-bold tracking-widest uppercase text-xs">Premium</div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-5xl font-bold text-white">29€</span>
-                  </div>
-                  <p className="text-white/90 text-sm">Tout pour un mariage complet.</p>
-                  <ul className="space-y-4">
-                    {[
-                      "Templates illimités",
-                      "Invités illimités",
-                      "Cagnotte + live",
-                      "Invitations PDF",
-                      "Support prioritaire",
-                    ].map((item, i) => (
-                      <li key={i} className="flex items-center gap-3 text-sm text-white">
-                        <CheckCircle2 className="h-4 w-4 text-white" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
+            <div className="p-10 rounded-[2.5rem] bg-primary relative overflow-hidden space-y-8 flex flex-col justify-between shadow-[0_20px_60px_-15px_rgba(200,169,106,0.2)]">
+              <div className="absolute top-4 right-6 px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold uppercase tracking-tighter text-white">Recommandé</div>
+              <div className="space-y-6">
+                <div className="text-white/80 font-bold tracking-widest uppercase text-xs">Premium</div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-5xl font-bold text-white">29€</span>
                 </div>
-                <a href={`${APP_BASE_URL}/app/signup`} title="Passer au Premium">
-                  <Button className="w-full rounded-full h-12 bg-white text-primary hover:bg-white/90 font-bold border-none">
-                    Choisir Premium
-                  </Button>
-                </a>
+                <p className="text-white/90 text-sm">Tout pour un mariage complet.</p>
+                <ul className="space-y-4">
+                  {[
+                    "Templates illimités",
+                    "Invités illimités",
+                    "Cagnotte + live",
+                    "Invitations PDF",
+                    "Support prioritaire",
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-center gap-3 text-sm text-white">
+                      <CheckCircle2 className="h-4 w-4 text-white" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
               </div>
+              <a href={`${APP_BASE_URL}/app/signup`} title="Passer au Premium">
+                <Button className="w-full rounded-full h-12 bg-white text-primary hover:bg-white/90 font-bold border-none">
+                  Choisir Premium
+                </Button>
+              </a>
             </div>
           </div>
+        </div>
       </section>
 
       <section id="faq" className="py-28 px-6">
