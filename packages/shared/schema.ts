@@ -102,6 +102,8 @@ export const weddings = pgTable("weddings", {
       liveQrCaption: string;
       galleryTitle: string;
       galleryDescription: string;
+      giftsTitle: string;
+      giftsDescription: string;
     };
     media: {
       heroImage: string;
@@ -130,6 +132,7 @@ export const weddings = pgTable("weddings", {
       pages: {
         rsvp: boolean;
         cagnotte: boolean;
+        gifts: boolean;
         live: boolean;
         story: boolean;
         gallery: boolean;
@@ -190,7 +193,9 @@ export const weddings = pgTable("weddings", {
       liveDonorsTitle: "NOS GÉNÉREUX DONATEURS",
       liveQrCaption: "Scannez pour contribuer",
       galleryTitle: "GALERIE",
-      galleryDescription: "Quelques instants capturés avant le grand jour."
+      galleryDescription: "Quelques instants capturés avant le grand jour.",
+      giftsTitle: "LISTE DE CADEAUX",
+      giftsDescription: "Quelques idées pour ceux qui souhaitent nous faire plaisir."
     },
     media: {
       heroImage: "",
@@ -246,6 +251,7 @@ export const weddings = pgTable("weddings", {
       pages: {
         rsvp: true,
         cagnotte: true,
+        gifts: true,
         live: true,
         story: true,
         gallery: true,
@@ -255,12 +261,13 @@ export const weddings = pgTable("weddings", {
       heroCtaPath: "rsvp",
       menuItems: [
         { id: "rsvp", label: "RSVP", path: "rsvp", enabled: true },
-        { id: "cagnotte", label: "Cagnotte", path: "cagnotte", enabled: true },
-        { id: "live", label: "Live", path: "live", enabled: true },
+        { id: "gifts", label: "Cadeaux", path: "gifts", enabled: true },
         { id: "story", label: "Histoire", path: "story", enabled: true },
         { id: "gallery", label: "Photos", path: "gallery", enabled: true },
         { id: "location", label: "Lieux", path: "location", enabled: true },
-        { id: "program", label: "Programme", path: "program", enabled: true }
+        { id: "program", label: "Programme", path: "program", enabled: true },
+        { id: "cagnotte", label: "Cagnotte", path: "cagnotte", enabled: true },
+        { id: "live", label: "Live", path: "live", enabled: true }
       ],
       customPages: []
     }
@@ -502,7 +509,14 @@ export const insertContributionSchema = z.object({
 
 export type InsertContribution = z.infer<typeof insertContributionSchema>;
 
-export const insertGiftSchema = createInsertSchema(gifts).omit({ id: true, createdAt: true });
+// weddingId is resolved from headers (tenant), and computed fields are server-managed.
+export const insertGiftSchema = createInsertSchema(gifts).omit({
+  id: true,
+  createdAt: true,
+  weddingId: true,
+  contributedAmount: true,
+  isReserved: true,
+});
 export const insertLiveJokeSchema = createInsertSchema(liveJokes).omit({ id: true, createdAt: true, weddingId: true });
 export const insertEmailVerificationTokenSchema = createInsertSchema(emailVerificationTokens).omit({ id: true, createdAt: true });
 export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).omit({ id: true, createdAt: true });

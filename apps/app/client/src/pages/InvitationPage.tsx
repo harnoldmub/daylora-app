@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -14,6 +14,9 @@ import {
     Link2,
     Check,
     Gift,
+    Pencil,
+    Trash2,
+    Plus,
 } from "lucide-react";
 import { useParams, Redirect, useLocation, useSearch } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -28,6 +31,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
     Select,
     SelectContent,
@@ -43,13 +47,23 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { AccommodationSection } from "@/components/accommodation";
 import { motion } from "framer-motion";
-import { useWedding, useUpdateWedding } from "@/hooks/use-api";
+import { usePublicGifts, useWedding, useUpdateWedding } from "@/hooks/use-api";
 import { InlineEditor } from "@/components/ui/inline-editor";
 import { Layout, Eye } from "lucide-react";
-import { getButtonClass } from "@/lib/design-presets";
+import { getButtonClass, getTemplatePreset } from "@/lib/design-presets";
 import { usePublicEdit } from "@/contexts/public-edit";
 import { compressImageFileToJpegDataUrl } from "@/lib/image";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Default/Fake data for empty state or loading
 const FAKE_DATA = {
@@ -108,6 +122,7 @@ const MAX_HERO_IMAGE_DATA_URL_LENGTH = 2_800_000;
 const MAX_COUPLE_IMAGE_DATA_URL_LENGTH = 2_000_000;
 const MAX_GALLERY_IMAGE_DATA_URL_LENGTH = 1_200_000;
 const MAX_GALLERY_IMAGES = 10;
+const MAX_GIFT_IMAGE_DATA_URL_LENGTH = 900_000;
 const DEFAULT_GALLERY_IMAGES = [
     "/defaults/gallery/01.jpg",
     "/defaults/gallery/02.jpg",
@@ -119,48 +134,48 @@ const DEFAULT_GALLERY_IMAGES = [
 
 const TEMPLATE_STYLES = {
     classic: {
-        pageBg: "bg-[#FBF8F3]",
-        heroOverlay: "from-[#2B2320]/40 via-transparent to-[#FBF8F3]",
+        pageBg: "bg-secondary",
+        heroOverlay: "from-foreground/40 via-transparent to-secondary",
         heroWrapper: "text-center max-w-5xl space-y-10",
-        heroTitle: "text-7xl md:text-9xl font-serif font-bold text-[#2B2320] leading-[1.05]",
-        heroSubtitle: "text-xs md:text-sm font-serif tracking-[0.4em] uppercase text-[#8C7A6B] mb-6",
-        heroDate: "text-xl md:text-2xl font-serif font-medium text-[#7A6B5E] mt-8 border-y border-[#8C7A6B]/20 py-5 inline-block px-12 tracking-widest",
-        heroButton: "px-16 py-8 text-xs tracking-[0.3em] uppercase font-black bg-[#2B2320] text-white hover:bg-black shadow-2xl rounded-none transition-all hover:scale-105",
-        rsvpSection: "bg-[#FBF8F3] py-40 border-t border-[#8C7A6B]/10",
-        rsvpCard: "border-none shadow-[0_40px_120px_rgba(140,122,107,0.15)] bg-white/90 backdrop-blur-2xl rounded-[4rem] p-16 border border-white/60",
-        storyTitle: "text-6xl font-serif font-bold text-[#2B2320] mb-12 text-center",
+        heroTitle: "text-7xl md:text-9xl font-bold text-foreground leading-[1.05]",
+        heroSubtitle: "text-xs md:text-sm tracking-[0.4em] uppercase text-primary mb-6 opacity-80",
+        heroDate: "text-xl md:text-2xl font-medium text-foreground mt-8 border-y border-primary/20 py-5 inline-block px-12 tracking-widest",
+        heroButton: "px-16 py-8 text-xs tracking-[0.3em] uppercase font-black shadow-2xl transition-all hover:scale-105",
+        rsvpSection: "bg-secondary py-40 border-t border-primary/10",
+        rsvpCard: "border-none shadow-[0_40px_120px_rgba(0,0,0,0.1)] bg-card/90 backdrop-blur-2xl rounded-[4rem] p-16 border border-white/60",
+        storyTitle: "text-6xl font-bold text-foreground mb-12 text-center",
         storyLayout: "grid grid-cols-1 lg:grid-cols-2 gap-24 items-center",
         storyImage: "rounded-[4rem] shadow-[0_50px_100px_rgba(0,0,0,0.1)] border-[12px] border-white -rotate-1 hover:rotate-0 transition-transform duration-700",
         container: "max-w-6xl mx-auto px-6",
         decoration: "serif-border",
     },
     modern: {
-        pageBg: "bg-white",
-        heroOverlay: "from-black/60 via-black/20 to-white",
+        pageBg: "bg-background",
+        heroOverlay: "from-black/60 via-black/20 to-background",
         heroWrapper: "text-left max-w-7xl pt-20 px-10",
-        heroTitle: "text-7xl md:text-[11rem] font-sans font-black text-white leading-[0.8] tracking-tighter uppercase",
-        heroSubtitle: "text-[10px] md:text-sm font-sans font-black tracking-[0.8em] uppercase text-primary mb-8 drop-shadow-lg",
-        heroDate: "text-2xl md:text-5xl font-sans font-black text-white/40 mt-10 tracking-widest uppercase",
-        heroButton: "px-14 py-8 text-xs tracking-[0.4em] uppercase font-black bg-white text-black hover:bg-primary hover:text-white transition-all rounded-none ring-1 ring-white/10 hover:ring-primary/50",
-        rsvpSection: "bg-[#0A0A0A] text-white py-40 border-y border-white/5",
-        rsvpCard: "bg-[#111111]/80 border border-white/10 backdrop-blur-3xl rounded-none shadow-[0_50px_100px_rgba(0,0,0,0.5)] p-16",
-        storyTitle: "text-8xl md:text-[12rem] font-sans font-black text-black leading-none tracking-tighter mb-16",
+        heroTitle: "text-7xl md:text-[11rem] font-black text-white leading-[0.8] tracking-tighter uppercase",
+        heroSubtitle: "text-[10px] md:text-sm font-black tracking-[0.8em] uppercase text-primary mb-8 drop-shadow-lg",
+        heroDate: "text-2xl md:text-5xl font-black text-white/40 mt-10 tracking-widest uppercase",
+        heroButton: "px-14 py-8 text-xs tracking-[0.4em] uppercase font-black transition-all rounded-none ring-1 ring-white/10 hover:ring-primary/50",
+        rsvpSection: "bg-black text-white py-40 border-y border-white/5",
+        rsvpCard: "bg-neutral-900/80 border border-white/10 backdrop-blur-3xl rounded-none shadow-[0_50px_100px_rgba(0,0,0,0.5)] p-16",
+        storyTitle: "text-8xl md:text-[12rem] font-black text-foreground leading-none tracking-tighter mb-16",
         storyLayout: "grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] gap-0 items-stretch min-h-[80vh]",
         storyImage: "rounded-none grayscale contrast-125 hover:grayscale-0 transition-all duration-1000 object-cover h-full",
         container: "max-w-full mx-auto px-0",
         decoration: "none",
     },
     minimal: {
-        pageBg: "bg-[#FAFAFA]",
-        heroOverlay: "from-transparent via-transparent to-[#FAFAFA]",
+        pageBg: "bg-background",
+        heroOverlay: "from-transparent via-transparent to-background",
         heroWrapper: "text-center max-w-3xl space-y-12",
-        heroTitle: "text-5xl md:text-[6rem] font-sans font-thin text-[#1A1A1A] tracking-[-0.07em] leading-[0.9]",
-        heroSubtitle: "text-[10px] font-sans tracking-[1.2em] uppercase text-[#A0A0A0] mb-12",
-        heroDate: "text-xl md:text-2xl font-sans font-light text-[#666666] mt-6 flex items-center justify-center gap-6 before:h-[0.5px] before:w-12 before:bg-black/10 after:h-[0.5px] after:w-12 after:bg-black/10",
-        heroButton: "px-12 py-6 text-[11px] tracking-[0.6em] uppercase font-medium border border-[#1A1A1A]/20 text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white hover:border-[#1A1A1A] transition-all rounded-full",
-        rsvpSection: "bg-[#FAFAFA] py-40",
-        rsvpCard: "border-none shadow-[0_20px_60px_rgba(0,0,0,0.03)] bg-white rounded-2xl p-16 max-w-2xl mx-auto",
-        storyTitle: "text-5xl md:text-7xl font-sans font-extralight text-[#1A1A1A] text-center mb-24 tracking-tighter",
+        heroTitle: "text-5xl md:text-[6rem] font-thin text-foreground tracking-[-0.07em] leading-[0.9]",
+        heroSubtitle: "text-[10px] tracking-[1.2em] uppercase text-muted-foreground mb-12",
+        heroDate: "text-xl md:text-2xl font-light text-muted-foreground mt-6 flex items-center justify-center gap-6 before:h-[0.5px] before:w-12 before:bg-foreground/10 after:h-[0.5px] after:w-12 after:bg-foreground/10",
+        heroButton: "px-12 py-6 text-[11px] tracking-[0.6em] uppercase font-medium border border-foreground/20 text-foreground transition-all rounded-full",
+        rsvpSection: "bg-background py-40",
+        rsvpCard: "border-none shadow-[0_20px_60px_rgba(0,0,0,0.03)] bg-card rounded-2xl p-16 max-w-2xl mx-auto",
+        storyTitle: "text-5xl md:text-7xl font-extralight text-foreground text-center mb-24 tracking-tighter",
         storyLayout: "max-w-5xl mx-auto space-y-32 px-10 pb-40",
         storyImage: "rounded-2xl opacity-95 shadow-2xl border border-black/5 transition-opacity hover:opacity-100 duration-1000",
         container: "max-w-4xl mx-auto px-6",
@@ -258,7 +273,7 @@ export default function InvitationPage() {
         return (fromQuery || fromRoute) || null;
     }, [queryParams, routeSection]);
 
-    const SECTION_IDS = useMemo(() => ["rsvp", "story", "gallery", "location", "program"] as const, []);
+    const SECTION_IDS = useMemo(() => ["rsvp", "story", "gallery", "gifts", "location", "program"] as const, []);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -534,6 +549,16 @@ export default function InvitationPage() {
         },
     });
 
+    const watchedAvailability = useWatch({
+        control: form.control,
+        name: "availability",
+    });
+
+    // If the guest declines, the "solo/couple" choice becomes irrelevant.
+    useEffect(() => {
+        if (watchedAvailability === "declined") form.setValue("partySize", 1, { shouldDirty: true, shouldValidate: true });
+    }, [watchedAvailability, form]);
+
     const rsvpMutation = useMutation({
         mutationFn: async (data: InsertRsvpResponse) => {
             return await apiRequest("POST", "/api/rsvp", data);
@@ -583,6 +608,9 @@ export default function InvitationPage() {
 
     const templateId = (currentWedding.templateId as keyof typeof TEMPLATE_STYLES) || "classic";
     const template = TEMPLATE_STYLES[templateId] || TEMPLATE_STYLES.classic;
+    const preset = getTemplatePreset(templateId);
+    const activeFont = currentWedding.config?.theme?.fontFamily || preset.defaultFont;
+    const fontClass = activeFont === "serif" ? "font-serif" : "font-sans";
     const heroTitle = currentWedding.config?.texts?.heroTitle || currentWedding.title;
     const heroSubtitle = currentWedding.config?.texts?.heroSubtitle || "Le Mariage de";
     const heroCta = currentWedding.config?.texts?.heroCta || "Confirmer votre présence";
@@ -609,11 +637,19 @@ export default function InvitationPage() {
     const showRsvp = currentWedding.config?.navigation?.pages?.rsvp ?? true;
     const showStory = currentWedding.config?.navigation?.pages?.story ?? true;
     const showGallery = currentWedding.config?.navigation?.pages?.gallery ?? true;
+    const showGifts =
+        (((currentWedding.config?.navigation?.pages as any)?.gifts ?? true) as boolean) &&
+        ((currentWedding.config?.features?.giftsEnabled ?? true) as boolean);
     const showLocation = currentWedding.config?.navigation?.pages?.location ?? true;
     const showProgram = currentWedding.config?.navigation?.pages?.program ?? true;
     const buttonToneClass = getButtonClass(currentWedding.config?.theme?.buttonStyle);
     const buttonRadiusClass = getButtonRadiusClass(currentWedding.config?.theme?.buttonRadius);
     const isModernTemplate = templateId === "modern";
+    const heroShellClass =
+        templateId === "modern"
+            ? "rounded-[3rem] bg-black/35 border border-white/10 backdrop-blur-md px-8 py-10 md:px-12 md:py-12 shadow-2xl shadow-black/40"
+            : "rounded-[3rem] bg-white/72 border border-black/5 backdrop-blur-xl px-8 py-10 md:px-12 md:py-12 shadow-2xl shadow-black/10";
+    const heroImageOpacityClass = templateId === "modern" ? "opacity-70" : "opacity-35";
 
     const galleryTitle = currentWedding.config?.texts?.galleryTitle || "GALERIE";
     const galleryDescription =
@@ -624,11 +660,132 @@ export default function InvitationPage() {
             : DEFAULT_GALLERY_IMAGES) as string[]
     ).slice(0, MAX_GALLERY_IMAGES);
 
+    const giftsTitle = (currentWedding.config?.texts as any)?.giftsTitle || "LISTE DE CADEAUX";
+    const giftsDescription =
+        (currentWedding.config?.texts as any)?.giftsDescription || "Quelques idées pour ceux qui souhaitent nous faire plaisir.";
+
+    const { data: giftsData } = usePublicGifts(showGifts);
+    const gifts = giftsData || [];
+    const [showAllGifts, setShowAllGifts] = useState(false);
+    const visibleGifts = showAllGifts ? gifts : gifts.slice(0, 3);
+
+    const [giftDialogOpen, setGiftDialogOpen] = useState(false);
+    const [giftDeleteOpen, setGiftDeleteOpen] = useState(false);
+    const [giftEditing, setGiftEditing] = useState<any | null>(null);
+    const [giftDeleting, setGiftDeleting] = useState<any | null>(null);
+    const [giftForm, setGiftForm] = useState<{ name: string; description: string; price: string; imageUrl: string }>({
+        name: "",
+        description: "",
+        price: "",
+        imageUrl: "",
+    });
+
+    const openCreateGift = () => {
+        setGiftEditing(null);
+        setGiftForm({ name: "", description: "", price: "", imageUrl: "" });
+        setGiftDialogOpen(true);
+    };
+
+    const openEditGift = (gift: any) => {
+        setGiftEditing(gift);
+        setGiftForm({
+            name: gift?.name || "",
+            description: gift?.description || "",
+            price: typeof gift?.price === "number" ? String(gift.price) : "",
+            imageUrl: gift?.imageUrl || "",
+        });
+        setGiftDialogOpen(true);
+    };
+
+    const createGiftMutation = useMutation({
+        mutationFn: async (payload: any) => {
+            const res = await apiRequest("POST", "/api/gifts", payload);
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/gifts/public"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/gifts"] });
+            toast({ title: "Cadeau enregistré" });
+            setGiftDialogOpen(false);
+        },
+        onError: (error: Error) => {
+            toast({ title: "Erreur", description: error.message || "Impossible d'enregistrer le cadeau.", variant: "destructive" });
+        },
+    });
+
+    const updateGiftMutation = useMutation({
+        mutationFn: async ({ id, payload }: { id: number; payload: any }) => {
+            const res = await apiRequest("PATCH", `/api/gifts/${id}`, payload);
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/gifts/public"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/gifts"] });
+            toast({ title: "Cadeau mis à jour" });
+            setGiftDialogOpen(false);
+        },
+        onError: (error: Error) => {
+            toast({ title: "Erreur", description: error.message || "Impossible de modifier le cadeau.", variant: "destructive" });
+        },
+    });
+
+    const deleteGiftMutation = useMutation({
+        mutationFn: async (id: number) => {
+            const res = await apiRequest("DELETE", `/api/gifts/${id}`);
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/gifts/public"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/gifts"] });
+            toast({ title: "Cadeau supprimé" });
+            setGiftDeleteOpen(false);
+            setGiftDeleting(null);
+        },
+        onError: (error: Error) => {
+            toast({ title: "Erreur", description: error.message || "Impossible de supprimer le cadeau.", variant: "destructive" });
+        },
+    });
+
+    const submitGift = () => {
+        const name = giftForm.name.trim();
+        if (!name) {
+            toast({ title: "Champ requis", description: "Le nom du cadeau est requis.", variant: "destructive" });
+            return;
+        }
+        const price = giftForm.price.trim() ? Number(giftForm.price.trim()) : null;
+        const payload = {
+            name,
+            description: giftForm.description.trim() ? giftForm.description.trim() : null,
+            imageUrl: giftForm.imageUrl || null,
+            price: Number.isFinite(price as any) ? price : null,
+        };
+        if (giftEditing?.id) updateGiftMutation.mutate({ id: giftEditing.id, payload });
+        else createGiftMutation.mutate(payload);
+    };
+
+    const onGiftImageSelected = async (file: File) => {
+        try {
+            const compressed = await compressImageFileToJpegDataUrl(file, {
+                maxSize: 1200,
+                quality: 0.82,
+                maxDataUrlLength: MAX_GIFT_IMAGE_DATA_URL_LENGTH,
+            });
+            setGiftForm((prev) => ({ ...prev, imageUrl: compressed }));
+        } catch (err: any) {
+            const msg =
+                String(err?.message) === "too_large"
+                    ? "Image trop lourde. Importez une image plus légère."
+                    : "Impossible d'importer l'image.";
+            toast({ title: "Erreur", description: msg, variant: "destructive" });
+        }
+    };
+
     const resolveInternalHref = (path: string) => {
         if (path === "home") return "/";
         if (path === "rsvp") return "/rsvp";
         if (path === "story") return "/story";
         if (path === "gallery") return "/gallery";
+        if (path === "gifts") return "/gifts";
         if (path === "location") return "/location";
         if (path === "program") return "/program";
         if (path === "cagnotte") return "/cagnotte";
@@ -722,6 +879,7 @@ export default function InvitationPage() {
         (requestedSection === "rsvp" && !showRsvp) ||
         (requestedSection === "story" && !showStory) ||
         (requestedSection === "gallery" && !showGallery) ||
+        (requestedSection === "gifts" && !showGifts) ||
         (requestedSection === "location" && !showLocation) ||
         (requestedSection === "program" && !showProgram)
     ) {
@@ -741,12 +899,12 @@ export default function InvitationPage() {
     }
 
     return (
-        <div className={`min-h-screen relative group/page ${template.pageBg}`}>
+        <div className={`min-h-screen relative group/page ${template.pageBg} ${fontClass}`}>
             {/* Hero Section */}
             <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
                 {heroImage ? (
                     <motion.div
-                        className="absolute inset-0 bg-cover bg-center opacity-40"
+                        className={`absolute inset-0 bg-cover bg-center ${heroImageOpacityClass}`}
                         style={{ backgroundImage: `url(${heroImage})` }}
                         initial={{ scale: 1 }}
                         animate={{ scale: 1.08 }}
@@ -767,130 +925,132 @@ export default function InvitationPage() {
                 <div className={`absolute inset-0 bg-gradient-to-b ${template.heroOverlay}`} />
 
                 <div className={`relative z-10 mx-auto ${template.heroWrapper}`}>
-                    {template.decoration === "floral" && <FloralDecoration />}
+                    <div className={heroShellClass}>
+                        {template.decoration === "floral" && <FloralDecoration />}
 
-                    <div className={`flex items-center mb-10 ${isModernTemplate ? "justify-start" : "justify-center"}`}>
-                        {logoUrl ? (
-                            <img
-                                src={logoUrl}
-                                alt={logoText}
-                                className="h-16 md:h-20 object-contain drop-shadow-xl"
-                            />
-                        ) : (
-                            <div className="text-xs font-black uppercase tracking-[0.4em] text-white/60">
-                                {logoText || "L'Union"}
-                            </div>
-                        )}
-                    </div>
-
-                    <motion.div
-                        className={`mb-6 flex ${isModernTemplate ? "justify-start" : "justify-center"} ${template.heroSubtitle}`}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                    >
-                        <InlineEditor
-                            value={heroSubtitle}
-                            onSave={(val) => handleSaveText("heroSubtitle", val)}
-                            canEdit={canEdit && editMode}
-                            placeholder="Le Mariage de"
-                        />
-                    </motion.div>
-
-                    <h1 className={`${template.heroTitle} mb-8 drop-shadow-2xl`}>
-                        <InlineEditor
-                            value={heroTitle}
-                            onSave={(val) => handleSaveText("heroTitle", val)}
-                            canEdit={canEdit && editMode}
-                            placeholder={currentWedding.title}
-                            className={isModernTemplate ? "text-left" : "text-center"}
-                        />
-                    </h1>
-
-                    <div className="mb-12">
-                        <div className={`${template.heroDate} ${isModernTemplate ? "justify-start" : "justify-center"}`}>
-                            <InlineEditor
-                                value={currentWedding.config?.texts?.weddingDate || (currentWedding.weddingDate ? new Date(currentWedding.weddingDate).toLocaleDateString("fr-FR", { day: 'numeric', month: 'long', year: 'numeric' }) : "Prochainement")}
-                                onSave={(val) => handleSaveText("weddingDate", val)}
-                                canEdit={canEdit && editMode}
-                                placeholder="19 & 21 mars 2026"
-                            />
+                        <div className={`flex items-center mb-10 ${isModernTemplate ? "justify-start" : "justify-center"}`}>
+                            {logoUrl ? (
+                                <img
+                                    src={logoUrl}
+                                    alt={logoText}
+                                    className="h-16 md:h-20 object-contain drop-shadow-xl"
+                                />
+                            ) : (
+                                <div className={`text-xs font-black uppercase tracking-[0.4em] ${templateId === "modern" ? "text-white/70" : "text-muted-foreground"}`}>
+                                    {logoText || "L'Union"}
+                                </div>
+                            )}
                         </div>
-                    </div>
 
-                    <div className={`mb-14 ${isModernTemplate ? "justify-start" : "justify-center"} flex`}>
-                        <Countdown weddingDate={countdownDate} />
-                    </div>
-
-                    <div className={`flex ${isModernTemplate ? "justify-start" : "justify-center"}`}>
-                        <Button
-                            size="lg"
-                            className={`${template.heroButton} ${buttonToneClass} ${buttonRadiusClass}`}
-                            onClick={handleHeroCtaClick}
+                        <motion.div
+                            className={`mb-6 flex ${isModernTemplate ? "justify-start" : "justify-center"} ${template.heroSubtitle}`}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
                         >
-                            {heroCta}
-                        </Button>
-                    </div>
+                            <InlineEditor
+                                value={heroSubtitle}
+                                onSave={(val) => handleSaveText("heroSubtitle", val)}
+                                canEdit={canEdit && editMode}
+                                placeholder="Le Mariage de"
+                            />
+                        </motion.div>
 
-                    {canEdit && editMode ? (
-                        <div className={`mt-10 ${isModernTemplate ? "text-left" : "text-center"}`}>
-                            <div className="inline-flex items-center gap-3 rounded-2xl bg-white/80 border border-primary/10 px-4 py-3 shadow-sm">
-                                <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Action bouton</div>
-                                <select
-                                    className="h-9 rounded-md border border-border bg-background px-3 text-sm"
-                                    value={ctaPath}
-                                    onChange={(e) => saveCtaPath(e.target.value)}
-                                >
-                                    <option value="rsvp">Aller vers RSVP</option>
-                                    <option value="story">Aller vers Histoire</option>
-                                    <option value="gallery">Aller vers Galerie</option>
-                                    <option value="location">Aller vers Lieux</option>
-                                    <option value="program">Aller vers Programme</option>
-                                    <option value="cagnotte">Aller vers Cagnotte</option>
-                                    <option value="live">Aller vers Live</option>
-                                    {(currentWedding.config?.navigation?.customPages || [])
-                                        .filter((p: any) => p.enabled && p.slug)
-                                        .map((p: any) => (
-                                            <option key={p.id} value={`page:${p.slug}`}>
-                                                Page: {p.title}
-                                            </option>
-                                        ))}
-                                </select>
-                            </div>
+                        <h1 className={`${template.heroTitle} mb-8 drop-shadow-2xl`}>
+                            <InlineEditor
+                                value={heroTitle}
+                                onSave={(val) => handleSaveText("heroTitle", val)}
+                                canEdit={canEdit && editMode}
+                                placeholder={currentWedding.title}
+                                className={isModernTemplate ? "text-left" : "text-center"}
+                            />
+                        </h1>
 
-                            <div className="mt-4 text-sm text-muted-foreground">
-                                <span className="font-medium text-foreground">Texte du bouton:</span>{" "}
+                        <div className="mb-12">
+                            <div className={`${template.heroDate} ${isModernTemplate ? "justify-start" : "justify-center"}`}>
                                 <InlineEditor
-                                    value={heroCta}
-                                    onSave={(val) => handleSaveText("heroCta", val)}
+                                    value={currentWedding.config?.texts?.weddingDate || (currentWedding.weddingDate ? new Date(currentWedding.weddingDate).toLocaleDateString("fr-FR", { day: 'numeric', month: 'long', year: 'numeric' }) : "Prochainement")}
+                                    onSave={(val) => handleSaveText("weddingDate", val)}
                                     canEdit={canEdit && editMode}
-                                    placeholder="Confirmer votre présence"
+                                    placeholder="19 & 21 mars 2026"
                                 />
                             </div>
+                        </div>
 
-                            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="rounded-2xl bg-white/80 border border-primary/10 px-4 py-3 shadow-sm">
-                                    <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">Image de couverture</div>
-                                    <input type="file" accept="image/*" onChange={handleMediaUpload("heroImage")} />
-                                    <div className="mt-2 flex items-center gap-2">
-                                        <Button type="button" size="sm" variant="outline" onClick={() => updateMedia("heroImage", "")} disabled={!heroImage || isUploading.heroImage}>
-                                            Supprimer
-                                        </Button>
-                                        {isUploading.heroImage ? <span className="text-xs text-muted-foreground">Import...</span> : null}
+                        <div className={`mb-14 ${isModernTemplate ? "justify-start" : "justify-center"} flex`}>
+                            <Countdown weddingDate={countdownDate} />
+                        </div>
+
+                        <div className={`flex ${isModernTemplate ? "justify-start" : "justify-center"}`}>
+                            <Button
+                                size="lg"
+                                className={`${template.heroButton} ${buttonToneClass} ${buttonRadiusClass}`}
+                                onClick={handleHeroCtaClick}
+                            >
+                                {heroCta}
+                            </Button>
+                        </div>
+
+                        {canEdit && editMode ? (
+                            <div className={`mt-10 ${isModernTemplate ? "text-left" : "text-center"}`}>
+                                <div className="inline-flex items-center gap-3 rounded-2xl bg-white/80 border border-primary/10 px-4 py-3 shadow-sm">
+                                    <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Action bouton</div>
+                                    <select
+                                        className="h-9 rounded-md border border-border bg-background px-3 text-sm"
+                                        value={ctaPath}
+                                        onChange={(e) => saveCtaPath(e.target.value)}
+                                    >
+                                        <option value="rsvp">Aller vers RSVP</option>
+                                        <option value="story">Aller vers Histoire</option>
+                                        <option value="gallery">Aller vers Galerie</option>
+                                        <option value="location">Aller vers Lieux</option>
+                                        <option value="program">Aller vers Programme</option>
+                                        <option value="cagnotte">Aller vers Cagnotte</option>
+                                        <option value="live">Aller vers Live</option>
+                                        {(currentWedding.config?.navigation?.customPages || [])
+                                            .filter((p: any) => p.enabled && p.slug)
+                                            .map((p: any) => (
+                                                <option key={p.id} value={`page:${p.slug}`}>
+                                                    Page: {p.title}
+                                                </option>
+                                            ))}
+                                    </select>
+                                </div>
+
+                                <div className="mt-4 text-sm text-muted-foreground">
+                                    <span className="font-medium text-foreground">Texte du bouton:</span>{" "}
+                                    <InlineEditor
+                                        value={heroCta}
+                                        onSave={(val) => handleSaveText("heroCta", val)}
+                                        canEdit={canEdit && editMode}
+                                        placeholder="Confirmer votre présence"
+                                    />
+                                </div>
+
+                                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="rounded-2xl bg-white/80 border border-primary/10 px-4 py-3 shadow-sm">
+                                        <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">Image de couverture</div>
+                                        <input type="file" accept="image/*" onChange={handleMediaUpload("heroImage")} />
+                                        <div className="mt-2 flex items-center gap-2">
+                                            <Button type="button" size="sm" variant="outline" onClick={() => updateMedia("heroImage", "")} disabled={!heroImage || isUploading.heroImage}>
+                                                Supprimer
+                                            </Button>
+                                            {isUploading.heroImage ? <span className="text-xs text-muted-foreground">Import...</span> : null}
+                                        </div>
+                                    </div>
+                                    <div className="rounded-2xl bg-white/80 border border-primary/10 px-4 py-3 shadow-sm">
+                                        <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">Countdown</div>
+                                        <input
+                                            type="datetime-local"
+                                            className="h-10 rounded-md border border-border bg-background px-3 text-sm w-full"
+                                            value={toDateInputValue(countdownDate)}
+                                            onChange={(e) => saveCountdownDate(fromDateInputValue(e.target.value))}
+                                        />
+                                        <div className="mt-2 text-xs text-muted-foreground">Change la date du compte à rebours.</div>
                                     </div>
                                 </div>
-                                <div className="rounded-2xl bg-white/80 border border-primary/10 px-4 py-3 shadow-sm">
-                                    <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">Countdown</div>
-                                    <input
-                                        type="datetime-local"
-                                        className="h-10 rounded-md border border-border bg-background px-3 text-sm w-full"
-                                        value={toDateInputValue(countdownDate)}
-                                        onChange={(e) => saveCountdownDate(fromDateInputValue(e.target.value))}
-                                    />
-                                    <div className="mt-2 text-xs text-muted-foreground">Change la date du compte à rebours.</div>
-                                </div>
                             </div>
-                        </div>
-                    ) : null}
+                        ) : null}
+                    </div>
                 </div>
             </section>
 
@@ -989,6 +1149,50 @@ export default function InvitationPage() {
                                                     )}
                                                 />
                                             </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                <FormField
+                                                    control={form.control}
+                                                    name="partySize"
+                                                    render={({ field }) => (
+                                                        <FormItem className={watchedAvailability === "declined" ? "opacity-60" : ""}>
+                                                            <FormLabel className="text-xs uppercase tracking-widest font-bold opacity-60">Vous venez *</FormLabel>
+                                                            <FormControl>
+                                                                <RadioGroup
+                                                                    className="grid grid-cols-2 gap-3"
+                                                                    value={String(field.value ?? 1)}
+                                                                    onValueChange={(v) => field.onChange(Number(v))}
+                                                                    disabled={watchedAvailability === "declined"}
+                                                                >
+                                                                    <button
+                                                                        type="button"
+                                                                        className="text-left flex items-center gap-3 rounded-2xl border border-primary/10 bg-white/50 px-4 py-4 hover:bg-white/70 transition-colors"
+                                                                        onClick={() => field.onChange(1)}
+                                                                    >
+                                                                        <RadioGroupItem value="1" />
+                                                                        <div className="flex flex-col">
+                                                                            <span className="text-sm font-semibold">Solo</span>
+                                                                            <span className="text-xs text-muted-foreground">Je viens seul(e)</span>
+                                                                        </div>
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        className="text-left flex items-center gap-3 rounded-2xl border border-primary/10 bg-white/50 px-4 py-4 hover:bg-white/70 transition-colors"
+                                                                        onClick={() => field.onChange(2)}
+                                                                    >
+                                                                        <RadioGroupItem value="2" />
+                                                                        <div className="flex flex-col">
+                                                                            <span className="text-sm font-semibold">Couple</span>
+                                                                            <span className="text-xs text-muted-foreground">Je viens avec mon/ma partenaire</span>
+                                                                        </div>
+                                                                    </button>
+                                                                </RadioGroup>
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                <div className="hidden md:block" />
+                                            </div>
                                             <Button type="submit" size="lg" className={`w-full h-16 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20 ${buttonRadiusClass} ${buttonToneClass}`} disabled={rsvpMutation.isPending}>
                                                 {rsvpMutation.isPending ? "Envoi..." : rsvpButton}
                                             </Button>
@@ -1005,6 +1209,232 @@ export default function InvitationPage() {
                             </div>
                         )}
                     </div>
+                </section>
+            ) : null}
+
+            {/* Gifts Section */}
+            {showGifts ? (
+                <section id="gifts" className="scroll-mt-24 py-24 px-6">
+                    <div className="max-w-6xl mx-auto">
+                        <div className="text-center max-w-3xl mx-auto">
+                            <h2 className="text-3xl md:text-4xl font-serif font-light tracking-wide uppercase">
+                                <InlineEditor
+                                    value={giftsTitle}
+                                    onSave={(val) => handleSaveText("giftsTitle" as any, val)}
+                                    canEdit={canEdit && editMode}
+                                />
+                            </h2>
+                            <div className="mt-4 text-muted-foreground leading-relaxed">
+                                <InlineEditor
+                                    value={giftsDescription}
+                                    onSave={(val) => handleSaveText("giftsDescription" as any, val)}
+                                    canEdit={canEdit && editMode}
+                                    isTextArea
+                                />
+                            </div>
+                        </div>
+
+                        {canEdit && editMode ? (
+                            <div className="mt-10 rounded-3xl bg-white/80 border border-primary/10 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                                <div className="text-sm text-muted-foreground">
+                                    Gérez votre liste de cadeaux (visible sur le site).
+                                </div>
+                                <Button type="button" size="sm" onClick={openCreateGift} className="rounded-full px-5">
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Ajouter un cadeau
+                                </Button>
+                            </div>
+                        ) : null}
+
+                        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {visibleGifts.length > 0 ? (
+                                visibleGifts.map((gift) => {
+                                    const price = typeof gift.price === "number" ? gift.price : 0;
+                                    const contributed = typeof gift.contributedAmount === "number" ? gift.contributedAmount : 0;
+                                    const pct = price > 0 ? Math.min(100, Math.round((contributed / price) * 100)) : 0;
+                                    return (
+                                        <Card key={gift.id} className="relative overflow-hidden rounded-3xl border border-primary/10 bg-white/60 backdrop-blur">
+                                            {canEdit && editMode ? (
+                                                <div className="absolute right-3 top-3 z-10 flex gap-2">
+                                                    <Button type="button" size="icon" variant="secondary" className="h-9 w-9 rounded-full" onClick={() => openEditGift(gift)}>
+                                                        <Pencil className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        size="icon"
+                                                        variant="secondary"
+                                                        className="h-9 w-9 rounded-full"
+                                                        onClick={() => {
+                                                            setGiftDeleting(gift);
+                                                            setGiftDeleteOpen(true);
+                                                        }}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            ) : null}
+
+                                            {gift.imageUrl ? (
+                                                <div className="h-44 w-full overflow-hidden">
+                                                    <img src={gift.imageUrl} alt={gift.name} className="h-full w-full object-cover" />
+                                                </div>
+                                            ) : (
+                                                <div className="h-44 w-full bg-gradient-to-br from-primary/10 to-primary/0" />
+                                            )}
+                                            <div className="p-6 space-y-3">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="min-w-0">
+                                                        <div className="font-semibold text-lg leading-tight truncate">{gift.name}</div>
+                                                        {gift.description ? (
+                                                            <div className="text-sm text-muted-foreground mt-1 line-clamp-2">{gift.description}</div>
+                                                        ) : null}
+                                                    </div>
+                                                    {gift.isReserved ? (
+                                                        <span className="shrink-0 text-xs font-semibold rounded-full px-3 py-1 bg-muted text-muted-foreground">
+                                                            Réservé
+                                                        </span>
+                                                    ) : null}
+                                                </div>
+
+                                                {price > 0 ? (
+                                                    <div className="pt-2">
+                                                        <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                                                            <span>
+                                                                {contributed}€ / {price}€
+                                                            </span>
+                                                            <span>{pct}%</span>
+                                                        </div>
+                                                        <div className="h-2 rounded-full bg-muted overflow-hidden">
+                                                            <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+                                                        </div>
+                                                    </div>
+                                                ) : null}
+                                            </div>
+                                        </Card>
+                                    );
+                                })
+                            ) : (
+                                <div className="md:col-span-3 text-center text-sm text-muted-foreground py-10">
+                                    Aucun cadeau pour le moment.
+                                </div>
+                            )}
+                        </div>
+
+                        {gifts.length > 3 ? (
+                            <div className="mt-10 flex justify-center">
+                                <Button
+                                    type="button"
+                                    size="lg"
+                                    variant="outline"
+                                    className="rounded-full px-10"
+                                    onClick={() => setShowAllGifts((v) => !v)}
+                                >
+                                    {showAllGifts ? "Voir moins" : "Voir plus"}
+                                </Button>
+                            </div>
+                        ) : null}
+                    </div>
+
+                    <Dialog open={giftDialogOpen} onOpenChange={setGiftDialogOpen}>
+                        <DialogContent className="max-w-xl">
+                            <div className="space-y-5">
+                                <div>
+                                    <div className="text-lg font-semibold">{giftEditing ? "Modifier un cadeau" : "Ajouter un cadeau"}</div>
+                                    <div className="text-sm text-muted-foreground">Le cadeau sera visible sur la landing publique.</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <div className="text-xs uppercase tracking-widest font-bold opacity-60">Nom *</div>
+                                        <Input
+                                            value={giftForm.name}
+                                            onChange={(e) => setGiftForm((p) => ({ ...p, name: e.target.value }))}
+                                            className="h-12 rounded-2xl bg-white/50 border-primary/10 focus:ring-primary/20"
+                                            placeholder="Ex: Nuits d'hôtel"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <div className="text-xs uppercase tracking-widest font-bold opacity-60">Prix (EUR)</div>
+                                        <Input
+                                            value={giftForm.price}
+                                            onChange={(e) => setGiftForm((p) => ({ ...p, price: e.target.value }))}
+                                            className="h-12 rounded-2xl bg-white/50 border-primary/10 focus:ring-primary/20"
+                                            placeholder="Ex: 120"
+                                            inputMode="numeric"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="text-xs uppercase tracking-widest font-bold opacity-60">Description</div>
+                                    <Textarea
+                                        value={giftForm.description}
+                                        onChange={(e) => setGiftForm((p) => ({ ...p, description: e.target.value }))}
+                                        className="min-h-[96px] rounded-2xl bg-white/50 border-primary/10 focus:ring-primary/20"
+                                        placeholder="Quelques détails pour vos invités."
+                                    />
+                                </div>
+
+                                <div className="rounded-2xl bg-white/70 border border-primary/10 p-4 space-y-3">
+                                    <div className="text-xs uppercase tracking-widest font-bold opacity-60">Image</div>
+                                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) await onGiftImageSelected(file);
+                                                e.target.value = "";
+                                            }}
+                                        />
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => setGiftForm((p) => ({ ...p, imageUrl: "" }))}
+                                            disabled={!giftForm.imageUrl}
+                                        >
+                                            Supprimer l'image
+                                        </Button>
+                                    </div>
+                                    {giftForm.imageUrl ? (
+                                        <img src={giftForm.imageUrl} alt="" className="mt-2 h-24 w-full object-cover rounded-xl" />
+                                    ) : null}
+                                </div>
+
+                                <div className="flex items-center justify-end gap-2 pt-2">
+                                    <Button type="button" variant="outline" onClick={() => setGiftDialogOpen(false)}>
+                                        Annuler
+                                    </Button>
+                                    <Button type="button" onClick={submitGift} disabled={createGiftMutation.isPending || updateGiftMutation.isPending}>
+                                        {createGiftMutation.isPending || updateGiftMutation.isPending ? "Enregistrement..." : "Enregistrer"}
+                                    </Button>
+                                </div>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+
+                    <AlertDialog open={giftDeleteOpen} onOpenChange={setGiftDeleteOpen}>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Supprimer ce cadeau ?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Cette action est irréversible.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={() => {
+                                        const id = giftDeleting?.id;
+                                        if (typeof id === "number") deleteGiftMutation.mutate(id);
+                                    }}
+                                >
+                                    Supprimer
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </section>
             ) : null}
 

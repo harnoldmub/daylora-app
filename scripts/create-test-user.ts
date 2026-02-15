@@ -61,12 +61,13 @@ async function main() {
   // Backfill advanced menu config for existing demo projects.
   const menuDefaults = [
     { id: "rsvp", label: "RSVP", path: "rsvp", enabled: true },
-    { id: "cagnotte", label: "Cagnotte", path: "cagnotte", enabled: true },
-    { id: "live", label: "Live", path: "live", enabled: true },
+    { id: "gifts", label: "Cadeaux", path: "gifts", enabled: true },
     { id: "story", label: "Histoire", path: "story", enabled: true },
     { id: "gallery", label: "Photos", path: "gallery", enabled: true },
     { id: "location", label: "Lieux", path: "location", enabled: true },
     { id: "program", label: "Programme", path: "program", enabled: true },
+    { id: "cagnotte", label: "Cagnotte", path: "cagnotte", enabled: true },
+    { id: "live", label: "Live", path: "live", enabled: true },
   ];
 
   const nav = (wedding as Wedding).config?.navigation;
@@ -79,6 +80,7 @@ async function main() {
   const hasCompletePages =
     typeof nav?.pages?.story === "boolean" &&
     typeof nav?.pages?.gallery === "boolean" &&
+    typeof (nav as any)?.pages?.gifts === "boolean" &&
     typeof nav?.pages?.location === "boolean" &&
     typeof nav?.pages?.program === "boolean";
 
@@ -91,6 +93,7 @@ async function main() {
           pages: {
             rsvp: true,
             cagnotte: true,
+            gifts: true,
             live: true,
             story: true,
             gallery: true,

@@ -97,6 +97,13 @@ export function useGifts() {
     });
 }
 
+export function usePublicGifts(enabled = true) {
+    return useQuery<Gift[]>({
+        queryKey: ["/api/gifts/public"],
+        enabled,
+    });
+}
+
 export function useCreateGift() {
     const queryClient = useQueryClient();
     return useMutation({

@@ -101,6 +101,7 @@ export function PublicLayout({ children, slug: slugProp }: { children: ReactNode
     const pageVisibility = {
         rsvp: navigation?.pages?.rsvp ?? true,
         cagnotte: navigation?.pages?.cagnotte ?? true,
+        gifts: (navigation?.pages as any)?.gifts ?? true,
         live: (navigation?.pages?.live ?? true) && (wedding.config?.features?.liveEnabled ?? true),
         story: navigation?.pages?.story ?? true,
         gallery: navigation?.pages?.gallery ?? true,
@@ -111,6 +112,7 @@ export function PublicLayout({ children, slug: slugProp }: { children: ReactNode
     const defaultMenuItems = [
         { id: "rsvp", label: wedding.config?.texts?.navRsvp || "RSVP", path: "rsvp", enabled: true },
         { id: "cagnotte", label: wedding.config?.texts?.navCagnotte || "Cagnotte", path: "cagnotte", enabled: true },
+        { id: "gifts", label: "Cadeaux", path: "gifts", enabled: true },
         { id: "live", label: wedding.config?.texts?.navLive || "Live", path: "live", enabled: true },
         { id: "story", label: "Histoire", path: "story", enabled: true },
         { id: "gallery", label: "Photos", path: "gallery", enabled: true },
@@ -123,11 +125,27 @@ export function PublicLayout({ children, slug: slugProp }: { children: ReactNode
         return `/${path}`;
     };
 
-    const internalMenu = (navigation?.menuItems?.length ? navigation.menuItems : defaultMenuItems)
+    const mergedMenuItems = useMemo(() => {
+        const incoming = (navigation?.menuItems || []) as Array<{ id: string } & Record<string, any>>;
+        const mergedDefaults = defaultMenuItems.map((base) => {
+            const found = incoming.find((item) => item.id === base.id);
+            return found ? { ...base, ...found } : base;
+        });
+        const customIncoming = incoming.filter((item) => !defaultMenuItems.some((base) => base.id === item.id));
+        return [...mergedDefaults, ...customIncoming];
+    }, [navigation?.menuItems, defaultMenuItems]);
+
+    const canonicalOrder = useMemo(
+        () => ["rsvp", "gifts", "story", "gallery", "location", "program", "cagnotte", "live"] as const,
+        []
+    );
+
+    const internalMenu = (mergedMenuItems.length ? mergedMenuItems : defaultMenuItems)
         .filter((item) => item.enabled)
         .filter((item) => {
             if (item.path === "rsvp") return pageVisibility.rsvp;
             if (item.path === "cagnotte") return pageVisibility.cagnotte;
+            if (item.path === "gifts") return pageVisibility.gifts && (wedding.config?.features?.giftsEnabled ?? true);
             if (item.path === "live") return pageVisibility.live;
             if (item.path === "story") return pageVisibility.story;
             if (item.path === "gallery") return pageVisibility.gallery;
@@ -135,6 +153,7 @@ export function PublicLayout({ children, slug: slugProp }: { children: ReactNode
             if (item.path === "program") return pageVisibility.program;
             return true;
         })
+        .sort((a, b) => canonicalOrder.indexOf(a.path as any) - canonicalOrder.indexOf(b.path as any))
         .map((item) => ({
             id: item.id,
             label: item.label,
@@ -150,7 +169,9 @@ export function PublicLayout({ children, slug: slugProp }: { children: ReactNode
             href: `/page/${page.slug}`,
         }));
 
-    const menuItems = [...internalMenu, ...customMenu];
+    const sectionMenuItems = internalMenu.filter((item) => item.path !== "cagnotte" && item.path !== "live");
+    const cagnotteItem = internalMenu.find((item) => item.path === "cagnotte");
+    const liveItem = internalMenu.find((item) => item.path === "live");
     const templateId = wedding.templateId || "classic";
     const headerClass =
         templateId === "modern"
@@ -333,36 +354,64 @@ export function PublicLayout({ children, slug: slugProp }: { children: ReactNode
                                 </div>
                             ) : null}
                         </div>
-                        <nav className={navClass}>
-                            {menuItems.map((item) => (
-                                <Link
-                                    key={item.id}
-                                    href={item.href}
-                                    className="hover:text-primary transition-colors"
-                                    onClick={(e) => {
-                                        if (canEdit && editMode) e.preventDefault();
-                                    }}
-                                >
-                                    {"path" in item ? (
-                                        <InlineEditor
-                                            value={item.label}
-                                            onSave={(val) => saveMenuLabel(item.id, val)}
-                                            canEdit={canEdit && editMode}
-                                            placeholder={item.label}
-                                        />
-                                    ) : (
-                                        <InlineEditor
-                                            value={item.label}
-                                            onSave={(val) => saveCustomPageTitle(item.id, val)}
-                                            canEdit={canEdit && editMode}
-                                            placeholder={item.label}
-                                        />
-                                    )}
-                                </Link>
-                            ))}
-                        </nav>
-                    </div>
-                </header>
+	                        <div className="flex items-center gap-3">
+	                            <nav className={navClass}>
+	                                {[...sectionMenuItems, ...customMenu].map((item) => (
+	                                    <Link
+	                                        key={item.id}
+	                                        href={item.href}
+	                                        className="hover:text-primary transition-colors"
+	                                        onClick={(e) => {
+	                                            if (canEdit && editMode) e.preventDefault();
+	                                        }}
+	                                    >
+	                                        {"path" in item ? (
+	                                            <InlineEditor
+	                                                value={item.label}
+	                                                onSave={(val) => saveMenuLabel(item.id, val)}
+	                                                canEdit={canEdit && editMode}
+	                                                placeholder={item.label}
+	                                            />
+	                                        ) : (
+	                                            <InlineEditor
+	                                                value={item.label}
+	                                                onSave={(val) => saveCustomPageTitle(item.id, val)}
+	                                                canEdit={canEdit && editMode}
+	                                                placeholder={item.label}
+	                                            />
+	                                        )}
+	                                    </Link>
+	                                ))}
+	                            </nav>
+
+	                            {/* One-page menu + primary CTA to open the donation flow */}
+	                            {cagnotteItem ? (
+	                                <Link href={cagnotteItem.href} onClick={(e) => (canEdit && editMode ? e.preventDefault() : undefined)}>
+	                                    <Button size="sm" className="rounded-full px-5">
+	                                        <InlineEditor
+	                                            value={cagnotteItem.label}
+	                                            onSave={(val) => saveMenuLabel(cagnotteItem.id, val)}
+	                                            canEdit={canEdit && editMode}
+	                                            placeholder={cagnotteItem.label}
+	                                        />
+	                                    </Button>
+	                                </Link>
+	                            ) : null}
+	                            {liveItem ? (
+	                                <Link href={liveItem.href} onClick={(e) => (canEdit && editMode ? e.preventDefault() : undefined)}>
+	                                    <Button size="sm" variant="outline" className="rounded-full px-5">
+	                                        <InlineEditor
+	                                            value={liveItem.label}
+	                                            onSave={(val) => saveMenuLabel(liveItem.id, val)}
+	                                            canEdit={canEdit && editMode}
+	                                            placeholder={liveItem.label}
+	                                        />
+	                                    </Button>
+	                                </Link>
+	                            ) : null}
+	                        </div>
+	                    </div>
+	                </header>
                 <main className="flex-1">{children}</main>
                 <footer className="py-6 md:px-8 md:py-0 border-t">
                     <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">

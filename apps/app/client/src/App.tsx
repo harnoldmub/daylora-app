@@ -124,6 +124,7 @@ function AppRouter() {
               <Route path="/rsvp" component={InvitationPage} />
               <Route path="/story" component={InvitationPage} />
               <Route path="/gallery" component={InvitationPage} />
+              <Route path="/gifts" component={InvitationPage} />
               <Route path="/location" component={InvitationPage} />
               <Route path="/program" component={InvitationPage} />
               <Route path="/cagnotte" component={CagnottePage} />
@@ -146,6 +147,7 @@ function AppRouter() {
               <Route path="/rsvp" component={InvitationPage} />
               <Route path="/story" component={InvitationPage} />
               <Route path="/gallery" component={InvitationPage} />
+              <Route path="/gifts" component={InvitationPage} />
               <Route path="/location" component={InvitationPage} />
               <Route path="/program" component={InvitationPage} />
               <Route path="/cagnotte" component={CagnottePage} />

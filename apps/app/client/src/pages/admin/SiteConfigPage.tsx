@@ -29,6 +29,7 @@ type NavigationConfig = {
   pages: {
     rsvp: boolean;
     cagnotte: boolean;
+    gifts: boolean;
     live: boolean;
     story: boolean;
     gallery: boolean;
@@ -43,6 +44,7 @@ const defaultNavigation: NavigationConfig = {
   pages: {
     rsvp: true,
     cagnotte: true,
+    gifts: true,
     live: true,
     story: true,
     gallery: true,
@@ -51,12 +53,13 @@ const defaultNavigation: NavigationConfig = {
   },
   menuItems: [
     { id: "rsvp", label: "RSVP", path: "rsvp", enabled: true },
-    { id: "cagnotte", label: "Cagnotte", path: "cagnotte", enabled: true },
-    { id: "live", label: "Live", path: "live", enabled: true },
+    { id: "gifts", label: "Cadeaux", path: "gifts", enabled: true },
     { id: "story", label: "Histoire", path: "story", enabled: true },
     { id: "gallery", label: "Photos", path: "gallery", enabled: true },
     { id: "location", label: "Lieux", path: "location", enabled: true },
     { id: "program", label: "Programme", path: "program", enabled: true },
+    { id: "cagnotte", label: "Cagnotte", path: "cagnotte", enabled: true },
+    { id: "live", label: "Live", path: "live", enabled: true },
   ],
   customPages: [],
 };
@@ -138,6 +141,7 @@ export default function SiteConfigPage() {
       pages: {
         rsvp: true,
         cagnotte: true,
+        gifts: true,
         live: true,
         story: true,
         gallery: true,
@@ -157,6 +161,7 @@ export default function SiteConfigPage() {
       pages: {
         rsvp: true,
         cagnotte: false,
+        gifts: true,
         live: false,
         story: true,
         gallery: true,
@@ -264,15 +269,16 @@ export default function SiteConfigPage() {
       <Card className="p-6 space-y-4">
           <h2 className="text-lg font-medium">Pages publiques</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { key: "rsvp", label: "Page RSVP" },
-              { key: "cagnotte", label: "Page Cagnotte" },
-              { key: "live", label: "Page Live" },
-              { key: "story", label: "Section Histoire" },
-              { key: "gallery", label: "Section Galerie" },
-              { key: "location", label: "Section Lieux & accès" },
-              { key: "program", label: "Section Déroulé" },
-            ].map((item) => (
+          {[
+            { key: "rsvp", label: "Page RSVP" },
+            { key: "cagnotte", label: "Page Cagnotte" },
+            { key: "gifts", label: "Section Cadeaux" },
+            { key: "live", label: "Page Live" },
+            { key: "story", label: "Section Histoire" },
+            { key: "gallery", label: "Section Galerie" },
+            { key: "location", label: "Section Lieux & accès" },
+            { key: "program", label: "Section Déroulé" },
+          ].map((item) => (
               <div key={item.key} className="flex items-center justify-between rounded-xl border px-4 py-3">
                 <span className="text-sm font-medium">{item.label}</span>
               <Switch

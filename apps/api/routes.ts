@@ -57,6 +57,8 @@ const DEFAULT_WEDDING_CONFIG = {
     liveQrCaption: "Scannez pour contribuer",
     galleryTitle: "GALERIE",
     galleryDescription: "Quelques instants capturés avant le grand jour.",
+    giftsTitle: "LISTE DE CADEAUX",
+    giftsDescription: "Quelques idées pour ceux qui souhaitent nous faire plaisir.",
   },
   media: {
     heroImage: "",
@@ -112,6 +114,7 @@ const DEFAULT_WEDDING_CONFIG = {
     pages: {
       rsvp: true,
       cagnotte: true,
+      gifts: true,
       live: true,
       story: true,
       gallery: true,
@@ -121,12 +124,13 @@ const DEFAULT_WEDDING_CONFIG = {
     heroCtaPath: "rsvp",
     menuItems: [
       { id: "rsvp", label: "RSVP", path: "rsvp", enabled: true },
-      { id: "cagnotte", label: "Cagnotte", path: "cagnotte", enabled: true },
-      { id: "live", label: "Live", path: "live", enabled: true },
+      { id: "gifts", label: "Cadeaux", path: "gifts", enabled: true },
       { id: "story", label: "Histoire", path: "story", enabled: true },
       { id: "gallery", label: "Photos", path: "gallery", enabled: true },
       { id: "location", label: "Lieux", path: "location", enabled: true },
       { id: "program", label: "Programme", path: "program", enabled: true },
+      { id: "cagnotte", label: "Cagnotte", path: "cagnotte", enabled: true },
+      { id: "live", label: "Live", path: "live", enabled: true },
     ],
     customPages: [],
   },
@@ -307,14 +311,14 @@ export async function registerRoutes(app: Express) {
         typeof value === "string" && value.startsWith("data:image/") && value.length > limit;
 
       if (isHugeDataUrl(heroImage, 3_000_000) || isHugeDataUrl(couplePhoto, 3_000_000)) {
-        return res.status(413).json({ message: "Image trop volumineuse. Importez une image plus legere." });
+        return res.status(413).json({ message: "Image trop volumineuse. Importez une image plus légère." });
       }
       if (Array.isArray(galleryImages)) {
         if (galleryImages.length > 10) {
           return res.status(400).json({ message: "Maximum 10 photos dans la galerie." });
         }
         if (galleryImages.some((img) => isHugeDataUrl(img, 1_200_000))) {
-          return res.status(413).json({ message: "Une photo de la galerie est trop volumineuse. Importez une image plus legere." });
+          return res.status(413).json({ message: "Une photo de la galerie est trop volumineuse. Importez une image plus légère." });
         }
       }
 
@@ -350,11 +354,15 @@ export async function registerRoutes(app: Express) {
           pages: {
             ...config.navigation.pages,
             cagnotte: features?.cagnotteEnabled ?? config.navigation.pages.cagnotte,
+            gifts: features?.giftsEnabled ?? (config.navigation.pages as any).gifts,
             live: features?.liveEnabled ?? config.navigation.pages.live,
           },
           menuItems: (config.navigation.menuItems || []).map((item: any) => {
             if (item.id === "cagnotte") {
               return { ...item, enabled: features?.cagnotteEnabled ?? item.enabled };
+            }
+            if (item.id === "gifts") {
+              return { ...item, enabled: features?.giftsEnabled ?? item.enabled };
             }
             if (item.id === "live") {
               return { ...item, enabled: features?.liveEnabled ?? item.enabled };
@@ -701,8 +709,19 @@ export async function registerRoutes(app: Express) {
     res.json(gifts);
   });
 
+  // Public gifts list (one-page public site)
+  app.get("/api/gifts/public", withWedding, async (req, res) => {
+    const wedding = (req as any).wedding;
+    const gifts = await storage.getGifts(wedding.id);
+    res.json(gifts);
+  });
+
   app.post("/api/gifts", isAuthenticated, withWedding, validateRequest(insertGiftSchema), async (req, res) => {
     const wedding = (req as any).wedding;
+    const imageUrl = req.body?.imageUrl;
+    if (typeof imageUrl === "string" && imageUrl.startsWith("data:image/") && imageUrl.length > 900_000) {
+      return res.status(413).json({ message: "Image trop volumineuse. Importez une image plus légère." });
+    }
     const gift = await storage.createGift(wedding.id, req.body);
     res.json(gift);
   });
@@ -710,6 +729,10 @@ export async function registerRoutes(app: Express) {
   app.patch("/api/gifts/:id", isAuthenticated, withWedding, async (req, res) => {
     const wedding = (req as any).wedding;
     const id = parseInt(req.params.id, 10);
+    const imageUrl = req.body?.imageUrl;
+    if (typeof imageUrl === "string" && imageUrl.startsWith("data:image/") && imageUrl.length > 900_000) {
+      return res.status(413).json({ message: "Image trop volumineuse. Importez une image plus légère." });
+    }
     const gift = await storage.updateGift(wedding.id, id, req.body);
     res.json(gift);
   });

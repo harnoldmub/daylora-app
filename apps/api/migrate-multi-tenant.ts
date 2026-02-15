@@ -22,7 +22,7 @@ async function migrate() {
 
         // 2. Create a default wedding
         console.log('💍 Creating default wedding...');
-        const [defaultWedding] = await db.insert(weddings).values([{
+        const [defaultWedding] = await db.insert(weddings).values({
             ownerId: owner.id,
             slug: 'default-wedding',
             title: 'Mon Premier Mariage',
@@ -66,6 +66,8 @@ async function migrate() {
                     liveQrCaption: "Scannez pour contribuer",
                     galleryTitle: "GALERIE",
                     galleryDescription: "Quelques instants capturés avant le grand jour.",
+                    giftsTitle: "LISTE DE CADEAUX",
+                    giftsDescription: "Quelques idées pour ceux qui souhaitent nous faire plaisir.",
                 },
                 media: {
                     heroImage: "",
@@ -120,6 +122,7 @@ async function migrate() {
                     pages: {
                         rsvp: true,
                         cagnotte: true,
+                        gifts: true,
                         live: true,
                         story: true,
                         gallery: true,
@@ -128,13 +131,14 @@ async function migrate() {
                     },
                     menuItems: [
                         { id: "rsvp", label: "RSVP", path: "rsvp", enabled: true },
+                        { id: "gifts", label: "Cadeaux", path: "gifts", enabled: true },
                         { id: "cagnotte", label: "Cagnotte", path: "cagnotte", enabled: true },
                         { id: "live", label: "Live", path: "live", enabled: true },
                     ],
                     customPages: [],
                 }
             },
-        }]).onConflictDoNothing().returning();
+        }).onConflictDoNothing().returning();
 
         const weddingId = defaultWedding?.id || (await db.select().from(weddings).where(eq(weddings.slug, 'default-wedding')))[0].id;
         console.log(`💍 Wedding ID: ${weddingId}`);

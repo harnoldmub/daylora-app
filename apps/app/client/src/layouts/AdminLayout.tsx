@@ -130,6 +130,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                     </div>
                 </div>
             </main>
-        </div >
+        </div>
     );
 }
