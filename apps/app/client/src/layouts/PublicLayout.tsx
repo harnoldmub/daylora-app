@@ -113,6 +113,7 @@ export function PublicLayout({ children, slug: slugProp }: { children: ReactNode
         { id: "cagnotte", label: wedding.config?.texts?.navCagnotte || "Cagnotte", path: "cagnotte", enabled: true },
         { id: "live", label: wedding.config?.texts?.navLive || "Live", path: "live", enabled: true },
         { id: "story", label: "Histoire", path: "story", enabled: true },
+        { id: "gallery", label: "Photos", path: "gallery", enabled: true },
         { id: "location", label: "Lieux", path: "location", enabled: true },
         { id: "program", label: "Programme", path: "program", enabled: true },
     ];

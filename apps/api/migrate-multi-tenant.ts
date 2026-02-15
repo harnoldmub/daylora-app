@@ -22,7 +22,7 @@ async function migrate() {
 
         // 2. Create a default wedding
         console.log('💍 Creating default wedding...');
-        const [defaultWedding] = await db.insert(weddings).values({
+        const [defaultWedding] = await db.insert(weddings).values([{
             ownerId: owner.id,
             slug: 'default-wedding',
             title: 'Mon Premier Mariage',
@@ -63,11 +63,13 @@ async function migrate() {
                     liveTitle: "CAGNOTTE EN DIRECT",
                     liveSubtitle: "Merci pour votre générosité",
                     liveDonorsTitle: "NOS GÉNÉREUX DONATEURS",
-                    liveQrCaption: "Scannez pour contribuer"
+                    liveQrCaption: "Scannez pour contribuer",
+                    galleryTitle: "GALERIE",
+                    galleryDescription: "Quelques instants capturés avant le grand jour.",
                 },
                 media: {
-                    heroImage: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80",
-                    couplePhoto: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&q=80"
+                    heroImage: "",
+                    couplePhoto: ""
                 },
                 branding: {
                     logoUrl: "",
@@ -76,6 +78,14 @@ async function migrate() {
                 sections: {
                     countdownDate: "",
                     cagnotteSuggestedAmounts: [20, 50, 100, 150, 200],
+                    galleryImages: [
+                        "/defaults/gallery/01.jpg",
+                        "/defaults/gallery/02.jpg",
+                        "/defaults/gallery/03.jpg",
+                        "/defaults/gallery/04.jpg",
+                        "/defaults/gallery/05.jpg",
+                        "/defaults/gallery/06.jpg",
+                    ],
                     locationItems: [
                         {
                             title: "Cérémonie civile",
@@ -112,6 +122,7 @@ async function migrate() {
                         cagnotte: true,
                         live: true,
                         story: true,
+                        gallery: true,
                         location: true,
                         program: true,
                     },
@@ -123,7 +134,7 @@ async function migrate() {
                     customPages: [],
                 }
             },
-        }).onConflictDoNothing().returning();
+        }]).onConflictDoNothing().returning();
 
         const weddingId = defaultWedding?.id || (await db.select().from(weddings).where(eq(weddings.slug, 'default-wedding')))[0].id;
         console.log(`💍 Wedding ID: ${weddingId}`);

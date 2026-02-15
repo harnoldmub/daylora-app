@@ -31,6 +31,7 @@ type NavigationConfig = {
     cagnotte: boolean;
     live: boolean;
     story: boolean;
+    gallery: boolean;
     location: boolean;
     program: boolean;
   };
@@ -44,6 +45,7 @@ const defaultNavigation: NavigationConfig = {
     cagnotte: true,
     live: true,
     story: true,
+    gallery: true,
     location: true,
     program: true,
   },
@@ -52,6 +54,7 @@ const defaultNavigation: NavigationConfig = {
     { id: "cagnotte", label: "Cagnotte", path: "cagnotte", enabled: true },
     { id: "live", label: "Live", path: "live", enabled: true },
     { id: "story", label: "Histoire", path: "story", enabled: true },
+    { id: "gallery", label: "Photos", path: "gallery", enabled: true },
     { id: "location", label: "Lieux", path: "location", enabled: true },
     { id: "program", label: "Programme", path: "program", enabled: true },
   ],
@@ -137,6 +140,7 @@ export default function SiteConfigPage() {
         cagnotte: true,
         live: true,
         story: true,
+        gallery: true,
         location: true,
         program: true,
       },
@@ -155,6 +159,7 @@ export default function SiteConfigPage() {
         cagnotte: false,
         live: false,
         story: true,
+        gallery: true,
         location: true,
         program: false,
       },
@@ -188,7 +193,7 @@ export default function SiteConfigPage() {
           id,
           title: "Nouvelle page",
           slug: `nouvelle-page-${prev.customPages.length + 1}`,
-          content: "Ajoutez ici le contenu de votre page personnalisee.",
+          content: "Ajoutez ici le contenu de votre page personnalisée.",
           enabled: true,
           showInMenu: true,
         },
@@ -223,8 +228,8 @@ export default function SiteConfigPage() {
       });
 
       toast({
-        title: "Configuration enregistree",
-        description: "Pages, menus et contenu personnalise sont a jour.",
+        title: "Configuration enregistrée",
+        description: "Pages, menus et contenu personnalisé sont à jour.",
       });
     } catch (_error) {
       toast({
@@ -241,8 +246,8 @@ export default function SiteConfigPage() {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-serif font-bold">Configuration Avancee</h1>
-          <p className="text-muted-foreground mt-1">Controlez les pages, la navigation et le contenu personnalise.</p>
+          <h1 className="text-3xl font-serif font-bold">Configuration avancée</h1>
+          <p className="text-muted-foreground mt-1">Contrôlez les pages, la navigation et le contenu personnalisé.</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={applySimpleConfig}>
@@ -257,18 +262,19 @@ export default function SiteConfigPage() {
       </div>
 
       <Card className="p-6 space-y-4">
-        <h2 className="text-lg font-medium">Pages publiques</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[
-            { key: "rsvp", label: "Page RSVP" },
-            { key: "cagnotte", label: "Page Cagnotte" },
-            { key: "live", label: "Page Live" },
-            { key: "story", label: "Section Histoire" },
-            { key: "location", label: "Section Lieux & acces" },
-            { key: "program", label: "Section Deroule" },
-          ].map((item) => (
-            <div key={item.key} className="flex items-center justify-between rounded-xl border px-4 py-3">
-              <span className="text-sm font-medium">{item.label}</span>
+          <h2 className="text-lg font-medium">Pages publiques</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { key: "rsvp", label: "Page RSVP" },
+              { key: "cagnotte", label: "Page Cagnotte" },
+              { key: "live", label: "Page Live" },
+              { key: "story", label: "Section Histoire" },
+              { key: "gallery", label: "Section Galerie" },
+              { key: "location", label: "Section Lieux & accès" },
+              { key: "program", label: "Section Déroulé" },
+            ].map((item) => (
+              <div key={item.key} className="flex items-center justify-between rounded-xl border px-4 py-3">
+                <span className="text-sm font-medium">{item.label}</span>
               <Switch
                 checked={navigation.pages[item.key as keyof NavigationConfig["pages"]]}
                 onCheckedChange={(value) =>
@@ -328,7 +334,7 @@ export default function SiteConfigPage() {
 
       <Card className="p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium">Pages personnalisees</h2>
+          <h2 className="text-lg font-medium">Pages personnalisées</h2>
           <Button variant="outline" onClick={addCustomPage}>
             <Plus className="h-4 w-4 mr-2" />
             Ajouter une page
@@ -336,7 +342,7 @@ export default function SiteConfigPage() {
         </div>
 
         {navigation.customPages.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Aucune page personnalisee. Ajoutez une page libre (infos pratiques, hebergements, FAQ etc.).</p>
+          <p className="text-sm text-muted-foreground">Aucune page personnalisée. Ajoutez une page libre (infos pratiques, hébergements, FAQ etc.).</p>
         ) : (
           <div className="space-y-4">
             {navigation.customPages.map((page) => (

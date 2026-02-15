@@ -120,7 +120,7 @@ export default function GiftsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/gifts"] });
-      toast({ title: "Cadeau mis a jour" });
+      toast({ title: "Cadeau mis à jour" });
       setEditOpen(false);
       setEditingGift(null);
       setForm(emptyForm);

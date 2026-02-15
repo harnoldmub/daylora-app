@@ -69,7 +69,15 @@ const DEFAULT_WEDDING_CONFIG = {
   sections: {
     countdownDate: "",
     cagnotteSuggestedAmounts: [20, 50, 100, 150, 200],
-    galleryImages: [],
+    // Small, local placeholders (editable later). Keep these lightweight to avoid huge default rows.
+    galleryImages: [
+      "/defaults/gallery/01.jpg",
+      "/defaults/gallery/02.jpg",
+      "/defaults/gallery/03.jpg",
+      "/defaults/gallery/04.jpg",
+      "/defaults/gallery/05.jpg",
+      "/defaults/gallery/06.jpg",
+    ],
     locationItems: [
       {
         title: "Cérémonie civile",
@@ -276,10 +284,39 @@ export async function registerRoutes(app: Express) {
   app.post("/api/weddings", isAuthenticated, async (req, res) => {
     try {
       const user = (req as any).user;
-      const { title, slug, templateId, toneId, weddingDate, currentPlan, features } = req.body || {};
+      const {
+        title,
+        slug,
+        templateId,
+        toneId,
+        weddingDate,
+        currentPlan,
+        features,
+        heroImage,
+        couplePhoto,
+        galleryImages,
+        storyBody
+      } = req.body || {};
+
       if (!title || !slug) return res.status(400).json({ message: "Titre et slug requis" });
       const existing = await storage.getWeddingBySlug(slug);
       if (existing) return res.status(400).json({ message: "Slug déjà utilisé" });
+
+      // Guardrail: don't allow huge base64 blobs in config
+      const isHugeDataUrl = (value: unknown, limit: number) =>
+        typeof value === "string" && value.startsWith("data:image/") && value.length > limit;
+
+      if (isHugeDataUrl(heroImage, 3_000_000) || isHugeDataUrl(couplePhoto, 3_000_000)) {
+        return res.status(413).json({ message: "Image trop volumineuse. Importez une image plus legere." });
+      }
+      if (Array.isArray(galleryImages)) {
+        if (galleryImages.length > 10) {
+          return res.status(400).json({ message: "Maximum 10 photos dans la galerie." });
+        }
+        if (galleryImages.some((img) => isHugeDataUrl(img, 1_200_000))) {
+          return res.status(413).json({ message: "Une photo de la galerie est trop volumineuse. Importez une image plus legere." });
+        }
+      }
 
       const config = applyTemplateConfig(templateId || "classic", DEFAULT_WEDDING_CONFIG);
       const tone = resolveTone(toneId);
@@ -294,6 +331,19 @@ export async function registerRoutes(app: Express) {
         features: {
           ...config.features,
           ...(features || {}),
+        },
+        media: {
+          ...config.media,
+          heroImage: heroImage || config.media.heroImage,
+          couplePhoto: couplePhoto || config.media.couplePhoto,
+        },
+        texts: {
+          ...config.texts,
+          storyBody: storyBody || config.texts.storyBody,
+        },
+        sections: {
+          ...config.sections,
+          galleryImages: galleryImages || config.sections.galleryImages,
         },
         navigation: {
           ...config.navigation,
@@ -313,6 +363,7 @@ export async function registerRoutes(app: Express) {
           }),
         },
       };
+
       const wedding = await storage.createWedding({
         ownerId: user.id,
         title,
@@ -351,12 +402,21 @@ export async function registerRoutes(app: Express) {
         const logoUrl = updates.config?.branding?.logoUrl;
         const heroImage = updates.config?.media?.heroImage;
         const couplePhoto = updates.config?.media?.couplePhoto;
+        const galleryImages = updates.config?.sections?.galleryImages;
 
         if (isHugeDataUrl(logoUrl, 220_000)) {
-          return res.status(413).json({ message: "Logo trop volumineux. Importez une image plus legere." });
+          return res.status(413).json({ message: "Logo trop volumineux. Importez une image plus légère." });
         }
         if (isHugeDataUrl(heroImage, 3_000_000) || isHugeDataUrl(couplePhoto, 3_000_000)) {
-          return res.status(413).json({ message: "Image trop volumineuse. Importez une image plus legere." });
+          return res.status(413).json({ message: "Image trop volumineuse. Importez une image plus légère." });
+        }
+        if (Array.isArray(galleryImages)) {
+          if (galleryImages.length > 10) {
+            return res.status(400).json({ message: "Maximum 10 photos dans la galerie." });
+          }
+          if (galleryImages.some((img) => isHugeDataUrl(img, 1_200_000))) {
+            return res.status(413).json({ message: "Une photo de la galerie est trop volumineuse. Importez une image plus légère." });
+          }
         }
       }
       if (updates.slug && updates.slug !== wedding.slug) {

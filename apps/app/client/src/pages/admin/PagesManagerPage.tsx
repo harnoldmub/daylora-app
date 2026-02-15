@@ -10,8 +10,8 @@ const CORE_PAGES = [
   { key: "cagnotte", label: "Cagnotte", path: "cagnotte" },
   { key: "live", label: "Live", path: "live" },
   { key: "story", label: "Histoire", path: "story" },
-  { key: "location", label: "Lieux & acces", path: "location" },
-  { key: "program", label: "Deroule", path: "program" },
+  { key: "location", label: "Lieux & accès", path: "location" },
+  { key: "program", label: "Déroulé", path: "program" },
 ] as const;
 
 export default function PagesManagerPage() {
@@ -76,10 +76,10 @@ export default function PagesManagerPage() {
       </Card>
 
       <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">Pages personnalisees</h2>
+        <h2 className="text-lg font-semibold mb-4">Pages personnalisées</h2>
         {customPages.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Aucune page personnalisee. Ajoutez des pages dans "Site & Menus".
+            Aucune page personnalisée. Ajoutez des pages dans "Site & Menus".
           </p>
         ) : (
           <div className="space-y-3">

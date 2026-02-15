@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -40,7 +40,7 @@ import {
     insertRsvpResponseSchema,
     type InsertRsvpResponse,
 } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { AccommodationSection } from "@/components/accommodation";
 import { motion } from "framer-motion";
 import { useWedding, useUpdateWedding } from "@/hooks/use-api";
@@ -49,14 +49,15 @@ import { Layout, Eye } from "lucide-react";
 import { getButtonClass } from "@/lib/design-presets";
 import { usePublicEdit } from "@/contexts/public-edit";
 import { compressImageFileToJpegDataUrl } from "@/lib/image";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 // Default/Fake data for empty state or loading
 const FAKE_DATA = {
     title: "Sophie & Marc",
     date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days from now
     location: "Château de la Verrière",
-    heroImage: "/gallery/DSC_8912.jpg",
-    couplePhoto: "/couple.jpg",
+    heroImage: "/defaults/hero_default.jpg",
+    couplePhoto: "/defaults/couple_default.jpg",
     story: "Leur histoire a commencé il y a quelques années, une rencontre simple qui s'est transformée en une belle aventure. Aujourd'hui, ils s'apprêtent à dire 'Oui' entourés de leurs proches."
 };
 
@@ -105,49 +106,65 @@ type ProgramItem = {
 
 const MAX_HERO_IMAGE_DATA_URL_LENGTH = 2_800_000;
 const MAX_COUPLE_IMAGE_DATA_URL_LENGTH = 2_000_000;
+const MAX_GALLERY_IMAGE_DATA_URL_LENGTH = 1_200_000;
+const MAX_GALLERY_IMAGES = 10;
+const DEFAULT_GALLERY_IMAGES = [
+    "/defaults/gallery/01.jpg",
+    "/defaults/gallery/02.jpg",
+    "/defaults/gallery/03.jpg",
+    "/defaults/gallery/04.jpg",
+    "/defaults/gallery/05.jpg",
+    "/defaults/gallery/06.jpg",
+];
 
 const TEMPLATE_STYLES = {
     classic: {
         pageBg: "bg-[#FFFDF9]",
         heroOverlay: "from-[#2B2320]/30 via-transparent to-[#FFFDF9]",
-        heroWrapper: "text-center max-w-5xl",
+        heroWrapper: "text-center max-w-5xl space-y-8",
         heroTitle: "text-6xl md:text-8xl font-serif font-bold text-[#2B2320] leading-[1.1]",
-        heroSubtitle: "text-sm md:text-base font-serif italic tracking-wide text-primary/80 mb-4",
-        heroDate: "text-xl md:text-3xl font-serif font-medium text-[#7A6B5E] mt-6",
-        heroButton: "px-14 py-7 text-sm tracking-[0.2em] uppercase font-bold bg-primary text-white hover:bg-primary/90 shadow-xl shadow-primary/20",
+        heroSubtitle: "text-sm md:text-base font-serif italic tracking-[0.3em] uppercase text-primary/80 mb-4",
+        heroDate: "text-xl md:text-3xl font-serif font-medium text-[#7A6B5E] mt-6 border-y border-primary/20 py-4 inline-block px-10",
+        heroButton: "px-14 py-7 text-sm tracking-[0.2em] uppercase font-bold bg-primary text-white hover:bg-primary/90 shadow-xl shadow-primary/20 rounded-none",
         rsvpSection: "bg-[#FFFDF9] py-32",
-        rsvpCard: "border-none shadow-[0_30px_100px_rgba(200,169,106,0.12)] bg-white/80 backdrop-blur-xl rounded-[3rem]",
-        storyTitle: "text-5xl font-serif font-bold text-[#2B2320] mb-10",
+        rsvpCard: "border-none shadow-[0_30px_100px_rgba(200,169,106,0.12)] bg-white/80 backdrop-blur-xl rounded-[3rem] p-12 border border-white/50",
+        storyTitle: "text-5xl font-serif font-bold text-[#2B2320] mb-10 text-center",
         storyLayout: "grid grid-cols-1 lg:grid-cols-2 gap-20 items-center",
-        storyImage: "rounded-[3rem] shadow-2xl border-8 border-white",
+        storyImage: "rounded-[3rem] shadow-2xl border-8 border-white rotate-1",
+        container: "max-w-6xl mx-auto px-6",
+        decoration: "serif-border",
     },
     modern: {
         pageBg: "bg-white",
-        heroOverlay: "from-black/40 via-transparent to-white",
-        heroWrapper: "text-left max-w-7xl pt-20",
-        heroTitle: "text-7xl md:text-9xl font-sans font-black text-black leading-[0.9] tracking-tighter",
-        heroSubtitle: "text-[10px] md:text-xs font-sans font-black tracking-[0.6em] uppercase text-primary mb-6",
-        heroDate: "text-2xl md:text-4xl font-sans font-black text-black/20 mt-8",
-        heroButton: "px-12 py-6 text-xs tracking-[0.4em] uppercase font-black bg-black text-white hover:bg-primary transition-all rounded-none",
+        heroOverlay: "from-black/60 via-black/20 to-white",
+        heroWrapper: "text-left max-w-7xl pt-20 px-10",
+        heroTitle: "text-7xl md:text-[10rem] font-sans font-black text-white leading-[0.85] tracking-tighter uppercase",
+        heroSubtitle: "text-[10px] md:text-xs font-sans font-black tracking-[0.8em] uppercase text-primary mb-6 drop-shadow-md",
+        heroDate: "text-2xl md:text-4xl font-sans font-black text-white/40 mt-8 tracking-widest uppercase",
+        heroButton: "px-12 py-6 text-xs tracking-[0.4em] uppercase font-black bg-white text-black hover:bg-primary hover:text-white transition-all rounded-none",
         rsvpSection: "bg-black text-white py-32",
-        rsvpCard: "bg-white/5 border border-white/10 backdrop-blur-2xl rounded-none shadow-2xl",
-        storyTitle: "text-6xl font-sans font-black text-black leading-none",
+        rsvpCard: "bg-white/5 border border-white/10 backdrop-blur-2xl rounded-none shadow-2xl p-10",
+        storyTitle: "text-7xl md:text-9xl font-sans font-black text-black leading-none tracking-tighter mb-12",
         storyLayout: "grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-0 items-stretch",
-        storyImage: "rounded-none grayscale hover:grayscale-0 transition-all duration-1000",
+        storyImage: "rounded-none grayscale hover:grayscale-0 transition-all duration-1000 object-cover h-full",
+        container: "max-w-full mx-auto px-0",
+        decoration: "none",
     },
     minimal: {
         pageBg: "bg-[#FAFAFA]",
         heroOverlay: "from-transparent via-transparent to-[#FAFAFA]",
-        heroWrapper: "text-center max-w-3xl",
+        heroWrapper: "text-center max-w-3xl space-y-12",
         heroTitle: "text-5xl md:text-7xl font-sans font-thin text-[#1A1A1A] tracking-[-0.05em] leading-tight",
-        heroSubtitle: "text-[9px] font-sans tracking-[0.8em] uppercase text-[#A0A0A0] mb-8",
-        heroDate: "text-lg md:text-2xl font-sans font-light text-[#666666] mt-4",
+        heroSubtitle: "text-[9px] font-sans tracking-[1em] uppercase text-[#A0A0A0] mb-8",
+        heroDate: "text-lg md:text-2xl font-sans font-light text-[#666666] mt-4 flex items-center justify-center gap-4 before:h-px before:w-8 before:bg-black/10 after:h-px after:w-8 after:bg-black/10",
         heroButton: "px-10 py-5 text-[10px] tracking-[0.5em] uppercase font-medium border border-[#1A1A1A] text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-colors rounded-full",
         rsvpSection: "bg-[#FAFAFA] py-32",
-        rsvpCard: "border border-[#EEEEEE] shadow-none bg-white rounded-xl",
-        storyTitle: "text-4xl font-sans font-extralight text-[#1A1A1A]",
-        storyLayout: "max-w-4xl mx-auto space-y-20",
-        storyImage: "rounded-lg opacity-90",
+        rsvpCard: "border border-[#EEEEEE] shadow-none bg-white rounded-xl p-8",
+        storyTitle: "text-4xl font-sans font-extralight text-[#1A1A1A] text-center mb-16",
+        storyLayout: "max-w-4xl mx-auto space-y-20 px-6",
+        storyImage: "rounded-lg opacity-90 shadow-sm",
+        container: "max-w-4xl mx-auto px-6",
+        decoration: "floral",
     },
 } as const;
 
@@ -207,16 +224,13 @@ function Countdown({ weddingDate }: { weddingDate: string }) {
 }
 
 export default function InvitationPage() {
-    const params = useParams();
-    const [, setLocation] = useLocation();
+    const params = useParams<{ slug: string }>();
+    const [routePath, setLocation] = useLocation();
     const search = useSearch();
 
-    // Extract slug from either /:slug or /preview/:slug
-    const slug = params.slug || (window.location.pathname.startsWith('/preview/')
-        ? window.location.pathname.split('/')[2]
-        : window.location.pathname.split('/')[1]);
+    const slug = params.slug || "";
 
-    const { data: wedding, isLoading } = useWedding(slug);
+    const { data: wedding, isLoading } = useWedding(slug || undefined);
     const updateWedding = useUpdateWedding();
     const queryClient = useQueryClient();
     const { toast } = useToast();
@@ -225,6 +239,7 @@ export default function InvitationPage() {
     const [ctaPath, setCtaPath] = useState("rsvp");
     const [draftMedia, setDraftMedia] = useState<{ heroImage: string; couplePhoto: string }>({ heroImage: "", couplePhoto: "" });
     const [isUploading, setIsUploading] = useState<{ heroImage: boolean; couplePhoto: boolean }>({ heroImage: false, couplePhoto: false });
+    const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
     useEffect(() => {
         if (!wedding) return;
@@ -235,32 +250,25 @@ export default function InvitationPage() {
         });
     }, [wedding?.id, (wedding as any)?.updatedAt]);
 
-    const isPreview = typeof window !== "undefined" ? window.location.pathname.startsWith("/preview/") : false;
-    const basePath = slug ? (isPreview ? `/preview/${slug}` : `/${slug}`) : "";
+    const queryParams = useMemo(() => new URLSearchParams(search), [search]);
+    const routeSection = useMemo(() => routePath.replace(/^\//, "").trim(), [routePath]);
+    const requestedSection = useMemo(() => {
+        const fromQuery = (queryParams.get("section") || "").trim();
+        const fromRoute = routeSection;
+        return (fromQuery || fromRoute) || null;
+    }, [queryParams, routeSection]);
 
-    type WeddingPage = "home" | "story" | "location" | "program";
-    const activePage = (() => {
-        const pathname = typeof window !== "undefined" ? window.location.pathname : "";
-        const parts = pathname.split("/").filter(Boolean);
-        const page = parts[0] === "preview" ? parts[2] : parts[1];
-        // RSVP is a section of the homepage in the MVP. Keep /rsvp as a compatibility route.
-        if (page === "rsvp") return "home";
-        if (page === "story" || page === "location" || page === "program") return page as WeddingPage;
-        return "home";
-    })();
+    const SECTION_IDS = useMemo(() => ["rsvp", "story", "gallery", "location", "program"] as const, []);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
-        const params = new URLSearchParams(search);
-        const section = params.get("section");
-        if (!section) return;
-        const id = section === "rsvp" ? "rsvp" : null;
-        if (!id) return;
+        if (!requestedSection) return;
+        if (!SECTION_IDS.includes(requestedSection as any)) return;
         // Wait a tick so the section is present, then scroll smoothly.
         setTimeout(() => {
-            document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+            document.getElementById(requestedSection)?.scrollIntoView({ behavior: "smooth", block: "start" });
         }, 0);
-    }, [search, wedding?.id]);
+    }, [requestedSection, SECTION_IDS, wedding?.id]);
 
     // Save text helper
     const handleSaveText = async (key: string, value: string) => {
@@ -600,22 +608,33 @@ export default function InvitationPage() {
         : DEFAULT_PROGRAM_ITEMS) as ProgramItem[];
     const showRsvp = currentWedding.config?.navigation?.pages?.rsvp ?? true;
     const showStory = currentWedding.config?.navigation?.pages?.story ?? true;
+    const showGallery = currentWedding.config?.navigation?.pages?.gallery ?? true;
     const showLocation = currentWedding.config?.navigation?.pages?.location ?? true;
     const showProgram = currentWedding.config?.navigation?.pages?.program ?? true;
     const buttonToneClass = getButtonClass(currentWedding.config?.theme?.buttonStyle);
     const buttonRadiusClass = getButtonRadiusClass(currentWedding.config?.theme?.buttonRadius);
     const isModernTemplate = templateId === "modern";
 
+    const galleryTitle = currentWedding.config?.texts?.galleryTitle || "GALERIE";
+    const galleryDescription =
+        currentWedding.config?.texts?.galleryDescription || "Quelques instants capturés avant le grand jour.";
+    const galleryImages = (
+        (currentWedding.config?.sections?.galleryImages?.length
+            ? currentWedding.config.sections.galleryImages
+            : DEFAULT_GALLERY_IMAGES) as string[]
+    ).slice(0, MAX_GALLERY_IMAGES);
+
     const resolveInternalHref = (path: string) => {
-        if (path === "home") return `${basePath}`;
-        if (path === "rsvp") return `${basePath}?section=rsvp`;
-        if (path === "cagnotte") return `${basePath}/cagnotte`;
-        if (path === "live") return `${basePath}/live`;
-        if (path === "story") return `${basePath}/story`;
-        if (path === "location") return `${basePath}/location`;
-        if (path === "program") return `${basePath}/program`;
-        if (path.startsWith("page:")) return `${basePath}/page/${path.replace(/^page:/, "")}`;
-        return `${basePath}`;
+        if (path === "home") return "/";
+        if (path === "rsvp") return "/rsvp";
+        if (path === "story") return "/story";
+        if (path === "gallery") return "/gallery";
+        if (path === "location") return "/location";
+        if (path === "program") return "/program";
+        if (path === "cagnotte") return "/cagnotte";
+        if (path === "live") return "/live";
+        if (path.startsWith("page:")) return `/page/${path.replace(/^page:/, "")}`;
+        return "/";
     };
 
     const handleHeroCtaClick = () => {
@@ -624,10 +643,87 @@ export default function InvitationPage() {
         setLocation(resolveInternalHref(ctaPath || "rsvp"));
     };
 
+    const saveGalleryImages = async (nextImages: string[]) => {
+        if (!wedding) return;
+        const capped = nextImages.slice(0, MAX_GALLERY_IMAGES);
+        try {
+            await updateWedding.mutateAsync({
+                id: wedding.id,
+                config: {
+                    ...wedding.config,
+                    sections: {
+                        ...(wedding.config.sections || {}),
+                        galleryImages: capped,
+                    },
+                },
+            });
+        } catch {
+            toast({ title: "Erreur", description: "Impossible d'enregistrer la galerie.", variant: "destructive" });
+        }
+    };
+
+    const onGalleryFilesSelected = async (files: FileList | null) => {
+        if (!files || !wedding) return;
+        const current = (
+            wedding.config?.sections?.galleryImages?.length
+                ? wedding.config.sections.galleryImages
+                : DEFAULT_GALLERY_IMAGES
+        ).slice(0, MAX_GALLERY_IMAGES);
+        const remaining = Math.max(0, MAX_GALLERY_IMAGES - current.length);
+        const batch = Array.from(files).slice(0, remaining);
+        if (batch.length === 0) {
+            toast({ title: "Galerie pleine", description: "Maximum 10 photos.", variant: "destructive" });
+            return;
+        }
+
+        const next: string[] = [...current];
+        for (const file of batch) {
+            try {
+                const compressed = await compressImageFileToJpegDataUrl(file, {
+                    maxSize: 1200,
+                    quality: 0.82,
+                    maxDataUrlLength: MAX_GALLERY_IMAGE_DATA_URL_LENGTH,
+                });
+                next.push(compressed);
+            } catch (err: any) {
+                const msg =
+                    String(err?.message) === "too_large"
+                        ? "Une photo est trop lourde. Importez une image plus légère."
+                        : "Impossible d'importer une photo.";
+                toast({ title: "Erreur", description: msg, variant: "destructive" });
+            }
+        }
+
+        await saveGalleryImages(next);
+    };
+
+    const removeGalleryImage = async (index: number) => {
+        if (!wedding) return;
+        const current = (
+            wedding.config?.sections?.galleryImages?.length
+                ? wedding.config.sections.galleryImages
+                : DEFAULT_GALLERY_IMAGES
+        ).slice(0, MAX_GALLERY_IMAGES);
+        await saveGalleryImages(current.filter((_img, idx) => idx !== index));
+    };
+
+    const resetGallery = async () => {
+        await saveGalleryImages([...DEFAULT_GALLERY_IMAGES]);
+    };
+
+    const FloralDecoration = () => (
+        <svg viewBox="0 0 100 100" className="w-16 h-16 mx-auto mb-6 text-black/10 transition-transform hover:scale-110 duration-700" fill="currentColor">
+            <path d="M50,10 C60,30 90,40 50,90 C10,40 40,30 50,10 Z" />
+            <path d="M50,40 C70,50 80,80 50,90 C20,80 30,50 50,40 Z" opacity="0.5" />
+        </svg>
+    );
+
     if (
-        (activePage === "story" && !showStory) ||
-        (activePage === "location" && !showLocation) ||
-        (activePage === "program" && !showProgram)
+        (requestedSection === "rsvp" && !showRsvp) ||
+        (requestedSection === "story" && !showStory) ||
+        (requestedSection === "gallery" && !showGallery) ||
+        (requestedSection === "location" && !showLocation) ||
+        (requestedSection === "program" && !showProgram)
     ) {
         return (
             <div className="min-h-[70vh] flex items-center justify-center px-6">
@@ -636,7 +732,7 @@ export default function InvitationPage() {
                     <p className="text-sm text-muted-foreground mb-6">
                         Cette page a ete masquee dans la configuration du site.
                     </p>
-                    <Button onClick={() => setLocation(basePath || "/")} variant="outline">
+                    <Button onClick={() => setLocation("/")} variant="outline">
                         Retour au site
                     </Button>
                 </div>
@@ -647,8 +743,7 @@ export default function InvitationPage() {
     return (
         <div className={`min-h-screen relative group/page ${template.pageBg}`}>
             {/* Hero Section */}
-            {activePage === "home" ? (
-                <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
+            <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
                     {heroImage ? (
                         <motion.div
                             className="absolute inset-0 bg-cover bg-center opacity-40"
@@ -671,22 +766,25 @@ export default function InvitationPage() {
                     )}
                     <div className={`absolute inset-0 bg-gradient-to-b ${template.heroOverlay}`} />
 
-                    <div className={`relative z-10 px-6 mx-auto ${template.heroWrapper}`}>
-                        <div className={`flex items-center mb-6 ${isModernTemplate ? "justify-start" : "justify-center"}`}>
+                    <div className={`relative z-10 mx-auto ${template.heroWrapper}`}>
+                        {template.decoration === "floral" && <FloralDecoration />}
+
+                        <div className={`flex items-center mb-10 ${isModernTemplate ? "justify-start" : "justify-center"}`}>
                             {logoUrl ? (
                                 <img
                                     src={logoUrl}
                                     alt={logoText}
-                                    className="h-12 md:h-14 object-contain"
+                                    className="h-16 md:h-20 object-contain drop-shadow-xl"
                                 />
                             ) : (
-                                <div className="text-sm uppercase tracking-[0.25em] text-white/80 md:text-muted-foreground">
-                                    {logoText}
+                                <div className="text-xs font-black uppercase tracking-[0.4em] text-white/60">
+                                    {logoText || "L'Union"}
                                 </div>
                             )}
                         </div>
+
                         <motion.div
-                            className={`mb-3 flex ${isModernTemplate ? "justify-start" : "justify-center"} ${template.heroSubtitle}`}
+                            className={`mb-6 flex ${isModernTemplate ? "justify-start" : "justify-center"} ${template.heroSubtitle}`}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                         >
@@ -698,7 +796,7 @@ export default function InvitationPage() {
                             />
                         </motion.div>
 
-                        <h1 className={`${template.heroTitle} mb-6 leading-tight`}>
+                        <h1 className={`${template.heroTitle} mb-8 drop-shadow-2xl`}>
                             <InlineEditor
                                 value={heroTitle}
                                 onSave={(val) => handleSaveText("heroTitle", val)}
@@ -708,33 +806,34 @@ export default function InvitationPage() {
                             />
                         </h1>
 
-                        <div className="mb-8">
-                            <p className={`${template.heroDate} tracking-wide ${isModernTemplate ? "text-left" : "text-center"}`}>
+                        <div className="mb-12">
+                            <div className={`${template.heroDate} ${isModernTemplate ? "justify-start" : "justify-center"}`}>
                                 <InlineEditor
                                     value={currentWedding.config?.texts?.weddingDate || (currentWedding.weddingDate ? new Date(currentWedding.weddingDate).toLocaleDateString("fr-FR", { day: 'numeric', month: 'long', year: 'numeric' }) : "Prochainement")}
                                     onSave={(val) => handleSaveText("weddingDate", val)}
                                     canEdit={canEdit && editMode}
                                     placeholder="19 & 21 mars 2026"
-                                    className={isModernTemplate ? "text-left" : "text-center"}
                                 />
-                            </p>
+                            </div>
                         </div>
 
-                        <div className={`mb-10 ${isModernTemplate ? "justify-start" : "justify-center"} flex`}>
-                            <Countdown weddingDate={countdownDate} />
-                        </div>
+	                        <div className={`mb-14 ${isModernTemplate ? "justify-start" : "justify-center"} flex`}>
+	                            <Countdown weddingDate={countdownDate} />
+	                        </div>
 
-                        <Button
-                            size="lg"
-                            className={`${template.heroButton} ${buttonToneClass} ${buttonRadiusClass}`}
-                            onClick={handleHeroCtaClick}
-                        >
-                            {heroCta}
-                        </Button>
+                            <div className={`flex ${isModernTemplate ? "justify-start" : "justify-center"}`}>
+                                <Button
+                                    size="lg"
+                                    className={`${template.heroButton} ${buttonToneClass} ${buttonRadiusClass}`}
+                                    onClick={handleHeroCtaClick}
+                                >
+                                    {heroCta}
+                                </Button>
+                            </div>
 
-                        {canEdit && editMode ? (
-                            <div className={`mt-6 ${isModernTemplate ? "text-left" : "text-center"}`}>
-                                <div className="inline-flex items-center gap-3 rounded-2xl bg-white/80 border border-primary/10 px-4 py-3 shadow-sm">
+	                        {canEdit && editMode ? (
+	                            <div className={`mt-10 ${isModernTemplate ? "text-left" : "text-center"}`}>
+	                                <div className="inline-flex items-center gap-3 rounded-2xl bg-white/80 border border-primary/10 px-4 py-3 shadow-sm">
                                     <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Action bouton</div>
                                     <select
                                         className="h-9 rounded-md border border-border bg-background px-3 text-sm"
@@ -743,6 +842,7 @@ export default function InvitationPage() {
                                     >
                                         <option value="rsvp">Aller vers RSVP</option>
                                         <option value="story">Aller vers Histoire</option>
+                                        <option value="gallery">Aller vers Galerie</option>
                                         <option value="location">Aller vers Lieux</option>
                                         <option value="program">Aller vers Programme</option>
                                         <option value="cagnotte">Aller vers Cagnotte</option>
@@ -792,24 +892,22 @@ export default function InvitationPage() {
                             </div>
                         ) : null}
                     </div>
-                </section>
-            ) : null}
+            </section>
 
             {/* RSVP Section */}
-            {showRsvp && activePage === "home" ? (
-            <section id="rsvp" className={`py-24 px-6 ${template.rsvpSection}`}>
-                <div className="max-w-3xl mx-auto">
-                    {!isSubmitted ? (
-                        <>
-                            <h2 className="text-3xl md:text-4xl font-serif font-light text-center mb-4 text-foreground tracking-wide flex justify-center">
-                                <InlineEditor
-                                    value={rsvpTitle}
-                                    onSave={(val) => handleSaveText("rsvpTitle", val)}
+            {showRsvp ? (
+                <section id="rsvp" className={`scroll-mt-24 py-32 px-6 ${template.rsvpSection}`}>
+                    <div className="max-w-3xl mx-auto">
+                        {!isSubmitted ? (
+                            <>
+                                <h1 className="text-4xl md:text-6xl font-serif font-light text-center mb-6 text-foreground tracking-tight">
+                                    <InlineEditor
+                                        value={rsvpTitle}
+                                        onSave={(val) => handleSaveText("rsvpTitle", val)}
                                         canEdit={canEdit && editMode}
-                                        className="uppercase" // Force uppercase display
                                     />
-                                </h2>
-                                <p className="text-center text-muted-foreground mb-12 max-w-xl mx-auto flex justify-center">
+                                </h1>
+                                <div className="text-center text-muted-foreground mb-16 max-w-xl mx-auto">
                                     <InlineEditor
                                         value={rsvpDescription}
                                         onSave={(val) => handleSaveText("rsvpDescription", val)}
@@ -817,12 +915,12 @@ export default function InvitationPage() {
                                         isTextArea={true} // Allow multiline for description
                                         className="text-center"
                                     />
-                                </p>
+                                </div>
 
-                                <Card className={`p-8 md:p-16 ${template.rsvpCard}`}>
+                                <Card className={`relative overflow-hidden ${template.rsvpCard}`}>
                                     {canEdit && editMode ? (
-                                        <div className="mb-8 p-4 rounded-2xl bg-white/70 border border-primary/10">
-                                            <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">Texte du bouton RSVP</div>
+                                        <div className="mb-10 p-6 rounded-3xl bg-primary/5 border border-primary/10">
+                                            <div className="text-[11px] uppercase tracking-widest text-primary font-bold mb-3">Texte du bouton RSVP</div>
                                             <InlineEditor
                                                 value={rsvpButton}
                                                 onSave={(val) => handleSaveText("rsvpButton", val)}
@@ -832,15 +930,15 @@ export default function InvitationPage() {
                                         </div>
                                     ) : null}
                                     <Form {...form}>
-                                        <form onSubmit={form.handleSubmit((d) => rsvpMutation.mutate(d))} className="space-y-8">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <form onSubmit={form.handleSubmit((d) => rsvpMutation.mutate(d))} className="space-y-10">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                                 <FormField
                                                     control={form.control}
                                                     name="firstName"
                                                     render={({ field }) => (
                                                         <FormItem>
-                                                            <FormLabel>Prénom *</FormLabel>
-                                                            <FormControl><Input {...field} placeholder="Votre prénom" /></FormControl>
+                                                            <FormLabel className="text-xs uppercase tracking-widest font-bold opacity-60">Prénom *</FormLabel>
+                                                            <FormControl><Input {...field} className="h-14 rounded-2xl bg-white/50 border-primary/10 focus:ring-primary/20" placeholder="Votre prénom" /></FormControl>
                                                             <FormMessage />
                                                         </FormItem>
                                                     )}
@@ -850,21 +948,21 @@ export default function InvitationPage() {
                                                     name="lastName"
                                                     render={({ field }) => (
                                                         <FormItem>
-                                                            <FormLabel>Nom *</FormLabel>
-                                                            <FormControl><Input {...field} placeholder="Votre nom" /></FormControl>
+                                                            <FormLabel className="text-xs uppercase tracking-widest font-bold opacity-60">Nom *</FormLabel>
+                                                            <FormControl><Input {...field} className="h-14 rounded-2xl bg-white/50 border-primary/10 focus:ring-primary/20" placeholder="Votre nom" /></FormControl>
                                                             <FormMessage />
                                                         </FormItem>
                                                     )}
                                                 />
                                             </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                                 <FormField
                                                     control={form.control}
                                                     name="email"
                                                     render={({ field }) => (
                                                         <FormItem>
-                                                            <FormLabel>Adresse email *</FormLabel>
-                                                            <FormControl><Input {...field} value={field.value ?? ""} type="email" placeholder="votre@email.com" /></FormControl>
+                                                            <FormLabel className="text-xs uppercase tracking-widest font-bold opacity-60">Adresse email *</FormLabel>
+                                                            <FormControl><Input {...field} value={field.value ?? ""} type="email" className="h-14 rounded-2xl bg-white/50 border-primary/10 focus:ring-primary/20" placeholder="votre@email.com" /></FormControl>
                                                             <FormMessage />
                                                         </FormItem>
                                                     )}
@@ -874,10 +972,10 @@ export default function InvitationPage() {
                                                     name="availability"
                                                     render={({ field }) => (
                                                         <FormItem>
-                                                            <FormLabel>Serez-vous présent ? *</FormLabel>
+                                                            <FormLabel className="text-xs uppercase tracking-widest font-bold opacity-60">Serez-vous présent ? *</FormLabel>
                                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                                 <FormControl>
-                                                                    <SelectTrigger>
+                                                                    <SelectTrigger className="h-14 rounded-2xl bg-white/50 border-primary/10 focus:ring-primary/20">
                                                                         <SelectValue placeholder="Sélectionnez" />
                                                                     </SelectTrigger>
                                                                 </FormControl>
@@ -891,7 +989,7 @@ export default function InvitationPage() {
                                                     )}
                                                 />
                                             </div>
-                                            <Button type="submit" size="lg" className={`w-full ${buttonRadiusClass} ${buttonToneClass}`} disabled={rsvpMutation.isPending}>
+                                            <Button type="submit" size="lg" className={`w-full h-16 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20 ${buttonRadiusClass} ${buttonToneClass}`} disabled={rsvpMutation.isPending}>
                                                 {rsvpMutation.isPending ? "Envoi..." : rsvpButton}
                                             </Button>
                                         </form>
@@ -899,11 +997,11 @@ export default function InvitationPage() {
                                 </Card>
                             </>
                         ) : (
-                            <div className="text-center py-20">
-                                <Check className="h-20 w-20 text-green-500 mx-auto mb-6" />
-                                <h3 className="text-3xl font-serif font-bold mb-4">Merci !</h3>
-                                <p className="text-muted-foreground mb-8">Nous avons bien reçu votre réponse.</p>
-                                <Button variant="outline" onClick={() => setIsSubmitted(false)}>Ajouter une autre réponse</Button>
+                            <div className="text-center py-20 bg-white/50 rounded-[4rem] border border-primary/10">
+                                <Check className="h-24 w-24 text-primary mx-auto mb-8 drop-shadow-xl" />
+                                <h3 className="text-4xl font-serif font-black mb-4">Merci !</h3>
+                                <p className="text-muted-foreground mb-10 text-lg">Nous avons bien reçu votre réponse.</p>
+                                <Button variant="outline" size="lg" className="rounded-full px-10" onClick={() => setIsSubmitted(false)}>Ajouter une autre réponse</Button>
                             </div>
                         )}
                     </div>
@@ -911,64 +1009,192 @@ export default function InvitationPage() {
             ) : null}
 
             {/* Story Section */}
-            {showStory && (activePage === "home" || activePage === "story") ? (
-                <section id="story" className="py-24 px-6">
-                    <div className={`max-w-6xl mx-auto ${template.storyLayout}`}>
-                        <div className={`relative p-4 ${template.storyImage}`}>
-                            <div className="aspect-[3/4] overflow-hidden rounded-md shadow-2xl">
-                                {couplePhoto ? (
-                                    <img
-                                        src={couplePhoto}
-                                        alt="Couple"
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full bg-gradient-to-br from-primary/15 via-background to-secondary flex items-center justify-center">
-                                        <div className="text-center">
-                                            <div className="text-2xl font-serif font-semibold text-foreground/80">Votre photo</div>
-                                            <div className="text-xs uppercase tracking-widest text-muted-foreground mt-2">Importez une image</div>
+            {showStory ? (
+                <section id="story" className="scroll-mt-24 py-32 px-6">
+                    <div className={template.container}>
+                        <h2 className={`${template.storyTitle} mb-12`}>
+                            <InlineEditor
+                                value={storyTitle}
+                                onSave={(val) => handleSaveText("storyTitle", val)}
+                                canEdit={canEdit && editMode}
+                            />
+                        </h2>
+                        <div className={template.storyLayout}>
+                            <div className="relative group">
+                                <div className="absolute -inset-4 bg-primary/10 rounded-[4rem] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <img
+                                    src={couplePhoto || "/defaults/couple_default.jpg"}
+                                    alt="Le couple"
+                                    className={`w-full h-full object-cover relative z-10 transition-transform duration-700 group-hover:scale-[1.02] ${template.storyImage}`}
+                                />
+                                {canEdit && editMode ? (
+                                    <div className="mt-4 rounded-2xl bg-white/80 border border-primary/10 px-4 py-3 shadow-sm relative z-20">
+                                        <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">Photo du couple</div>
+                                        <input type="file" accept="image/*" onChange={handleMediaUpload("couplePhoto")} />
+                                        <div className="mt-2 flex items-center gap-2">
+                                            <Button type="button" size="sm" variant="outline" onClick={() => updateMedia("couplePhoto", "")} disabled={!couplePhoto || isUploading.couplePhoto}>
+                                                Supprimer
+                                            </Button>
+                                            {isUploading.couplePhoto ? <span className="text-xs text-muted-foreground">Import...</span> : null}
                                         </div>
                                     </div>
-                                )}
+                                ) : null}
                             </div>
-                            {canEdit && editMode ? (
-                                <div className="mt-4 rounded-2xl bg-white/80 border border-primary/10 px-4 py-3 shadow-sm">
-                                    <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">Photo du couple</div>
-                                    <input type="file" accept="image/*" onChange={handleMediaUpload("couplePhoto")} />
-                                    <div className="mt-2 flex items-center gap-2">
-                                        <Button type="button" size="sm" variant="outline" onClick={() => updateMedia("couplePhoto", "")} disabled={!couplePhoto || isUploading.couplePhoto}>
-                                            Supprimer
-                                        </Button>
-                                        {isUploading.couplePhoto ? <span className="text-xs text-muted-foreground">Import...</span> : null}
-                                    </div>
+                            <div className="space-y-8 flex flex-col justify-center">
+                                {template.decoration === "floral" && <FloralDecoration />}
+                                <div className="text-lg md:text-xl text-muted-foreground leading-relaxed font-light italic text-[#7A6B5E] max-w-lg mx-auto lg:mx-0">
+                                    <InlineEditor
+                                        value={storyBody}
+                                        onSave={(val) => handleSaveText("storyBody", val)}
+                                        canEdit={canEdit && editMode}
+                                        isTextArea
+                                    />
                                 </div>
-                            ) : null}
-                        </div>
-                        <div>
-                            <h2 className={`${template.storyTitle} mb-8`}>
-                                <InlineEditor
-                                    value={storyTitle}
-                                    onSave={(val) => handleSaveText("storyTitle", val)}
-                                    canEdit={canEdit && editMode}
-                                    className="uppercase"
-                                />
-                            </h2>
-                            <div className="space-y-6 text-muted-foreground leading-relaxed">
-                                <InlineEditor
-                                    value={storyBody}
-                                    onSave={(val) => handleSaveText("storyBody", val)}
-                                    canEdit={canEdit && editMode}
-                                    isTextArea={true}
-                                />
+                                {template.decoration === "serif-border" && (
+                                    <div className="h-px w-24 bg-primary/30 mx-auto lg:mx-0" />
+                                )}
                             </div>
                         </div>
                     </div>
                 </section>
             ) : null}
 
+            {/* Gallery Section */}
+            {showGallery ? (
+                <section id="gallery" className="scroll-mt-24 py-28 px-6 bg-white/40">
+                    <div className="max-w-6xl mx-auto">
+                        <div className="text-center max-w-3xl mx-auto">
+                            <h2 className="text-3xl md:text-4xl font-serif font-light tracking-wide">
+                                <InlineEditor
+                                    value={galleryTitle}
+                                    onSave={(val) => handleSaveText("galleryTitle", val)}
+                                    canEdit={canEdit && editMode}
+                                    className="uppercase"
+                                />
+                            </h2>
+                            <div className="mt-4 text-muted-foreground leading-relaxed">
+                                <InlineEditor
+                                    value={galleryDescription}
+                                    onSave={(val) => handleSaveText("galleryDescription", val)}
+                                    canEdit={canEdit && editMode}
+                                    isTextArea
+                                />
+                            </div>
+                        </div>
+
+                        {canEdit && editMode ? (
+                            <div className="mt-10 rounded-3xl bg-white/80 border border-primary/10 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                                <div className="text-sm text-muted-foreground">
+                                    {galleryImages.length}/{MAX_GALLERY_IMAGES} photos
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        onChange={async (e) => {
+                                            await onGalleryFilesSelected(e.target.files);
+                                            e.target.value = "";
+                                        }}
+                                    />
+                                    <Button type="button" size="sm" variant="outline" onClick={resetGallery}>
+                                        Remettre par defaut
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : null}
+
+                        <div className="mt-10 grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                            {galleryImages.map((src, idx) => (
+                                <div key={`${src}-${idx}`} className="relative group">
+                                    <button
+                                        type="button"
+                                        className="block w-full"
+                                        onClick={() => setLightboxIndex(idx)}
+                                    >
+                                        <div className="aspect-square overflow-hidden rounded-3xl border border-primary/10 bg-muted shadow-sm">
+                                            <img
+                                                src={src}
+                                                alt={`Photo ${idx + 1}`}
+                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                loading="lazy"
+                                            />
+                                        </div>
+                                    </button>
+                                    {canEdit && editMode ? (
+                                        <Button
+                                            type="button"
+                                            size="icon"
+                                            variant="secondary"
+                                            className="absolute top-3 right-3 h-9 w-9 rounded-full opacity-0 group-hover:opacity-100 shadow-lg"
+                                            onClick={async (e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                await removeGalleryImage(idx);
+                                            }}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    ) : null}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <Dialog
+                        open={lightboxIndex !== null}
+                        onOpenChange={(open) => {
+                            if (!open) setLightboxIndex(null);
+                        }}
+                    >
+                        <DialogContent className="max-w-6xl p-0 overflow-hidden bg-black border-black">
+                            {lightboxIndex !== null ? (
+                                <div className="relative">
+                                    <img
+                                        src={galleryImages[lightboxIndex] || ""}
+                                        alt=""
+                                        className="w-full h-[80vh] object-contain bg-black"
+                                    />
+                                    {galleryImages.length > 1 ? (
+                                        <div className="absolute left-4 top-4 flex gap-2">
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="secondary"
+                                                onClick={() =>
+                                                    setLightboxIndex((idx) =>
+                                                        idx === null
+                                                            ? 0
+                                                            : (idx - 1 + galleryImages.length) % galleryImages.length
+                                                    )
+                                                }
+                                            >
+                                                Precedent
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="secondary"
+                                                onClick={() =>
+                                                    setLightboxIndex((idx) =>
+                                                        idx === null ? 0 : (idx + 1) % galleryImages.length
+                                                    )
+                                                }
+                                            >
+                                                Suivant
+                                            </Button>
+                                        </div>
+                                    ) : null}
+                                </div>
+                            ) : null}
+                        </DialogContent>
+                    </Dialog>
+                </section>
+            ) : null}
+
             {/* Location Section */}
-            {showLocation && (activePage === "home" || activePage === "location") ? (
-                <section id="location" className="py-24 px-6 bg-muted/20">
+            {showLocation ? (
+                <section id="location" className="scroll-mt-24 py-24 px-6 bg-muted/20">
                     <div className="max-w-4xl mx-auto text-center space-y-6">
                         <h2 className="text-3xl md:text-4xl font-serif font-light tracking-wide">
                             <InlineEditor
@@ -1047,8 +1273,8 @@ export default function InvitationPage() {
             ) : null}
 
             {/* Program Section */}
-            {showProgram && (activePage === "home" || activePage === "program") ? (
-                <section id="program" className="py-24 px-6">
+            {showProgram ? (
+                <section id="program" className="scroll-mt-24 py-24 px-6">
                     <div className="max-w-4xl mx-auto text-center space-y-6">
                         <h2 className="text-3xl md:text-4xl font-serif font-light tracking-wide">
                             <InlineEditor

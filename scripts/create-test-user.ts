@@ -64,6 +64,7 @@ async function main() {
     { id: "cagnotte", label: "Cagnotte", path: "cagnotte", enabled: true },
     { id: "live", label: "Live", path: "live", enabled: true },
     { id: "story", label: "Histoire", path: "story", enabled: true },
+    { id: "gallery", label: "Photos", path: "gallery", enabled: true },
     { id: "location", label: "Lieux", path: "location", enabled: true },
     { id: "program", label: "Programme", path: "program", enabled: true },
   ];
@@ -77,6 +78,7 @@ async function main() {
   const missingCoreItems = menuDefaults.some((item) => !existingMenu.some((m) => m.id === item.id));
   const hasCompletePages =
     typeof nav?.pages?.story === "boolean" &&
+    typeof nav?.pages?.gallery === "boolean" &&
     typeof nav?.pages?.location === "boolean" &&
     typeof nav?.pages?.program === "boolean";
 
@@ -91,6 +93,7 @@ async function main() {
             cagnotte: true,
             live: true,
             story: true,
+            gallery: true,
             location: true,
             program: true,
             ...(wedding.config?.navigation?.pages || {}),

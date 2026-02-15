@@ -174,8 +174,6 @@ export default function CagnottePage() {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const { slug } = useParams<{ slug: string }>();
   const { data: wedding } = useWedding(slug);
-  const isPreview = typeof window !== "undefined" ? window.location.pathname.startsWith("/preview/") : false;
-  const basePath = slug ? (isPreview ? `/preview/${slug}` : `/${slug}`) : "";
 
   const { data: contributions } = useQuery<Contribution[]>({
     queryKey: ["/api/contributions/confirmed", slug],
@@ -313,7 +311,7 @@ export default function CagnottePage() {
         <Card className="p-8 max-w-lg text-center">
           <h2 className="text-2xl font-serif font-bold mb-3">Cagnotte indisponible</h2>
           <p className="text-muted-foreground mb-6">Cette page a ete desactivee par les maries.</p>
-          <Link href={basePath || "/"}>
+          <Link href="/">
             <Button>Retour au site</Button>
           </Link>
         </Card>
@@ -335,7 +333,7 @@ export default function CagnottePage() {
         </div>
 
         <div className="relative z-10 pt-6 px-6">
-          <Link href={basePath || "/"}>
+          <Link href="/">
             <Button variant="ghost" className={`text-white hover:bg-white/20 ${buttonRadiusClass}`} data-testid="button-back-home">
               <ArrowLeft className="h-4 w-4 mr-2" />
               {cagnotteBackLabel}

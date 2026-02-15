@@ -236,7 +236,7 @@ export default function DesignPage() {
         if (safeBranding.logoUrl.length > MAX_LOGO_DATA_URL_LENGTH) {
           toast({
             title: "Logo trop volumineux",
-            description: "Le logo est trop lourd. Importez une image plus legere.",
+            description: "Le logo est trop lourd. Importez une image plus légère.",
             variant: "destructive",
           });
           setIsSaving(false);
@@ -253,7 +253,7 @@ export default function DesignPage() {
         if (field.value.startsWith("data:image/") && field.value.length > field.limit) {
           toast({
             title: "Image trop volumineuse",
-            description: `L'image "${field.key}" est trop lourde. Importez une image plus legere.`,
+            description: `L'image "${field.key}" est trop lourde. Importez une image plus légère.`,
             variant: "destructive",
           });
           setIsSaving(false);
@@ -421,7 +421,7 @@ export default function DesignPage() {
     if (compressed.length > opts.maxDataUrlLength) {
       toast({
         title: "Image trop volumineuse",
-        description: "Importez une image plus legere.",
+        description: "Importez une image plus légère.",
         variant: "destructive",
       });
       return null;

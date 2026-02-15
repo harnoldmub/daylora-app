@@ -193,8 +193,6 @@ function formatAmount(cents: number): string {
 export default function LiveContributions() {
   const { slug } = useParams<{ slug: string }>();
   const { data: wedding } = useWedding(slug);
-  const isPreview = typeof window !== "undefined" ? window.location.pathname.startsWith("/preview/") : false;
-  const basePath = slug ? (isPreview ? `/preview/${slug}` : `/${slug}`) : "";
   const [showPopup, setShowPopup] = useState(false);
   const [newContribution, setNewContribution] = useState<Contribution | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
@@ -325,7 +323,7 @@ export default function LiveContributions() {
         <Card className="p-8 max-w-lg text-center">
           <h2 className="text-2xl font-serif font-bold mb-3">Live indisponible</h2>
           <p className="text-muted-foreground mb-6">Cette page a ete desactivee dans la configuration du site.</p>
-          <Link href={basePath || "/"}>
+          <Link href="/">
             <Button>Retour au site</Button>
           </Link>
         </Card>

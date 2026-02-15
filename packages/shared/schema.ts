@@ -203,7 +203,15 @@ export const weddings = pgTable("weddings", {
     sections: {
       countdownDate: "",
       cagnotteSuggestedAmounts: [20, 50, 100, 150, 200],
-      galleryImages: [],
+      // Small, local placeholders (editable later). Keep these lightweight to avoid huge default rows.
+      galleryImages: [
+        "/defaults/gallery/01.jpg",
+        "/defaults/gallery/02.jpg",
+        "/defaults/gallery/03.jpg",
+        "/defaults/gallery/04.jpg",
+        "/defaults/gallery/05.jpg",
+        "/defaults/gallery/06.jpg",
+      ],
       locationItems: [
         {
           title: "Cérémonie civile",
