@@ -1,0 +1,13 @@
+<svg width="900" height="1200" viewBox="0 0 900 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1200" rx="48" fill="#F7F3EE"/>
+  <rect x="0" y="0" width="900" height="520" fill="#EFE6DB"/>
+  <rect x="110" y="130" width="680" height="34" rx="17" fill="#5D5147"/>
+  <rect x="110" y="210" width="520" height="50" rx="6" fill="#2B2320"/>
+  <rect x="110" y="280" width="360" height="18" rx="9" fill="#9C8A7C"/>
+  <rect x="110" y="610" width="680" height="14" rx="7" fill="#9C8A7C"/>
+  <rect x="110" y="640" width="420" height="14" rx="7" fill="#BBAEA1"/>
+  <rect x="110" y="700" width="680" height="100" rx="28" fill="#FFFFFF"/>
+  <rect x="110" y="820" width="680" height="100" rx="28" fill="#FFFFFF"/>
+  <rect x="260" y="980" width="380" height="54" rx="27" fill="#5D5147"/>
+  <text x="450" y="1012" font-family="Playfair Display, serif" font-size="26" fill="#FFFFFF" text-anchor="middle" letter-spacing="2">MINIMAL</text>
+</svg>

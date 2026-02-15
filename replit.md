@@ -1,8 +1,8 @@
-# Ruth & Arnold Wedding Website - Golden Love 2026
+# Marie & Julien Wedding Website - Golden Love 2026
 
 ## Overview
 
-This project is an elegant, mobile-first wedding website for Ruth & Arnold's 2026 wedding. It functions as a public landing page for guests to view details and RSVP, and a private admin dashboard for managing guest responses and table assignments. The design embodies a romantic, sophisticated aesthetic with a gold and ivory color palette, aiming to create an emotional and memorable experience for wedding guests.
+This project is an elegant, mobile-first wedding website for Marie & Julien's 2026 wedding. It functions as a public landing page for guests to view details and RSVP, and a private admin dashboard for managing guest responses and table assignments. The design embodies a romantic, sophisticated aesthetic with a gold and ivory color palette, aiming to create an emotional and memorable experience for wedding guests.
 
 ## User Preferences
 

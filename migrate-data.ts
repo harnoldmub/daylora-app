@@ -1,6 +1,6 @@
 
-import { db } from "./server/db";
-import { weddings, rsvpResponses, contributions, users } from "./shared/schema";
+import { db } from "./apps/api/db";
+import { weddings, rsvpResponses, contributions, users } from "./packages/shared/schema";
 import { eq, isNull } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 

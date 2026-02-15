@@ -1,4 +1,4 @@
-# Design Guidelines: Ruth & Arnold Wedding Website - Golden Love 2026
+# Design Guidelines: Marie & Julien Wedding Website - Golden Love 2026
 
 ## Design Approach: Elegant Wedding Experience
 **Reference-Based Approach**: Drawing inspiration from luxury wedding platforms like The Knot and Joy, combined with the refined aesthetics of premium hospitality sites. This creates an emotional, memorable experience celebrating love.
@@ -115,13 +115,13 @@
 ## Images
 
 ### Hero Section
-**Main Hero Image**: Romantic couple photo (Ruth & Arnold)
+**Main Hero Image**: Romantic couple photo (Marie & Julien)
 - Placement: Full-screen background, fixed attachment
 - Treatment: Gaussian blur (blur-sm), slight darkening overlay
 - Fallback: Soft gold gradient if image fails to load
 
 ### Story Section
-**Couple Photos**: Individual portraits of Ruth and Arnold
+**Couple Photos**: Individual portraits of Marie and Julien
 - Placement: Side-by-side below story text (grid-cols-1 md:grid-cols-2)
 - Treatment: Circular frames (rounded-full) with gold border (border-4 border-gold)
 - Caption: Names and birth dates centered below each photo

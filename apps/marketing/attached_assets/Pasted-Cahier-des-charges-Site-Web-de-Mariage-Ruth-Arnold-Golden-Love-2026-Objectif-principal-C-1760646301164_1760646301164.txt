@@ -1,0 +1,103 @@
+Cahier des charges – Site Web de Mariage : Marie & Julien – Golden Love 2026
+🎯 Objectif principal
+
+Créer une landing page élégante, responsive (mobile-first), qui présente :
+
+Votre histoire et vos dates importantes
+
+Vos photos en haute qualité
+
+Un formulaire RSVP fonctionnel pour récolter les réponses
+
+🖥️ Structure du site (One Page)
+1. Header / Hero section
+
+Image de fond floue (photo de couple)
+
+Texte principal :
+
+"Le Mariage de Marie & Julien"
+
+Sous-texte : Deux dates, un seul amour – Golden Love 2026
+
+Bouton : "Voir plus"
+
+2. Notre Histoire
+
+Titre : Notre histoire d’amour
+
+Texte : court paragraphe racontant votre rencontre (voir texte plus haut)
+
+Photos côte à côte des deux mariés avec noms et dates de naissance
+
+Design élégant (ex. fond blanc + texte gris foncé + typographie serif)
+
+3. Dates clés
+
+Titre : Les moments à retenir
+
+Deux blocs clairs avec pictos :
+
+📅 19 mars 2026 : Mariage civil + Fête de la Dot
+
+📅 21 mars 2026 : Bénédiction nuptiale + Grande fête
+
+Compte à rebours optionnel
+
+4. Galerie
+
+Grille responsive de 3 à 6 photos
+
+Possibilité de cliquer pour agrandir (lightbox ou modal simple)
+
+5. ✅ Formulaire RSVP – Section prioritaire
+
+Titre : Confirmez votre présence
+Description : Merci de nous indiquer vos disponibilités afin de préparer nos invitations officielles.
+
+Champs :
+
+Nom (input text)
+
+Prénom (input text)
+
+Disponibilité (select)
+
+19 mars seulement
+
+21 mars seulement
+
+Les deux dates
+
+Je ne serai pas disponible
+
+Bouton : "Je confirme ma présence"
+
+➕ Options (si tu veux aller plus loin) :
+
+✅ Message de confirmation : “Merci ! Nous avons bien reçu votre réponse.”
+
+✅ Envoi vers une adresse e-mail (ex. contact@ar2k26.com
+) ou stockage dans Google Sheet / Firebase
+
+✅ Validation douce (avec messages personnalisés comme vu plus haut)
+
+6. Contact / Footer
+
+Adresse email : contact@ar2k26.com
+
+Copyright : © 2026 Marie & Julien – Golden Love
+
+Réseaux sociaux (optionnels)
+
+📱 Design / UI UX
+
+Mobile-first design : navigation fluide sur smartphone
+
+Couleurs : Blanc, ivoire, doré (gold #C8A96A), noir doux
+
+Typographie : Serif pour les titres (ex : Playfair Display), Sans-serif pour le texte (ex : Lato ou Open Sans)
+
+Animations douces : fade-in, scroll smooth
+
+Layout : Flexbox ou CSS Grid (layout clair et espacé)

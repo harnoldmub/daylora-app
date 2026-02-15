@@ -1,9 +1,9 @@
-# 💍 Golden Love 2026 - Ruth & Arnold Wedding Website
+# 💍 Golden Love 2026 - Marie & Julien Wedding Website
 
 [![CI Status](https://github.com/harnoldmub/mariage-AR/actions/workflows/ci.yml/badge.svg)](https://github.com/harnoldmub/mariage-AR/actions/workflows/ci.yml)
 [![Deploy Status](https://github.com/harnoldmub/mariage-AR/actions/workflows/deploy.yml/badge.svg)](https://github.com/harnoldmub/mariage-AR/actions/workflows/deploy.yml)
 
-Site web de mariage élégant et moderne pour Ruth & Arnold - Célébration 2026
+Site web de mariage élégant et moderne pour Marie & Julien - Célébration 2026
 
 ## ✨ Caractéristiques
 
@@ -172,8 +172,8 @@ Pour toute question :
 
 ## 📄 License
 
-Ce projet est privé et réservé à l'usage du mariage Ruth & Arnold 2026.
+Ce projet est privé et réservé à l'usage du mariage Marie & Julien 2026.
 
 ---
 
-Fait avec ❤️ pour Ruth & Arnold | Golden Love 2026
+Fait avec ❤️ pour Marie & Julien | Golden Love 2026
