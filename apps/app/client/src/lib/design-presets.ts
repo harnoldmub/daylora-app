@@ -1,5 +1,12 @@
 export const COLOR_TONES = [
   {
+    id: "libala-signature",
+    name: "Libala Signature",
+    description: "Premium, intemporel et chaleureux.",
+    primaryColor: "#8C7A6B",
+    secondaryColor: "#FBF8F3",
+  },
+  {
     id: "golden-ivory",
     name: "Or & Ivoire",
     description: "Elegant, lumineux et intemporel.",

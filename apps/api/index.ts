@@ -9,6 +9,9 @@ import { handleStripeWebhook } from "./stripeWebhook";
 
 const app = express();
 
+// Dev/prod liveness probe (used by dev scripts to detect the API is up)
+app.get("/", (_req, res) => res.status(200).type("text/plain").send("ok"));
+
 // Security Hardening
 app.use(helmet({
   contentSecurityPolicy: {

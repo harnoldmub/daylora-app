@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "dev": "npm run dev:api & npm run dev:app",
-    "dev:api": "NODE_ENV=development tsx apps/api/index.ts",
+    "dev:api": "PORT=3000 NODE_ENV=development tsx apps/api/index.ts",
     "dev:app": "npm --prefix apps/app run dev",
     "dev:marketing": "npm --prefix apps/marketing run dev",
     "start:api": "NODE_ENV=production node dist/index.js",

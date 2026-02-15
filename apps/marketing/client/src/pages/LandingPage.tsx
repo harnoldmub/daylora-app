@@ -360,7 +360,7 @@ export default function LandingPage() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-[#7A6B5E]">Votre nom</label>
                   <div className="h-14 w-full rounded-2xl bg-[#F6F1EA] border border-[#E9DFD2] flex items-center px-6 text-[#2b2320] font-medium opacity-60">
-                    Famille Kasenga
+                    Famille Lawson
                   </div>
                 </div>
 
