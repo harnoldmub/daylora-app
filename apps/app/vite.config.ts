@@ -45,6 +45,7 @@ export default defineConfig({
       strict: true,
       deny: ["**/.*"],
     },
-    port: 5174,
+    port: 5000,
+    allowedHosts: true,
   },
 });
