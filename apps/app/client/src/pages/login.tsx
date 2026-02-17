@@ -33,7 +33,7 @@ export default function Login() {
   const isUnverified = loginMutation.error?.message.includes("Veuillez confirmer votre adresse email");
 
   useEffect(() => {
-    document.title = "Libala – Connexion";
+    document.title = "Nocely – Connexion";
     const emailFromQuery = new URLSearchParams(window.location.search).get("email");
     if (emailFromQuery && !form.getValues("email")) {
       form.setValue("email", emailFromQuery);
@@ -52,8 +52,8 @@ export default function Login() {
               <Heart className="h-6 w-6 text-white fill-white" />
             </div>
           </div>
-          <CardTitle className="text-4xl font-serif font-bold text-[#2b2320]">Libala</CardTitle>
-          <CardDescription className="text-[#7A6B5E] italic mt-2">Heureux de vous revoir</CardDescription>
+          <CardTitle className="text-4xl font-serif font-bold text-[#2b2320]">Nocely</CardTitle>
+          <CardDescription className="text-[#7A6B5E] italic mt-2">Connectez-vous à votre espace Nocely</CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6 p-10 pt-4">
@@ -88,7 +88,13 @@ export default function Login() {
                   <FormItem>
                     <FormLabel className="text-[#6B5B4F] uppercase tracking-widest text-[10px] font-bold">Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="jean@exemple.com" {...field} className="bg-white border-[#E6DCCF] h-12 focus:border-primary/50 transition-colors" />
+                      <Input
+                        type="email"
+                        autoComplete="username"
+                        placeholder="jean@exemple.com"
+                        {...field}
+                        className="bg-white border-[#E6DCCF] h-12 focus:border-primary/50 transition-colors"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -122,7 +128,7 @@ export default function Login() {
 
           <div className="text-center text-sm pt-4">
             <span className="text-[#7A6B5E] font-medium">Pas encore de compte ?</span>{" "}
-            <Link href="/app/signup" title="Créer un compte Libala" className="text-primary font-bold hover:text-primary/80 transition-colors ml-1">
+            <Link href="/app/signup" title="Créer un compte Nocely" className="text-primary font-bold hover:text-primary/80 transition-colors ml-1">
               Inscrivez-vous
             </Link>
           </div>
@@ -132,7 +138,7 @@ export default function Login() {
               onClick={() => setLocation("/")}
               className="text-[10px] uppercase tracking-widest text-[#B6A796] hover:text-primary transition-all font-bold"
             >
-              ← Explorer Libala
+              ← Découvrir Nocely
             </button>
           </div>
         </CardContent>

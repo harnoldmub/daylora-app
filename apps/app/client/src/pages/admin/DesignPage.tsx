@@ -299,12 +299,12 @@ export default function DesignPage() {
       setPreviewToken(Date.now());
       toast({
         title: "Design mis à jour",
-        description: "Vos modifications visuelles ont été enregistrées.",
+        description: "Les modifications sont enregistrées et visibles dans l'aperçu.",
       });
     } catch (error: any) {
       toast({
-        title: "Erreur",
-        description: error?.message || "Impossible de sauvegarder le design.",
+        title: "Enregistrement impossible",
+        description: error?.message || "Impossible d'enregistrer le design pour le moment.",
         variant: "destructive",
       });
     } finally {
@@ -323,11 +323,11 @@ export default function DesignPage() {
       setPreviewToken(Date.now());
       toast({
         title: "Template appliqué",
-        description: "Le style du template a été mis à jour.",
+        description: "La base visuelle a bien été appliquée.",
       });
     } catch (_error) {
       toast({
-        title: "Erreur",
+        title: "Action impossible",
         description: "Impossible d'appliquer le template.",
         variant: "destructive",
       });
@@ -438,7 +438,7 @@ export default function DesignPage() {
       setMedia((prev) => ({ ...prev, [key]: compressed }));
     } catch {
       toast({
-        title: "Erreur",
+        title: "Import impossible",
         description: "Impossible d'importer l'image.",
         variant: "destructive",
       });
@@ -446,23 +446,26 @@ export default function DesignPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-64px)] -mx-8 -mt-8 flex flex-col">
+    <div className="h-[calc(100vh-64px)] w-full flex flex-col">
       <div className="px-8 pt-6 pb-4 border-b bg-background/80 backdrop-blur flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-serif font-bold text-foreground">Studio Design</h1>
-          <p className="text-muted-foreground text-sm">Modifiez votre template et personnalisez chaque section.</p>
+          <p className="text-muted-foreground text-sm">Personnalisez chaque section publique avec un rendu instantané.</p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" asChild>
-            <a href={previewUrl} target="_blank" rel="noopener noreferrer">Ouvrir</a>
+            <a href={`/app/${wedding.id}/dashboard`}>Retour au backoffice</a>
+          </Button>
+          <Button variant="outline" asChild>
+            <a href={previewUrl} target="_blank" rel="noopener noreferrer">Ouvrir l'aperçu</a>
           </Button>
           <Button onClick={saveDesign} disabled={isSaving}>
-            {isSaving ? "Sauvegarde..." : "Enregistrer"}
+            {isSaving ? "Enregistrement..." : "Enregistrer les changements"}
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[380px_1fr]">
+      <div className="flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-[460px_1fr]">
         <aside className="min-h-0 overflow-y-auto border-r bg-white">
           <div className="p-6 space-y-4">
             <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Sections</div>
@@ -471,10 +474,10 @@ export default function DesignPage() {
                 <AccordionTrigger className="hover:no-underline">Template</AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-3">
-                    <div className="text-xs text-muted-foreground">Choisissez un style global (couleurs + typo).</div>
+                    <div className="text-xs text-muted-foreground">Choisissez une direction visuelle globale (couleurs + typographie).</div>
                     <Select value={templateId} onValueChange={(value) => setTemplateId(value)}>
                       <SelectTrigger className="h-10">
-                        <SelectValue placeholder="Sélectionner" />
+                        <SelectValue placeholder="Choisir un template" />
                       </SelectTrigger>
                       <SelectContent>
                         {TEMPLATES.map((tmpl) => (
@@ -483,7 +486,7 @@ export default function DesignPage() {
                       </SelectContent>
                     </Select>
                     <Button onClick={applyTemplate} disabled={isApplyingTemplate} className="w-full">
-                      {isApplyingTemplate ? "Application..." : "Appliquer le template"}
+                      {isApplyingTemplate ? "Application..." : "Appliquer ce template"}
                     </Button>
                   </div>
                 </AccordionContent>
@@ -529,7 +532,7 @@ export default function DesignPage() {
                 <AccordionContent>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-xs font-medium">Ton de couleurs</label>
+                      <label className="text-xs font-medium">Palette de couleurs</label>
                       <div className="grid grid-cols-1 gap-2">
                         {COLOR_TONES.map((tone) => (
                           <button
@@ -580,7 +583,7 @@ export default function DesignPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-medium">Typographie</label>
+                      <label className="text-xs font-medium">Famille typographique</label>
                       <select
                         className="h-10 rounded-md border border-border bg-background px-3 text-sm w-full"
                         value={theme.fontFamily}
@@ -593,7 +596,7 @@ export default function DesignPage() {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <label className="text-xs font-medium">Style de bouton</label>
+                      <label className="text-xs font-medium">Style des boutons</label>
                         <select
                           className="h-10 rounded-md border border-border bg-background px-3 text-sm w-full"
                           value={theme.buttonStyle}
@@ -605,7 +608,7 @@ export default function DesignPage() {
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-medium">Forme de bouton</label>
+                      <label className="text-xs font-medium">Forme des boutons</label>
                         <select
                           className="h-10 rounded-md border border-border bg-background px-3 text-sm w-full"
                           value={theme.buttonRadius}
@@ -702,17 +705,17 @@ export default function DesignPage() {
                 <AccordionContent>
                   <div className="space-y-3">
                     <div className="space-y-2">
-                      <label className="text-xs font-medium">Texte des dates (affiché)</label>
+                      <label className="text-xs font-medium">Texte de date affiché</label>
                       <Input value={texts.weddingDate} onChange={(e) => setTexts({ ...texts, weddingDate: e.target.value })} />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-medium">Date du countdown</label>
+                      <label className="text-xs font-medium">Date du compte à rebours</label>
                       <Input
                         type="datetime-local"
                         value={toDateInputValue(sections.countdownDate)}
                         onChange={(e) => setSections((prev) => ({ ...prev, countdownDate: fromDateInputValue(e.target.value) }))}
                       />
-                      <p className="text-[11px] text-muted-foreground">Utilisée pour le compte à rebours.</p>
+                      <p className="text-[11px] text-muted-foreground">Référence utilisée par le compteur principal.</p>
                     </div>
                   </div>
                 </AccordionContent>
@@ -723,15 +726,15 @@ export default function DesignPage() {
                 <AccordionContent>
                   <div className="space-y-3">
                     <div className="space-y-2">
-                      <label className="text-xs font-medium">Lien RSVP</label>
+                      <label className="text-xs font-medium">Libellé menu: RSVP</label>
                       <Input value={texts.navRsvp} onChange={(e) => setTexts({ ...texts, navRsvp: e.target.value })} />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-medium">Lien Cagnotte</label>
+                      <label className="text-xs font-medium">Libellé menu: Cagnotte</label>
                       <Input value={texts.navCagnotte} onChange={(e) => setTexts({ ...texts, navCagnotte: e.target.value })} />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-medium">Lien Live</label>
+                      <label className="text-xs font-medium">Libellé menu: Live</label>
                       <Input value={texts.navLive} onChange={(e) => setTexts({ ...texts, navLive: e.target.value })} />
                     </div>
                   </div>
@@ -772,11 +775,11 @@ export default function DesignPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <label className="text-xs font-medium">Bouton retour</label>
+                      <label className="text-xs font-medium">Bouton retour</label>
                         <Input value={texts.cagnotteBackLabel} onChange={(e) => setTexts({ ...texts, cagnotteBackLabel: e.target.value })} />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-medium">Bouton contribution</label>
+                      <label className="text-xs font-medium">Bouton contribuer</label>
                         <Input value={texts.cagnotteSubmitLabel} onChange={(e) => setTexts({ ...texts, cagnotteSubmitLabel: e.target.value })} />
                       </div>
                     </div>
@@ -818,7 +821,7 @@ export default function DesignPage() {
                       <Input value={texts.liveDonorsTitle} onChange={(e) => setTexts({ ...texts, liveDonorsTitle: e.target.value })} />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-medium">Texte QR</label>
+                      <label className="text-xs font-medium">Texte sous QR code</label>
                       <Input value={texts.liveQrCaption} onChange={(e) => setTexts({ ...texts, liveQrCaption: e.target.value })} />
                     </div>
                   </div>
@@ -826,7 +829,7 @@ export default function DesignPage() {
               </AccordionItem>
 
               <AccordionItem value="location" className="border rounded-xl px-4 mb-4">
-                <AccordionTrigger className="hover:no-underline">Titres & Intro</AccordionTrigger>
+                <AccordionTrigger className="hover:no-underline">Titres & introductions</AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-3">
                     <div className="space-y-2">
@@ -1021,15 +1024,15 @@ export default function DesignPage() {
         </aside>
 
         <main className="bg-[#F3F5F9] p-6 min-h-0">
-          <div className="rounded-2xl border bg-white overflow-hidden shadow-sm h-full">
+          <div className="rounded-2xl border bg-white overflow-hidden shadow-sm h-full flex flex-col">
             <div className="bg-muted/40 px-4 py-2 text-xs text-muted-foreground flex items-center justify-between">
               <span className="truncate">{previewUrl}</span>
-              <span>Preview</span>
+              <span>Aperçu</span>
             </div>
             <iframe
               src={previewUrl}
               title="Preview public"
-              className="w-full h-[calc(100vh-180px)] border-0"
+              className="w-full flex-1 border-0 min-h-[720px]"
             />
           </div>
         </main>

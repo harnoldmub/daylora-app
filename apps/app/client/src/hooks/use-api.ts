@@ -12,6 +12,18 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+type DeepPartial<T> = {
+    [K in keyof T]?: T[K] extends Array<infer U>
+        ? Array<U>
+        : T[K] extends object
+            ? DeepPartial<T[K]>
+            : T[K];
+};
+
+export type WeddingPatch = { id: string } & Omit<Partial<Wedding>, "config"> & {
+    config?: DeepPartial<Wedding["config"]>;
+};
+
 /**
  * Hook to manage the current wedding context based on slug or user ownership.
  */
@@ -53,7 +65,7 @@ export function useWeddings() {
 export function useUpdateWedding() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async (data: Partial<Wedding> & { id: string }) => {
+        mutationFn: async (data: WeddingPatch) => {
             const res = await apiRequest("PATCH", `/api/weddings/${data.id}`, data);
             return res.json();
         },

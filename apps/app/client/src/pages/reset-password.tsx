@@ -65,7 +65,7 @@ export default function ResetPassword() {
             <Card className="w-full max-w-md shadow-lg border-t-4 border-primary">
                 <CardHeader className="text-center">
                     <CardTitle className="text-2xl font-serif">Nouveau mot de passe</CardTitle>
-                    <CardDescription>Choisissez un mot de passe sécurisé</CardDescription>
+                    <CardDescription>Sécurisez votre accès Nocely</CardDescription>
                 </CardHeader>
 
                 <CardContent className="space-y-6 pt-4">
@@ -76,7 +76,7 @@ export default function ResetPassword() {
                             <p className="text-muted-foreground text-sm">
                                 Vous pouvez maintenant vous connecter avec vos nouveaux identifiants.
                             </p>
-                            <Link href="/login" title="Se connecter">
+                            <Link href="/app/login" title="Se connecter">
                                 <Button className="w-full rounded-full mt-4">Se connecter</Button>
                             </Link>
                         </div>
@@ -119,7 +119,7 @@ export default function ResetPassword() {
 
                     {!isSuccess && (
                         <div className="text-center border-t pt-4">
-                            <Link href="/login" title="Annuler" className="text-sm text-muted-foreground hover:text-primary">
+                            <Link href="/app/login" title="Annuler" className="text-sm text-muted-foreground hover:text-primary">
                                 Annuler et retourner à la connexion
                             </Link>
                         </div>

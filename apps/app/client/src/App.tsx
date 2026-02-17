@@ -31,10 +31,10 @@ import NotFound from "@/pages/not-found";
 import InvitationPage from "@/pages/InvitationPage";
 import Invitation from "@/pages/invitation";
 import CheckIn from "@/pages/checkin";
-import CagnottePage from "@/pages/cagnotte";
 import LiveContributions from "@/pages/live-contributions";
 import GuestInvitation from "@/pages/dot-invitation";
 import CustomPage from "@/pages/custom-page";
+import LegalPage from "@/pages/legal-page";
 
 import { useWedding } from "@/hooks/use-api";
 
@@ -127,8 +127,9 @@ function AppRouter() {
               <Route path="/gifts" component={InvitationPage} />
               <Route path="/location" component={InvitationPage} />
               <Route path="/program" component={InvitationPage} />
-              <Route path="/cagnotte" component={CagnottePage} />
+              <Route path="/cagnotte" component={InvitationPage} />
               <Route path="/live" component={LiveContributions} />
+              <Route path="/legal/:legalSlug" component={LegalPage} />
               <Route path="/page/:customSlug" component={CustomPage} />
               <Route path="/checkin" component={CheckIn} />
               <Route path="/guest/:guestId" component={GuestInvitation} />
@@ -150,8 +151,9 @@ function AppRouter() {
               <Route path="/gifts" component={InvitationPage} />
               <Route path="/location" component={InvitationPage} />
               <Route path="/program" component={InvitationPage} />
-              <Route path="/cagnotte" component={CagnottePage} />
+              <Route path="/cagnotte" component={InvitationPage} />
               <Route path="/live" component={LiveContributions} />
+              <Route path="/legal/:legalSlug" component={LegalPage} />
               <Route path="/page/:customSlug" component={CustomPage} />
               <Route path="/checkin" component={CheckIn} />
               <Route path="/guest/:guestId" component={GuestInvitation} />

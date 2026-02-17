@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap');
 
 /* LIGHT MODE */
 :root {
@@ -16,63 +16,63 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: 210 20% 98%;
+  --background: 40 27% 96%;
 
-  --foreground: 222 47% 11%;
+  --foreground: 240 3% 12%;
 
-  --border: 220 16% 90%;
+  --border: 30 24% 86%;
 
-  --card: 0 0% 100%;
+  --card: 40 25% 98%;
 
-  --card-foreground: 222 47% 11%;
+  --card-foreground: 240 3% 12%;
 
-  --card-border: 220 16% 92%;
+  --card-border: 32 21% 88%;
 
-  --sidebar: 222 47% 11%;
+  --sidebar: 37 27% 93%;
 
-  --sidebar-foreground: 210 20% 98%;
+  --sidebar-foreground: 240 3% 12%;
 
-  --sidebar-border: 222 33% 16%;
+  --sidebar-border: 32 20% 84%;
 
-  --sidebar-primary: 221 83% 53%;
+  --sidebar-primary: 39 47% 57%;
 
   --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: 222 35% 18%;
+  --sidebar-accent: 34 26% 88%;
 
-  --sidebar-accent-foreground: 210 20% 98%;
+  --sidebar-accent-foreground: 240 3% 12%;
 
-  --sidebar-ring: 221 83% 53%;
+  --sidebar-ring: 39 47% 57%;
 
   --popover: 0 0% 100%;
 
-  --popover-foreground: 222 47% 11%;
+  --popover-foreground: 240 3% 12%;
 
   --popover-border: 220 16% 90%;
 
-  --primary: 221 83% 53%;
+  --primary: 39 47% 57%;
 
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 210 20% 96%;
+  --secondary: 30 24% 86%;
 
-  --secondary-foreground: 222 47% 11%;
+  --secondary-foreground: 240 3% 12%;
 
-  --muted: 210 20% 96%;
+  --muted: 31 18% 91%;
 
-  --muted-foreground: 220 9% 46%;
+  --muted-foreground: 240 4% 58%;
 
-  --accent: 210 20% 96%;
+  --accent: 31 18% 91%;
 
-  --accent-foreground: 222 47% 11%;
+  --accent-foreground: 240 3% 12%;
 
   --destructive: 0 72% 51%;
 
   --destructive-foreground: 0 0% 98%;
 
-  --input: 220 16% 86%;
-  --ring: 221 83% 53%;
-  --chart-1: 221 83% 53%;
+  --input: 30 24% 83%;
+  --ring: 39 47% 57%;
+  --chart-1: 39 47% 57%;
   --chart-2: 142 71% 45%;
   --chart-3: 210 50% 45%;
   --chart-4: 280 60% 48%;
@@ -81,7 +81,7 @@
   --font-sans: 'Manrope', sans-serif;
   --font-serif: 'Playfair Display', serif;
   --font-mono: Menlo, monospace;
-  --radius: .5rem; /* 8px */
+  --radius: .7rem; /* 11px */
   --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
   --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.00);

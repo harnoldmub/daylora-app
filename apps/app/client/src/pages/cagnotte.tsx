@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Gift, Heart, CreditCard, Loader2, ArrowLeft, MessageCircle } from "lucide-react";
+import { Gift, Heart, CreditCard, Loader2, ArrowLeft, MessageCircle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -174,6 +174,13 @@ export default function CagnottePage() {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const { slug } = useParams<{ slug: string }>();
   const { data: wedding } = useWedding(slug);
+  const basePath = useMemo(() => {
+    if (!slug) return "/";
+    if (typeof window === "undefined") return `/${slug}`;
+    const pathname = window.location.pathname || "";
+    const previewPrefix = `/preview/${slug}`;
+    return pathname.startsWith(previewPrefix) ? previewPrefix : `/${slug}`;
+  }, [slug]);
 
   const { data: contributions } = useQuery<Contribution[]>({
     queryKey: ["/api/contributions/confirmed", slug],
@@ -221,6 +228,11 @@ export default function CagnottePage() {
   const cagnotteEnabled =
     (wedding?.config?.navigation?.pages?.cagnotte ?? true) &&
     (wedding?.config?.features?.cagnotteEnabled ?? true);
+  const paymentMode = wedding?.config?.payments?.mode || (((wedding?.config?.sections as any)?.cagnotteExternalUrl || "") ? "external" : "stripe");
+  const externalCagnotteUrl =
+    wedding?.config?.payments?.externalUrl ||
+    (wedding?.config?.sections as any)?.cagnotteExternalUrl ||
+    "";
 
   useEffect(() => {
     if (!slug) return;
@@ -283,8 +295,8 @@ export default function CagnottePage() {
     },
     onError: (error: any) => {
       toast({
-        title: "Erreur",
-        description: error.message || "Impossible de créer la session de paiement",
+        title: "Paiement indisponible",
+        description: error.message || "Impossible de lancer la contribution.",
         variant: "destructive",
       });
     },
@@ -307,15 +319,15 @@ export default function CagnottePage() {
 
   return (
     !cagnotteEnabled ? (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <Card className="p-8 max-w-lg text-center">
-          <h2 className="text-2xl font-serif font-bold mb-3">Cagnotte indisponible</h2>
-          <p className="text-muted-foreground mb-6">Cette page a ete desactivee par les maries.</p>
-          <Link href="/">
-            <Button>Retour au site</Button>
-          </Link>
-        </Card>
-      </div>
+	      <div className="min-h-screen flex items-center justify-center p-6">
+	        <Card className="p-8 max-w-lg text-center">
+	          <h2 className="text-2xl font-serif font-bold mb-3">Cagnotte indisponible</h2>
+	          <p className="text-muted-foreground mb-6">Cette page a été désactivée par les mariés.</p>
+		          <Link href={basePath}>
+		            <Button>Retour au site</Button>
+		          </Link>
+	        </Card>
+	      </div>
     ) : (
     <div className={`min-h-screen ${templateTheme.pageBg}`}>
       <div className="relative">
@@ -333,12 +345,12 @@ export default function CagnottePage() {
         </div>
 
         <div className="relative z-10 pt-6 px-6">
-          <Link href="/">
-            <Button variant="ghost" className={`text-white hover:bg-white/20 ${buttonRadiusClass}`} data-testid="button-back-home">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              {cagnotteBackLabel}
-            </Button>
-          </Link>
+	          <Link href={basePath}>
+	            <Button variant="ghost" className={`text-white hover:bg-white/20 ${buttonRadiusClass}`} data-testid="button-back-home">
+	              <ArrowLeft className="h-4 w-4 mr-2" />
+	              {cagnotteBackLabel}
+	            </Button>
+	          </Link>
         </div>
 
         <div className="relative z-10 pt-24 md:pt-32 pb-8 px-6 text-center">
@@ -354,6 +366,11 @@ export default function CagnottePage() {
           <Card className={`p-6 md:p-8 ${templateTheme.cardClass}`}>
             <div className="text-center mb-8">
               <Gift className="h-10 w-10 mx-auto mb-4 text-primary" />
+              {paymentMode === "external" ? (
+                <div className="inline-flex items-center justify-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1 text-[10px] font-semibold uppercase tracking-widest text-primary mb-4">
+                  Paiement externe
+                </div>
+              ) : null}
               <h2 className="text-2xl md:text-3xl font-serif font-light mb-3 text-foreground tracking-wide">
                 {cagnotteTitle}
               </h2>
@@ -368,6 +385,30 @@ export default function CagnottePage() {
 
             <AnimatedMessages messages={messages} />
 
+            {paymentMode === "external" ? (
+              <div className="space-y-6">
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-foreground">
+                  Cette cagnotte utilise un lien externe. Cliquez sur le bouton ci-dessous pour contribuer.
+                </div>
+                {externalCagnotteUrl ? (
+                  <Button
+                    type="button"
+                    asChild
+                    className={`w-full h-14 text-base font-sans tracking-wider uppercase ${buttonToneClass} ${buttonRadiusClass}`}
+                    data-testid="button-external-cagnotte"
+                  >
+                    <a href={externalCagnotteUrl} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-5 w-5 mr-2" />
+                      {cagnotteSubmitLabel}
+                    </a>
+                  </Button>
+                ) : (
+                  <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+                    Le lien externe n'est pas encore configuré.
+                  </div>
+                )}
+              </div>
+            ) : (
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
@@ -512,6 +553,7 @@ export default function CagnottePage() {
                 </div>
               </form>
             </Form>
+            )}
           </Card>
         </div>
       </div>

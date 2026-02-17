@@ -2,9 +2,10 @@ import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, Heart, Users, Clock, Gift, ExternalLink } from "lucide-react";
+import { Loader2, Heart, Users, Clock, Gift, ExternalLink, QrCode, MapPin } from "lucide-react";
 import { useWedding } from "@/hooks/use-api";
 import { getButtonClass } from "@/lib/design-presets";
+import QRCodeLib from "qrcode";
 
 type GuestData = {
   id: number;
@@ -75,6 +76,7 @@ export default function GuestInvitationPage() {
   const slug = params.slug || window.location.pathname.split("/")[1] || "";
   const guestId = params.guestId;
   const { data: wedding } = useWedding(slug);
+  const [qrDataUrl, setQrDataUrl] = useState<string>("");
 
   const { data: guest, isLoading, error } = useQuery<GuestData>({
     queryKey: ["/api/invitation/guest", guestId],
@@ -85,6 +87,33 @@ export default function GuestInvitationPage() {
     },
     enabled: !!guestId,
   });
+
+  const primaryColor = wedding?.config?.theme?.primaryColor || "#1F2937";
+
+  // Keep hooks order stable: this effect must run even while the page is loading.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!guestId) return;
+    const text = window.location.href;
+    let cancelled = false;
+    QRCodeLib.toDataURL(text, {
+      margin: 1,
+      width: 320,
+      color: {
+        dark: primaryColor,
+        light: "#00000000",
+      },
+    })
+      .then((url) => {
+        if (!cancelled) setQrDataUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQrDataUrl("");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [guestId, primaryColor]);
 
   const countdownDate = useMemo(() => {
     const raw = wedding?.config?.sections?.countdownDate || wedding?.weddingDate || "2026-03-21T00:00:00";
@@ -103,6 +132,23 @@ export default function GuestInvitationPage() {
   const logoText = wedding?.config?.branding?.logoText || title;
   const buttonToneClass = getButtonClass(wedding?.config?.theme?.buttonStyle);
   const buttonRadiusClass = getButtonRadiusClass(wedding?.config?.theme?.buttonRadius);
+  const invitationTitle = (wedding?.config?.texts as any)?.invitationTitle || "Invitation";
+  const invitationSubtitle = (wedding?.config?.texts as any)?.invitationSubtitle || "Vous êtes invité(e) à célébrer avec nous";
+  const invitationBody = (wedding?.config?.texts as any)?.invitationBody || "Retrouvez ici toutes les informations utiles pour le jour J.";
+  const invitationCtaRsvp = (wedding?.config?.texts as any)?.invitationCtaRsvp || "Répondre au RSVP";
+  const invitationCtaCagnotte = (wedding?.config?.texts as any)?.invitationCtaCagnotte || "Accéder à la cagnotte";
+  const invitationImage =
+    (wedding?.config?.media as any)?.invitationImage ||
+    wedding?.config?.media?.heroImage ||
+    "";
+  const showLocations = ((wedding?.config?.sections as any)?.invitationShowLocations ?? true) as boolean;
+  const showCountdown = ((wedding?.config?.sections as any)?.invitationShowCountdown ?? true) as boolean;
+  const locations = wedding?.config?.sections?.locationItems || [];
+  const cagnotteExternalUrl = (
+    wedding?.config?.payments?.externalUrl ||
+    (wedding?.config?.sections as any)?.cagnotteExternalUrl ||
+    ""
+  ) as string;
 
   if (isLoading) {
     return (
@@ -125,29 +171,72 @@ export default function GuestInvitationPage() {
 
   const isCouple = guest.partySize >= 2;
   const isAllowed = guest.availability === "confirmed" || guest.availability === "pending";
-  const downloadHref = `/api/invitation/pdf/${guestId}`;
-  const cagnotteHref = slug ? `/${slug}/cagnotte` : "/cagnotte";
+  const basePath = slug ? `/${slug}` : "/";
+  const rsvpHref = `${basePath}/rsvp`;
+  const cagnotteMode = wedding?.config?.payments?.mode || (cagnotteExternalUrl ? "external" : "stripe");
+  const cagnotteHref = cagnotteMode === "external" ? cagnotteExternalUrl : `${basePath}/cagnotte`;
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-6 bg-background">
-      <div className="w-full max-w-lg">
-        <div className="rounded-3xl border bg-card shadow-sm overflow-hidden">
-          <div className="p-8 text-center">
-            <div className="flex items-center justify-center gap-3 mb-6">
-              {logoUrl ? (
-                <img src={logoUrl} alt={logoText} className="h-12 w-auto object-contain" />
-              ) : (
-                <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                  <Heart className="h-6 w-6 text-primary" />
+    <div className="min-h-[calc(100vh-64px)] bg-background">
+      <div className="relative h-[42vh] min-h-[320px] overflow-hidden">
+        {invitationImage ? (
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${invitationImage})` }}
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-background to-secondary" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/10 to-background" />
+        <div
+          className="absolute -left-40 -top-40 h-[520px] w-[520px] rounded-full blur-3xl opacity-35"
+          style={{ background: `radial-gradient(circle, ${primaryColor} 0%, transparent 60%)` }}
+        />
+        <div
+          className="absolute -right-40 -bottom-48 h-[560px] w-[560px] rounded-full blur-3xl opacity-25"
+          style={{ background: `radial-gradient(circle, ${primaryColor} 0%, transparent 62%)` }}
+        />
+
+        <div className="relative z-10 h-full flex items-end">
+          <div className="w-full max-w-5xl mx-auto px-6 pb-10">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                {logoUrl ? (
+                  <img src={logoUrl} alt={logoText} className="h-10 w-auto object-contain" />
+                ) : (
+                  <div className="h-10 w-10 rounded-2xl bg-white/15 flex items-center justify-center border border-white/20">
+                    <Heart className="h-5 w-5 text-white" />
+                  </div>
+                )}
+                <div className="text-white">
+                  <div className="text-[10px] uppercase tracking-[0.4em] text-white/70">
+                    {invitationTitle}
+                  </div>
+                  <div className="text-2xl md:text-3xl font-serif font-bold">{title}</div>
                 </div>
-              )}
-              <div className="text-left">
-                <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Invitation</div>
-                <div className="text-2xl font-serif font-bold">{title}</div>
               </div>
+              {isAllowed ? (
+                <a href={rsvpHref} className="hidden md:inline-block">
+                  <Button className={`${buttonToneClass} ${buttonRadiusClass}`}>
+                    {invitationCtaRsvp}
+                    <ExternalLink className="h-4 w-4 ml-2" />
+                  </Button>
+                </a>
+              ) : null}
             </div>
 
-            <div className="rounded-2xl border bg-muted/10 p-6">
+            <div className="mt-8 text-white max-w-2xl">
+              <div className="text-sm md:text-base text-white/85">{invitationSubtitle}</div>
+              <div className="mt-2 text-xs md:text-sm text-white/70 leading-relaxed">{invitationBody}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-6 py-10">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-6">
+          <div className="rounded-3xl border bg-card shadow-sm overflow-hidden">
+            <div className="p-8">
               <div className="flex items-center justify-center gap-2 text-xs uppercase tracking-widest text-muted-foreground mb-3">
                 {isCouple ? <Users className="h-4 w-4 text-primary" /> : <Heart className="h-4 w-4 text-primary" />}
                 {isCouple ? "Invitation Couple" : "Invitation Personnelle"}
@@ -164,21 +253,23 @@ export default function GuestInvitationPage() {
               )}
             </div>
 
-            <div className="mt-6">
-              <div className="text-xs uppercase tracking-widest text-muted-foreground mb-3 flex items-center justify-center gap-2">
-                <Clock className="h-4 w-4" />
-                Compte à rebours
-                <span className="text-primary">{countdownLabel}</span>
+            {showCountdown ? (
+              <div className="px-8 pb-8">
+                <div className="text-xs uppercase tracking-widest text-muted-foreground mb-3 flex items-center justify-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  Compte à rebours
+                  <span className="text-primary">{countdownLabel}</span>
+                </div>
+                <Countdown targetDate={countdownDate} />
               </div>
-              <Countdown targetDate={countdownDate} />
-            </div>
+            ) : null}
 
-            <div className="mt-8 space-y-3">
+            <div className="px-8 pb-8 space-y-3">
               {isAllowed ? (
-                <a href={downloadHref} target="_blank" rel="noopener noreferrer" className="block">
+                <a href={rsvpHref} className="block">
                   <Button className={`w-full h-12 ${buttonToneClass} ${buttonRadiusClass}`}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Télécharger mon invitation (PDF)
+                    {invitationCtaRsvp}
+                    <ExternalLink className="h-4 w-4 ml-2" />
                   </Button>
                 </a>
               ) : (
@@ -187,22 +278,102 @@ export default function GuestInvitationPage() {
                 </div>
               )}
 
-              <a href={cagnotteHref} className="block" data-testid="link-cagnotte">
-                <Button variant="outline" className={`w-full h-12 ${buttonRadiusClass}`}>
-                  <Gift className="h-4 w-4 mr-2 text-primary" />
-                  Accéder à la cagnotte
-                  <ExternalLink className="h-4 w-4 ml-2 text-muted-foreground" />
-                </Button>
-              </a>
+              {cagnotteHref ? (
+                <a
+                  href={cagnotteHref}
+                  className="block"
+                  target={cagnotteMode === "external" ? "_blank" : undefined}
+                  rel={cagnotteMode === "external" ? "noopener noreferrer" : undefined}
+                  data-testid="link-cagnotte"
+                >
+                  <Button variant="outline" className={`w-full h-12 ${buttonRadiusClass}`}>
+                    <Gift className="h-4 w-4 mr-2 text-primary" />
+                    {invitationCtaCagnotte}
+                    <ExternalLink className="h-4 w-4 ml-2 text-muted-foreground" />
+                  </Button>
+                  {cagnotteMode === "external" ? (
+                    <div className="mt-2 text-[10px] uppercase tracking-widest text-primary/80 text-center">
+                      Paiement externe
+                    </div>
+                  ) : null}
+                </a>
+              ) : null}
             </div>
 
-            <p className="mt-8 text-xs text-muted-foreground">
-              Besoin d'aide ? Contactez les mariés ou revenez plus tard.
-            </p>
+            <div className="px-8 pb-8">
+              <p className="text-xs text-muted-foreground">
+                Besoin d'aide ? Contactez les mariés ou revenez plus tard.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border bg-card shadow-sm overflow-hidden">
+            <div className="p-8 space-y-6">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-sm font-semibold">Informations</div>
+                {qrDataUrl ? (
+                  <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                    <QrCode className="h-4 w-4" />
+                    QR Code
+                  </div>
+                ) : null}
+              </div>
+
+              {showLocations ? (
+                <div className="space-y-4">
+                  {locations.length ? (
+                    locations.map((l, idx) => (
+                      <div key={`${l.title}-${idx}`} className="rounded-2xl border bg-muted/10 p-4">
+                        <div className="font-medium flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-primary" />
+                          {l.title}
+                        </div>
+                        {l.address ? (
+                          <a
+                            className="text-sm text-primary hover:underline"
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.address)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {l.address}
+                          </a>
+                        ) : null}
+                        {l.description ? (
+                          <div className="text-sm text-muted-foreground mt-2">{l.description}</div>
+                        ) : null}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-sm text-muted-foreground">
+                      Les lieux seront indiqués prochainement.
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  Les informations pratiques sont disponibles sur la page d'accueil.
+                </div>
+              )}
+
+              {qrDataUrl ? (
+                <div className="pt-2">
+                  <div className="rounded-3xl border bg-background/60 p-5 flex items-center gap-4">
+                    <div className="h-24 w-24 rounded-2xl bg-white flex items-center justify-center border shadow-sm overflow-hidden">
+                      <img src={qrDataUrl} alt="QR code invitation" className="h-full w-full object-contain" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold">Scannez pour ouvrir votre invitation</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Vous pouvez partager ce QR code à l'entrée ou avec vos proches.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 }
-

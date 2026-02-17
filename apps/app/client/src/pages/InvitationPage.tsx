@@ -13,7 +13,7 @@ import {
     MessageCircle,
     Link2,
     Check,
-    Gift,
+    Gift as GiftIcon,
     Pencil,
     Trash2,
     Plus,
@@ -43,6 +43,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
     insertRsvpResponseSchema,
     type InsertRsvpResponse,
+    type Gift as GiftDb,
 } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { AccommodationSection } from "@/components/accommodation";
@@ -123,6 +124,7 @@ const MAX_COUPLE_IMAGE_DATA_URL_LENGTH = 2_000_000;
 const MAX_GALLERY_IMAGE_DATA_URL_LENGTH = 1_200_000;
 const MAX_GALLERY_IMAGES = 10;
 const MAX_GIFT_IMAGE_DATA_URL_LENGTH = 900_000;
+
 const DEFAULT_GALLERY_IMAGES = [
     "/defaults/gallery/01.jpg",
     "/defaults/gallery/02.jpg",
@@ -133,12 +135,12 @@ const DEFAULT_GALLERY_IMAGES = [
 ];
 
 const TEMPLATE_STYLES = {
-    classic: {
-        pageBg: "bg-secondary",
-        heroOverlay: "from-foreground/40 via-transparent to-secondary",
-        heroWrapper: "text-center max-w-5xl space-y-10",
-        heroTitle: "text-7xl md:text-9xl font-bold text-foreground leading-[1.05]",
-        heroSubtitle: "text-xs md:text-sm tracking-[0.4em] uppercase text-primary mb-6 opacity-80",
+	    classic: {
+	        pageBg: "bg-secondary",
+	        heroOverlay: "from-foreground/25 via-transparent to-secondary",
+	        heroWrapper: "text-center max-w-5xl space-y-10",
+	        heroTitle: "text-7xl md:text-9xl font-bold text-foreground leading-[1.05]",
+	        heroSubtitle: "text-xs md:text-sm tracking-[0.4em] uppercase text-primary mb-6 opacity-80",
         heroDate: "text-xl md:text-2xl font-medium text-foreground mt-8 border-y border-primary/20 py-5 inline-block px-12 tracking-widest",
         heroButton: "px-16 py-8 text-xs tracking-[0.3em] uppercase font-black shadow-2xl transition-all hover:scale-105",
         rsvpSection: "bg-secondary py-40 border-t border-primary/10",
@@ -149,13 +151,13 @@ const TEMPLATE_STYLES = {
         container: "max-w-6xl mx-auto px-6",
         decoration: "serif-border",
     },
-    modern: {
-        pageBg: "bg-background",
-        heroOverlay: "from-black/60 via-black/20 to-background",
-        heroWrapper: "text-left max-w-7xl pt-20 px-10",
-        heroTitle: "text-7xl md:text-[11rem] font-black text-white leading-[0.8] tracking-tighter uppercase",
-        heroSubtitle: "text-[10px] md:text-sm font-black tracking-[0.8em] uppercase text-primary mb-8 drop-shadow-lg",
-        heroDate: "text-2xl md:text-5xl font-black text-white/40 mt-10 tracking-widest uppercase",
+	    modern: {
+	        pageBg: "bg-background",
+	        heroOverlay: "from-black/35 via-black/10 to-background",
+	        heroWrapper: "text-left max-w-7xl pt-20 px-10",
+	        heroTitle: "text-7xl md:text-[11rem] font-black text-white leading-[0.8] tracking-tighter uppercase",
+	        heroSubtitle: "text-[10px] md:text-sm font-black tracking-[0.8em] uppercase text-primary mb-8 drop-shadow-lg",
+	        heroDate: "text-2xl md:text-5xl font-black text-white/40 mt-10 tracking-widest uppercase",
         heroButton: "px-14 py-8 text-xs tracking-[0.4em] uppercase font-black transition-all rounded-none ring-1 ring-white/10 hover:ring-primary/50",
         rsvpSection: "bg-black text-white py-40 border-y border-white/5",
         rsvpCard: "bg-neutral-900/80 border border-white/10 backdrop-blur-3xl rounded-none shadow-[0_50px_100px_rgba(0,0,0,0.5)] p-16",
@@ -176,7 +178,8 @@ const TEMPLATE_STYLES = {
         rsvpSection: "bg-background py-40",
         rsvpCard: "border-none shadow-[0_20px_60px_rgba(0,0,0,0.03)] bg-card rounded-2xl p-16 max-w-2xl mx-auto",
         storyTitle: "text-5xl md:text-7xl font-extralight text-foreground text-center mb-24 tracking-tighter",
-        storyLayout: "max-w-5xl mx-auto space-y-32 px-10 pb-40",
+        // Requirement: story image + text on the same row on desktop.
+        storyLayout: "max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center px-6 pb-40",
         storyImage: "rounded-2xl opacity-95 shadow-2xl border border-black/5 transition-opacity hover:opacity-100 duration-1000",
         container: "max-w-4xl mx-auto px-6",
         decoration: "floral",
@@ -258,7 +261,7 @@ export default function InvitationPage() {
 
     useEffect(() => {
         if (!wedding) return;
-        setCtaPath(wedding.config?.navigation?.heroCtaPath || "rsvp");
+        setCtaPath(normalizeCtaPath(wedding.config?.navigation?.heroCtaPath || "rsvp"));
         setDraftMedia({
             heroImage: wedding.config?.media?.heroImage || "",
             couplePhoto: wedding.config?.media?.couplePhoto || "",
@@ -273,10 +276,17 @@ export default function InvitationPage() {
         return (fromQuery || fromRoute) || null;
     }, [queryParams, routeSection]);
 
-    const SECTION_IDS = useMemo(() => ["rsvp", "story", "gallery", "gifts", "location", "program"] as const, []);
+    const SECTION_IDS = useMemo(() => ["rsvp", "gifts", "cagnotte", "story", "gallery", "location", "program"] as const, []);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
+        const hashSection = (window.location.hash || "").replace(/^#/, "").trim();
+        if (hashSection && SECTION_IDS.includes(hashSection as any)) {
+            setTimeout(() => {
+                document.getElementById(hashSection)?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }, 0);
+            return;
+        }
         if (!requestedSection) return;
         if (!SECTION_IDS.includes(requestedSection as any)) return;
         // Wait a tick so the section is present, then scroll smoothly.
@@ -293,12 +303,10 @@ export default function InvitationPage() {
             await updateWedding.mutateAsync({
                 id: wedding.id,
                 config: {
-                    ...wedding.config,
                     texts: {
-                        ...(wedding.config.texts || {}),
-                        [key]: value
-                    }
-                }
+                        [key]: value,
+                    },
+                },
             });
             toast({ title: "Modifications enregistrées" });
         } catch (error) {
@@ -331,9 +339,7 @@ export default function InvitationPage() {
             await updateWedding.mutateAsync({
                 id: wedding.id,
                 config: {
-                    ...wedding.config,
                     sections: {
-                        ...(wedding.config.sections || {}),
                         countdownDate: value,
                     },
                 },
@@ -350,9 +356,7 @@ export default function InvitationPage() {
             await updateWedding.mutateAsync({
                 id: wedding.id,
                 config: {
-                    ...wedding.config,
                     media: {
-                        ...(wedding.config.media || {}),
                         [key]: value,
                     },
                 },
@@ -395,9 +399,7 @@ export default function InvitationPage() {
             await updateWedding.mutateAsync({
                 id: wedding.id,
                 config: {
-                    ...wedding.config,
                     sections: {
-                        ...(wedding.config.sections || {}),
                         locationItems: nextItems,
                     },
                 },
@@ -417,9 +419,7 @@ export default function InvitationPage() {
             await updateWedding.mutateAsync({
                 id: wedding.id,
                 config: {
-                    ...wedding.config,
                     sections: {
-                        ...(wedding.config.sections || {}),
                         locationItems: nextItems,
                     },
                 },
@@ -439,9 +439,7 @@ export default function InvitationPage() {
             await updateWedding.mutateAsync({
                 id: wedding.id,
                 config: {
-                    ...wedding.config,
                     sections: {
-                        ...(wedding.config.sections || {}),
                         locationItems: nextItems,
                     },
                 },
@@ -461,9 +459,7 @@ export default function InvitationPage() {
             await updateWedding.mutateAsync({
                 id: wedding.id,
                 config: {
-                    ...wedding.config,
                     sections: {
-                        ...(wedding.config.sections || {}),
                         programItems: nextItems,
                     },
                 },
@@ -483,9 +479,7 @@ export default function InvitationPage() {
             await updateWedding.mutateAsync({
                 id: wedding.id,
                 config: {
-                    ...wedding.config,
                     sections: {
-                        ...(wedding.config.sections || {}),
                         programItems: nextItems,
                     },
                 },
@@ -505,9 +499,7 @@ export default function InvitationPage() {
             await updateWedding.mutateAsync({
                 id: wedding.id,
                 config: {
-                    ...wedding.config,
                     sections: {
-                        ...(wedding.config.sections || {}),
                         programItems: nextItems,
                     },
                 },
@@ -517,17 +509,33 @@ export default function InvitationPage() {
         }
     };
 
+    const normalizeCtaPath = (value: string) => {
+        const raw = String(value || "").trim();
+        if (!raw) return "rsvp";
+        // Accept legacy stored values like "/:slug/rsvp" or "slug/rsvp" and normalize to "rsvp".
+        let v = raw.replace(/^https?:\/\/[^/]+/i, ""); // strip origin if any
+        v = v.replace(/^\/+/, ""); // no leading slashes
+        if (slug) {
+            const previewPrefix = `preview/${slug}/`;
+            const slugPrefix = `${slug}/`;
+            // Handle accidentally duplicated prefixes (e.g. "slug/slug/rsvp")
+            while (v.startsWith(previewPrefix)) v = v.slice(previewPrefix.length);
+            while (v.startsWith(slugPrefix)) v = v.slice(slugPrefix.length);
+        }
+        // For one-page sections and route pages we store bare segment (e.g. "rsvp", "page:about").
+        return v || "rsvp";
+    };
+
     const saveCtaPath = async (value: string) => {
         if (!wedding) return;
-        setCtaPath(value);
+        const normalized = normalizeCtaPath(value);
+        setCtaPath(normalized);
         try {
             await updateWedding.mutateAsync({
                 id: wedding.id,
                 config: {
-                    ...wedding.config,
                     navigation: {
-                        ...(wedding.config.navigation || {}),
-                        heroCtaPath: value,
+                        heroCtaPath: normalized,
                     } as any,
                 },
             });
@@ -558,6 +566,31 @@ export default function InvitationPage() {
     useEffect(() => {
         if (watchedAvailability === "declined") form.setValue("partySize", 1, { shouldDirty: true, shouldValidate: true });
     }, [watchedAvailability, form]);
+
+    const [draftCagnotteExternalUrl, setDraftCagnotteExternalUrl] = useState("");
+
+    useEffect(() => {
+        if (!wedding) return;
+        setDraftCagnotteExternalUrl(((wedding.config?.sections as any)?.cagnotteExternalUrl || "") as string);
+    }, [wedding?.id, (wedding as any)?.updatedAt]);
+
+    const saveCagnotteExternalUrl = async (value: string) => {
+        if (!wedding) return;
+        const next = value.trim();
+        setDraftCagnotteExternalUrl(next);
+        try {
+            await updateWedding.mutateAsync({
+                id: wedding.id,
+                config: {
+                    sections: {
+                        cagnotteExternalUrl: next,
+                    } as any,
+                },
+            });
+        } catch {
+            toast({ title: "Erreur", description: "Impossible d'enregistrer le lien de cagnotte.", variant: "destructive" });
+        }
+    };
 
     const rsvpMutation = useMutation({
         mutationFn: async (data: InsertRsvpResponse) => {
@@ -595,7 +628,7 @@ export default function InvitationPage() {
                 primaryColor: "#8C7A6B",
                 secondaryColor: "#FBF8F3",
                 fontFamily: "serif",
-                toneId: "libala-signature",
+                toneId: "nocely-signature",
                 buttonStyle: "solid",
                 buttonRadius: "pill",
             }
@@ -639,17 +672,47 @@ export default function InvitationPage() {
     const showGallery = currentWedding.config?.navigation?.pages?.gallery ?? true;
     const showGifts =
         (((currentWedding.config?.navigation?.pages as any)?.gifts ?? true) as boolean) &&
-        ((currentWedding.config?.features?.giftsEnabled ?? true) as boolean);
-    const showLocation = currentWedding.config?.navigation?.pages?.location ?? true;
-    const showProgram = currentWedding.config?.navigation?.pages?.program ?? true;
-    const buttonToneClass = getButtonClass(currentWedding.config?.theme?.buttonStyle);
-    const buttonRadiusClass = getButtonRadiusClass(currentWedding.config?.theme?.buttonRadius);
-    const isModernTemplate = templateId === "modern";
-    const heroShellClass =
-        templateId === "modern"
-            ? "rounded-[3rem] bg-black/35 border border-white/10 backdrop-blur-md px-8 py-10 md:px-12 md:py-12 shadow-2xl shadow-black/40"
-            : "rounded-[3rem] bg-white/72 border border-black/5 backdrop-blur-xl px-8 py-10 md:px-12 md:py-12 shadow-2xl shadow-black/10";
-    const heroImageOpacityClass = templateId === "modern" ? "opacity-70" : "opacity-35";
+        (currentWedding.config?.features?.giftsEnabled ?? true);
+
+    const showCagnotte = (currentWedding.config?.navigation?.pages?.cagnotte ?? true) && (currentWedding.config?.features?.cagnotteEnabled ?? true);
+    const cagnotteTitle = currentWedding.config?.texts?.cagnotteTitle || "CAGNOTTE MARIAGE";
+    const cagnotteDescription = currentWedding.config?.texts?.cagnotteDescription || "Votre présence est notre plus beau cadeau. Si vous souhaitez contribuer à notre voyage de noces ou à notre nouveau départ, vous pouvez participer à notre cagnotte.";
+    const cagnotteSubmitLabel = currentWedding.config?.texts?.cagnotteSubmitLabel || "Contribuer";
+    const cagnotteMode = currentWedding.config?.payments?.mode || (draftCagnotteExternalUrl ? "external" : "stripe");
+    const cagnotteExternalUrl =
+        currentWedding.config?.payments?.externalUrl ||
+        draftCagnotteExternalUrl ||
+        "";
+    const defaultCagnottePath = slug ? `/${slug}/cagnotte` : "/cagnotte";
+    const cagnotteCtaUrl = cagnotteMode === "external"
+        ? cagnotteExternalUrl
+        : defaultCagnottePath;
+	    const showLocation = currentWedding.config?.navigation?.pages?.location ?? true;
+	    const showProgram = currentWedding.config?.navigation?.pages?.program ?? true;
+		    const sectionOrder = useMemo(() => {
+		        const base = ["rsvp", "gifts", "cagnotte", "story", "gallery", "location", "program"] as const;
+		        const incoming = ((currentWedding.config?.navigation?.menuItems || []) as Array<{ path?: string }>).map(
+		            (it) => String(it.path || "").trim()
+		        );
+	        const ordered = [
+	            ...incoming.filter((p) => (base as readonly string[]).includes(p)),
+	            ...base.filter((p) => !incoming.includes(p)),
+	        ];
+	        const map: Record<string, number> = {};
+	        ordered.forEach((p, idx) => {
+	            map[p] = idx;
+	        });
+	        return map as Record<(typeof base)[number], number>;
+	    }, [currentWedding.config?.navigation?.menuItems]);
+	    const buttonToneClass = getButtonClass(currentWedding.config?.theme?.buttonStyle);
+	    const buttonRadiusClass = getButtonRadiusClass(currentWedding.config?.theme?.buttonRadius);
+	    const isModernTemplate = templateId === "modern";
+	    const heroShellClass =
+	        templateId === "modern"
+	            ? "rounded-[3rem] bg-black/25 backdrop-blur-md border border-white/10 px-8 py-10 md:px-12 md:py-12 shadow-[0_30px_120px_rgba(0,0,0,0.25)]"
+	            : "rounded-[3rem] bg-white/55 backdrop-blur-md border border-white/50 px-8 py-10 md:px-12 md:py-12 shadow-[0_30px_120px_rgba(0,0,0,0.10)]";
+	    const heroImageOpacityClass =
+	        templateId === "modern" ? "opacity-90" : templateId === "minimal" ? "opacity-75" : "opacity-78";
 
     const galleryTitle = currentWedding.config?.texts?.galleryTitle || "GALERIE";
     const galleryDescription =
@@ -665,7 +728,7 @@ export default function InvitationPage() {
         (currentWedding.config?.texts as any)?.giftsDescription || "Quelques idées pour ceux qui souhaitent nous faire plaisir.";
 
     const { data: giftsData } = usePublicGifts(showGifts);
-    const gifts = giftsData || [];
+    const gifts: GiftDb[] = (giftsData || []) as GiftDb[];
     const [showAllGifts, setShowAllGifts] = useState(false);
     const visibleGifts = showAllGifts ? gifts : gifts.slice(0, 3);
 
@@ -763,7 +826,7 @@ export default function InvitationPage() {
         else createGiftMutation.mutate(payload);
     };
 
-    const onGiftImageSelected = async (file: File) => {
+	    const onGiftImageSelected = async (file: File) => {
         try {
             const compressed = await compressImageFileToJpegDataUrl(file, {
                 maxSize: 1200,
@@ -778,27 +841,35 @@ export default function InvitationPage() {
                     : "Impossible d'importer l'image.";
             toast({ title: "Erreur", description: msg, variant: "destructive" });
         }
-    };
+	    };
 
-    const resolveInternalHref = (path: string) => {
-        if (path === "home") return "/";
-        if (path === "rsvp") return "/rsvp";
-        if (path === "story") return "/story";
-        if (path === "gallery") return "/gallery";
-        if (path === "gifts") return "/gifts";
-        if (path === "location") return "/location";
-        if (path === "program") return "/program";
-        if (path === "cagnotte") return "/cagnotte";
-        if (path === "live") return "/live";
-        if (path.startsWith("page:")) return `/page/${path.replace(/^page:/, "")}`;
-        return "/";
-    };
+	    const basePath = useMemo(() => {
+	        if (!slug) return "/";
+	        if (typeof window === "undefined") return `/${slug}`;
+	        const pathname = window.location.pathname || "";
+	        const previewPrefix = `/preview/${slug}`;
+	        return pathname.startsWith(previewPrefix) ? previewPrefix : `/${slug}`;
+	    }, [slug]);
 
-    const handleHeroCtaClick = () => {
-        if (!slug) return;
-        if (canEdit && editMode) return;
-        setLocation(resolveInternalHref(ctaPath || "rsvp"));
-    };
+	    const resolveInternalHref = (path: string) => {
+	        const raw = String(path || "").trim();
+	        if (!raw) return basePath;
+	        // Allow absolute external links.
+	        if (/^https?:\/\//i.test(raw)) return raw;
+
+	        const normalized = normalizeCtaPath(raw);
+	        if (normalized === "home") return basePath;
+	        if (normalized.startsWith("page:")) return `${basePath}/page/${normalized.replace(/^page:/, "")}`;
+
+	        // If user somehow stored a full path like "/slug/rsvp" we already normalized it above.
+	        return `${basePath}/${normalized}`.replace(/\/+$/, "") || basePath;
+	    };
+
+	    const handleHeroCtaClick = () => {
+	        if (!slug) return;
+	        if (canEdit && editMode) return;
+	        setLocation(resolveInternalHref(ctaPath || "rsvp"));
+	    };
 
     const saveGalleryImages = async (nextImages: string[]) => {
         if (!wedding) return;
@@ -807,9 +878,7 @@ export default function InvitationPage() {
             await updateWedding.mutateAsync({
                 id: wedding.id,
                 config: {
-                    ...wedding.config,
                     sections: {
-                        ...(wedding.config.sections || {}),
                         galleryImages: capped,
                     },
                 },
@@ -886,11 +955,11 @@ export default function InvitationPage() {
         return (
             <div className="min-h-[70vh] flex items-center justify-center px-6">
                 <div className="text-center">
-                    <div className="text-lg font-semibold text-foreground mb-2">Page desactivée</div>
+                    <div className="text-lg font-semibold text-foreground mb-2">Page désactivée</div>
                     <p className="text-sm text-muted-foreground mb-6">
-                        Cette page a ete masquee dans la configuration du site.
+                        Cette page a été masquée dans la configuration du site.
                     </p>
-                    <Button onClick={() => setLocation("/")} variant="outline">
+                    <Button onClick={() => setLocation(basePath)} variant="outline">
                         Retour au site
                     </Button>
                 </div>
@@ -976,10 +1045,6 @@ export default function InvitationPage() {
                             </div>
                         </div>
 
-                        <div className={`mb-14 ${isModernTemplate ? "justify-start" : "justify-center"} flex`}>
-                            <Countdown weddingDate={countdownDate} />
-                        </div>
-
                         <div className={`flex ${isModernTemplate ? "justify-start" : "justify-center"}`}>
                             <Button
                                 size="lg"
@@ -1054,9 +1119,32 @@ export default function InvitationPage() {
                 </div>
             </section>
 
+            {/* One-page sections (order is user-configurable via menu ordering). */}
+            <div className="flex flex-col">
+            {/* Countdown (above RSVP) */}
+            <section id="countdown" className="scroll-mt-24 py-20 px-6 bg-background">
+                <div className="max-w-3xl mx-auto text-center">
+                    <div className="text-xs uppercase tracking-[0.35em] text-muted-foreground mb-4">
+                        <InlineEditor
+                            value={(currentWedding.config?.texts as any)?.countdownTitle || "Compte à rebours"}
+                            onSave={(val) => handleSaveText("countdownTitle" as any, val)}
+                            canEdit={canEdit && editMode}
+                            placeholder="Compte à rebours"
+                        />
+                    </div>
+                    <div className="flex justify-center">
+                        <Countdown weddingDate={countdownDate} />
+                    </div>
+                </div>
+            </section>
+
             {/* RSVP Section */}
             {showRsvp ? (
-                <section id="rsvp" className={`scroll-mt-24 py-32 px-6 ${template.rsvpSection}`}>
+                <section
+                    id="rsvp"
+                    style={{ order: sectionOrder.rsvp ?? 0 }}
+                    className={`scroll-mt-24 py-32 px-6 ${template.rsvpSection}`}
+                >
                     <div className="max-w-3xl mx-auto">
                         {!isSubmitted ? (
                             <>
@@ -1214,7 +1302,11 @@ export default function InvitationPage() {
 
             {/* Gifts Section */}
             {showGifts ? (
-                <section id="gifts" className="scroll-mt-24 py-24 px-6">
+                <section
+                    id="gifts"
+                    style={{ order: sectionOrder.gifts ?? 1 }}
+                    className="scroll-mt-24 py-24 px-6"
+                >
                     <div className="max-w-6xl mx-auto">
                         <div className="text-center max-w-3xl mx-auto">
                             <h2 className="text-3xl md:text-4xl font-serif font-light tracking-wide uppercase">
@@ -1425,6 +1517,7 @@ export default function InvitationPage() {
                             <AlertDialogFooter>
                                 <AlertDialogCancel>Annuler</AlertDialogCancel>
                                 <AlertDialogAction
+                                    className="bg-destructive text-destructive-foreground"
                                     onClick={() => {
                                         const id = giftDeleting?.id;
                                         if (typeof id === "number") deleteGiftMutation.mutate(id);
@@ -1438,9 +1531,85 @@ export default function InvitationPage() {
                 </section>
             ) : null}
 
+            {/* Cagnotte Section (CTA only, redirects to an external link configured by the user). */}
+            {showCagnotte ? (
+                <section
+                    id="cagnotte"
+                    style={{ order: sectionOrder.cagnotte ?? 2 }}
+                    className="scroll-mt-24 py-24 px-6 bg-muted/30"
+                >
+                    <div className="max-w-5xl mx-auto">
+                        <div className="rounded-[3rem] border border-primary/10 bg-white/70 backdrop-blur-md shadow-[0_40px_100px_rgba(0,0,0,0.06)] p-10 md:p-16 text-center">
+                            <GiftIcon className="h-12 w-12 mx-auto mb-6 text-primary opacity-70" />
+                            <h2 className="text-4xl md:text-5xl font-serif font-light mb-4 tracking-wide">
+                                <InlineEditor
+                                    value={cagnotteTitle}
+                                    onSave={(val) => handleSaveText("cagnotteTitle", val)}
+                                    canEdit={canEdit && editMode}
+                                />
+                            </h2>
+                            <div className="text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                                <InlineEditor
+                                    value={cagnotteDescription}
+                                    onSave={(val) => handleSaveText("cagnotteDescription", val)}
+                                    canEdit={canEdit && editMode}
+                                    isTextArea
+                                />
+                            </div>
+
+                            {canEdit && editMode ? (
+                                <div className="mt-10 max-w-2xl mx-auto text-left space-y-3">
+                                    <div className="text-xs uppercase tracking-widest font-bold opacity-60">Lien de cagnotte</div>
+                                    <Input
+                                        value={draftCagnotteExternalUrl}
+                                        onChange={(e) => setDraftCagnotteExternalUrl(e.target.value)}
+                                        onBlur={(e) => saveCagnotteExternalUrl(e.target.value)}
+                                        placeholder="https://..."
+                                        className="h-12 rounded-2xl bg-white/70 border-primary/10 focus:ring-primary/20"
+                                        inputMode="url"
+                                    />
+                                    <div className="text-xs text-muted-foreground">
+                                        Le bouton redirigera vers ce lien (Leetchi, PayPal, Lydia, Stripe Payment Link, etc.).
+                                    </div>
+                                </div>
+                            ) : null}
+
+                            {cagnotteCtaUrl ? (
+                                <div className="mt-10 flex justify-center">
+                                    <a href={cagnotteCtaUrl} target={cagnotteMode === "external" ? "_blank" : undefined} rel={cagnotteMode === "external" ? "noopener noreferrer" : undefined}>
+                                        <Button
+                                            size="lg"
+                                            className={`px-14 py-7 text-xs tracking-[0.3em] uppercase font-black shadow-2xl transition-all hover:scale-[1.02] ${buttonToneClass} ${buttonRadiusClass}`}
+                                        >
+                                            {cagnotteSubmitLabel}
+                                        </Button>
+                                    </a>
+                                </div>
+                            ) : null}
+
+                            {cagnotteMode === "external" && cagnotteExternalUrl ? (
+                                <div className="mt-4 text-[10px] uppercase tracking-widest text-primary/80">
+                                    Paiement externe
+                                </div>
+                            ) : canEdit && editMode ? (
+                                <div className="mt-10 flex justify-center">
+                                    <Button size="lg" variant="outline" className="rounded-full px-12" disabled>
+                                        Ajoutez un lien pour activer la cagnotte
+                                    </Button>
+                                </div>
+                            ) : null}
+                        </div>
+                    </div>
+                </section>
+            ) : null}
+
             {/* Story Section */}
             {showStory ? (
-                <section id="story" className="scroll-mt-24 py-32 px-6">
+                <section
+                    id="story"
+                    style={{ order: sectionOrder.story ?? 2 }}
+                    className="scroll-mt-24 py-32 px-6"
+                >
                     <div className={template.container}>
                         <h2 className={`${template.storyTitle} mb-12`}>
                             <InlineEditor
@@ -1491,7 +1660,11 @@ export default function InvitationPage() {
 
             {/* Gallery Section */}
             {showGallery ? (
-                <section id="gallery" className="scroll-mt-24 py-28 px-6 bg-white/40">
+                <section
+                    id="gallery"
+                    style={{ order: sectionOrder.gallery ?? 3 }}
+                    className="scroll-mt-24 py-28 px-6 bg-white/40"
+                >
                     <div className="max-w-6xl mx-auto">
                         <div className="text-center max-w-3xl mx-auto">
                             <h2 className="text-3xl md:text-4xl font-serif font-light tracking-wide">
@@ -1598,9 +1771,9 @@ export default function InvitationPage() {
                                                             : (idx - 1 + galleryImages.length) % galleryImages.length
                                                     )
                                                 }
-                                            >
-                                                Precedent
-                                            </Button>
+	                                            >
+	                                                Précédent
+	                                            </Button>
                                             <Button
                                                 type="button"
                                                 size="sm"
@@ -1624,7 +1797,11 @@ export default function InvitationPage() {
 
             {/* Location Section */}
             {showLocation ? (
-                <section id="location" className="scroll-mt-24 py-24 px-6 bg-muted/20">
+                <section
+                    id="location"
+                    style={{ order: sectionOrder.location ?? 4 }}
+                    className="scroll-mt-24 py-24 px-6 bg-muted/20"
+                >
                     <div className="max-w-4xl mx-auto text-center space-y-6">
                         <h2 className="text-3xl md:text-4xl font-serif font-light tracking-wide">
                             <InlineEditor
@@ -1704,7 +1881,11 @@ export default function InvitationPage() {
 
             {/* Program Section */}
             {showProgram ? (
-                <section id="program" className="scroll-mt-24 py-24 px-6">
+                <section
+                    id="program"
+                    style={{ order: sectionOrder.program ?? 5 }}
+                    className="scroll-mt-24 py-24 px-6"
+                >
                     <div className="max-w-4xl mx-auto text-center space-y-6">
                         <h2 className="text-3xl md:text-4xl font-serif font-light tracking-wide">
                             <InlineEditor
@@ -1770,6 +1951,7 @@ export default function InvitationPage() {
                     </div>
                 </section>
             ) : null}
+            </div>
         </div>
     );
 }

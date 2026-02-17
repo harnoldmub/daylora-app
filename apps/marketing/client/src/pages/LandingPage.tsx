@@ -143,8 +143,8 @@ export default function LandingPage() {
               <Heart className="h-7 w-7 text-white fill-white" />
             </div>
             <div className="flex flex-col -space-y-1">
-              <span className="text-2xl font-serif font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-[#2b2320] via-primary to-[#7A6B5E]">Libala</span>
-              <span className="text-[8px] font-black uppercase tracking-[0.4em] text-primary/60 ml-0.5">L'amour 2.0</span>
+              <span className="text-2xl font-serif font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-[#2b2320] via-primary to-[#7A6B5E]">Nocely</span>
+              <span className="text-[8px] font-black uppercase tracking-[0.4em] text-primary/60 ml-0.5">Wedding platform</span>
             </div>
           </div>
 
@@ -159,9 +159,9 @@ export default function LandingPage() {
             <a href={`${APP_BASE_URL}/app/login`} title="Connexion">
               <Button variant="ghost" className="text-xs font-bold uppercase tracking-widest text-[#7A6B5E] hover:text-[#2b2320] transition-colors">Connexion</Button>
             </a>
-            <a href={`${APP_BASE_URL}/app/signup`} title="Commencer">
+            <a href={`${APP_BASE_URL}/app/signup`} title="Créer mon site">
               <Button className="rounded-full px-8 h-12 bg-[#2b2320] text-white hover:bg-black transition-all shadow-xl shadow-black/10 hover:-translate-y-0.5 border-none">
-                Commencer gratuitement
+                Créer mon site
               </Button>
             </a>
           </div>
@@ -180,8 +180,10 @@ export default function LandingPage() {
           >
             <source src="https://videos.pexels.com/video-files/3015488/3015488-uhd_3840_2160_30fps.mp4" type="video/mp4" />
           </video>
-          <div className="absolute inset-0 bg-gradient-to-b from-[#2B2320]/70 via-[#2B2320]/30 to-[#F6F1EA]" />
-          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#F6F1EA] to-transparent" />
+          {/* Dark overlay for better text contrast */}
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-[#F6F1EA]" />
+          <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[#F6F1EA] via-[#F6F1EA]/80 to-transparent" />
         </div>
 
         <motion.div
@@ -190,30 +192,50 @@ export default function LandingPage() {
           variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.15 } } }}
           className="relative z-10 max-w-6xl mx-auto px-6 text-center space-y-8"
         >
-          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 text-xs font-semibold tracking-wider uppercase text-primary border border-[#E9DFD2]">
-            <Sparkles className="h-3.5 w-3.5" />
-            Mode cinématique
+          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/10 backdrop-blur-md text-xs font-bold tracking-[0.2em] uppercase text-white border border-white/20 shadow-xl">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            L'excellence du mariage
           </motion.div>
 
-          <motion.h1 variants={fadeUp} className="text-7xl md:text-9xl font-serif font-bold leading-[0.95] tracking-tight text-white drop-shadow-2xl">
-            L'élégance du <span className="italic text-primary">oui</span> immatériel.
-          </motion.h1>
+          <div className="space-y-4">
+            <motion.h1
+              variants={fadeUp}
+              className="text-7xl md:text-[10rem] font-serif font-extrabold leading-[0.85] tracking-tighter text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
+            >
+              Nocely
+            </motion.h1>
 
-          <motion.p variants={fadeUp} className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed font-light">
-            Une interface <span className="font-semibold text-white">cinématique</span> pour vos invités, un outil de gestion <span className="font-semibold text-white">ultra-fluide</span> pour vous.
-          </motion.p>
+            <motion.p
+              variants={fadeUp}
+              className="text-2xl md:text-4xl text-white/95 max-w-4xl mx-auto leading-tight font-serif italic drop-shadow-lg"
+            >
+              La nouvelle génération de sites de mariage
+            </motion.p>
+          </div>
 
-          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4 justify-center">
+          <motion.div
+            variants={fadeUp}
+            className="flex flex-col gap-4 py-4"
+          >
+            <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed font-medium drop-shadow-md">
+              Créez une expérience mémorable pour vos invités.
+            </p>
+            <p className="text-sm md:text-base text-white/70 max-w-xl mx-auto leading-relaxed tracking-wider uppercase font-semibold">
+              Beautiful weddings, effortlessly online.
+            </p>
+          </motion.div>
+
+          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-6 justify-center pt-4">
             <a href={`${APP_BASE_URL}/app/signup`} title="Créer mon site">
-              <Button size="lg" className="rounded-full px-10 h-14 text-lg bg-primary hover:bg-primary/90 group border-none">
-                Créer mon projet
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              <Button size="lg" className="rounded-full px-12 h-16 text-xl bg-primary hover:bg-primary/90 group border-none shadow-[0_15px_35px_rgba(200,169,106,0.4)] transition-all hover:-translate-y-1">
+                Commencer
+                <ArrowRight className="ml-3 h-6 w-6 group-hover:translate-x-1 transition-transform" />
               </Button>
             </a>
-            <Button asChild size="lg" variant="outline" className="rounded-full px-10 h-14 text-lg border-white/40 text-white hover:bg-white/10">
+            <Button asChild size="lg" variant="outline" className="rounded-full px-12 h-16 text-xl border-white/20 bg-white/5 backdrop-blur-md text-white hover:bg-white/20 shadow-xl transition-all hover:-translate-y-1">
               <a href="#cinema">
-                <Play className="mr-2 h-4 w-4" />
-                Voir une démo
+                <Play className="mr-3 h-5 w-5 fill-white" />
+                Voir la démo
               </a>
             </Button>
           </motion.div>
@@ -248,7 +270,7 @@ export default function LandingPage() {
               <motion.img
                 key={activeImage}
                 src={activeImage}
-                alt="Aperçu Libala"
+                alt="Aperçu Nocely"
                 className="w-full h-[520px] object-cover transition-all duration-700 group-hover:scale-105"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -461,17 +483,19 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="p-10 rounded-[2.5rem] bg-white/80 border border-[#E9DFD2] space-y-8 flex flex-col justify-between shadow-sm">
               <div className="space-y-6">
-                <div className="text-primary font-bold tracking-widest uppercase text-xs">Découverte</div>
+                <div className="text-primary font-bold tracking-widest uppercase text-xs">Free</div>
                 <div className="flex items-baseline gap-1">
                   <span className="text-5xl font-bold">0€</span>
                 </div>
-                <p className="text-[#7A6B5E] text-sm">Le nécessaire pour démarrer.</p>
+                <p className="text-[#7A6B5E] text-sm">Pour tester rapidement et publier votre première version.</p>
                 <ul className="space-y-4">
                   {[
                     "1 template",
                     "Jusqu'à 50 invités",
-                    "RSVP + export",
-                    "Support email",
+                    "Cagnotte activée",
+                    "Branding Nocely visible",
+                    "Sans liste cadeaux",
+                    "Sans live contributions avancé",
                   ].map((item, i) => (
                     <li key={i} className="flex items-center gap-3 text-sm text-[#6B5B4F]">
                       <CheckCircle2 className="h-4 w-4 text-primary" />
@@ -481,27 +505,31 @@ export default function LandingPage() {
                 </ul>
                 <a href={`${APP_BASE_URL}/app/signup`} className="w-full">
                   <Button className="w-full rounded-full h-12 bg-white text-primary font-bold hover:bg-[#F3EBE1] border border-[#E6DCCF]">
-                    Démarrer
+                    Démarrer gratuitement
                   </Button>
                 </a>
               </div>
             </div>
 
-            <div className="p-10 rounded-[2.5rem] bg-primary relative overflow-hidden space-y-8 flex flex-col justify-between shadow-[0_20px_60px_-15px_rgba(200,169,106,0.2)]">
-              <div className="absolute top-4 right-6 px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold uppercase tracking-tighter text-white">Recommandé</div>
+            <div className="p-10 rounded-[2.5rem] bg-primary relative overflow-hidden space-y-8 flex flex-col justify-between shadow-[0_20px_60px_-15px_rgba(200,169,106,0.2)] hover:-translate-y-1 transition-transform">
+              <div className="absolute top-4 right-6 px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold uppercase tracking-tighter text-white">Best seller</div>
               <div className="space-y-6">
                 <div className="text-white/80 font-bold tracking-widest uppercase text-xs">Premium</div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-5xl font-bold text-white">29€</span>
+                  <span className="text-5xl font-bold text-white">19€</span>
+                  <span className="text-white/80 text-sm">/mois</span>
                 </div>
-                <p className="text-white/90 text-sm">Tout pour un mariage complet.</p>
+                <p className="text-white/90 text-sm">Best seller. Minimum 2 mois, puis flexible.</p>
                 <ul className="space-y-4">
                   {[
-                    "Templates illimités",
+                    "2 templates premium",
                     "Invités illimités",
-                    "Cagnotte + live",
-                    "Invitations PDF",
-                    "Support prioritaire",
+                    "Liste cadeaux",
+                    "Live contributions + animations",
+                    "Blagues live",
+                    "Suppression branding Nocely",
+                    "Export complet",
+                    "Emails illimités",
                   ].map((item, i) => (
                     <li key={i} className="flex items-center gap-3 text-sm text-white">
                       <CheckCircle2 className="h-4 w-4 text-white" />
@@ -517,6 +545,9 @@ export default function LandingPage() {
               </a>
             </div>
           </div>
+          <p className="text-center text-sm text-[#8C7A6B]">
+            FR/EN ready. Conçu pour une expérience premium et internationale.
+          </p>
         </div>
       </section>
 
@@ -525,10 +556,10 @@ export default function LandingPage() {
           <h2 className="text-4xl font-serif font-bold text-center">FAQ</h2>
           <div className="space-y-6">
             {[
-              { q: "Puis-je modifier mon design après création ?", a: "Oui, à tout moment. Couleurs, typographie, textes et images sont éditables." },
-              { q: "Est-ce que mes invités ont besoin d'un compte ?", a: "Non, le site public est accessible sans compte." },
-              { q: "Comment fonctionne la cagnotte ?", a: "Le paiement est sécurisé et les contributions sont visibles en direct." },
-              { q: "Puis‑je exporter mes invités ?", a: "Oui, l’export est disponible dans le backoffice." },
+              { q: "Puis-je modifier mon design après création ? / Can I edit the design later?", a: "Oui, à tout moment. Couleurs, typographie, textes, boutons et images sont éditables." },
+              { q: "Les invités ont-ils besoin d'un compte ? / Do guests need an account?", a: "Non. Le site public est accessible sans connexion." },
+              { q: "Comment fonctionne la cagnotte ? / How does payment work?", a: "Paiement sécurisé et suivi en direct des contributions." },
+              { q: "Puis-je exporter mes invités ? / Can I export my guests?", a: "Oui, export complet disponible dans le backoffice." },
             ].map((faq, i) => (
               <div key={i} className="p-8 rounded-3xl bg-white/70 border border-[#E9DFD2] space-y-3">
                 <h4 className="font-serif font-bold text-xl">{faq.q}</h4>
@@ -549,7 +580,7 @@ export default function LandingPage() {
           <div className="pt-4">
             <a href={`${APP_BASE_URL}/app/signup`} title="Créer mon site">
               <Button size="lg" className="rounded-full px-16 h-16 text-xl bg-primary hover:shadow-[0_12px_30px_rgba(196,165,117,0.45)] transition-all border-none">
-                Créer mon projet
+                Créer mon site / Create my site
               </Button>
             </a>
           </div>
@@ -562,10 +593,10 @@ export default function LandingPage() {
             <div className="w-6 h-6 bg-primary rounded-md flex items-center justify-center">
               <Heart className="h-4 w-4 text-white fill-white" />
             </div>
-            <span className="text-xl font-serif font-bold tracking-tight">Libala</span>
+            <span className="text-xl font-serif font-bold tracking-tight">Nocely</span>
           </div>
           <div className="text-[#B6A796] text-xs font-sans">
-            © 2026 Libala. L'amour, version 2.0.
+            © 2026 Nocely. La nouvelle génération de sites de mariage.
           </div>
           <div className="flex gap-8 text-[#8C7A6B] text-xs uppercase tracking-widest font-semibold font-sans">
             <a href="#" className="hover:text-primary transition-colors">Contact</a>

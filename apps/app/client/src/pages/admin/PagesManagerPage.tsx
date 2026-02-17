@@ -4,14 +4,18 @@ import { Badge } from "@/components/ui/badge";
 import { useWedding } from "@/hooks/use-api";
 import { useParams, Link } from "wouter";
 import { LayoutPanelTop, ListTree, Palette } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { KpiCard } from "@/components/admin/KpiCard";
 
 const CORE_PAGES = [
   { key: "rsvp", label: "RSVP", path: "rsvp" },
-  { key: "cagnotte", label: "Cagnotte", path: "cagnotte" },
-  { key: "live", label: "Live", path: "live" },
+  { key: "gifts", label: "Cadeaux", path: "gifts" },
   { key: "story", label: "Histoire", path: "story" },
+  { key: "gallery", label: "Photos", path: "gallery" },
   { key: "location", label: "Lieux & accès", path: "location" },
   { key: "program", label: "Déroulé", path: "program" },
+  { key: "cagnotte", label: "Cagnotte", path: "cagnotte" },
+  { key: "live", label: "Live", path: "live" },
 ] as const;
 
 export default function PagesManagerPage() {
@@ -25,30 +29,51 @@ export default function PagesManagerPage() {
   const navigation = wedding.config?.navigation;
   const pages = navigation?.pages || {};
   const customPages = navigation?.customPages || [];
+  const activeCore = CORE_PAGES.filter((item) => pages[item.key] ?? true).length;
+  const activeCustom = customPages.filter((page) => page.enabled).length;
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-serif font-bold">Pages du site</h1>
-          <p className="text-muted-foreground mt-1">
-            Vue d'ensemble des pages actives et de la navigation publique.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link href={`/app/${wedding.id}/design`}>
-            <Button variant="outline">
-              <Palette className="h-4 w-4 mr-2" />
-              Studio design
-            </Button>
-          </Link>
-          <Link href={`/app/${wedding.id}/site`}>
-            <Button>
-              <ListTree className="h-4 w-4 mr-2" />
-              Configurer menus
-            </Button>
-          </Link>
-        </div>
+      <AdminPageHeader
+        title="Pages du site"
+        description="Vue d'ensemble des pages actives et de la navigation publique."
+        actions={
+          <>
+            <Link href={`/app/${wedding.id}/design`}>
+              <Button variant="outline">
+                <Palette className="h-4 w-4 mr-2" />
+                Studio design
+              </Button>
+            </Link>
+            <Link href={`/app/${wedding.id}/site`}>
+              <Button>
+                <ListTree className="h-4 w-4 mr-2" />
+                Configurer menus
+              </Button>
+            </Link>
+          </>
+        }
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <KpiCard
+          label="Pages cœur"
+          value={CORE_PAGES.length}
+          hint="Pages système"
+          icon={<LayoutPanelTop className="h-5 w-5" />}
+        />
+        <KpiCard
+          label="Actives"
+          value={activeCore}
+          hint="Pages visibles"
+          icon={<ListTree className="h-5 w-5" />}
+        />
+        <KpiCard
+          label="Personnalisées"
+          value={activeCustom}
+          hint={`${customPages.length} au total`}
+          icon={<Palette className="h-5 w-5" />}
+        />
       </div>
 
       <Card className="p-6">

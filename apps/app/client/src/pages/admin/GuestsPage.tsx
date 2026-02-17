@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
     Users,
@@ -47,10 +47,17 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { RsvpResponse } from "@shared/schema";
 import { useParams } from "wouter";
+import { useWedding } from "@/hooks/use-api";
+import { useUpdateWedding } from "@/hooks/use-api";
+import { compressImageFileToJpegDataUrl } from "@/lib/image";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { KpiCard } from "@/components/admin/KpiCard";
 
 export default function GuestsPage() {
     const { weddingId } = useParams<{ weddingId: string }>();
     const { toast } = useToast();
+    const { data: wedding } = useWedding(weddingId);
+    const updateWedding = useUpdateWedding();
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -63,6 +70,18 @@ export default function GuestsPage() {
     const [editGuestId, setEditGuestId] = useState<number | null>(null);
     const [deleteGuestOpen, setDeleteGuestOpen] = useState(false);
     const [deleteGuestTarget, setDeleteGuestTarget] = useState<RsvpResponse | null>(null);
+    const [invitationSettingsOpen, setInvitationSettingsOpen] = useState(false);
+    const [invitationDraft, setInvitationDraft] = useState({
+        invitationTitle: "",
+        invitationSubtitle: "",
+        invitationBody: "",
+        invitationCtaRsvp: "",
+        invitationCtaCagnotte: "",
+        invitationImage: "",
+        invitationShowLocations: true,
+        invitationShowCountdown: true,
+    });
+    const [invitationSaving, setInvitationSaving] = useState(false);
     const [newGuest, setNewGuest] = useState({
         firstName: "",
         lastName: "",
@@ -118,8 +137,8 @@ export default function GuestsPage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["/api/rsvp"] });
             toast({
-                title: "Succès",
-                description: "Invité ajouté avec succès",
+                title: "Invité ajouté",
+                description: "Le contact est maintenant disponible dans la liste.",
             });
             setAddGuestOpen(false);
             setNewGuest({
@@ -134,8 +153,8 @@ export default function GuestsPage() {
         },
         onError: (error: Error) => {
             toast({
-                title: "Erreur",
-                description: error.message || "Impossible d'ajouter l'invité",
+                title: "Ajout impossible",
+                description: error.message || "Impossible d'ajouter cet invité pour le moment.",
                 variant: "destructive",
             });
         },
@@ -156,15 +175,15 @@ export default function GuestsPage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["/api/rsvp"] });
             toast({
-                title: "Succès",
-                description: "Invité mis à jour",
+                title: "Invité mis à jour",
+                description: "Les modifications ont bien été enregistrées.",
             });
             setEditGuestOpen(false);
         },
         onError: (error: Error) => {
             toast({
-                title: "Erreur",
-                description: error.message || "Impossible de mettre à jour l'invité",
+                title: "Mise à jour impossible",
+                description: error.message || "Impossible de mettre à jour cet invité.",
                 variant: "destructive",
             });
         },
@@ -177,14 +196,14 @@ export default function GuestsPage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["/api/rsvp"] });
             toast({
-                title: "Supprimé",
-                description: "Invité supprimé",
+                title: "Invité supprimé",
+                description: "Le contact a été retiré de votre liste.",
             });
         },
         onError: (error: Error) => {
             toast({
-                title: "Erreur",
-                description: error.message || "Impossible de supprimer l'invité",
+                title: "Suppression impossible",
+                description: error.message || "Impossible de supprimer cet invité.",
                 variant: "destructive",
             });
         },
@@ -264,11 +283,29 @@ export default function GuestsPage() {
     };
 
     const selectedGuests = responses.filter((g) => selectedIds.includes(g.id));
+    const publicBasePath = useMemo(() => {
+        const slug = (wedding as any)?.slug as string | undefined;
+        return `/${slug || weddingId}`;
+    }, [weddingId, (wedding as any)?.slug]);
+
+    const getInvitationUrl = (guest: RsvpResponse) => {
+        const token = (guest as any)?.publicToken as string | undefined;
+        return `${publicBasePath}/guest/${token || ""}`;
+    };
+
+    const copyToClipboard = async (text: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            return true;
+        } catch {
+            return false;
+        }
+    };
 
     const handleBulkEmail = () => {
         const emails = selectedGuests.map((g) => g.email).filter((e): e is string => !!e && e.length > 0);
         if (emails.length === 0) {
-            toast({ title: "Aucun email", description: "Les invités sélectionnés n'ont pas d'email.", variant: "destructive" });
+            toast({ title: "Aucun email disponible", description: "Ajoutez au moins une adresse email pour utiliser cette action.", variant: "destructive" });
             return;
         }
         const href = `mailto:?bcc=${encodeURIComponent(emails.join(","))}`;
@@ -278,14 +315,14 @@ export default function GuestsPage() {
     const handleBulkWhatsApp = () => {
         const phones = selectedGuests.map((g) => g.phone).filter((p): p is string => !!p && p.length > 0);
         if (phones.length === 0) {
-            toast({ title: "Aucun numéro", description: "Les invités sélectionnés n'ont pas de téléphone.", variant: "destructive" });
+            toast({ title: "Aucun numéro disponible", description: "Ajoutez au moins un numéro de téléphone pour utiliser cette action.", variant: "destructive" });
             return;
         }
         const phone = phones[0].replace(/\\s+/g, "");
         window.open(`https://wa.me/${phone}`, "_blank");
         if (phones.length > 1) {
             toast({
-                title: "WhatsApp",
+                title: "WhatsApp lancé",
                 description: `Ouverture du premier contact. ${phones.length - 1} autre(s) numéro(s) restent à contacter.`,
             });
         }
@@ -299,23 +336,125 @@ export default function GuestsPage() {
             }
             setSelectedIds([]);
             queryClient.invalidateQueries({ queryKey: ["/api/rsvp"] });
-            toast({ title: "Supprimé", description: "Les invités sélectionnés ont été supprimés." });
+            toast({ title: "Sélection supprimée", description: "Les invités sélectionnés ont été retirés." });
         } catch (error: any) {
-            toast({ title: "Erreur", description: error?.message || "Impossible de supprimer la sélection.", variant: "destructive" });
+            toast({ title: "Suppression impossible", description: error?.message || "Impossible de supprimer la sélection.", variant: "destructive" });
+        }
+    };
+
+    const handleBulkCopyInvitations = async () => {
+        if (selectedGuests.length === 0) return;
+        const links = selectedGuests
+            .map((g) => ({ g, token: (g as any)?.publicToken as string | undefined }))
+            .filter((x) => !!x.token)
+            .map((x) => `${publicBasePath}/guest/${x.token}`)
+            .join("\n");
+        if (!links) {
+            toast({ title: "Liens indisponibles", description: "Aucun invité sélectionné ne possède de lien d'invitation.", variant: "destructive" });
+            return;
+        }
+        const ok = await copyToClipboard(links);
+        toast({
+            title: ok ? "Liens copiés" : "Copie impossible",
+            description: ok
+                ? `${selectedGuests.length} lien(s) d'invitation copiés dans le presse-papier.`
+                : "Le navigateur a bloqué l'accès au presse-papier.",
+            variant: ok ? "default" : "destructive",
+        });
+    };
+
+    const sampleToken = useMemo(() => {
+        const first = responses.find((r) => !!(r as any)?.publicToken);
+        return (first as any)?.publicToken as string | undefined;
+    }, [responses]);
+
+    const openInvitationSettings = () => {
+        const texts = (wedding as any)?.config?.texts || {};
+        const media = (wedding as any)?.config?.media || {};
+        const sections = (wedding as any)?.config?.sections || {};
+        setInvitationDraft({
+            invitationTitle: texts.invitationTitle || "Invitation",
+            invitationSubtitle: texts.invitationSubtitle || "Vous êtes invité(e) à célébrer avec nous",
+            invitationBody: texts.invitationBody || "Retrouvez ici toutes les informations utiles pour le jour J.",
+            invitationCtaRsvp: texts.invitationCtaRsvp || "Répondre au RSVP",
+            invitationCtaCagnotte: texts.invitationCtaCagnotte || "Accéder à la cagnotte",
+            invitationImage: media.invitationImage || "",
+            invitationShowLocations: (sections.invitationShowLocations ?? true) as boolean,
+            invitationShowCountdown: (sections.invitationShowCountdown ?? true) as boolean,
+        });
+        setInvitationSettingsOpen(true);
+    };
+
+    const saveInvitationSettings = async () => {
+        if (!wedding) return;
+        setInvitationSaving(true);
+        try {
+            await updateWedding.mutateAsync({
+                id: wedding.id,
+                config: {
+                    ...wedding.config,
+                    texts: {
+                        ...(wedding.config.texts || {}),
+                        invitationTitle: invitationDraft.invitationTitle,
+                        invitationSubtitle: invitationDraft.invitationSubtitle,
+                        invitationBody: invitationDraft.invitationBody,
+                        invitationCtaRsvp: invitationDraft.invitationCtaRsvp,
+                        invitationCtaCagnotte: invitationDraft.invitationCtaCagnotte,
+                    } as any,
+                    media: {
+                        ...(wedding.config.media || {}),
+                        invitationImage: invitationDraft.invitationImage,
+                    } as any,
+                    sections: {
+                        ...(wedding.config.sections || {}),
+                        invitationShowLocations: invitationDraft.invitationShowLocations,
+                        invitationShowCountdown: invitationDraft.invitationShowCountdown,
+                    } as any,
+                },
+            });
+            toast({ title: "Invitation enregistrée", description: "La page invitation est à jour." });
+            setInvitationSettingsOpen(false);
+        } catch (error: any) {
+            toast({ title: "Enregistrement impossible", description: error?.message || "Impossible d'enregistrer cette invitation.", variant: "destructive" });
+        } finally {
+            setInvitationSaving(false);
+        }
+    };
+
+    const onInvitationImageSelected = async (file: File) => {
+        setInvitationSaving(true);
+        try {
+            const compressed = await compressImageFileToJpegDataUrl(file, {
+                maxSize: 1600,
+                quality: 0.82,
+                maxDataUrlLength: 1_600_000,
+            });
+            setInvitationDraft((p) => ({ ...p, invitationImage: compressed }));
+        } catch (err: any) {
+            const msg =
+                String(err?.message) === "too_large"
+                    ? "Image trop lourde. Importez une image plus légère."
+                    : "Impossible d'importer l'image.";
+            toast({ title: "Import impossible", description: msg, variant: "destructive" });
+        } finally {
+            setInvitationSaving(false);
         }
     };
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-serif font-bold">Invités</h1>
-                    <p className="text-muted-foreground mt-1">Gérez votre liste et suivez les réponses</p>
-                </div>
-                <div className="flex gap-3">
+            <AdminPageHeader
+                title="Invités"
+                description="Gérez vos invités, invitations et relances."
+                actions={
+                    <div className="flex gap-2">
                     <Button variant="outline" onClick={handleExportCSV}>
                         <Download className="h-4 w-4 mr-2" />
                         Exporter CSV
+                    </Button>
+                    <Button variant="outline" onClick={openInvitationSettings} disabled={!wedding}>
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Invitation
                     </Button>
                     <Dialog open={addGuestOpen} onOpenChange={setAddGuestOpen}>
                         <DialogTrigger asChild>
@@ -327,7 +466,7 @@ export default function GuestsPage() {
                         <DialogContent className="max-w-2xl">
                             <DialogHeader>
                                 <DialogTitle>Ajouter un invité</DialogTitle>
-                                <DialogDescription>Complétez les informations pour créer un invité.</DialogDescription>
+                                <DialogDescription>Créez un nouveau contact pour le suivi RSVP.</DialogDescription>
                             </DialogHeader>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
@@ -379,7 +518,7 @@ export default function GuestsPage() {
                         <DialogContent className="max-w-2xl">
                             <DialogHeader>
                                 <DialogTitle>Modifier l'invité</DialogTitle>
-                                <DialogDescription>Mettre à jour les informations de l'invité.</DialogDescription>
+                                <DialogDescription>Mettez à jour les informations de ce contact.</DialogDescription>
                             </DialogHeader>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
@@ -430,7 +569,7 @@ export default function GuestsPage() {
                     <AlertDialog open={deleteGuestOpen} onOpenChange={setDeleteGuestOpen}>
                         <AlertDialogContent className="max-w-md">
                             <AlertDialogHeader>
-                                <AlertDialogTitle>Supprimer l'invité</AlertDialogTitle>
+                                <AlertDialogTitle>Supprimer cet invité ?</AlertDialogTitle>
                                 <AlertDialogDescription>
                                     Cette action est irréversible. Voulez-vous supprimer{" "}
                                     <span className="font-semibold text-foreground">
@@ -454,25 +593,164 @@ export default function GuestsPage() {
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
-                </div>
-            </div>
+                    </div>
+                }
+            />
+
+            <Dialog open={invitationSettingsOpen} onOpenChange={setInvitationSettingsOpen}>
+                <DialogContent className="max-w-5xl">
+                    <DialogHeader>
+                        <DialogTitle>Configurer la page invitation</DialogTitle>
+                        <DialogDescription>
+                            Personnalisez le contenu affiché sur la page invitation de vos invités.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Titre</Label>
+                                <Input
+                                    value={invitationDraft.invitationTitle}
+                                    onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationTitle: e.target.value }))}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Sous-titre</Label>
+                                <Input
+                                    value={invitationDraft.invitationSubtitle}
+                                    onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationSubtitle: e.target.value }))}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Texte</Label>
+                                <Textarea
+                                    rows={4}
+                                    value={invitationDraft.invitationBody}
+                                    onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationBody: e.target.value }))}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Label bouton RSVP</Label>
+                                    <Input
+                                        value={invitationDraft.invitationCtaRsvp}
+                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationCtaRsvp: e.target.value }))}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Label bouton cagnotte</Label>
+                                    <Input
+                                        value={invitationDraft.invitationCtaCagnotte}
+                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationCtaCagnotte: e.target.value }))}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="rounded-xl border p-4 space-y-3">
+                                <div className="text-sm font-medium">Image</div>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) await onInvitationImageSelected(file);
+                                        e.target.value = "";
+                                    }}
+                                />
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setInvitationDraft((p) => ({ ...p, invitationImage: "" }))}
+                                        disabled={!invitationDraft.invitationImage}
+                                    >
+                                        Supprimer l'image
+                                    </Button>
+                                </div>
+                                {invitationDraft.invitationImage ? (
+                                    <img src={invitationDraft.invitationImage} alt="" className="h-28 w-full object-cover rounded-lg border" />
+                                ) : (
+                                    <div className="h-28 w-full rounded-lg border bg-muted/30 flex items-center justify-center text-sm text-muted-foreground">
+                                        Aucune image
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <label className="flex items-center gap-2 text-sm">
+                                    <Checkbox
+                                        checked={invitationDraft.invitationShowCountdown}
+                                        onCheckedChange={(v) => setInvitationDraft((p) => ({ ...p, invitationShowCountdown: !!v }))}
+                                    />
+                                    Afficher le compte à rebours
+                                </label>
+                                <label className="flex items-center gap-2 text-sm">
+                                    <Checkbox
+                                        checked={invitationDraft.invitationShowLocations}
+                                        onCheckedChange={(v) => setInvitationDraft((p) => ({ ...p, invitationShowLocations: !!v }))}
+                                    />
+                                    Afficher les lieux
+                                </label>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <div className="text-sm font-medium">Aperçu</div>
+                                {sampleToken ? (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => window.open(`${publicBasePath}/guest/${sampleToken}`, "_blank", "noopener,noreferrer")}
+                                    >
+                                        Ouvrir
+                                    </Button>
+                                ) : null}
+                            </div>
+
+                            {sampleToken ? (
+                                <div className="rounded-xl border overflow-hidden bg-background">
+                                    <iframe
+                                        title="Aperçu invitation"
+                                        src={`${publicBasePath}/guest/${sampleToken}`}
+                                        className="w-full h-[560px]"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="rounded-xl border bg-muted/20 p-6 text-sm text-muted-foreground">
+                                    Ajoutez au moins un invité pour activer l'aperçu de l'invitation.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2">
+                        <Button variant="outline" onClick={() => setInvitationSettingsOpen(false)}>
+                            Annuler
+                        </Button>
+                        <Button onClick={saveInvitationSettings} disabled={invitationSaving || updateWedding.isPending}>
+                            {invitationSaving || updateWedding.isPending ? "Enregistrement..." : "Enregistrer"}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                    { label: "Invités", value: total, icon: Users },
-                    { label: "Confirmés", value: confirmed, icon: CheckCircle2 },
-                    { label: "En attente", value: pending, icon: Clock },
-                    { label: "Refusés", value: declined, icon: XCircle },
+                    { label: "Invités", value: total, icon: Users, hint: "Total" },
+                    { label: "Confirmés", value: confirmed, icon: CheckCircle2, hint: "Présence confirmée" },
+                    { label: "En attente", value: pending, icon: Clock, hint: "À relancer" },
+                    { label: "Refusés", value: declined, icon: XCircle, hint: "Indisponibles" },
                 ].map((item) => (
-                    <Card key={item.label} className="p-5 flex items-center gap-4">
-                        <div className="h-11 w-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                            <item.icon className="h-5 w-5" />
-                        </div>
-                        <div>
-                            <div className="text-xs uppercase tracking-widest text-muted-foreground">{item.label}</div>
-                            <div className="text-2xl font-semibold">{item.value}</div>
-                        </div>
-                    </Card>
+                    <KpiCard
+                        key={item.label}
+                        label={item.label}
+                        value={item.value}
+                        hint={item.hint}
+                        icon={<item.icon className="h-5 w-5" />}
+                    />
                 ))}
             </div>
 
@@ -571,7 +849,7 @@ export default function GuestsPage() {
                         <DialogContent className="max-w-lg">
                             <DialogHeader>
                                 <DialogTitle>Filtres</DialogTitle>
-                                <DialogDescription>Affinez la liste d'invités (sans modifier les données).</DialogDescription>
+                                <DialogDescription>Affinez la liste sans modifier les données.</DialogDescription>
                             </DialogHeader>
                             <div className="space-y-5">
                                 <div className="space-y-2">
@@ -634,7 +912,10 @@ export default function GuestsPage() {
                                 {selectedIds.length} invité(s) sélectionné(s)
                             </div>
                             <div className="flex items-center gap-2">
-                                <Button size="sm" variant="outline" onClick={handleBulkEmail}>Envoyer email</Button>
+                                <Button size="sm" variant="outline" onClick={handleBulkCopyInvitations}>
+                                    Invitations
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={handleBulkEmail}>Envoyer un email</Button>
                                 <Button size="sm" variant="outline" onClick={handleBulkWhatsApp}>WhatsApp</Button>
                                 <Button size="sm" variant="destructive" onClick={handleBulkDelete}>Supprimer</Button>
                             </div>
@@ -707,9 +988,24 @@ export default function GuestsPage() {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
+                                                onClick={async () => {
+                                                    const token = (guest as any)?.publicToken as string | undefined;
+                                                    if (!token) {
+                                                        toast({ title: "Lien indisponible", description: "Aucun lien d'invitation n'est disponible pour cet invité.", variant: "destructive" });
+                                                        return;
+                                                    }
+                                                    window.open(`${publicBasePath}/guest/${token}`, "_blank", "noopener,noreferrer");
+                                                }}
+                                                title="Ouvrir l'invitation"
+                                            >
+                                                <ExternalLink className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
                                                 onClick={() => {
                                                     if (!guest.email) {
-                                                        toast({ title: "Email manquant", description: "Cet invité n'a pas d'email.", variant: "destructive" });
+                                                        toast({ title: "Email manquant", description: "Ajoutez un email pour contacter cet invité.", variant: "destructive" });
                                                         return;
                                                     }
                                                     window.location.href = `mailto:${guest.email}`;
@@ -722,7 +1018,7 @@ export default function GuestsPage() {
                                                 size="icon"
                                                 onClick={() => {
                                                     if (!guest.phone) {
-                                                        toast({ title: "Téléphone manquant", description: "Cet invité n'a pas de numéro.", variant: "destructive" });
+                                                        toast({ title: "Téléphone manquant", description: "Ajoutez un numéro pour contacter cet invité.", variant: "destructive" });
                                                         return;
                                                     }
                                                     const phone = guest.phone.replace(/\\s+/g, "");

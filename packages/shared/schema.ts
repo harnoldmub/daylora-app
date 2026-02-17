@@ -74,6 +74,14 @@ export const weddings = pgTable("weddings", {
       cagnotteEnabled: boolean;
       liveEnabled: boolean;
     };
+    payments: {
+      mode: "stripe" | "external";
+      externalProvider: string;
+      externalUrl: string;
+      stripeStatus: "not_connected" | "connected";
+      stripeAccountId?: string;
+      allowManualLiveContributions: boolean;
+    };
     texts: {
       siteTitle: string;
       heroTitle: string;
@@ -96,6 +104,17 @@ export const weddings = pgTable("weddings", {
       cagnotteDescription: string;
       cagnotteBackLabel: string;
       cagnotteSubmitLabel: string;
+      invitationTitle: string;
+      invitationSubtitle: string;
+      invitationBody: string;
+      invitationCtaRsvp: string;
+      invitationCtaCagnotte: string;
+      footerTitle: string;
+      footerSubtitle: string;
+      footerEmail: string;
+      footerPhone: string;
+      footerAddress: string;
+      footerCopyright: string;
       liveTitle: string;
       liveSubtitle: string;
       liveDonorsTitle: string;
@@ -108,6 +127,7 @@ export const weddings = pgTable("weddings", {
     media: {
       heroImage: string;
       couplePhoto: string;
+      invitationImage?: string;
     };
     branding: {
       logoUrl: string;
@@ -116,6 +136,9 @@ export const weddings = pgTable("weddings", {
     sections: {
       countdownDate: string;
       cagnotteSuggestedAmounts: number[];
+      cagnotteExternalUrl: string;
+      invitationShowLocations?: boolean;
+      invitationShowCountdown?: boolean;
       galleryImages: string[];
       locationItems: {
         title: string;
@@ -144,6 +167,9 @@ export const weddings = pgTable("weddings", {
         label: string;
         path: string;
         enabled: boolean;
+        linkType?: "anchor" | "external";
+        anchorId?: string;
+        externalUrl?: string;
       }[];
       customPages: {
         id: string;
@@ -166,6 +192,14 @@ export const weddings = pgTable("weddings", {
     },
     seo: { title: 'Notre Mariage', description: 'Rejoignez-nous pour célébrer notre union' },
     features: { jokesEnabled: true, giftsEnabled: true, cagnotteEnabled: true, liveEnabled: true },
+    payments: {
+      mode: "stripe",
+      externalProvider: "other",
+      externalUrl: "",
+      stripeStatus: "not_connected",
+      stripeAccountId: "",
+      allowManualLiveContributions: true,
+    },
     texts: {
       siteTitle: "",
       heroTitle: "", // Default: dynamic from title
@@ -188,6 +222,17 @@ export const weddings = pgTable("weddings", {
       cagnotteDescription: "Votre présence est notre plus beau cadeau. Si vous souhaitez contribuer à notre voyage de noces ou à notre nouveau départ, vous pouvez participer à notre cagnotte.",
       cagnotteBackLabel: "Retour",
       cagnotteSubmitLabel: "Contribuer",
+      invitationTitle: "Invitation",
+      invitationSubtitle: "Vous êtes invité(e) à célébrer avec nous",
+      invitationBody: "Retrouvez ici toutes les informations utiles pour le jour J.",
+      invitationCtaRsvp: "Répondre au RSVP",
+      invitationCtaCagnotte: "Accéder à la cagnotte",
+      footerTitle: "On a hâte de vous voir",
+      footerSubtitle: "Merci de faire partie de cette aventure.",
+      footerEmail: "",
+      footerPhone: "",
+      footerAddress: "",
+      footerCopyright: "© 2026. Tous droits réservés.",
       liveTitle: "CAGNOTTE EN DIRECT",
       liveSubtitle: "Merci pour votre générosité",
       liveDonorsTitle: "NOS GÉNÉREUX DONATEURS",
@@ -199,7 +244,8 @@ export const weddings = pgTable("weddings", {
     },
     media: {
       heroImage: "",
-      couplePhoto: ""
+      couplePhoto: "",
+      invitationImage: "",
     },
     branding: {
       logoUrl: "",
@@ -208,6 +254,9 @@ export const weddings = pgTable("weddings", {
     sections: {
       countdownDate: "",
       cagnotteSuggestedAmounts: [20, 50, 100, 150, 200],
+      cagnotteExternalUrl: "",
+      invitationShowLocations: true,
+      invitationShowCountdown: true,
       // Small, local placeholders (editable later). Keep these lightweight to avoid huge default rows.
       galleryImages: [
         "/defaults/gallery/01.jpg",
@@ -260,14 +309,14 @@ export const weddings = pgTable("weddings", {
       },
       heroCtaPath: "rsvp",
       menuItems: [
-        { id: "rsvp", label: "RSVP", path: "rsvp", enabled: true },
-        { id: "gifts", label: "Cadeaux", path: "gifts", enabled: true },
-        { id: "story", label: "Histoire", path: "story", enabled: true },
-        { id: "gallery", label: "Photos", path: "gallery", enabled: true },
-        { id: "location", label: "Lieux", path: "location", enabled: true },
-        { id: "program", label: "Programme", path: "program", enabled: true },
-        { id: "cagnotte", label: "Cagnotte", path: "cagnotte", enabled: true },
-        { id: "live", label: "Live", path: "live", enabled: true }
+        { id: "home", label: "Accueil", path: "home", enabled: true, linkType: "anchor", anchorId: "hero", externalUrl: "" },
+        { id: "rsvp", label: "RSVP", path: "rsvp", enabled: true, linkType: "anchor", anchorId: "rsvp", externalUrl: "" },
+        { id: "gifts", label: "Cadeaux", path: "gifts", enabled: true, linkType: "anchor", anchorId: "gifts", externalUrl: "" },
+        { id: "story", label: "Histoire", path: "story", enabled: true, linkType: "anchor", anchorId: "story", externalUrl: "" },
+        { id: "gallery", label: "Photos", path: "gallery", enabled: true, linkType: "anchor", anchorId: "gallery", externalUrl: "" },
+        { id: "location", label: "Lieux", path: "location", enabled: true, linkType: "anchor", anchorId: "location", externalUrl: "" },
+        { id: "program", label: "Programme", path: "program", enabled: true, linkType: "anchor", anchorId: "program", externalUrl: "" },
+        { id: "cagnotte", label: "Cagnotte", path: "cagnotte", enabled: true, linkType: "anchor", anchorId: "cagnotte", externalUrl: "" }
       ],
       customPages: []
     }

@@ -14,6 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, MailCheck, MailWarning } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { KpiCard } from "@/components/admin/KpiCard";
 
 export default function EmailLogsPage() {
     const { weddingId } = useParams();
@@ -31,17 +33,40 @@ export default function EmailLogsPage() {
         );
     }
 
+    const total = logs?.length ?? 0;
+    const sent = logs?.filter((log) => log.status === "sent").length ?? 0;
+    const failed = total - sent;
+
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Historique des Emails</h1>
-                <p className="text-muted-foreground text-lg">
-                    Suivez tous les messages envoyés à vos invités et donateurs.
-                </p>
+        <div className="space-y-8">
+            <AdminPageHeader
+                title="Historique des emails"
+                description="Suivez tous les messages envoyés aux invités et contributeurs."
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <KpiCard
+                    label="Total"
+                    value={total}
+                    hint="Tous les envois"
+                    icon={<MailCheck className="h-5 w-5" />}
+                />
+                <KpiCard
+                    label="Envoyés"
+                    value={sent}
+                    hint="Statut livré"
+                    icon={<MailCheck className="h-5 w-5" />}
+                />
+                <KpiCard
+                    label="Échecs"
+                    value={failed}
+                    hint="À relancer"
+                    icon={<MailWarning className="h-5 w-5" />}
+                />
             </div>
 
-            <Card className="border-gold/20 shadow-lg">
-                <CardHeader className="bg-muted/30">
+            <Card className="shadow-sm">
+                <CardHeader className="bg-muted/30 border-b">
                     <CardTitle className="flex items-center gap-2">
                         Journal d'envoi
                     </CardTitle>
@@ -87,7 +112,7 @@ export default function EmailLogsPage() {
                                     </TableCell>
                                 </TableRow>
                             ))}
-                            {logs?.length === 0 && (
+                            {!logs?.length && (
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic">
                                         Aucun email envoyé pour le moment.

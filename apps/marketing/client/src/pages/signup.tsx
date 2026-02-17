@@ -54,8 +54,8 @@ export default function Signup() {
                             <Heart className="h-6 w-6 text-white fill-white" />
                         </div>
                     </div>
-                    <CardTitle className="text-4xl font-serif font-bold text-white">Libala</CardTitle>
-                    <CardDescription className="text-white/40 italic mt-2">Dernière étape avant le grand jour</CardDescription>
+                    <CardTitle className="text-4xl font-serif font-bold text-white">Nocely</CardTitle>
+                    <CardDescription className="text-white/40 italic mt-2">Créez votre espace en quelques minutes</CardDescription>
                 </CardHeader>
 
                 <CardContent className="space-y-6 p-10 pt-4">
@@ -68,7 +68,7 @@ export default function Signup() {
                                     <FormItem>
                                         <FormLabel className="text-white/70 uppercase tracking-widest text-[10px] font-bold">Prénom</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Jean" {...field} className="glass-morphism border-white/10 h-12 focus:border-primary/50 transition-colors" />
+                                            <Input autoComplete="given-name" placeholder="Jean" {...field} className="glass-morphism border-white/10 h-12 focus:border-primary/50 transition-colors" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -81,7 +81,7 @@ export default function Signup() {
                                     <FormItem>
                                         <FormLabel className="text-white/70 uppercase tracking-widest text-[10px] font-bold">Email professionnel</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="jean@exemple.com" {...field} className="glass-morphism border-white/10 h-12 focus:border-primary/50 transition-colors" />
+                                            <Input type="email" autoComplete="username" placeholder="jean@exemple.com" {...field} className="glass-morphism border-white/10 h-12 focus:border-primary/50 transition-colors" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -94,7 +94,7 @@ export default function Signup() {
                                     <FormItem>
                                         <FormLabel className="text-white/70 uppercase tracking-widest text-[10px] font-bold">Mot de passe secret</FormLabel>
                                         <FormControl>
-                                            <Input type="password" {...field} className="glass-morphism border-white/10 h-12 focus:border-primary/50 transition-colors" />
+                                            <Input type="password" autoComplete="new-password" {...field} className="glass-morphism border-white/10 h-12 focus:border-primary/50 transition-colors" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -105,14 +105,14 @@ export default function Signup() {
                                 className="w-full rounded-full h-14 bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-[0_10px_30px_rgba(200,169,106,0.2)] border-none mt-4 transition-all"
                                 disabled={signupMutation.isPending}
                             >
-                                {signupMutation.isPending ? <Loader2 className="animate-spin mr-2" /> : "Créer mon univers"}
+                                {signupMutation.isPending ? <Loader2 className="animate-spin mr-2" /> : "Créer mon site"}
                             </Button>
                         </form>
                     </Form>
 
                     <div className="text-center text-sm pt-4">
                         <span className="text-white/40 font-medium">Déjà parmi nous ?</span>{" "}
-                        <Link href="/login" title="Se connecter à Libala" className="text-primary font-bold hover:text-primary/80 transition-colors ml-1">
+                        <Link href="/login" title="Se connecter à Nocely" className="text-primary font-bold hover:text-primary/80 transition-colors ml-1">
                             Connectez-vous
                         </Link>
                     </div>
@@ -122,7 +122,7 @@ export default function Signup() {
                             onClick={() => setLocation("/")}
                             className="text-[10px] uppercase tracking-widest text-white/20 hover:text-primary transition-all font-bold"
                         >
-                            ← Explorer Libala
+                            ← Découvrir Nocely
                         </button>
                     </div>
                 </CardContent>

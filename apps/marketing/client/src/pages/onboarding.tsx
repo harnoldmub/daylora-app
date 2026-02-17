@@ -22,7 +22,7 @@ import { Check, Heart, Sparkles, ArrowRight, Calendar, Globe, Layout } from "luc
 
 // Template images
 const TEMPLATES = [
-    { id: 'heritage', name: 'Héritage', description: 'Le classique intemporel de Libala', image: 'https://images.unsplash.com/photo-1544078751-58fee2d8a03b?auto=format&fit=crop&q=80' },
+    { id: 'heritage', name: 'Héritage', description: 'Le classique intemporel de Nocely', image: 'https://images.unsplash.com/photo-1544078751-58fee2d8a03b?auto=format&fit=crop&q=80' },
     { id: 'classic', name: 'Classique', description: 'Élégant et intemporel', image: '/template_classic_preview_1770241373403.png' },
     { id: 'modern', name: 'Moderne', description: 'Épuré et minimaliste', image: '/template_modern_preview_1770241388271.png' },
     { id: 'minimal', name: 'Minimal', description: 'Audacieux et chic', image: '/template_minimal_preview_1770241404102.png' },
@@ -99,7 +99,7 @@ export default function Onboarding() {
             setIsLoading(false);
             toast({
                 title: "Erreur",
-                description: "Impossible de créer votre site. Veuillez réessayer.",
+                description: "Impossible de créer votre projet. Vérifiez vos informations puis réessayez.",
                 variant: "destructive",
             });
         }
@@ -122,10 +122,10 @@ export default function Onboarding() {
                         Lancez votre aventure
                     </div>
                     <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">
-                        Créez votre <span className="text-gradient italic">Libala</span>
+                        Créez votre site <span className="text-gradient italic">Nocely</span>
                     </h1>
                     <p className="text-white/40 max-w-lg mx-auto text-sm">
-                        En quelques clics, préparez le site qui racontera votre histoire et unira vos proches.
+                        Une plateforme moderne pour créer, personnaliser et publier une expérience digitale élégante.
                     </p>
                 </div>
 
@@ -138,7 +138,7 @@ export default function Onboarding() {
                             </div>
                             <span className={`text-xs uppercase tracking-[0.2em] font-medium hidden sm:block ${step >= i ? 'text-primary' : 'text-white/20'
                                 }`}>
-                                {i === 1 ? 'Details' : 'Design'}
+                                {i === 1 ? 'Détails' : 'Design'}
                             </span>
                             {i === 1 && <div className={`h-[1px] w-12 sm:w-20 mx-2 ${step > 1 ? 'bg-primary' : 'bg-white/10'}`} />}
                         </div>
@@ -163,7 +163,7 @@ export default function Onboarding() {
                                                 name="title"
                                                 render={({ field }) => (
                                                     <FormItem className="md:col-span-2">
-                                                        <FormLabel className="text-white/70 uppercase tracking-widest text-[10px] font-bold">Titre du mariage</FormLabel>
+                                                        <FormLabel className="text-white/70 uppercase tracking-widest text-[10px] font-bold">Titre du projet</FormLabel>
                                                         <FormControl>
                                                             <div className="relative">
                                                                 <Heart className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/50" />
@@ -183,7 +183,7 @@ export default function Onboarding() {
                                                     <FormItem>
                                                         <FormLabel className="text-white/70 uppercase tracking-widest text-[10px] font-bold">Votre URL unique</FormLabel>
                                                         <div className="flex items-center">
-                                                            <div className="glass-morphism border-white/10 border-r-0 px-4 h-14 flex items-center text-xs text-white/40 font-mono rounded-l-xl">libala.com/</div>
+                                                            <div className="glass-morphism border-white/10 border-r-0 px-4 h-14 flex items-center text-xs text-white/40 font-mono rounded-l-xl">nocely.com/</div>
                                                             <FormControl>
                                                                 <Input {...field} className="glass-morphism border-white/10 rounded-l-none h-14 focus:border-primary/50 transition-colors font-mono text-white placeholder:text-white/30" />
                                                             </FormControl>
@@ -198,7 +198,7 @@ export default function Onboarding() {
                                                 name="weddingDate"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel className="text-white/70 uppercase tracking-widest text-[10px] font-bold">La date du grand jour</FormLabel>
+                                                        <FormLabel className="text-white/70 uppercase tracking-widest text-[10px] font-bold">Date principale</FormLabel>
                                                         <FormControl>
                                                             <div className="relative">
                                                                 <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/50" />
@@ -317,7 +317,7 @@ export default function Onboarding() {
                                 className="space-y-4"
                             >
                                 <h2 className="text-3xl font-serif font-bold text-white">
-                                    Préparation de votre univers
+                                    Préparation de votre espace Nocely
                                 </h2>
                                 <div className="space-y-2">
                                     <motion.p

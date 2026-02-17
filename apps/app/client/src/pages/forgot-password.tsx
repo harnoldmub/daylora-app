@@ -53,7 +53,7 @@ export default function ForgotPassword() {
             <Card className="w-full max-w-md shadow-lg border-t-4 border-primary">
                 <CardHeader className="text-center">
                     <CardTitle className="text-2xl font-serif">Mot de passe oublié</CardTitle>
-                    <CardDescription>Nous vous enverrons un lien de réinitialisation</CardDescription>
+                    <CardDescription>Récupérez l'accès à votre espace Nocely</CardDescription>
                 </CardHeader>
 
                 <CardContent className="space-y-6 pt-4">
@@ -63,7 +63,7 @@ export default function ForgotPassword() {
                             <p className="text-muted-foreground">
                                 Si un compte est associé à l'adresse <strong>{form.getValues("email")}</strong>, vous recevrez un email sous peu.
                             </p>
-                            <Link href="/login" title="Retour à la connexion">
+                            <Link href="/app/login" title="Retour à la connexion">
                                 <Button variant="outline" className="w-full rounded-full mt-4">Retour à la connexion</Button>
                             </Link>
                         </div>
@@ -93,7 +93,7 @@ export default function ForgotPassword() {
 
                     {!isSent && (
                         <div className="text-center border-t pt-4">
-                            <Link href="/login" title="Se connecter" className="text-sm text-primary hover:underline">
+                            <Link href="/app/login" title="Se connecter" className="text-sm text-primary hover:underline">
                                 Pas besoin ? Retour à la connexion
                             </Link>
                         </div>

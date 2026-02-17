@@ -159,7 +159,7 @@ export default function WelcomePage() {
                 </div>
 
                 <div className="mt-12 text-center">
-                    <p className="text-white/20 text-sm italic uppercase tracking-[0.2em]">Libala — L'excellence pour votre mariage</p>
+                    <p className="text-white/20 text-sm italic uppercase tracking-[0.2em]">Nocely — Votre mariage, sublimé en ligne</p>
                 </div>
             </motion.div>
         </div>

@@ -1,5 +1,6 @@
 import { type Express } from "express";
 import { createServer } from "http";
+import { randomUUID } from "node:crypto";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
 import authRoutes from "./auth-routes";
@@ -29,6 +30,14 @@ const DEFAULT_WEDDING_CONFIG = {
   },
   seo: { title: "Notre Mariage", description: "Rejoignez-nous pour célébrer notre union" },
   features: { jokesEnabled: true, giftsEnabled: true, cagnotteEnabled: true, liveEnabled: true },
+  payments: {
+    mode: "stripe",
+    externalProvider: "other",
+    externalUrl: "",
+    stripeStatus: "not_connected",
+    stripeAccountId: "",
+    allowManualLiveContributions: true,
+  },
   texts: {
     siteTitle: "",
     heroTitle: "",
@@ -51,6 +60,17 @@ const DEFAULT_WEDDING_CONFIG = {
     cagnotteDescription: "Votre présence est notre plus beau cadeau. Si vous souhaitez contribuer à notre voyage de noces ou à notre nouveau départ, vous pouvez participer à notre cagnotte.",
     cagnotteBackLabel: "Retour",
     cagnotteSubmitLabel: "Contribuer",
+    invitationTitle: "Invitation",
+    invitationSubtitle: "Vous êtes invité(e) à célébrer avec nous",
+    invitationBody: "Retrouvez ici toutes les informations utiles pour le jour J.",
+    invitationCtaRsvp: "Répondre au RSVP",
+    invitationCtaCagnotte: "Accéder à la cagnotte",
+    footerTitle: "On a hâte de vous voir",
+    footerSubtitle: "Merci de faire partie de cette aventure.",
+    footerEmail: "",
+    footerPhone: "",
+    footerAddress: "",
+    footerCopyright: "© 2026. Tous droits réservés.",
     liveTitle: "CAGNOTTE EN DIRECT",
     liveSubtitle: "Merci pour votre générosité",
     liveDonorsTitle: "NOS GÉNÉREUX DONATEURS",
@@ -63,6 +83,7 @@ const DEFAULT_WEDDING_CONFIG = {
   media: {
     heroImage: "",
     couplePhoto: "",
+    invitationImage: "",
   },
   branding: {
     logoUrl: "",
@@ -71,6 +92,9 @@ const DEFAULT_WEDDING_CONFIG = {
   sections: {
     countdownDate: "",
     cagnotteSuggestedAmounts: [20, 50, 100, 150, 200],
+    cagnotteExternalUrl: "",
+    invitationShowLocations: true,
+    invitationShowCountdown: true,
     // Small, local placeholders (editable later). Keep these lightweight to avoid huge default rows.
     galleryImages: [
       "/defaults/gallery/01.jpg",
@@ -123,14 +147,14 @@ const DEFAULT_WEDDING_CONFIG = {
     },
     heroCtaPath: "rsvp",
     menuItems: [
-      { id: "rsvp", label: "RSVP", path: "rsvp", enabled: true },
-      { id: "gifts", label: "Cadeaux", path: "gifts", enabled: true },
-      { id: "story", label: "Histoire", path: "story", enabled: true },
-      { id: "gallery", label: "Photos", path: "gallery", enabled: true },
-      { id: "location", label: "Lieux", path: "location", enabled: true },
-      { id: "program", label: "Programme", path: "program", enabled: true },
-      { id: "cagnotte", label: "Cagnotte", path: "cagnotte", enabled: true },
-      { id: "live", label: "Live", path: "live", enabled: true },
+      { id: "home", label: "Accueil", path: "home", enabled: true, linkType: "anchor", anchorId: "hero", externalUrl: "" },
+      { id: "rsvp", label: "RSVP", path: "rsvp", enabled: true, linkType: "anchor", anchorId: "rsvp", externalUrl: "" },
+      { id: "gifts", label: "Cadeaux", path: "gifts", enabled: true, linkType: "anchor", anchorId: "gifts", externalUrl: "" },
+      { id: "story", label: "Histoire", path: "story", enabled: true, linkType: "anchor", anchorId: "story", externalUrl: "" },
+      { id: "gallery", label: "Photos", path: "gallery", enabled: true, linkType: "anchor", anchorId: "gallery", externalUrl: "" },
+      { id: "location", label: "Lieux", path: "location", enabled: true, linkType: "anchor", anchorId: "location", externalUrl: "" },
+      { id: "program", label: "Programme", path: "program", enabled: true, linkType: "anchor", anchorId: "program", externalUrl: "" },
+      { id: "cagnotte", label: "Cagnotte", path: "cagnotte", enabled: true, linkType: "anchor", anchorId: "cagnotte", externalUrl: "" },
     ],
     customPages: [],
   },
@@ -224,7 +248,7 @@ export async function registerRoutes(app: Express) {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Libala API</title>
+          <title>Nocely API</title>
           <style>
             body { font-family: system-ui, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; line-height: 1.6; }
             h1 { color: #333; }
@@ -238,7 +262,7 @@ export async function registerRoutes(app: Express) {
         <body>
           <div class="card">
             <h1>Backend Server Running</h1>
-            <p>This is the API server for Libala.</p>
+            <p>This is the API server for Nocely.</p>
             <ul>
               <li><strong>Marketing (Public Site):</strong> <a href="http://localhost:5173">http://localhost:5173</a></li>
               <li><strong>App (Admin):</strong> <a href="http://localhost:5174">http://localhost:5174</a></li>
@@ -256,6 +280,125 @@ export async function registerRoutes(app: Express) {
       res.json({ key });
     } catch (error) {
       res.status(500).json({ message: "Stripe key not available" });
+    }
+  });
+
+  // Stripe Connect OAuth
+  app.get("/api/stripe/connect/start", isAuthenticated, withWedding, requireRole(["owner", "admin"]), async (req, res) => {
+    try {
+      const wedding = (req as any).wedding;
+      const user = (req as any).user;
+      const clientId = process.env.STRIPE_CONNECT_CLIENT_ID;
+      if (!clientId) {
+        return res.status(500).json({ message: "STRIPE_CONNECT_CLIENT_ID manquant" });
+      }
+
+      const appBase = process.env.APP_BASE_URL || "http://localhost:5174";
+      const redirectUri = `${appBase}/api/stripe/connect/callback`;
+      const state = randomUUID();
+
+      (req as any).session.stripeConnectState = {
+        state,
+        weddingId: wedding.id,
+        userId: user.id,
+        createdAt: Date.now(),
+      };
+
+      const qs = new URLSearchParams({
+        response_type: "code",
+        client_id: clientId,
+        scope: "read_write",
+        redirect_uri: redirectUri,
+        state,
+      });
+
+      res.redirect(`https://connect.stripe.com/oauth/authorize?${qs.toString()}`);
+    } catch {
+      res.status(500).json({ message: "Impossible de démarrer Stripe Connect" });
+    }
+  });
+
+  app.get("/api/stripe/connect/callback", isAuthenticated, async (req, res) => {
+    const appBase = process.env.APP_BASE_URL || "http://localhost:5174";
+    const redirectTo = (weddingId?: string, params?: string) =>
+      `${appBase}/app/${weddingId || ""}/settings${params ? `?${params}` : ""}`;
+
+    try {
+      const code = req.query.code as string | undefined;
+      const state = req.query.state as string | undefined;
+      const oauthError = req.query.error as string | undefined;
+      const user = (req as any).user;
+      const sessionState = (req as any).session?.stripeConnectState as
+        | { state: string; weddingId: string; userId: string; createdAt: number }
+        | undefined;
+
+      if (!sessionState) {
+        return res.redirect(`${appBase}/app/login`);
+      }
+
+      const { weddingId } = sessionState;
+      if (oauthError) {
+        return res.redirect(redirectTo(weddingId, "stripe=error"));
+      }
+
+      if (!code || !state || sessionState.state !== state || sessionState.userId !== user.id) {
+        return res.redirect(redirectTo(weddingId, "stripe=invalid_state"));
+      }
+
+      if (Date.now() - sessionState.createdAt > 10 * 60 * 1000) {
+        return res.redirect(redirectTo(weddingId, "stripe=expired"));
+      }
+
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.redirect(`${appBase}/app`);
+      }
+      const membership = await storage.getMembershipByUserAndWedding(user.id, wedding.id);
+      if (!user.isAdmin && wedding.ownerId !== user.id && !membership) {
+        return res.redirect(`${appBase}/app`);
+      }
+
+      const stripe = await getUncachableStripeClient();
+      const tokenResp = await stripe.oauth.token({
+        grant_type: "authorization_code",
+        code,
+      });
+
+      const stripeAccountId = tokenResp.stripe_user_id;
+      const nextConfig = {
+        ...(wedding.config || {}),
+        payments: {
+          ...(wedding.config?.payments || {}),
+          mode: "stripe",
+          stripeStatus: "connected",
+          stripeAccountId,
+        },
+      } as any;
+
+      await storage.updateWedding(wedding.id, { config: nextConfig });
+      (req as any).session.stripeConnectState = null;
+      return res.redirect(redirectTo(wedding.id, "stripe=connected"));
+    } catch {
+      const sessionState = (req as any).session?.stripeConnectState as { weddingId?: string } | undefined;
+      return res.redirect(redirectTo(sessionState?.weddingId, "stripe=error"));
+    }
+  });
+
+  app.post("/api/stripe/connect/disconnect", isAuthenticated, withWedding, requireRole(["owner", "admin"]), async (req, res) => {
+    try {
+      const wedding = (req as any).wedding;
+      const nextConfig = {
+        ...(wedding.config || {}),
+        payments: {
+          ...(wedding.config?.payments || {}),
+          stripeStatus: "not_connected",
+          stripeAccountId: "",
+        },
+      } as any;
+      const updated = await storage.updateWedding(wedding.id, { config: nextConfig });
+      res.json({ success: true, wedding: updated });
+    } catch {
+      res.status(500).json({ message: "Impossible de déconnecter Stripe" });
     }
   });
 
@@ -296,6 +439,9 @@ export async function registerRoutes(app: Express) {
         weddingDate,
         currentPlan,
         features,
+        paymentMode,
+        externalCagnotteUrl,
+        externalProvider,
         heroImage,
         couplePhoto,
         galleryImages,
@@ -336,6 +482,13 @@ export async function registerRoutes(app: Express) {
           ...config.features,
           ...(features || {}),
         },
+        payments: {
+          ...config.payments,
+          mode: paymentMode === "external" ? "external" : "stripe",
+          externalProvider: externalProvider || config.payments.externalProvider || "other",
+          externalUrl: externalCagnotteUrl || config.payments.externalUrl || "",
+          stripeStatus: paymentMode === "external" ? "not_connected" : (config.payments.stripeStatus || "not_connected"),
+        },
         media: {
           ...config.media,
           heroImage: heroImage || config.media.heroImage,
@@ -347,6 +500,7 @@ export async function registerRoutes(app: Express) {
         },
         sections: {
           ...config.sections,
+          cagnotteExternalUrl: externalCagnotteUrl || config.sections.cagnotteExternalUrl || "",
           galleryImages: galleryImages || config.sections.galleryImages,
         },
         navigation: {
@@ -410,12 +564,13 @@ export async function registerRoutes(app: Express) {
         const logoUrl = updates.config?.branding?.logoUrl;
         const heroImage = updates.config?.media?.heroImage;
         const couplePhoto = updates.config?.media?.couplePhoto;
+        const invitationImage = updates.config?.media?.invitationImage;
         const galleryImages = updates.config?.sections?.galleryImages;
 
         if (isHugeDataUrl(logoUrl, 220_000)) {
           return res.status(413).json({ message: "Logo trop volumineux. Importez une image plus légère." });
         }
-        if (isHugeDataUrl(heroImage, 3_000_000) || isHugeDataUrl(couplePhoto, 3_000_000)) {
+        if (isHugeDataUrl(heroImage, 3_000_000) || isHugeDataUrl(couplePhoto, 3_000_000) || isHugeDataUrl(invitationImage, 2_000_000)) {
           return res.status(413).json({ message: "Image trop volumineuse. Importez une image plus légère." });
         }
         if (Array.isArray(galleryImages)) {
@@ -462,6 +617,10 @@ export async function registerRoutes(app: Express) {
           features: {
             ...(wedding.config?.features || {}),
             ...(incomingConfig?.features || {}),
+          },
+          payments: {
+            ...(wedding.config?.payments || {}),
+            ...(incomingConfig?.payments || {}),
           },
           sections: {
             ...(wedding.config?.sections || {}),
@@ -771,6 +930,38 @@ export async function registerRoutes(app: Express) {
     res.json({ total, currency: "eur", latest, recent });
   });
 
+  const manualContributionSchema = z.object({
+    donorName: z.string().min(1, "Nom requis"),
+    amount: z.number().int().min(100, "Montant minimum: 1€"),
+    donorEmail: z.string().email("Email invalide").optional().nullable(),
+    message: z.string().optional().nullable(),
+  });
+
+  app.post("/api/contributions/manual", isAuthenticated, withWedding, validateRequest(manualContributionSchema), async (req, res) => {
+    const wedding = (req as any).wedding;
+    const payments = (wedding?.config?.payments || {}) as {
+      allowManualLiveContributions?: boolean;
+    };
+    if (payments.allowManualLiveContributions === false) {
+      return res.status(403).json({ message: "Les contributions manuelles sont désactivées pour ce projet." });
+    }
+
+    const manualIntentId = `manual_${wedding.id}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+    const contribution = await storage.createContribution(wedding.id, {
+      donorName: req.body.donorName,
+      donorEmail: req.body.donorEmail || null,
+      amount: req.body.amount,
+      message: req.body.message || null,
+      stripePaymentIntentId: manualIntentId,
+    });
+    const updatedContribution = await storage.updateContributionStatus(manualIntentId, "paid");
+
+    liveService.broadcast(wedding.id, "contribution_created", updatedContribution || contribution);
+    await storage.createLiveEvent(wedding.id, "contribution_created", updatedContribution || contribution);
+
+    res.status(201).json(updatedContribution || contribution);
+  });
+
   // SSE Live Stream
   app.get("/api/live/stream", withWedding, async (req, res) => {
     const wedding = (req as any).wedding;
@@ -823,6 +1014,41 @@ export async function registerRoutes(app: Express) {
   app.post("/api/create-checkout-session", withWedding, validateRequest(insertContributionSchema), async (req, res) => {
     try {
       const wedding = (req as any).wedding;
+      const payments = (wedding?.config?.payments || {}) as {
+        mode?: "stripe" | "external";
+        externalUrl?: string;
+        stripeStatus?: "not_connected" | "connected";
+        stripeAccountId?: string;
+      };
+      const sections = (wedding?.config?.sections || {}) as {
+        cagnotteExternalUrl?: string;
+      };
+      const externalUrl = payments.externalUrl || sections.cagnotteExternalUrl || "";
+      const mode = payments.mode || (externalUrl ? "external" : "stripe");
+
+      if (mode === "external") {
+        if (!externalUrl) {
+          return res.status(400).json({
+            message: "Aucun lien de cagnotte externe configuré. Ajoutez-le dans les paramètres.",
+          });
+        }
+        return res.json({
+          url: externalUrl,
+          mode: "external",
+        });
+      }
+
+      const stripeAccountId = payments.stripeAccountId || "";
+      const stripeConnected = payments.stripeStatus === "connected" && !!stripeAccountId;
+      if (!stripeConnected) {
+        if (externalUrl) {
+          return res.json({ url: externalUrl, mode: "external" });
+        }
+        return res.status(400).json({
+          message: "Stripe n'est pas connecté. Connectez votre compte Stripe ou configurez un lien externe.",
+        });
+      }
+
       const { donorName, donorEmail, amount, message } = req.body;
       const stripe = await getUncachableStripeClient();
       const session = await stripe.checkout.sessions.create({
@@ -847,13 +1073,19 @@ export async function registerRoutes(app: Express) {
           donorEmail: donorEmail || "",
           message: message || "",
         },
+        payment_intent_data: {
+          transfer_data: {
+            destination: stripeAccountId,
+          },
+          // Keep fees = 0 for now (destination charge). Can add application_fee_amount later.
+        },
         success_url: `${process.env.APP_BASE_URL || "http://localhost:5174"}/contribution/merci?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.APP_BASE_URL || "http://localhost:5174"}/${wedding.slug}/cagnotte`,
       });
 
       res.json({ url: session.url });
     } catch (error) {
-      res.status(500).json({ message: "Stripe error" });
+      res.status(500).json({ message: "Paiement Stripe indisponible" });
     }
   });
 
@@ -874,12 +1106,54 @@ export async function registerRoutes(app: Express) {
         metadata: { weddingId: wedding.id, purpose: "billing", billingType: type },
         subscription_data: type === "subscription" ? { metadata: { weddingId: wedding.id, purpose: "billing" } } : undefined,
         payment_intent_data: type === "one_time" ? { metadata: { weddingId: wedding.id, purpose: "billing" } } : undefined,
-        success_url: `${process.env.APP_BASE_URL || "http://localhost:5174"}/app/${wedding.id}/billing?success=1`,
+        success_url: `${process.env.APP_BASE_URL || "http://localhost:5174"}/app/${wedding.id}/billing?success=1&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.APP_BASE_URL || "http://localhost:5174"}/app/${wedding.id}/billing?canceled=1`,
       });
       res.json({ url: session.url });
     } catch (error) {
       res.status(500).json({ message: "Erreur Stripe" });
+    }
+  });
+
+  // Billing: sync plan state from Stripe (useful when webhooks are delayed/misconfigured)
+  app.post("/api/billing/sync", isAuthenticated, withWedding, async (req, res) => {
+    try {
+      const wedding = (req as any).wedding;
+      const stripe = await getUncachableStripeClient();
+
+      let subs: any[] = [];
+      try {
+        const result = await (stripe as any).subscriptions.search({
+          query: `metadata['weddingId']:'${wedding.id}'`,
+          limit: 10,
+        });
+        subs = result?.data || [];
+      } catch {
+        // Fallback for accounts without search enabled: list and filter.
+        const result = await stripe.subscriptions.list({ limit: 100, status: "all" as any });
+        subs = (result?.data || []).filter((s: any) => s?.metadata?.weddingId === wedding.id);
+      }
+
+      if (!subs.length) {
+        await storage.updateWedding(wedding.id, { currentPlan: "free" });
+        return res.json({ ok: true, found: false, currentPlan: "free" });
+      }
+
+      const preferred = subs.find((s: any) => ["active", "trialing"].includes(String(s.status))) || subs[0];
+      await storage.upsertStripeSubscription({
+        weddingId: wedding.id,
+        stripeCustomerId: String(preferred.customer || ""),
+        stripeSubscriptionId: String(preferred.id || ""),
+        priceId: preferred?.items?.data?.[0]?.price?.id || null,
+        status: String(preferred.status || "incomplete"),
+        currentPeriodEnd: preferred?.current_period_end ? new Date(preferred.current_period_end * 1000) : null,
+      });
+      const isPremium = ["active", "trialing"].includes(String(preferred.status || ""));
+      await storage.updateWedding(wedding.id, { currentPlan: isPremium ? "premium" : "free" });
+
+      res.json({ ok: true, found: true, status: preferred.status, currentPlan: isPremium ? "premium" : "free" });
+    } catch (error: any) {
+      res.status(500).json({ message: "Sync Stripe impossible" });
     }
   });
 

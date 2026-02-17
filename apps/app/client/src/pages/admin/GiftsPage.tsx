@@ -45,6 +45,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Gift as GiftType } from "@shared/schema";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { KpiCard } from "@/components/admin/KpiCard";
 
 type GiftForm = {
   name: string;
@@ -94,14 +96,14 @@ export default function GiftsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/gifts"] });
-      toast({ title: "Cadeau ajoute" });
+      toast({ title: "Cadeau ajouté", description: "L'élément est maintenant visible dans votre liste." });
       setCreateOpen(false);
       setForm(emptyForm);
     },
     onError: (error: Error) => {
       toast({
-        title: "Erreur",
-        description: error.message || "Impossible d'ajouter le cadeau",
+        title: "Ajout impossible",
+        description: error.message || "Impossible d'ajouter ce cadeau.",
         variant: "destructive",
       });
     },
@@ -120,15 +122,15 @@ export default function GiftsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/gifts"] });
-      toast({ title: "Cadeau mis à jour" });
+      toast({ title: "Cadeau mis à jour", description: "Les modifications ont bien été enregistrées." });
       setEditOpen(false);
       setEditingGift(null);
       setForm(emptyForm);
     },
     onError: (error: Error) => {
       toast({
-        title: "Erreur",
-        description: error.message || "Impossible de modifier le cadeau",
+        title: "Mise à jour impossible",
+        description: error.message || "Impossible de modifier ce cadeau.",
         variant: "destructive",
       });
     },
@@ -141,14 +143,14 @@ export default function GiftsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/gifts"] });
-      toast({ title: "Cadeau supprime" });
+      toast({ title: "Cadeau supprimé", description: "L'élément a été retiré de la liste." });
       setDeleteOpen(false);
       setDeletingGift(null);
     },
     onError: (error: Error) => {
       toast({
-        title: "Erreur",
-        description: error.message || "Impossible de supprimer le cadeau",
+        title: "Suppression impossible",
+        description: error.message || "Impossible de supprimer ce cadeau.",
         variant: "destructive",
       });
     },
@@ -180,7 +182,7 @@ export default function GiftsPage() {
   const submitCreate = () => {
     if (!form.name.trim()) {
       toast({
-        title: "Champ requis",
+        title: "Nom requis",
         description: "Le nom du cadeau est requis.",
         variant: "destructive",
       });
@@ -193,7 +195,7 @@ export default function GiftsPage() {
     if (!editingGift) return;
     if (!form.name.trim()) {
       toast({
-        title: "Champ requis",
+        title: "Nom requis",
         description: "Le nom du cadeau est requis.",
         variant: "destructive",
       });
@@ -204,12 +206,11 @@ export default function GiftsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-serif font-bold">Cadeaux</h1>
-          <p className="text-muted-foreground mt-1">Gerez votre liste de cadeaux et son avancement</p>
-        </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+      <AdminPageHeader
+        title="Cadeaux"
+        description="Gérez votre liste de cadeaux et suivez sa progression."
+        actions={
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
@@ -219,7 +220,7 @@ export default function GiftsPage() {
           <DialogContent className="max-w-xl">
             <DialogHeader>
               <DialogTitle>Nouveau cadeau</DialogTitle>
-              <DialogDescription>Ajoutez un item a votre liste de mariage.</DialogDescription>
+              <DialogDescription>Ajoutez un nouvel élément à votre liste de mariage.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -255,45 +256,34 @@ export default function GiftsPage() {
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setCreateOpen(false)}>Annuler</Button>
                 <Button onClick={submitCreate} disabled={createGiftMutation.isPending}>
-                  {createGiftMutation.isPending ? "Ajout..." : "Ajouter"}
+                  {createGiftMutation.isPending ? "Ajout..." : "Ajouter le cadeau"}
                 </Button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+        }
+      />
 
       <div className="grid md:grid-cols-3 gap-6">
-        <Card className="p-6 flex items-center gap-4">
-          <div className="h-11 w-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-            <Euro className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-xs uppercase tracking-widest text-muted-foreground">Total collecte</div>
-            <div className="text-2xl font-semibold">{totalCollected.toLocaleString("fr-FR")} €</div>
-            <div className="text-xs text-muted-foreground">Objectif: {totalTarget.toLocaleString("fr-FR")} €</div>
-          </div>
-        </Card>
-        <Card className="p-6 flex items-center gap-4">
-          <div className="h-11 w-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-            <ListChecks className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-xs uppercase tracking-widest text-muted-foreground">Cadeaux</div>
-            <div className="text-2xl font-semibold">{gifts.length}</div>
-            <div className="text-xs text-muted-foreground">Items actifs</div>
-          </div>
-        </Card>
-        <Card className="p-6 flex items-center gap-4">
-          <div className="h-11 w-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-            <TrendingUp className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-xs uppercase tracking-widest text-muted-foreground">Progression</div>
-            <div className="text-2xl font-semibold">{completionRate}%</div>
-            <div className="text-xs text-muted-foreground">Objectif atteint</div>
-          </div>
-        </Card>
+        <KpiCard
+          label="Total collecté"
+          value={`${totalCollected.toLocaleString("fr-FR")} €`}
+          hint={`Objectif: ${totalTarget.toLocaleString("fr-FR")} €`}
+          icon={<Euro className="h-5 w-5" />}
+        />
+        <KpiCard
+          label="Cadeaux"
+          value={gifts.length}
+          hint="Items actifs"
+          icon={<ListChecks className="h-5 w-5" />}
+        />
+        <KpiCard
+          label="Progression"
+          value={`${completionRate}%`}
+          hint="Objectif atteint"
+          icon={<TrendingUp className="h-5 w-5" />}
+        />
       </div>
 
       <Card className="p-6">
@@ -308,7 +298,7 @@ export default function GiftsPage() {
                 <TableRow>
                   <TableHead>Cadeau</TableHead>
                   <TableHead>Prix cible</TableHead>
-                  <TableHead>Reserve</TableHead>
+                  <TableHead>Statut</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -337,7 +327,7 @@ export default function GiftsPage() {
                       <TableCell>
                         {gift.isReserved ? (
                           <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">
-                            Reserve
+                            Réservé
                           </span>
                         ) : (
                           <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-medium">
@@ -373,7 +363,7 @@ export default function GiftsPage() {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>Modifier le cadeau</DialogTitle>
-            <DialogDescription>Ajustez les informations de cet item.</DialogDescription>
+            <DialogDescription>Mettez à jour les informations de ce cadeau.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -421,7 +411,7 @@ export default function GiftsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer ce cadeau ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action supprimera definitivement "{deletingGift?.name}".
+              Cette action est irréversible. Le cadeau "{deletingGift?.name}" sera supprimé définitivement.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

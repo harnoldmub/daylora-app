@@ -67,11 +67,12 @@ export default function PricingPage() {
                         </div>
                         <div className="text-4xl font-bold font-serif">0€</div>
                         <ul className="space-y-3">
-                            <Feature text="1 Template classique" checked />
+                            <Feature text="1 template" checked />
                             <Feature text="Jusqu'à 50 invités" checked />
-                            <Feature text="RSVP Standard" checked />
+                            <Feature text="Cagnotte activée" checked />
+                            <Feature text="Branding Nocely visible" checked />
                             <Feature text="Liste cadeaux" checked={false} />
-                            <Feature text="Live features" checked={false} />
+                            <Feature text="Live contributions avancé" checked={false} />
                         </ul>
                         <Button variant="outline" className="w-full" disabled={!isPremium}>
                             {!isPremium ? "Plan actuel" : "Sélectionner Découverte"}
@@ -93,19 +94,20 @@ export default function PricingPage() {
                     )}
                     <div className="space-y-6">
                         <div>
-                            <h3 className="text-2xl font-bold">Premium Gold</h3>
-                            <p className="text-muted-foreground">L'excellence pour votre mariage</p>
+                            <h3 className="text-2xl font-bold">Premium</h3>
+                            <p className="text-muted-foreground">Best seller</p>
                         </div>
                         <div className="flex items-baseline gap-2">
-                            <span className="text-4xl font-bold font-serif">29€</span>
+                            <span className="text-4xl font-bold font-serif">19€</span>
                             <span className="text-muted-foreground">/ mois</span>
                         </div>
                         <ul className="space-y-3">
-                            <Feature text="Tous les Templates" checked />
+                            <Feature text="2 templates premium" checked />
                             <Feature text="Invités illimités" checked />
-                            <Feature text="Liste cadeaux & Cagnotte" checked />
+                            <Feature text="Liste cadeaux" checked />
                             <Feature text="Live Contributions & Jokes" checked />
-                            <Feature text="Exports Excel complets" checked />
+                            <Feature text="Suppression branding Nocely" checked />
+                            <Feature text="Exports complets" checked />
                             <Feature text="Emails illimités" checked />
                         </ul>
                         <Button
@@ -117,24 +119,10 @@ export default function PricingPage() {
                             {isPremium ? "Déjà Premium" : "Passer au Premium"}
                         </Button>
                         <p className="text-center text-xs text-muted-foreground">
-                            Sans engagement. Annulez dès que votre mariage est terminé.
+                            Minimum 2 mois, puis sans engagement.
                         </p>
                     </div>
                 </Card>
-            </div>
-
-            <div className="bg-muted/30 rounded-2xl p-8 text-center space-y-4">
-                <h2 className="text-xl font-bold">Vous préférez un paiement unique ?</h2>
-                <p className="text-muted-foreground max-w-xl mx-auto">
-                    Accédez à vie (pas de limite mensuelle) à toutes les fonctionnalités Premium pour un montant fixe.
-                </p>
-                <Button
-                    variant="outline"
-                    disabled={isPremium || checkoutMutation.isPending}
-                    onClick={() => checkoutMutation.mutate('one_time')}
-                >
-                    Acheter l'accès complet pour 149€
-                </Button>
             </div>
         </div>
     );

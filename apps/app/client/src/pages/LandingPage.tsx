@@ -45,7 +45,7 @@ export default function LandingPage() {
                         <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(200,169,106,0.5)]">
                             <Heart className="h-5 w-5 text-white fill-white" />
                         </div>
-                        <span className="text-2xl font-serif font-bold tracking-tight">Libala</span>
+                        <span className="text-2xl font-serif font-bold tracking-tight">Nocely</span>
                     </div>
 
                     <div className="hidden md:flex items-center gap-8 text-sm font-medium text-white/70">
@@ -82,21 +82,24 @@ export default function LandingPage() {
                     >
                         <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-morphism text-xs font-semibold tracking-wider uppercase text-primary border-primary/20">
                             <Sparkles className="h-3.5 w-3.5" />
-                            L'excellence pour votre grand jour
+                            Nocely
                         </motion.div>
 
                         <motion.h1 variants={fadeInUp} className="text-6xl md:text-8xl font-serif font-bold leading-[1.1] tracking-tight">
-                            Le plus beau jour mérite le <span className="text-gradient italic">meilleur site</span>.
+                            La nouvelle génération de sites de mariage
                         </motion.h1>
 
                         <motion.p variants={fadeInUp} className="text-lg md:text-xl text-white/60 max-w-xl leading-relaxed">
-                            Gérez vos invitations, collectez vos cadeaux et vivez l'instant présent avec vos invités. Une solution élégante, de l'annonce à la lune de miel.
+                            Créez. Personnalisez. Publiez.
+                        </motion.p>
+                        <motion.p variants={fadeInUp} className="text-sm md:text-base text-white/55 max-w-xl leading-relaxed">
+                            Beautiful weddings, effortlessly online.
                         </motion.p>
 
                         <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4">
                             <Link href="/signup" title="Créer mon site">
                                 <Button size="lg" className="rounded-full px-10 h-14 text-lg bg-primary hover:bg-primary/90 group border-none">
-                                    Créer notre site gratuitement
+                                    Créer mon site
                                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                                 </Button>
                             </Link>
@@ -206,9 +209,9 @@ export default function LandingPage() {
                                 <div className="flex items-baseline gap-1">
                                     <span className="text-5xl font-bold">0€</span>
                                 </div>
-                                <p className="text-white/50 text-sm">L'essentiel pour commencer sereinement.</p>
+                                <p className="text-white/50 text-sm">Pour tester rapidement et lancer votre site.</p>
                                 <ul className="space-y-4">
-                                    {["1 Template classique", "Jusqu'à 50 invités", "RSVP Standard", "Support par email"].map((item, i) => (
+                                    {["1 template", "Jusqu'à 50 invités", "Cagnotte activée", "Branding Nocely visible", "Sans liste cadeaux", "Sans live contributions avancé"].map((item, i) => (
                                         <li key={i} className="flex items-center gap-3 text-sm text-white/70">
                                             <CheckCircle2 className="h-4 w-4 text-primary" />
                                             {item}
@@ -223,13 +226,14 @@ export default function LandingPage() {
                         <div className="p-10 rounded-[2.5rem] bg-primary relative overflow-hidden space-y-8 flex flex-col justify-between shadow-[0_20px_60px_-15px_rgba(200,169,106,0.2)]">
                             <div className="absolute top-4 right-6 px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold uppercase tracking-tighter text-white">Recommandé</div>
                             <div className="space-y-6">
-                                <div className="text-white/80 font-bold tracking-widest uppercase text-xs">Premium (Gold)</div>
+                                <div className="text-white/80 font-bold tracking-widest uppercase text-xs">Premium</div>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-5xl font-bold">29€</span>
+                                    <span className="text-5xl font-bold">19€</span>
+                                    <span className="text-white/70 text-sm">/mois</span>
                                 </div>
-                                <p className="text-white/90 text-sm">Tout pour un mariage d'exception et sans limite.</p>
+                                <p className="text-white/90 text-sm">Best seller. Minimum 2 mois.</p>
                                 <ul className="space-y-4">
-                                    {["Templates Deluxe illimités", "Invités illimités", "Cagnotte & Liste de cadeaux", "Live Contributions", "Support prioritaire 7j/7"].map((item, i) => (
+                                    {["2 templates premium", "Invités illimités", "Liste cadeaux", "Live contributions + animations", "Blagues live", "Suppression branding Nocely", "Export complet", "Emails illimités"].map((item, i) => (
                                         <li key={i} className="flex items-center gap-3 text-sm text-white">
                                             <CheckCircle2 className="h-4 w-4 text-white" />
                                             {item}
@@ -239,7 +243,7 @@ export default function LandingPage() {
                             </div>
                             <Link href="/signup" title="Passer au Premium">
                                 <Button className="w-full rounded-full h-12 bg-white text-primary hover:bg-white/90 font-bold border-none">
-                                    Choisir l'excellence
+                                    Choisir Premium
                                 </Button>
                             </Link>
                         </div>
@@ -273,7 +277,7 @@ export default function LandingPage() {
                 <div className="max-w-4xl mx-auto space-y-12 relative z-10">
                     <h2 className="text-6xl md:text-8xl font-serif font-bold italic text-gradient leading-tight">Prêt à dire Oui ?</h2>
                     <p className="text-xl text-white/50 max-w-xl mx-auto leading-relaxed">
-                        Rejoignez les centaines de couples qui utilisent Libala pour rendre leur mariage inoubliable.
+                        Nocely : votre mariage, sublimé en ligne. Élégant, fluide, sans complexité.
                     </p>
                     <div className="pt-8">
                         <Link href="/signup" title="Créer mon site">
@@ -292,10 +296,10 @@ export default function LandingPage() {
                         <div className="w-6 h-6 bg-primary rounded-md flex items-center justify-center">
                             <Heart className="h-4 w-4 text-white fill-white" />
                         </div>
-                        <span className="text-xl font-serif font-bold tracking-tight">Libala</span>
+                        <span className="text-xl font-serif font-bold tracking-tight">Nocely</span>
                     </div>
                     <div className="text-white/30 text-xs font-sans">
-                        © 2026 Libala. L'amour, version 2.0.
+                        © 2026 Nocely. Votre mariage, sublimé en ligne.
                     </div>
                     <div className="flex gap-8 text-white/40 text-xs uppercase tracking-widest font-semibold font-sans">
                         <a href="#" className="hover:text-primary transition-colors">Contact</a>

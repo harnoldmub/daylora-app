@@ -6,6 +6,9 @@ import { useToast } from "@/hooks/use-toast";
 import { type Wedding } from "@shared/schema";
 import { useParams } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { KpiCard } from "@/components/admin/KpiCard";
+import { queryClient } from "@/lib/queryClient";
 
 export default function PricingPage() {
     const { weddingId } = useParams<{ weddingId: string }>();
@@ -33,17 +36,70 @@ export default function PricingPage() {
         },
     });
 
+    const syncMutation = useMutation({
+        mutationFn: async () => {
+            const res = await apiRequest("POST", "/api/billing/sync", {});
+            return res.json();
+        },
+        onSuccess: async (data: any) => {
+            await queryClient.invalidateQueries({ queryKey: [`/api/weddings/${weddingId}`] });
+            toast({
+                title: "Synchronisation Stripe",
+                description: data?.currentPlan === "premium"
+                    ? "Votre abonnement Premium est actif."
+                    : "Aucun abonnement Premium actif détecté.",
+                variant: data?.currentPlan === "premium" ? "default" : "destructive",
+            });
+        },
+        onError: (err: any) => {
+            toast({
+                title: "Erreur",
+                description: err.message || "Sync Stripe impossible",
+                variant: "destructive",
+            });
+        },
+    });
+
     if (isLoading) return <Loader2 className="h-8 w-8 animate-spin mx-auto mt-20" />;
 
     const isPremium = wedding?.currentPlan === 'premium';
 
     return (
-        <div className="max-w-5xl mx-auto space-y-12">
-            <div className="text-center space-y-4">
-                <h1 className="text-4xl font-serif font-bold tracking-tight">Choisissez votre formule</h1>
-                <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                    Simplifiez l'organisation de votre mariage avec nos outils premium et offrez une expérience unique à vos invités.
-                </p>
+        <div className="space-y-8">
+            <AdminPageHeader
+                title="Facturation"
+                description="Activez Premium pour débloquer tous les modules du site public et du backoffice."
+                actions={
+                    <Button
+                        variant="outline"
+                        onClick={() => syncMutation.mutate()}
+                        disabled={syncMutation.isPending}
+                    >
+                        {syncMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Synchroniser Stripe
+                    </Button>
+                }
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <KpiCard
+                    label="Plan actuel"
+                    value={isPremium ? "Premium" : "Découverte"}
+                    hint={isPremium ? "Modules illimités" : "Fonctionnalités essentielles"}
+                    icon={<Crown className="h-5 w-5" />}
+                />
+                <KpiCard
+                    label="Abonnement"
+                    value="19€"
+                    hint="Par mois"
+                    icon={<Check className="h-5 w-5" />}
+                />
+                <KpiCard
+                    label="Accès à vie"
+                    value="149€"
+                    hint="Paiement unique"
+                    icon={<Check className="h-5 w-5" />}
+                />
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
@@ -63,11 +119,12 @@ export default function PricingPage() {
                         </div>
                         <div className="text-4xl font-bold font-serif">0€</div>
                         <ul className="space-y-3">
-                            <Feature text="1 Template classique" checked />
+                            <Feature text="1 template" checked />
                             <Feature text="Jusqu'à 50 invités" checked />
-                            <Feature text="RSVP Standard" checked />
+                            <Feature text="Cagnotte activée" checked />
+                            <Feature text="Branding Nocely visible" checked />
                             <Feature text="Liste cadeaux" checked={false} />
-                            <Feature text="Live features" checked={false} />
+                            <Feature text="Live contributions avancé" checked={false} />
                         </ul>
                         <Button variant="outline" className="w-full" disabled={!isPremium}>
                             {!isPremium ? "Plan actuel" : "Sélectionner Découverte"}
@@ -89,19 +146,20 @@ export default function PricingPage() {
                     )}
                     <div className="space-y-6">
                         <div>
-                            <h3 className="text-2xl font-bold">Premium Gold</h3>
-                            <p className="text-muted-foreground">L'excellence pour votre mariage</p>
+                            <h3 className="text-2xl font-bold">Premium</h3>
+                            <p className="text-muted-foreground">Best seller</p>
                         </div>
                         <div className="flex items-baseline gap-2">
-                            <span className="text-4xl font-bold font-serif">29€</span>
+                            <span className="text-4xl font-bold font-serif">19€</span>
                             <span className="text-muted-foreground">/ mois</span>
                         </div>
                         <ul className="space-y-3">
-                            <Feature text="Tous les Templates" checked />
+                            <Feature text="2 templates premium" checked />
                             <Feature text="Invités illimités" checked />
-                            <Feature text="Liste cadeaux & Cagnotte" checked />
+                            <Feature text="Liste cadeaux" checked />
                             <Feature text="Live Contributions & Jokes" checked />
-                            <Feature text="Exports Excel complets" checked />
+                            <Feature text="Suppression branding Nocely" checked />
+                            <Feature text="Exports complets" checked />
                             <Feature text="Emails illimités" checked />
                         </ul>
                         <Button
@@ -113,24 +171,10 @@ export default function PricingPage() {
                             {isPremium ? "Déjà Premium" : "Passer au Premium"}
                         </Button>
                         <p className="text-center text-xs text-muted-foreground">
-                            Sans engagement. Annulez dès que votre mariage est terminé.
+                            Minimum 2 mois, puis sans engagement.
                         </p>
                     </div>
                 </Card>
-            </div>
-
-            <div className="bg-muted/30 rounded-2xl p-8 text-center space-y-4">
-                <h2 className="text-xl font-bold">Vous préférez un paiement unique ?</h2>
-                <p className="text-muted-foreground max-w-xl mx-auto">
-                    Accédez à vie (pas de limite mensuelle) à toutes les fonctionnalités Premium pour un montant fixe.
-                </p>
-                <Button
-                    variant="outline"
-                    disabled={isPremium || checkoutMutation.isPending}
-                    onClick={() => checkoutMutation.mutate('one_time')}
-                >
-                    Acheter l'accès complet pour 149€
-                </Button>
             </div>
         </div>
     );

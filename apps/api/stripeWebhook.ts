@@ -17,6 +17,23 @@ export async function handleStripeWebhook(req: Request, res: Response) {
       return res.json({ received: true, deduped: true });
     }
 
+    const upsertSubscription = async (subscription: any, weddingId?: string) => {
+      const wId = weddingId || subscription?.metadata?.weddingId;
+      if (!wId) return;
+      await storage.upsertStripeSubscription({
+        weddingId: wId,
+        stripeCustomerId: String(subscription?.customer || ""),
+        stripeSubscriptionId: String(subscription?.id || ""),
+        priceId: subscription?.items?.data?.[0]?.price?.id || null,
+        status: String(subscription?.status || "incomplete"),
+        currentPeriodEnd: subscription?.current_period_end
+          ? new Date(subscription.current_period_end * 1000)
+          : null,
+      });
+      const isPremium = ["active", "trialing"].includes(String(subscription?.status || ""));
+      await storage.updateWedding(wId, { currentPlan: isPremium ? "premium" : "free" });
+    };
+
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as any;
@@ -24,24 +41,20 @@ export async function handleStripeWebhook(req: Request, res: Response) {
         const purpose = session.metadata?.purpose;
 
         // Contributions also use Checkout Sessions in `mode=payment`. We only promote to Premium for billing flows.
-        if (purpose === "billing" && weddingId) {
-          await storage.updateWedding(weddingId, { currentPlan: "premium" });
-        }
+        if (purpose !== "billing" || !weddingId) break;
+
         if (session.subscription) {
-          if (purpose !== "billing") break;
-          await storage.upsertStripeSubscription({
-            id: session.subscription,
-            weddingId,
-            stripeCustomerId: session.customer,
-            stripeSubscriptionId: session.subscription,
-            priceId: session?.display_items?.[0]?.price?.id,
-            status: "active",
-            currentPeriodEnd: null,
-          });
+          const sub = await stripe.subscriptions.retrieve(String(session.subscription));
+          await upsertSubscription(sub, weddingId);
+        } else {
+          // One-time billing purchase: mark premium immediately.
+          await storage.updateWedding(weddingId, { currentPlan: "premium" });
         }
         break;
       }
-      case "invoice.paid": {
+      case "invoice.paid":
+      case "invoice_payment.paid":
+      case "invoice.payment_succeeded": {
         const invoice = event.data.object as any;
         const subscriptionId = invoice.subscription;
         let weddingId = invoice.metadata?.weddingId;
@@ -50,22 +63,20 @@ export async function handleStripeWebhook(req: Request, res: Response) {
           const sub = await stripe.subscriptions.retrieve(subscriptionId);
           weddingId = sub.metadata?.weddingId;
         }
-        if (weddingId) {
+        if (subscriptionId) {
+          const sub = await stripe.subscriptions.retrieve(String(subscriptionId));
+          await upsertSubscription(sub, weddingId);
+        } else if (weddingId) {
+          // Safety for one-time billing invoices.
           await storage.updateWedding(weddingId, { currentPlan: "premium" });
         }
-        if (subscriptionId) {
-          await storage.upsertStripeSubscription({
-            id: subscriptionId,
-            weddingId,
-            stripeCustomerId: invoice.customer,
-            stripeSubscriptionId: subscriptionId,
-            priceId: invoice.lines?.data?.[0]?.price?.id,
-            status: "active",
-            currentPeriodEnd: invoice.lines?.data?.[0]?.period?.end
-              ? new Date(invoice.lines.data[0].period.end * 1000)
-              : null,
-          });
-        }
+        break;
+      }
+      case "customer.subscription.created":
+      case "customer.subscription.updated":
+      case "customer.subscription.deleted": {
+        const sub = event.data.object as any;
+        await upsertSubscription(sub);
         break;
       }
       default:

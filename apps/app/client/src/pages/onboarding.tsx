@@ -38,18 +38,18 @@ import {
 import { compressImageFileToJpegDataUrl } from "@/lib/image";
 
 const TEMPLATES = [
-  { id: "classic", name: "Classique", description: "Elegant et intemporel", image: "/previews/template_classic_preview_v2.png" },
-  { id: "modern", name: "Moderne", description: "Epure et minimaliste", image: "/previews/template_modern_preview_v2.png" },
+  { id: "classic", name: "Classique", description: "Élégant et intemporel", image: "/previews/template_classic_preview_v2.png" },
+  { id: "modern", name: "Moderne", description: "Épuré et minimaliste", image: "/previews/template_modern_preview_v2.png" },
   { id: "minimal", name: "Minimal", description: "Audacieux et chic", image: "/previews/template_minimal_preview_v2.png" },
 ];
 
 const MAX_ONBOARDING_GALLERY_IMAGES = 6;
 
 const onboardingSchema = z.object({
-  title: z.string().min(3, "Le titre doit faire au moins 3 caracteres"),
+  title: z.string().min(3, "Le titre doit faire au moins 3 caractères"),
   slug: z
     .string()
-    .min(3, "Le slug doit faire au moins 3 caracteres")
+    .min(3, "Le slug doit faire au moins 3 caractères")
     .regex(/^[a-z0-9-]+$/, "Uniquement des minuscules, chiffres et tirets"),
   weddingDate: z.string().min(1, "La date est requise"),
   templateId: z.string().default("classic"),
@@ -80,6 +80,9 @@ export default function Onboarding() {
     jokesEnabled: true,
     liveEnabled: true,
   });
+  const [paymentMode, setPaymentMode] = useState<"stripe" | "external">("stripe");
+  const [externalCagnotteUrl, setExternalCagnotteUrl] = useState("");
+  const [externalProvider, setExternalProvider] = useState("other");
 
   const [heroImage, setHeroImage] = useState<string>("");
   const [couplePhoto, setCouplePhoto] = useState<string>("");
@@ -170,6 +173,9 @@ export default function Onboarding() {
   const onSubmit = async (data: OnboardingForm) => {
     setIsLoading(true);
     try {
+      if (paymentMode === "external" && !externalCagnotteUrl.trim()) {
+        throw new Error("Ajoutez un lien de cagnotte externe.");
+      }
       const response = await fetch("/api/weddings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -184,6 +190,9 @@ export default function Onboarding() {
             jokesEnabled: modules.jokesEnabled,
             liveEnabled: modules.liveEnabled,
           },
+          paymentMode,
+          externalCagnotteUrl: externalCagnotteUrl.trim(),
+          externalProvider,
           toneId,
           heroImage,
           couplePhoto,
@@ -199,11 +208,11 @@ export default function Onboarding() {
 
       const wedding = await response.json();
       setLocation(`/app/${wedding.id}/welcome`);
-    } catch (_error) {
+    } catch (error: any) {
       setIsLoading(false);
       toast({
         title: "Erreur",
-        description: "Impossible de creer votre projet. Verifiez le slug et reessayez.",
+        description: error?.message || "Impossible de créer votre projet. Vérifiez le slug et réessayez.",
         variant: "destructive",
       });
     }
@@ -217,14 +226,17 @@ export default function Onboarding() {
             <Sparkles className="h-3 w-3" />
             Wizard rapide
           </div>
-          <h1 className="text-4xl md:text-5xl font-serif font-bold mb-3">Creez votre projet en 3 minutes</h1>
-          <p className="text-[#7A6B5E] max-w-2xl mx-auto">Site public, backoffice et modules preconfigures. Tout est modifiable ensuite.</p>
+          <h1 className="text-4xl md:text-5xl font-serif font-bold mb-3">Créez votre projet en 3 minutes</h1>
+          <p className="text-[#7A6B5E] max-w-3xl mx-auto">
+            Nocely est une plateforme moderne pour créer une expérience digitale élégante en quelques minutes.
+            Site public premium, backoffice complet, tout reste modifiable ensuite.
+          </p>
         </div>
 
         <Card className="p-6 md:p-8 bg-white border border-[#E6DCCF] rounded-[2rem] shadow-sm">
           <div className="mb-8">
             <div className="flex items-center justify-between text-xs uppercase tracking-widest text-[#8C7A6B] font-semibold mb-3">
-              <span>Etape {step}/7</span>
+              <span>Étape {step}/7</span>
               <span>{stepLabels[step - 1]}</span>
             </div>
             <div className="h-2 rounded-full bg-[#EFE5D9] overflow-hidden">
@@ -242,7 +254,7 @@ export default function Onboarding() {
                       name="title"
                       render={({ field }) => (
                         <FormItem className="md:col-span-2">
-                          <FormLabel>Titre du mariage</FormLabel>
+                          <FormLabel>Titre du projet</FormLabel>
                           <FormControl>
                             <Input placeholder="Ex: Alex et Sam" {...field} className="h-12" />
                           </FormControl>
@@ -255,7 +267,7 @@ export default function Onboarding() {
                       name="slug"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>URL du site</FormLabel>
+                          <FormLabel>URL publique</FormLabel>
                           <FormControl>
                             <Input {...field} className="h-12" placeholder="marie-et-sophie" />
                           </FormControl>
@@ -268,7 +280,7 @@ export default function Onboarding() {
                       name="weddingDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Date du mariage</FormLabel>
+                          <FormLabel>Date principale</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -362,7 +374,7 @@ export default function Onboarding() {
                             <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer">
                               <Camera className="h-10 w-10 text-[#8C7A6B] mb-2" />
                               <span className="text-sm font-semibold text-[#8C7A6B]">Ajouter une photo</span>
-                              <span className="text-[10px] text-[#A69585] mt-1 uppercase tracking-wider">Format paysage recommande</span>
+                              <span className="text-[10px] text-[#A69585] mt-1 uppercase tracking-wider">Format paysage recommandé</span>
                               <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoUpload(e, 'hero')} />
                             </label>
                           )}
@@ -449,6 +461,50 @@ export default function Onboarding() {
                       </div>
                     ))}
                     <p className="text-xs text-muted-foreground">Tous les modules sont modifiables plus tard dans le backoffice.</p>
+
+                    <div className="rounded-2xl border border-[#E6DCCF] p-4 space-y-4">
+                      <div className="text-sm font-semibold">Mode de cagnotte</div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          className={`rounded-xl border p-3 text-left ${paymentMode === "stripe" ? "border-primary bg-primary/5" : "border-[#E6DCCF]"}`}
+                          onClick={() => setPaymentMode("stripe")}
+                        >
+                          <div className="font-medium">Stripe intégré</div>
+                          <div className="text-xs text-muted-foreground mt-1">Paiement direct et live automatique</div>
+                        </button>
+                        <button
+                          type="button"
+                          className={`rounded-xl border p-3 text-left ${paymentMode === "external" ? "border-primary bg-primary/5" : "border-[#E6DCCF]"}`}
+                          onClick={() => setPaymentMode("external")}
+                        >
+                          <div className="font-medium">Lien externe</div>
+                          <div className="text-xs text-muted-foreground mt-1">Leetchi, PayPal, Lydia, etc.</div>
+                        </button>
+                      </div>
+
+                      {paymentMode === "external" ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <Input
+                            value={externalCagnotteUrl}
+                            onChange={(e) => setExternalCagnotteUrl(e.target.value)}
+                            placeholder="https://..."
+                            className="h-11"
+                          />
+                          <select
+                            value={externalProvider}
+                            onChange={(e) => setExternalProvider(e.target.value)}
+                            className="h-11 rounded-md border border-border bg-background px-3 text-sm"
+                          >
+                            <option value="leetchi">Leetchi</option>
+                            <option value="paypal">PayPal</option>
+                            <option value="lydia">Lydia</option>
+                            <option value="stripe_payment_link">Stripe Payment Link</option>
+                            <option value="other">Autre</option>
+                          </select>
+                        </div>
+                      ) : null}
+                    </div>
                   </motion.div>
                 )}
 
@@ -486,8 +542,8 @@ export default function Onboarding() {
                 {step === 7 && (
                   <motion.div key="s7" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="space-y-6">
                     <div className="rounded-3xl border border-[#E6DCCF] p-6 bg-[#FBF8F3]">
-                      <div className="text-2xl font-serif font-bold mb-2">Votre site est pret</div>
-                      <p className="text-[#7A6B5E]">Confirmez et nous generons tout automatiquement: site public, admin, modules et URLs.</p>
+                      <div className="text-2xl font-serif font-bold mb-2">Votre site est prêt</div>
+                      <p className="text-[#7A6B5E]">Confirmez et nous générons tout automatiquement : site public, admin, modules et URLs.</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div className="rounded-2xl border border-[#E6DCCF] p-4">
@@ -523,7 +579,7 @@ export default function Onboarding() {
                     </Button>
                   ) : (
                     <Button type="submit" disabled={isLoading || isUploading}>
-                      {isLoading ? "Creation..." : "Creer mon site"}
+                      {isLoading ? "Création..." : "Créer mon site"}
                     </Button>
                   )}
                 </div>

@@ -26,6 +26,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     const [location, setLocation] = useLocation();
     const { logoutMutation, user } = useAuth();
     const { data: weddings = [] } = useWeddings();
+    const isDesignRoute = location.includes("/design");
 
     const navItems = [
         { name: "Accueil", icon: Home, href: `/app/${weddingId}/welcome` },
@@ -49,7 +50,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                 <div className="p-6 border-b border-sidebar-border">
                     <Link href="/app">
                         <a className="flex items-center space-x-2">
-                            <span className="text-xl font-semibold tracking-tight text-sidebar-foreground">Libala Admin</span>
+                            <span className="text-xl font-semibold tracking-tight text-sidebar-foreground">Nocely Admin</span>
                         </a>
                     </Link>
                 </div>
@@ -124,8 +125,8 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                         )}
                     </div>
                 </header>
-                <div className="flex-1 p-8 overflow-y-auto">
-                    <div className="max-w-6xl mx-auto">
+                <div className={`flex-1 overflow-y-auto ${isDesignRoute ? "p-0" : "p-8"}`}>
+                    <div className={isDesignRoute ? "w-full" : "max-w-6xl mx-auto"}>
                         {children}
                     </div>
                 </div>

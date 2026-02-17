@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useWedding, useUpdateWedding } from "@/hooks/use-api";
 import type { LiveJoke } from "@shared/schema";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default function LiveJokesPage() {
   const { weddingId } = useParams<{ weddingId: string }>();
@@ -20,6 +21,9 @@ export default function LiveJokesPage() {
   const [content, setContent] = useState("");
   const [tone, setTone] = useState<"safe" | "fun" | "second-degree">("safe");
   const [frequency, setFrequency] = useState(30);
+  const [manualDonorName, setManualDonorName] = useState("");
+  const [manualAmount, setManualAmount] = useState(50);
+  const [manualMessage, setManualMessage] = useState("");
 
   const { data: jokes = [] } = useQuery<LiveJoke[]>({
     queryKey: ["/api/jokes", weddingId],
@@ -46,12 +50,12 @@ export default function LiveJokesPage() {
     onSuccess: () => {
       setContent("");
       queryClient.invalidateQueries({ queryKey: ["/api/jokes", weddingId] });
-      toast({ title: "Blague ajoutée" });
+      toast({ title: "Blague ajoutée", description: "Elle est maintenant active pour le live." });
     },
     onError: (error: Error) => {
       toast({
-        title: "Erreur",
-        description: error.message || "Impossible d'ajouter la blague",
+        title: "Ajout impossible",
+        description: error.message || "Impossible d'ajouter cette blague.",
         variant: "destructive",
       });
     },
@@ -67,39 +71,89 @@ export default function LiveJokesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/jokes", weddingId] });
-      toast({ title: "Blague supprimée" });
+      toast({ title: "Blague supprimée", description: "Elle ne sera plus diffusée dans le live." });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Suppression impossible",
+        description: error.message || "Impossible de supprimer cette blague.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createManualContribution = useMutation({
+    mutationFn: async () => {
+      if (!weddingId) {
+        throw new Error("Mariage introuvable");
+      }
+      const amount = Math.round(Math.max(1, Number(manualAmount || 0)) * 100);
+      const res = await apiRequest("POST", "/api/contributions/manual", {
+        donorName: manualDonorName,
+        amount,
+        message: manualMessage || null,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      setManualDonorName("");
+      setManualAmount(50);
+      setManualMessage("");
+      queryClient.invalidateQueries({ queryKey: ["/api/contributions/live", weddingId] });
+      toast({ title: "Contribution ajoutée", description: "Le live public a été mis à jour." });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Ajout impossible",
+        description: error.message || "Impossible d'ajouter la contribution manuelle.",
+        variant: "destructive",
+      });
     },
   });
 
   const toggleJokes = async (enabled: boolean) => {
     if (!wedding) return;
-    await updateWedding.mutateAsync({
-      id: wedding.id,
-      config: {
-        ...wedding.config,
-        features: {
-          ...wedding.config.features,
-          jokesEnabled: enabled,
+    try {
+      await updateWedding.mutateAsync({
+        id: wedding.id,
+        config: {
+          ...wedding.config,
+          features: {
+            ...wedding.config.features,
+            jokesEnabled: enabled,
+          },
         },
-      },
-    });
+      });
+      toast({
+        title: enabled ? "Module activé" : "Module désactivé",
+        description: enabled
+          ? "Les blagues peuvent être diffusées sur le live."
+          : "Les blagues sont mises en pause.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Mise à jour impossible",
+        description: error?.message || "Impossible de modifier l'état du module.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-serif font-bold">Blagues Live</h1>
-          <p className="text-muted-foreground mt-1">Activez le module et gérez vos blagues personnalisées.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">Activer</span>
-          <Switch
-            checked={!!wedding?.config?.features?.jokesEnabled}
-            onCheckedChange={toggleJokes}
-          />
-        </div>
-      </div>
+      <AdminPageHeader
+        title="Blagues Live"
+        description="Activez le module et gérez vos blagues pour l'affichage en direct."
+        actions={
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">Activer</span>
+            <Switch
+              checked={!!wedding?.config?.features?.jokesEnabled}
+              onCheckedChange={toggleJokes}
+            />
+          </div>
+        }
+      />
 
       <Card className="p-6 space-y-4">
         <h2 className="text-lg font-medium">Ajouter une blague</h2>
@@ -137,16 +191,65 @@ export default function LiveJokesPage() {
               disabled={!content.trim()}
               className="w-full"
             >
-              Ajouter
+              Ajouter au live
             </Button>
           </div>
         </div>
       </Card>
 
       <Card className="p-6 space-y-4">
+        <h2 className="text-lg font-medium">Contribution manuelle (live)</h2>
+        <p className="text-sm text-muted-foreground">
+          À utiliser quand la cagnotte est externe (Leetchi, PayPal...) pour alimenter le live à la main.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Donateur</label>
+            <Input
+              value={manualDonorName}
+              onChange={(e) => setManualDonorName(e.target.value)}
+              placeholder="Ex: Famille Dupont"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Montant (€)</label>
+            <Input
+              type="number"
+              min={1}
+              value={manualAmount}
+              onChange={(e) => setManualAmount(parseInt(e.target.value || "0", 10))}
+            />
+          </div>
+          <div className="flex items-end">
+            <Button
+              onClick={() => createManualContribution.mutate()}
+              disabled={!manualDonorName.trim() || createManualContribution.isPending || wedding?.config?.payments?.allowManualLiveContributions === false}
+              className="w-full"
+            >
+              {createManualContribution.isPending ? "Ajout..." : "Ajouter au live"}
+            </Button>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Message (optionnel)</label>
+          <Textarea
+            value={manualMessage}
+            onChange={(e) => setManualMessage(e.target.value)}
+            rows={2}
+            placeholder="Un mot à afficher avec la contribution."
+          />
+        </div>
+        {wedding?.config?.payments?.allowManualLiveContributions === false ? (
+          <p className="text-xs text-destructive">
+            Les contributions manuelles sont désactivées dans les paramètres du projet.
+          </p>
+        ) : null}
+      </Card>
+
+      <Card className="p-6 space-y-4">
         <h2 className="text-lg font-medium">Blagues actives</h2>
         {jokes.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Aucune blague enregistrée.</p>
+          <p className="text-muted-foreground text-sm">Aucune blague active pour le moment.</p>
         ) : (
           <div className="space-y-3">
             {jokes.map((joke) => (

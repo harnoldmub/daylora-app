@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -14,72 +16,72 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: 0 0% 100%;
+  --background: 40 27% 96%;
 
-  --foreground: 0 0% 15%;
+  --foreground: 240 3% 12%;
 
-  --border: 0 0% 89%;
+  --border: 30 24% 86%;
 
-  --card: 40 33% 97%;
+  --card: 40 25% 98%;
 
-  --card-foreground: 0 0% 15%;
+  --card-foreground: 240 3% 12%;
 
-  --card-border: 40 20% 92%;
+  --card-border: 32 21% 88%;
 
-  --sidebar: 40 25% 95%;
+  --sidebar: 37 27% 93%;
 
-  --sidebar-foreground: 0 0% 15%;
+  --sidebar-foreground: 240 3% 12%;
 
-  --sidebar-border: 40 18% 88%;
+  --sidebar-border: 32 20% 84%;
 
-  --sidebar-primary: 43 45% 62%;
+  --sidebar-primary: 39 47% 57%;
 
   --sidebar-primary-foreground: 0 0% 10%;
 
-  --sidebar-accent: 40 30% 90%;
+  --sidebar-accent: 34 26% 88%;
 
-  --sidebar-accent-foreground: 0 0% 20%;
+  --sidebar-accent-foreground: 240 3% 12%;
 
-  --sidebar-ring: 43 45% 62%;
+  --sidebar-ring: 39 47% 57%;
 
-  --popover: 40 25% 93%;
+  --popover: 40 25% 98%;
 
-  --popover-foreground: 0 0% 15%;
+  --popover-foreground: 240 3% 12%;
 
-  --popover-border: 40 18% 86%;
+  --popover-border: 30 24% 86%;
 
-  --primary: 43 45% 48%;
+  --primary: 39 47% 57%;
 
   --primary-foreground: 0 0% 98%;
 
-  --secondary: 40 22% 88%;
+  --secondary: 30 24% 86%;
 
-  --secondary-foreground: 0 0% 20%;
+  --secondary-foreground: 240 3% 12%;
 
-  --muted: 40 18% 91%;
+  --muted: 31 18% 91%;
 
-  --muted-foreground: 0 0% 45%;
+  --muted-foreground: 240 4% 58%;
 
-  --accent: 40 20% 90%;
+  --accent: 31 18% 91%;
 
-  --accent-foreground: 0 0% 20%;
+  --accent-foreground: 240 3% 12%;
 
   --destructive: 0 72% 51%;
 
   --destructive-foreground: 0 0% 98%;
 
-  --input: 0 0% 75%;
-  --ring: 43 45% 62%;
-  --chart-1: 43 45% 48%;
+  --input: 30 24% 83%;
+  --ring: 39 47% 57%;
+  --chart-1: 39 47% 57%;
   --chart-2: 142 71% 45%;
   --chart-3: 210 50% 45%;
   --chart-4: 280 60% 48%;
   --chart-5: 25 70% 50%;
 
-  --font-sans: 'Lato', sans-serif;
+  --font-sans: 'Manrope', sans-serif;
   --font-serif: 'Playfair Display', serif;
   --font-mono: Menlo, monospace;
-  --radius: .5rem; /* 8px */
+  --radius: .7rem; /* 11px */
   --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
   --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.00);

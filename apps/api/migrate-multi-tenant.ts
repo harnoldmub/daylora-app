@@ -22,7 +22,7 @@ async function migrate() {
 
         // 2. Create a default wedding
         console.log('💍 Creating default wedding...');
-        const [defaultWedding] = await db.insert(weddings).values({
+        const [defaultWedding] = await db.insert(weddings).values([{
             ownerId: owner.id,
             slug: 'default-wedding',
             title: 'Mon Premier Mariage',
@@ -38,6 +38,14 @@ async function migrate() {
                 },
                 seo: { title: 'Mon Premier Mariage', description: 'Rejoignez-nous' },
                 features: { jokesEnabled: true, giftsEnabled: true, cagnotteEnabled: true, liveEnabled: true },
+                payments: {
+                    mode: "stripe",
+                    externalProvider: "other",
+                    externalUrl: "",
+                    stripeStatus: "not_connected",
+                    stripeAccountId: "",
+                    allowManualLiveContributions: true,
+                },
                 texts: {
                     siteTitle: "",
                     heroTitle: "Mon Premier Mariage",
@@ -60,6 +68,17 @@ async function migrate() {
                     cagnotteDescription: "Votre présence est notre plus beau cadeau. Si vous souhaitez contribuer à notre voyage de noces ou à notre nouveau départ, vous pouvez participer à notre cagnotte.",
                     cagnotteBackLabel: "Retour",
                     cagnotteSubmitLabel: "Contribuer",
+                    invitationTitle: "Invitation",
+                    invitationSubtitle: "Vous êtes invité(e) à célébrer avec nous",
+                    invitationBody: "Retrouvez ici toutes les informations utiles pour le jour J.",
+                    invitationCtaRsvp: "Répondre au RSVP",
+                    invitationCtaCagnotte: "Accéder à la cagnotte",
+                    footerTitle: "On a hâte de vous voir",
+                    footerSubtitle: "Merci de faire partie de cette aventure.",
+                    footerEmail: "",
+                    footerPhone: "",
+                    footerAddress: "",
+                    footerCopyright: "© 2026. Tous droits réservés.",
                     liveTitle: "CAGNOTTE EN DIRECT",
                     liveSubtitle: "Merci pour votre générosité",
                     liveDonorsTitle: "NOS GÉNÉREUX DONATEURS",
@@ -71,7 +90,8 @@ async function migrate() {
                 },
                 media: {
                     heroImage: "",
-                    couplePhoto: ""
+                    couplePhoto: "",
+                    invitationImage: ""
                 },
                 branding: {
                     logoUrl: "",
@@ -80,6 +100,9 @@ async function migrate() {
                 sections: {
                     countdownDate: "",
                     cagnotteSuggestedAmounts: [20, 50, 100, 150, 200],
+                    cagnotteExternalUrl: "",
+                    invitationShowLocations: true,
+                    invitationShowCountdown: true,
                     galleryImages: [
                         "/defaults/gallery/01.jpg",
                         "/defaults/gallery/02.jpg",
@@ -138,7 +161,7 @@ async function migrate() {
                     customPages: [],
                 }
             },
-        }).onConflictDoNothing().returning();
+        }]).onConflictDoNothing().returning();
 
         const weddingId = defaultWedding?.id || (await db.select().from(weddings).where(eq(weddings.slug, 'default-wedding')))[0].id;
         console.log(`💍 Wedding ID: ${weddingId}`);

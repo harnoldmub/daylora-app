@@ -1,5 +1,5 @@
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useParams } from "wouter";
+import { Link, useLocation, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { type Wedding } from "@shared/schema";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -14,8 +14,14 @@ import { useToast } from "@/hooks/use-toast";
 
 export function PublicLayout({ children, slug: slugProp }: { children: ReactNode; slug?: string }) {
     const params = useParams<{ slug: string }>();
+    const [routePath] = useLocation();
     const slug = slugProp || params.slug;
     const isUuid = !!slug && /^[0-9a-fA-F-]{36}$/.test(slug);
+    const isPreviewRoute = useMemo(() => {
+        if (!slug) return false;
+        return routePath.startsWith(`/preview/${slug}`);
+    }, [routePath, slug]);
+    const [marketingBaseUrl, setMarketingBaseUrl] = useState<string>("");
 
     const { data: wedding, isLoading } = useQuery<Wedding>({
         queryKey: [`/api/weddings`, slug],
@@ -52,8 +58,26 @@ export function PublicLayout({ children, slug: slugProp }: { children: ReactNode
 
     useEffect(() => {
         if (typeof window === "undefined") return;
-        const stored = window.localStorage.getItem("libala_edit_mode") === "1";
+        const storedRaw =
+            window.localStorage.getItem("nocely_edit_mode") ??
+            window.localStorage.getItem("libala_edit_mode");
+        const stored = storedRaw === "1";
         setEditModeState(stored);
+    }, []);
+
+    useEffect(() => {
+        let cancelled = false;
+        fetch("/api/site-config")
+            .then((r) => (r.ok ? r.json() : null))
+            .then((cfg) => {
+                if (cancelled) return;
+                const next = String(cfg?.marketingBaseUrl || "").trim();
+                if (next) setMarketingBaseUrl(next);
+            })
+            .catch(() => { });
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     useEffect(() => {
@@ -67,12 +91,83 @@ export function PublicLayout({ children, slug: slugProp }: { children: ReactNode
     const setEditMode = useCallback((value: boolean) => {
         setEditModeState(value);
         if (typeof window !== "undefined") {
-            window.localStorage.setItem("libala_edit_mode", value ? "1" : "0");
+            window.localStorage.setItem("nocely_edit_mode", value ? "1" : "0");
+            window.localStorage.removeItem("libala_edit_mode");
         }
     }, []);
 
-    const canEdit = !!(user && wedding && user.id === wedding.ownerId);
+    // Edits must happen in preview mode only (prevents accidental edits on the live public URL).
+    const canEdit = !!(isPreviewRoute && user && wedding && user.id === wedding.ownerId);
     const editValue = useMemo(() => ({ canEdit, editMode, setEditMode }), [canEdit, editMode, setEditMode]);
+
+
+    const navigation = wedding?.config?.navigation;
+    const basePath = useMemo(() => {
+        if (!slug) return "/";
+        const previewPrefix = `/preview/${slug}`;
+        return routePath.startsWith(previewPrefix) ? previewPrefix : `/${slug}`;
+    }, [routePath, slug]);
+
+    const shouldShowHeader = useMemo(() => {
+        // Header is only for the one-page landing (sections).
+        const withoutBase = routePath.startsWith(basePath) ? routePath.slice(basePath.length) : routePath;
+        const sub = (withoutBase || "").replace(/^\//, "");
+        if (!sub) return true;
+        const onePageSections = new Set(["rsvp", "gifts", "cagnotte", "story", "gallery", "location", "program"]);
+        return onePageSections.has(sub);
+    }, [routePath, basePath]);
+
+    const shouldShowFooter = useMemo(() => {
+        // Footer is part of the one-page experience: show it on home and section routes.
+        const withoutBase = routePath.startsWith(basePath) ? routePath.slice(basePath.length) : routePath;
+        const sub = (withoutBase || "").replace(/^\//, "");
+        if (!sub) return true;
+        const onePageSections = new Set(["rsvp", "gifts", "cagnotte", "story", "gallery", "location", "program"]);
+        return onePageSections.has(sub);
+    }, [routePath, basePath]);
+    const isHome = shouldShowFooter;
+    const pageVisibility = useMemo(() => ({
+        rsvp: navigation?.pages?.rsvp ?? true,
+        cagnotte: navigation?.pages?.cagnotte ?? true,
+        gifts: (navigation?.pages as any)?.gifts ?? true,
+        live: (navigation?.pages?.live ?? true) && (wedding?.config?.features?.liveEnabled ?? true),
+        story: navigation?.pages?.story ?? true,
+        gallery: navigation?.pages?.gallery ?? true,
+        location: navigation?.pages?.location ?? true,
+        program: navigation?.pages?.program ?? true,
+    }), [navigation?.pages, wedding?.config?.features?.liveEnabled]);
+
+    const defaultMenuItems = useMemo(() => [
+        { id: "home", label: "Accueil", path: "home", enabled: true, linkType: "anchor", anchorId: "hero", externalUrl: "" },
+        { id: "rsvp", label: wedding?.config?.texts?.navRsvp || "RSVP", path: "rsvp", enabled: true, linkType: "anchor", anchorId: "rsvp", externalUrl: "" },
+        { id: "cagnotte", label: wedding?.config?.texts?.navCagnotte || "Cagnotte", path: "cagnotte", enabled: true, linkType: "anchor", anchorId: "cagnotte", externalUrl: "" },
+        { id: "gifts", label: "Cadeaux", path: "gifts", enabled: true, linkType: "anchor", anchorId: "gifts", externalUrl: "" },
+        { id: "story", label: "Histoire", path: "story", enabled: true, linkType: "anchor", anchorId: "story", externalUrl: "" },
+        { id: "gallery", label: "Photos", path: "gallery", enabled: true, linkType: "anchor", anchorId: "gallery", externalUrl: "" },
+        { id: "location", label: "Lieux", path: "location", enabled: true, linkType: "anchor", anchorId: "location", externalUrl: "" },
+        { id: "program", label: "Programme", path: "program", enabled: true, linkType: "anchor", anchorId: "program", externalUrl: "" },
+    ], [wedding?.config?.texts]);
+
+    const mergedMenuItems = useMemo(() => {
+        const incoming = (navigation?.menuItems || []) as Array<{ id: string } & Record<string, any>>;
+        const baseById = new Map(defaultMenuItems.map((m) => [m.id, m]));
+
+        // Preserve incoming order (user-controlled) and append missing defaults.
+        const merged = incoming.map((item) => {
+            const base = baseById.get(item.id);
+            return base ? { ...base, ...item } : item;
+        });
+
+        const mergedIds = new Set(merged.map((m) => m.id));
+        defaultMenuItems.forEach((base) => {
+            if (!mergedIds.has(base.id)) merged.push(base);
+        });
+
+        // "Accueil" must always be first.
+        const home = merged.find((m) => m.id === "home");
+        const withoutHome = merged.filter((m) => m.id !== "home");
+        return home ? [home, ...withoutHome] : merged;
+    }, [navigation?.menuItems, defaultMenuItems]);
 
     if (typeof window !== "undefined" && slug && !isUuid) {
         window.localStorage.setItem("last_wedding_slug", slug);
@@ -97,52 +192,25 @@ export function PublicLayout({ children, slug: slugProp }: { children: ReactNode
         );
     }
 
-    const navigation = wedding.config?.navigation;
-    const pageVisibility = {
-        rsvp: navigation?.pages?.rsvp ?? true,
-        cagnotte: navigation?.pages?.cagnotte ?? true,
-        gifts: (navigation?.pages as any)?.gifts ?? true,
-        live: (navigation?.pages?.live ?? true) && (wedding.config?.features?.liveEnabled ?? true),
-        story: navigation?.pages?.story ?? true,
-        gallery: navigation?.pages?.gallery ?? true,
-        location: navigation?.pages?.location ?? true,
-        program: navigation?.pages?.program ?? true,
+    const resolveMenuHref = (item: any) => {
+        const linkType = item?.linkType || "anchor";
+        const path = String(item?.path || "");
+        if (path === "live") {
+            // Live is a dedicated page (full-screen), not a one-page section.
+            return `${basePath}/live`;
+        }
+        if (linkType === "external") {
+            const url = String(item?.externalUrl || "").trim();
+            return url || `${basePath}#hero`;
+        }
+        const anchor = String(item?.anchorId || (path === "home" ? "hero" : path)).trim() || "hero";
+        return `${basePath}#${anchor}`;
     };
-
-    const defaultMenuItems = [
-        { id: "rsvp", label: wedding.config?.texts?.navRsvp || "RSVP", path: "rsvp", enabled: true },
-        { id: "cagnotte", label: wedding.config?.texts?.navCagnotte || "Cagnotte", path: "cagnotte", enabled: true },
-        { id: "gifts", label: "Cadeaux", path: "gifts", enabled: true },
-        { id: "live", label: wedding.config?.texts?.navLive || "Live", path: "live", enabled: true },
-        { id: "story", label: "Histoire", path: "story", enabled: true },
-        { id: "gallery", label: "Photos", path: "gallery", enabled: true },
-        { id: "location", label: "Lieux", path: "location", enabled: true },
-        { id: "program", label: "Programme", path: "program", enabled: true },
-    ];
-
-    const resolveMenuHref = (path: string) => {
-        if (path === "home") return `/`;
-        return `/${path}`;
-    };
-
-    const mergedMenuItems = useMemo(() => {
-        const incoming = (navigation?.menuItems || []) as Array<{ id: string } & Record<string, any>>;
-        const mergedDefaults = defaultMenuItems.map((base) => {
-            const found = incoming.find((item) => item.id === base.id);
-            return found ? { ...base, ...found } : base;
-        });
-        const customIncoming = incoming.filter((item) => !defaultMenuItems.some((base) => base.id === item.id));
-        return [...mergedDefaults, ...customIncoming];
-    }, [navigation?.menuItems, defaultMenuItems]);
-
-    const canonicalOrder = useMemo(
-        () => ["rsvp", "gifts", "story", "gallery", "location", "program", "cagnotte", "live"] as const,
-        []
-    );
 
     const internalMenu = (mergedMenuItems.length ? mergedMenuItems : defaultMenuItems)
         .filter((item) => item.enabled)
         .filter((item) => {
+            if (item.path === "home") return true;
             if (item.path === "rsvp") return pageVisibility.rsvp;
             if (item.path === "cagnotte") return pageVisibility.cagnotte;
             if (item.path === "gifts") return pageVisibility.gifts && (wedding.config?.features?.giftsEnabled ?? true);
@@ -153,12 +221,14 @@ export function PublicLayout({ children, slug: slugProp }: { children: ReactNode
             if (item.path === "program") return pageVisibility.program;
             return true;
         })
-        .sort((a, b) => canonicalOrder.indexOf(a.path as any) - canonicalOrder.indexOf(b.path as any))
         .map((item) => ({
             id: item.id,
             label: item.label,
             path: item.path,
-            href: resolveMenuHref(item.path),
+            linkType: item.linkType || "anchor",
+            externalUrl: item.externalUrl || "",
+            anchorId: item.anchorId || (item.path === "home" ? "hero" : item.path),
+            href: resolveMenuHref(item),
         }));
 
     const customMenu = (navigation?.customPages || [])
@@ -166,25 +236,24 @@ export function PublicLayout({ children, slug: slugProp }: { children: ReactNode
         .map((page) => ({
             id: page.id,
             label: page.title,
-            href: `/page/${page.slug}`,
+            href: `${basePath}/page/${page.slug}`,
         }));
 
-    const sectionMenuItems = internalMenu.filter((item) => item.path !== "cagnotte" && item.path !== "live");
-    const cagnotteItem = internalMenu.find((item) => item.path === "cagnotte");
+    const sectionMenuItems = internalMenu.filter((item) => item.path !== "live");
     const liveItem = internalMenu.find((item) => item.path === "live");
     const templateId = wedding.templateId || "classic";
     const headerClass =
         templateId === "modern"
             ? "sticky top-0 z-50 w-full border-b border-[#CAD9F8] bg-[#F7FAFF]/95 backdrop-blur"
             : templateId === "minimal"
-              ? "sticky top-0 z-50 w-full border-b border-[#D5DCE8] bg-[#F8FAFC]/96 backdrop-blur"
-              : "sticky top-0 z-50 w-full border-b border-[#DCC9AB] bg-[#FFF9F1]/92 backdrop-blur";
+                ? "sticky top-0 z-50 w-full border-b border-[#D5DCE8] bg-[#F8FAFC]/96 backdrop-blur"
+                : "sticky top-0 z-50 w-full border-b border-[#DCC9AB] bg-[#FFF9F1]/92 backdrop-blur";
     const navClass =
         templateId === "modern"
             ? "flex items-center space-x-6 text-sm font-semibold text-[#113366]"
             : templateId === "minimal"
-              ? "flex items-center space-x-6 text-sm font-semibold uppercase tracking-[0.18em]"
-              : "flex items-center space-x-6 text-sm font-medium";
+                ? "flex items-center space-x-6 text-sm font-semibold uppercase tracking-[0.18em]"
+                : "flex items-center space-x-6 text-sm font-medium";
 
     const siteTitle = wedding.config?.texts?.siteTitle || wedding.title;
     const headerLogoUrl = draftBranding.logoUrl || wedding.config?.branding?.logoUrl || "";
@@ -287,166 +356,334 @@ export function PublicLayout({ children, slug: slugProp }: { children: ReactNode
         });
     };
 
+    const footerTitle = (wedding.config?.texts as any)?.footerTitle || "On a hâte de vous voir";
+    const footerSubtitle = (wedding.config?.texts as any)?.footerSubtitle || "Merci de faire partie de cette aventure.";
+    const footerEmail = (wedding.config?.texts as any)?.footerEmail || "";
+    const footerPhone = (wedding.config?.texts as any)?.footerPhone || "";
+    const footerAddress =
+        (wedding.config?.texts as any)?.footerAddress ||
+        (wedding.config?.sections?.locationItems?.[0]?.address || "");
+    const footerCopyright = (wedding.config?.texts as any)?.footerCopyright || "© 2026. Tous droits réservés.";
+
+    const saveFooterField = async (key: string, value: string) => {
+        await updateWedding.mutateAsync({
+            id: wedding.id,
+            config: {
+                ...wedding.config,
+                texts: {
+                    ...(wedding.config?.texts || {}),
+                    [key]: value,
+                },
+            },
+        });
+    };
+
+    const footerLinks = [
+        { id: "mentions-legales", label: "Mentions légales", href: `${basePath}/legal/mentions-legales` },
+        { id: "confidentialite", label: "Confidentialité", href: `${basePath}/legal/confidentialite` },
+        { id: "cgu", label: "CGU", href: `${basePath}/legal/cgu` },
+        { id: "cookies", label: "Cookies", href: `${basePath}/legal/cookies` },
+    ];
+    const nocelyHref = marketingBaseUrl || "http://localhost:5173";
+
     return (
         <ThemeProvider wedding={wedding}>
             <PublicEditProvider value={editValue}>
-            <div className="flex flex-col min-h-screen">
-                <header className={headerClass}>
-                    <div className="container flex h-16 items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Link
-                                href="/"
-                                className="flex items-center space-x-2"
-                                onClick={(e) => {
-                                    if (canEdit && editMode) e.preventDefault();
-                                }}
-                            >
-                                {headerLogoUrl ? (
-                                    <img
-                                        src={headerLogoUrl}
-                                        alt={headerLogoText || wedding.title}
-                                        className="h-10 w-auto object-contain"
-                                    />
-                                ) : (
-                                    <span className="text-xl font-bold tracking-tight">
-                                        <InlineEditor
-                                            value={siteTitle}
-                                            onSave={saveSiteTitle}
-                                            canEdit={canEdit && editMode}
-                                            placeholder={wedding.title}
-                                        />
-                                    </span>
-                                )}
-                            </Link>
-
-                            {canEdit && editMode ? (
-                                <div className="flex items-center gap-2">
-                                    <input
-                                        ref={logoInputRef}
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={async (e) => {
-                                            const file = e.target.files?.[0];
-                                            if (!file) return;
-                                            await onLogoFileSelected(file);
-                                            e.target.value = "";
+                <div className="flex flex-col min-h-screen">
+                    {shouldShowHeader ? (
+                        <header className={headerClass}>
+                            <div className="container mx-auto flex h-16 items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <Link
+                                        href={basePath}
+                                        className="flex items-center space-x-2"
+                                        onClick={(e) => {
+                                            if (canEdit && editMode) e.preventDefault();
                                         }}
-                                    />
-                                    <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => logoInputRef.current?.click()}
-                                        disabled={isUploadingLogo}
                                     >
-                                        {isUploadingLogo ? "Import..." : "Logo"}
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => saveBranding({ logoUrl: "" })}
-                                        disabled={!headerLogoUrl || isUploadingLogo}
-                                    >
-                                        Supprimer
-                                    </Button>
+                                        {headerLogoUrl ? (
+                                            <img
+                                                src={headerLogoUrl}
+                                                alt={headerLogoText || wedding.title}
+                                                className="h-10 w-auto object-contain"
+                                            />
+                                        ) : (
+                                            <span className="text-xl font-bold tracking-tight">
+                                                <InlineEditor
+                                                    value={siteTitle}
+                                                    onSave={saveSiteTitle}
+                                                    canEdit={canEdit && editMode}
+                                                    placeholder={wedding.title}
+                                                />
+                                            </span>
+                                        )}
+                                    </Link>
+
+                                    {canEdit && editMode ? (
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                ref={logoInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (!file) return;
+                                                    await onLogoFileSelected(file);
+                                                    e.target.value = "";
+                                                }}
+                                            />
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => logoInputRef.current?.click()}
+                                                disabled={isUploadingLogo}
+                                            >
+                                                {isUploadingLogo ? "Import..." : "Logo"}
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => saveBranding({ logoUrl: "" })}
+                                                disabled={!headerLogoUrl || isUploadingLogo}
+                                            >
+                                                Supprimer
+                                            </Button>
+                                        </div>
+                                    ) : null}
                                 </div>
-                            ) : null}
-                        </div>
-	                        <div className="flex items-center gap-3">
-	                            <nav className={navClass}>
-	                                {[...sectionMenuItems, ...customMenu].map((item) => (
-	                                    <Link
-	                                        key={item.id}
-	                                        href={item.href}
-	                                        className="hover:text-primary transition-colors"
-	                                        onClick={(e) => {
-	                                            if (canEdit && editMode) e.preventDefault();
-	                                        }}
-	                                    >
-	                                        {"path" in item ? (
-	                                            <InlineEditor
-	                                                value={item.label}
-	                                                onSave={(val) => saveMenuLabel(item.id, val)}
-	                                                canEdit={canEdit && editMode}
-	                                                placeholder={item.label}
-	                                            />
-	                                        ) : (
-	                                            <InlineEditor
-	                                                value={item.label}
-	                                                onSave={(val) => saveCustomPageTitle(item.id, val)}
-	                                                canEdit={canEdit && editMode}
-	                                                placeholder={item.label}
-	                                            />
-	                                        )}
-	                                    </Link>
-	                                ))}
-	                            </nav>
+                                <div className="flex items-center gap-3">
+                                    <nav className={navClass}>
+                                        {/* On homepage: show all menus. On section routes: show only sections. */}
+                                        {(isHome ? sectionMenuItems : sectionMenuItems).map((item) => {
+                                            const isExternal = item.linkType === "external";
+                                            const cls =
+                                                item.id === "cagnotte"
+                                                    ? "rounded-full px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/15 transition-colors"
+                                                    : "hover:text-primary transition-colors";
 
-	                            {/* One-page menu + primary CTA to open the donation flow */}
-	                            {cagnotteItem ? (
-	                                <Link href={cagnotteItem.href} onClick={(e) => (canEdit && editMode ? e.preventDefault() : undefined)}>
-	                                    <Button size="sm" className="rounded-full px-5">
-	                                        <InlineEditor
-	                                            value={cagnotteItem.label}
-	                                            onSave={(val) => saveMenuLabel(cagnotteItem.id, val)}
-	                                            canEdit={canEdit && editMode}
-	                                            placeholder={cagnotteItem.label}
-	                                        />
-	                                    </Button>
-	                                </Link>
-	                            ) : null}
-	                            {liveItem ? (
-	                                <Link href={liveItem.href} onClick={(e) => (canEdit && editMode ? e.preventDefault() : undefined)}>
-	                                    <Button size="sm" variant="outline" className="rounded-full px-5">
-	                                        <InlineEditor
-	                                            value={liveItem.label}
-	                                            onSave={(val) => saveMenuLabel(liveItem.id, val)}
-	                                            canEdit={canEdit && editMode}
-	                                            placeholder={liveItem.label}
-	                                        />
-	                                    </Button>
-	                                </Link>
-	                            ) : null}
-	                        </div>
-	                    </div>
-	                </header>
-                <main className="flex-1">{children}</main>
-                <footer className="py-6 md:px-8 md:py-0 border-t">
-                    <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
-                        <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-                            Fait avec amour sur <span className="font-bold">Libala</span>
-                        </p>
-                    </div>
-                </footer>
+                                            const content = (
+                                                <InlineEditor
+                                                    value={item.label}
+                                                    onSave={(val) => saveMenuLabel(item.id, val)}
+                                                    canEdit={canEdit && editMode}
+                                                    placeholder={item.label}
+                                                />
+                                            );
 
-                {canEdit ? (
-                    <div className="fixed bottom-6 right-6 z-50 flex gap-2">
-                        {editMode ? (
-                            <div className="bg-primary text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 animate-in slide-in-from-bottom-5">
-                                <span className="text-sm font-medium">Mode Edition</span>
-                                <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    className="h-7 px-2 rounded-full text-xs"
-                                    onClick={() => setEditMode(false)}
-                                >
-                                    Terminer
-                                </Button>
+                                            if (isExternal) {
+                                                return (
+                                                    <a
+                                                        key={item.id}
+                                                        href={item.href}
+                                                        className={cls}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        onClick={(e) => {
+                                                            if (canEdit && editMode) e.preventDefault();
+                                                        }}
+                                                    >
+                                                        {content}
+                                                    </a>
+                                                );
+                                            }
+
+                                            return (
+                                                <a
+                                                    key={item.id}
+                                                    href={item.href}
+                                                    className={cls}
+                                                    onClick={(e) => {
+                                                        if (canEdit && editMode) e.preventDefault();
+                                                    }}
+                                                >
+                                                    {content}
+                                                </a>
+                                            );
+                                        })}
+                                        {isHome && liveItem ? (
+                                            <a
+                                                key={liveItem.id}
+                                                href={liveItem.href}
+                                                className="hover:text-primary transition-colors"
+                                                target={liveItem.linkType === "external" ? "_blank" : undefined}
+                                                rel={liveItem.linkType === "external" ? "noopener noreferrer" : undefined}
+                                                onClick={(e) => {
+                                                    if (canEdit && editMode) e.preventDefault();
+                                                }}
+                                            >
+                                                <InlineEditor
+                                                    value={liveItem.label}
+                                                    onSave={(val) => saveMenuLabel(liveItem.id, val)}
+                                                    canEdit={canEdit && editMode}
+                                                    placeholder={liveItem.label}
+                                                />
+                                            </a>
+                                        ) : null}
+                                    </nav>
+
+                                    {/* Keep "Live" as a CTA button on section routes (homepage already shows it in the menu). */}
+                                    {!isHome && liveItem ? (
+                                        <Link href={liveItem.href} onClick={(e) => (canEdit && editMode ? e.preventDefault() : undefined)}>
+                                            <Button size="sm" variant="outline" className="rounded-full px-5">
+                                                <InlineEditor
+                                                    value={liveItem.label}
+                                                    onSave={(val) => saveMenuLabel(liveItem.id, val)}
+                                                    canEdit={canEdit && editMode}
+                                                    placeholder={liveItem.label}
+                                                />
+                                            </Button>
+                                        </Link>
+                                    ) : null}
+                                </div>
                             </div>
-                        ) : (
-                            <Button
-                                className="rounded-full shadow-lg h-12 px-6 bg-primary/90 hover:bg-primary backdrop-blur-sm"
-                                onClick={() => setEditMode(true)}
-                            >
-                                Modifier le site
-                            </Button>
-                        )}
-                    </div>
-                ) : null}
-            </div>
-            </PublicEditProvider>
-        </ThemeProvider>
+                        </header>
+                    ) : null}
+                    <main className="flex-1">{children}</main>
+                    {shouldShowFooter ? (
+                    <footer className="border-t bg-background">
+                        <div className="container mx-auto px-6 py-12">
+                            <div className="flex flex-col items-center gap-8 text-center">
+                                <div className="max-w-xl">
+                                    <div className="text-2xl font-serif font-bold tracking-tight text-foreground">
+                                        {wedding.config?.texts?.siteTitle || wedding.title}
+                                    </div>
+
+                                    <div className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                                        <div className="font-medium text-foreground">
+                                            <InlineEditor
+                                                value={footerTitle}
+                                                onSave={(v) => saveFooterField("footerTitle", v)}
+                                                canEdit={canEdit && editMode}
+                                                placeholder="On a hâte de vous voir"
+                                            />
+                                        </div>
+                                        <div className="mt-1">
+                                            <InlineEditor
+                                                value={footerSubtitle}
+                                                onSave={(v) => saveFooterField("footerSubtitle", v)}
+                                                canEdit={canEdit && editMode}
+                                                placeholder="Merci de faire partie de cette aventure."
+                                                isTextArea
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-5 space-y-2 text-sm">
+                                        {footerAddress ? (
+                                            <div className="text-muted-foreground">
+                                                <span className="text-foreground font-medium">Adresse:</span>{" "}
+                                                {canEdit && editMode ? (
+                                                    <InlineEditor
+                                                        value={footerAddress}
+                                                        onSave={(v) => saveFooterField("footerAddress", v)}
+                                                        canEdit={canEdit && editMode}
+                                                        placeholder="Adresse"
+                                                    />
+                                                ) : (
+                                                    <a
+                                                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(footerAddress)}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="hover:underline"
+                                                    >
+                                                        {footerAddress}
+                                                    </a>
+                                                )}
+                                            </div>
+                                        ) : null}
+                                        {footerEmail || (canEdit && editMode) ? (
+                                            <div className="text-muted-foreground">
+                                                <span className="text-foreground font-medium">Email:</span>{" "}
+                                                {canEdit && editMode ? (
+                                                    <InlineEditor
+                                                        value={footerEmail}
+                                                        onSave={(v) => saveFooterField("footerEmail", v)}
+                                                        canEdit={canEdit && editMode}
+                                                        placeholder="contact@email.com"
+                                                    />
+                                                ) : (
+                                                    <a className="hover:underline" href={`mailto:${footerEmail}`}>
+                                                        {footerEmail}
+                                                    </a>
+                                                )}
+                                            </div>
+                                        ) : null}
+                                        {footerPhone || (canEdit && editMode) ? (
+                                            <div className="text-muted-foreground">
+                                                <span className="text-foreground font-medium">Téléphone:</span>{" "}
+                                                {canEdit && editMode ? (
+                                                    <InlineEditor
+                                                        value={footerPhone}
+                                                        onSave={(v) => saveFooterField("footerPhone", v)}
+                                                        canEdit={canEdit && editMode}
+                                                        placeholder="+33..."
+                                                    />
+                                                ) : (
+                                                    <a className="hover:underline" href={`tel:${footerPhone}`}>
+                                                        {footerPhone}
+                                                    </a>
+                                                )}
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                </div>
+
+                                <div className="text-xs text-muted-foreground">
+                                    <InlineEditor
+                                        value={footerCopyright}
+                                        onSave={(v) => saveFooterField("footerCopyright", v)}
+                                        canEdit={canEdit && editMode}
+                                        placeholder="© 2026. Tous droits réservés."
+                                    />
+                                </div>
+
+                                <div className="text-xs text-muted-foreground">
+                                    Fait avec amour sur{" "}
+                                    <a
+                                        href={nocelyHref}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="font-semibold text-foreground hover:underline"
+                                    >
+                                        Nocely
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </footer>
+                    ) : null}
+
+                    {
+                        canEdit ? (
+                            <div className="fixed bottom-6 right-6 z-50 flex gap-2">
+                                {editMode ? (
+                                    <div className="bg-primary text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 animate-in slide-in-from-bottom-5">
+                                        <span className="text-sm font-medium">Mode Edition</span>
+                                        <Button
+                                            size="sm"
+                                            variant="secondary"
+                                            className="h-7 px-2 rounded-full text-xs"
+                                            onClick={() => setEditMode(false)}
+                                        >
+                                            Terminer
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <Button
+                                        className="rounded-full shadow-lg h-12 px-6 bg-primary/90 hover:bg-primary backdrop-blur-sm"
+                                        onClick={() => setEditMode(true)}
+                                    >
+                                        Modifier le site
+                                    </Button>
+                                )}
+                            </div>
+                        ) : null
+                    }
+                </div >
+            </PublicEditProvider >
+        </ThemeProvider >
     );
 }

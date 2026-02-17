@@ -32,7 +32,7 @@ export function setupAuth(app: Express) {
     app.set("trust proxy", 1);
     app.use(
         session({
-            secret: process.env.SESSION_SECRET || "libala-secret-key",
+            secret: process.env.SESSION_SECRET || "nocely-secret-key",
             resave: false,
             saveUninitialized: false,
             store: sessionStore,

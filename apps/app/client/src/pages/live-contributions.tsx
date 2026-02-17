@@ -193,6 +193,13 @@ function formatAmount(cents: number): string {
 export default function LiveContributions() {
   const { slug } = useParams<{ slug: string }>();
   const { data: wedding } = useWedding(slug);
+  const basePath = useMemo(() => {
+    if (!slug) return "/";
+    if (typeof window === "undefined") return `/${slug}`;
+    const pathname = window.location.pathname || "";
+    const previewPrefix = `/preview/${slug}`;
+    return pathname.startsWith(previewPrefix) ? previewPrefix : `/${slug}`;
+  }, [slug]);
   const [showPopup, setShowPopup] = useState(false);
   const [newContribution, setNewContribution] = useState<Contribution | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
@@ -226,8 +233,12 @@ export default function LiveContributions() {
   const liveQrCaption = wedding?.config?.texts?.liveQrCaption || "Scannez pour contribuer";
   const templateId = (wedding?.templateId as keyof typeof LIVE_TEMPLATE_THEME) || "classic";
   const liveTheme = LIVE_TEMPLATE_THEME[templateId] || LIVE_TEMPLATE_THEME.classic;
+  const paymentMode = wedding?.config?.payments?.mode || (((wedding?.config?.sections as any)?.cagnotteExternalUrl || "") ? "external" : "stripe");
+  const externalCagnotteUrl =
+    wedding?.config?.payments?.externalUrl ||
+    ((wedding?.config?.sections as any)?.cagnotteExternalUrl || "");
   const publicCagnotteUrl = slug
-    ? `${window.location.origin}/${slug}/cagnotte`
+    ? (paymentMode === "external" && externalCagnotteUrl ? externalCagnotteUrl : `${window.location.origin}/${slug}/cagnotte`)
     : `${window.location.origin}/cagnotte`;
 
   useEffect(() => {
@@ -317,19 +328,19 @@ export default function LiveContributions() {
     return list;
   }, [recent]);
 
-  if (!liveEnabled) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
-        <Card className="p-8 max-w-lg text-center">
-          <h2 className="text-2xl font-serif font-bold mb-3">Live indisponible</h2>
-          <p className="text-muted-foreground mb-6">Cette page a ete desactivee dans la configuration du site.</p>
-          <Link href="/">
-            <Button>Retour au site</Button>
-          </Link>
-        </Card>
-      </div>
-    );
-  }
+	  if (!liveEnabled) {
+	    return (
+	      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+	        <Card className="p-8 max-w-lg text-center">
+	          <h2 className="text-2xl font-serif font-bold mb-3">Live indisponible</h2>
+	          <p className="text-muted-foreground mb-6">Cette page a été désactivée dans la configuration du site.</p>
+	          <Link href={basePath}>
+	            <Button>Retour au site</Button>
+	          </Link>
+	        </Card>
+	      </div>
+	    );
+	  }
 
   return (
     <div className={`h-screen ${liveTheme.pageClass} text-foreground relative overflow-hidden`}>
@@ -406,6 +417,11 @@ export default function LiveContributions() {
             <p className="text-lg text-muted-foreground font-light tracking-widest">
               {liveTitle}
             </p>
+            {paymentMode === "external" ? (
+              <div className="mt-3 inline-flex items-center justify-center rounded-full border border-primary/20 bg-primary/10 px-4 py-1 text-[10px] font-semibold uppercase tracking-widest text-primary">
+                Paiement externe
+              </div>
+            ) : null}
             <p className="text-sm text-muted-foreground mt-2">{liveSubtitle}</p>
           </div>
 
