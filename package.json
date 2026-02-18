@@ -16,7 +16,15 @@
     "check": "npm --prefix apps/app run check && npm --prefix apps/marketing run check && tsc -p apps/api/tsconfig.json",
     "db:push": "drizzle-kit push",
     "seed:test-user": "tsx scripts/create-test-user.ts",
-    "test:smoke": "tsx scripts/smoke.ts"
+    "test:smoke": "tsx scripts/smoke.ts",
+    "test": "vitest run --config tests/vitest.config.unit.ts && vitest run --config tests/vitest.config.api.ts",
+    "test:unit": "vitest run --config tests/vitest.config.unit.ts",
+    "test:unit:watch": "vitest --config tests/vitest.config.unit.ts",
+    "test:api": "vitest run --config tests/vitest.config.api.ts",
+    "test:api:watch": "vitest --config tests/vitest.config.api.ts",
+    "test:component": "vitest run --config tests/vitest.config.component.ts",
+    "test:coverage": "vitest run --config tests/vitest.config.unit.ts --coverage && vitest run --config tests/vitest.config.api.ts --coverage",
+    "test:all": "npm run test:unit && npm run test:api && npm run test:component"
   },
   "dependencies": {
     "@jridgewell/trace-mapping": "^0.3.25",
