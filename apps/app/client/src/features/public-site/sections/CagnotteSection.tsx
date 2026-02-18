@@ -29,15 +29,15 @@ export function CagnotteSection({
       className={`scroll-mt-24 py-24 px-6 ${tokens.cagnotte.section}`}
     >
       <div className="max-w-3xl mx-auto text-center space-y-6">
-        <GiftIcon className="h-12 w-12 mx-auto mb-6 text-primary opacity-70" />
-        <h2 className="text-4xl md:text-5xl font-serif font-light mb-4 tracking-wide">
+        <GiftIcon className={`h-12 w-12 mx-auto mb-6 ${tokens.cagnotte.icon}`} />
+        <h2 className={`text-4xl md:text-5xl font-serif font-light mb-4 tracking-wide ${tokens.cagnotte.title}`}>
           <InlineEditor
             value={cagnotteTitle}
             onSave={(val) => onSaveText("cagnotteTitle", val)}
             canEdit={canEdit && editMode}
           />
         </h2>
-        <div className="text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+        <div className="opacity-60 leading-relaxed max-w-2xl mx-auto">
           <InlineEditor
             value={cagnotteDescription}
             onSave={(val) => onSaveText("cagnotteDescription", val)}
@@ -57,7 +57,7 @@ export function CagnotteSection({
               className="h-12 rounded-2xl bg-white/70 border-primary/10 focus:ring-primary/20"
               inputMode="url"
             />
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs opacity-60">
               Le bouton redirigera vers ce lien (Leetchi, PayPal, Lydia, Stripe Payment Link, etc.).
             </div>
           </div>
@@ -77,7 +77,7 @@ export function CagnotteSection({
         ) : null}
 
         {cagnotteMode === "external" && cagnotteExternalUrl ? (
-          <div className="mt-4 text-[10px] uppercase tracking-widest text-primary/80">
+          <div className="mt-4 text-[10px] uppercase tracking-widest opacity-60">
             Paiement externe
           </div>
         ) : canEdit && editMode ? (

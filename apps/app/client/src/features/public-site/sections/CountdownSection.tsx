@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { InlineEditor } from "@/components/ui/inline-editor";
 import type { CountdownSectionProps } from "@/features/public-site/types";
 
-function Countdown({ weddingDate }: { weddingDate: string }) {
+function Countdown({ tokens, weddingDate }: { tokens: CountdownSectionProps["tokens"]; weddingDate: string }) {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -37,12 +37,12 @@ function Countdown({ weddingDate }: { weddingDate: string }) {
         { value: timeLeft.seconds, label: "Secondes" },
       ].map((item, idx) => (
         <div key={idx} className="flex flex-col items-center">
-          <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
-            <span className="text-2xl md:text-3xl font-serif font-bold text-primary">
+          <div className={`w-16 h-16 md:w-20 md:h-20 flex items-center justify-center ${tokens.countdown.box}`}>
+            <span className={tokens.countdown.number}>
               {item.value.toString().padStart(2, "0")}
             </span>
           </div>
-          <span className="text-xs md:text-sm text-muted-foreground mt-2 font-sans">
+          <span className={tokens.countdown.label}>
             {item.label}
           </span>
         </div>
@@ -52,6 +52,7 @@ function Countdown({ weddingDate }: { weddingDate: string }) {
 }
 
 export function CountdownSection({
+  tokens,
   weddingDate,
   countdownTitle,
   onSaveText,
@@ -59,9 +60,9 @@ export function CountdownSection({
   editMode,
 }: CountdownSectionProps) {
   return (
-    <section id="countdown" className="scroll-mt-24 py-20 px-6 bg-background">
+    <section id="countdown" className={`scroll-mt-24 py-20 px-6 ${tokens.countdown.section}`}>
       <div className="max-w-3xl mx-auto text-center">
-        <div className="text-xs uppercase tracking-[0.35em] text-muted-foreground mb-4">
+        <div className={`text-xs uppercase tracking-[0.35em] mb-4 ${tokens.countdown.label}`}>
           <InlineEditor
             value={countdownTitle}
             onSave={(val) => onSaveText("countdownTitle", val)}
@@ -70,7 +71,7 @@ export function CountdownSection({
           />
         </div>
         <div className="flex justify-center">
-          <Countdown weddingDate={weddingDate} />
+          <Countdown tokens={tokens} weddingDate={weddingDate} />
         </div>
       </div>
     </section>

@@ -59,7 +59,7 @@ export function StorySection({
           </div>
           <div className="space-y-8 flex flex-col justify-center">
             {tokens.hero.decoration === "floral" && <FloralDecoration />}
-            <div className="text-lg md:text-xl text-muted-foreground leading-relaxed font-light italic text-[#7A6B5E] max-w-lg mx-auto lg:mx-0">
+            <div className={`max-w-lg mx-auto lg:mx-0 ${tokens.story.body}`}>
               <InlineEditor
                 value={storyBody}
                 onSave={(val) => onSaveText("storyBody", val)}

@@ -22,7 +22,7 @@ export function ScheduleSection({
       className={`scroll-mt-24 py-24 px-6 ${tokens.schedule.section}`}
     >
       <div className="max-w-4xl mx-auto text-center space-y-6">
-        <h2 className="text-3xl md:text-4xl font-serif font-light tracking-wide">
+        <h2 className={`text-3xl md:text-4xl font-serif font-light tracking-wide ${tokens.schedule.title}`}>
           <InlineEditor
             value={programTitle}
             onSave={(val) => onSaveText("programTitle", val)}
@@ -30,7 +30,7 @@ export function ScheduleSection({
             className="uppercase"
           />
         </h2>
-        <div className="text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+        <div className="opacity-60 leading-relaxed max-w-2xl mx-auto">
           <InlineEditor
             value={programDescription}
             onSave={(val) => onSaveText("programDescription", val)}
@@ -41,7 +41,7 @@ export function ScheduleSection({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 text-left">
           {programItems.map((item, idx) => (
             <div key={`${item.title}-${idx}`} className={tokens.schedule.card}>
-              <div className="text-xs uppercase tracking-widest text-primary mb-2">
+              <div className={`text-xs uppercase tracking-widest mb-2 ${tokens.schedule.time}`}>
                 <InlineEditor
                   value={item.time}
                   onSave={(val) => onUpdateProgramItem(idx, { time: val })}
@@ -49,7 +49,7 @@ export function ScheduleSection({
                   placeholder="00:00"
                 />
               </div>
-              <h3 className="text-lg font-serif font-semibold text-foreground mb-2">
+              <h3 className="text-lg font-serif font-semibold mb-2">
                 <InlineEditor
                   value={item.title}
                   onSave={(val) => onUpdateProgramItem(idx, { title: val })}
@@ -57,7 +57,7 @@ export function ScheduleSection({
                   placeholder={`Étape ${idx + 1}`}
                 />
               </h3>
-              <div className="text-sm text-muted-foreground leading-relaxed">
+              <div className="text-sm opacity-60 leading-relaxed">
                 <InlineEditor
                   value={item.description}
                   onSave={(val) => onUpdateProgramItem(idx, { description: val })}

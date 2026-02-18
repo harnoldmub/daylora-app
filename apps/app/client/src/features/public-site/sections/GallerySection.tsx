@@ -29,7 +29,7 @@ export function GallerySection({
     >
       <div className="max-w-6xl mx-auto">
         <div className="text-center max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-serif font-light tracking-wide">
+          <h2 className={`text-3xl md:text-4xl font-serif font-light tracking-wide ${tokens.gallery.title}`}>
             <InlineEditor
               value={galleryTitle}
               onSave={(val) => onSaveText("galleryTitle", val)}
@@ -37,7 +37,7 @@ export function GallerySection({
               className="uppercase"
             />
           </h2>
-          <div className="mt-4 text-muted-foreground leading-relaxed">
+          <div className="mt-4 opacity-60 leading-relaxed">
             <InlineEditor
               value={galleryDescription}
               onSave={(val) => onSaveText("galleryDescription", val)}

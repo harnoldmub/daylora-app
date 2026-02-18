@@ -65,31 +65,49 @@ export interface TemplateTokens {
   rsvp: {
     section: string;
     card: string;
+    label: string;
+    input: string;
+    title: string;
+    description: string;
   };
   story: {
     title: string;
     layout: string;
     image: string;
     container: string;
+    body: string;
   };
   gallery: {
     section: string;
     imageRadius: string;
+    title: string;
   };
   location: {
     section: string;
     card: string;
+    title: string;
   };
   schedule: {
     section: string;
     card: string;
+    title: string;
+    time: string;
   };
   gifts: {
     section: string;
     card: string;
+    title: string;
   };
   cagnotte: {
     section: string;
+    title: string;
+    icon: string;
+  };
+  countdown: {
+    section: string;
+    box: string;
+    number: string;
+    label: string;
   };
   footer: {
     section: string;
@@ -102,51 +120,69 @@ export const templateTokens: Record<TemplateId, TemplateTokens> = {
     name: "Classique",
     font: "serif",
     page: {
-      bg: "bg-secondary",
+      bg: "bg-[#FAF7F2]",
     },
     hero: {
-      overlay: "from-foreground/25 via-transparent to-secondary",
-      wrapper: "text-center max-w-5xl space-y-10",
-      title: "text-7xl md:text-9xl font-bold text-foreground leading-[1.05]",
-      subtitle: "text-xs md:text-sm tracking-[0.4em] uppercase text-primary mb-6 opacity-80",
-      date: "text-xl md:text-2xl font-medium text-foreground mt-8 border-y border-primary/20 py-5 inline-block px-12 tracking-widest",
-      button: "px-16 py-8 text-xs tracking-[0.3em] uppercase font-black shadow-2xl transition-all hover:scale-105",
-      shell: "rounded-[3rem] bg-white/55 backdrop-blur-md border border-white/50 px-8 py-10 md:px-12 md:py-12 shadow-[0_30px_120px_rgba(0,0,0,0.10)]",
-      imageOpacity: "opacity-78",
+      overlay: "from-black/60 via-black/30 to-[#FAF7F2]",
+      wrapper: "text-center max-w-4xl space-y-8",
+      title: "text-6xl md:text-8xl font-bold text-white leading-[1.05] drop-shadow-[0_4px_30px_rgba(0,0,0,0.4)]",
+      subtitle: "text-xs md:text-sm tracking-[0.4em] uppercase text-white/90 mb-4",
+      date: "text-lg md:text-xl font-medium text-white/90 mt-6 border-y border-white/30 py-4 inline-block px-10 tracking-widest",
+      button: "px-14 py-7 text-xs tracking-[0.3em] uppercase font-bold shadow-2xl transition-all hover:scale-105",
+      shell: "rounded-3xl bg-black/40 backdrop-blur-xl border border-white/15 px-8 py-10 md:px-14 md:py-14 shadow-[0_30px_80px_rgba(0,0,0,0.3)]",
+      imageOpacity: "opacity-90",
       alignment: "center",
       decoration: "serif-border",
     },
     rsvp: {
-      section: "bg-secondary py-40 border-t border-primary/10",
-      card: "border-none shadow-[0_40px_120px_rgba(0,0,0,0.1)] bg-card/90 backdrop-blur-2xl rounded-[4rem] p-16 border border-white/60",
+      section: "bg-[#FAF7F2] py-32 border-t border-black/5",
+      card: "border border-black/8 shadow-[0_20px_60px_rgba(0,0,0,0.06)] bg-white rounded-3xl p-12 md:p-16",
+      label: "text-xs uppercase tracking-widest font-semibold text-[#6B5E50]",
+      input: "h-14 rounded-xl bg-[#FAF7F2] border-[#E5DFD5] text-[#3D3428] placeholder:text-[#B5AA9A] focus:ring-[#C8A96A]/30 focus:border-[#C8A96A]",
+      title: "text-4xl md:text-5xl font-serif font-light text-[#3D3428] tracking-tight",
+      description: "text-[#8A7D6D]",
     },
     story: {
-      title: "text-6xl font-bold text-foreground mb-12 text-center",
-      layout: "grid grid-cols-1 lg:grid-cols-2 gap-24 items-center",
-      image: "rounded-[4rem] shadow-[0_50px_100px_rgba(0,0,0,0.1)] border-[12px] border-white -rotate-1 hover:rotate-0 transition-transform duration-700",
+      title: "text-5xl md:text-6xl font-bold text-[#3D3428] mb-12 text-center",
+      layout: "grid grid-cols-1 lg:grid-cols-2 gap-16 items-center",
+      image: "rounded-3xl shadow-[0_30px_80px_rgba(0,0,0,0.08)] border-[8px] border-white -rotate-1 hover:rotate-0 transition-transform duration-700",
       container: "max-w-6xl mx-auto px-6",
+      body: "text-lg text-[#6B5E50] leading-relaxed font-light italic",
     },
     gallery: {
-      section: "bg-white/40",
-      imageRadius: "rounded-3xl",
+      section: "bg-white/60",
+      imageRadius: "rounded-2xl",
+      title: "text-[#3D3428]",
     },
     location: {
-      section: "bg-muted/20",
-      card: "bg-white/80 border border-primary/10 rounded-2xl p-6 shadow-sm",
+      section: "bg-[#F3EDE4]/50",
+      card: "bg-white border border-[#E5DFD5] rounded-2xl p-6 shadow-sm",
+      title: "text-[#3D3428]",
     },
     schedule: {
       section: "",
-      card: "border border-primary/10 rounded-2xl p-6",
+      card: "border border-[#E5DFD5] rounded-2xl p-6 bg-white",
+      title: "text-[#3D3428]",
+      time: "text-primary",
     },
     gifts: {
       section: "",
-      card: "rounded-3xl border border-primary/10 bg-white/60 backdrop-blur",
+      card: "rounded-2xl border border-[#E5DFD5] bg-white shadow-sm",
+      title: "text-[#3D3428]",
     },
     cagnotte: {
-      section: "bg-secondary/30",
+      section: "bg-[#F3EDE4]/40",
+      title: "text-[#3D3428]",
+      icon: "text-primary/70",
+    },
+    countdown: {
+      section: "bg-[#FAF7F2]",
+      box: "w-18 h-18 md:w-22 md:h-22 rounded-xl bg-white border border-[#E5DFD5] shadow-sm",
+      number: "text-2xl md:text-3xl font-serif font-bold text-primary",
+      label: "text-xs text-[#8A7D6D] mt-2 font-sans",
     },
     footer: {
-      section: "bg-foreground text-background",
+      section: "bg-[#2A2318] text-white/90",
     },
   },
   modern: {
@@ -154,51 +190,69 @@ export const templateTokens: Record<TemplateId, TemplateTokens> = {
     name: "Moderne",
     font: "sans",
     page: {
-      bg: "bg-background",
+      bg: "bg-[#0A0A0A]",
     },
     hero: {
-      overlay: "from-black/35 via-black/10 to-background",
+      overlay: "from-black/70 via-black/40 to-[#0A0A0A]",
       wrapper: "text-left max-w-7xl pt-20 px-10",
-      title: "text-7xl md:text-[11rem] font-black text-white leading-[0.8] tracking-tighter uppercase",
-      subtitle: "text-[10px] md:text-sm font-black tracking-[0.8em] uppercase text-primary mb-8 drop-shadow-lg",
-      date: "text-2xl md:text-5xl font-black text-white/40 mt-10 tracking-widest uppercase",
-      button: "px-14 py-8 text-xs tracking-[0.4em] uppercase font-black transition-all rounded-none ring-1 ring-white/10 hover:ring-primary/50",
-      shell: "rounded-[3rem] bg-black/25 backdrop-blur-md border border-white/10 px-8 py-10 md:px-12 md:py-12 shadow-[0_30px_120px_rgba(0,0,0,0.25)]",
-      imageOpacity: "opacity-90",
+      title: "text-6xl md:text-[10rem] font-black text-white leading-[0.85] tracking-tighter uppercase drop-shadow-[0_4px_40px_rgba(0,0,0,0.5)]",
+      subtitle: "text-[10px] md:text-xs font-bold tracking-[0.6em] uppercase text-white/80 mb-6",
+      date: "text-xl md:text-4xl font-black text-white/50 mt-8 tracking-widest uppercase",
+      button: "px-12 py-7 text-xs tracking-[0.4em] uppercase font-bold transition-all rounded-none ring-1 ring-white/20 hover:ring-white/60 bg-white text-black hover:bg-white/90",
+      shell: "rounded-none bg-black/50 backdrop-blur-2xl border border-white/10 px-8 py-10 md:px-14 md:py-14 shadow-[0_30px_100px_rgba(0,0,0,0.5)]",
+      imageOpacity: "opacity-80",
       alignment: "left",
       decoration: "none",
     },
     rsvp: {
-      section: "bg-black text-white py-40 border-y border-white/5",
-      card: "bg-neutral-900/80 border border-white/10 backdrop-blur-3xl rounded-none shadow-[0_50px_100px_rgba(0,0,0,0.5)] p-16",
+      section: "bg-[#111111] text-white py-32",
+      card: "bg-[#1A1A1A] border border-white/10 rounded-none shadow-[0_30px_80px_rgba(0,0,0,0.4)] p-12 md:p-16",
+      label: "text-xs uppercase tracking-widest font-semibold text-white/60",
+      input: "h-14 rounded-none bg-[#222222] border-white/15 text-white placeholder:text-white/30 focus:ring-white/20 focus:border-white/40",
+      title: "text-4xl md:text-6xl font-black text-white tracking-tighter uppercase",
+      description: "text-white/50",
     },
     story: {
-      title: "text-8xl md:text-[12rem] font-black text-foreground leading-none tracking-tighter mb-16",
-      layout: "grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] gap-0 items-stretch min-h-[80vh]",
-      image: "rounded-none grayscale contrast-125 hover:grayscale-0 transition-all duration-1000 object-cover h-full",
+      title: "text-6xl md:text-[8rem] font-black text-white leading-none tracking-tighter mb-16",
+      layout: "grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] gap-0 items-stretch min-h-[70vh]",
+      image: "rounded-none grayscale contrast-110 hover:grayscale-0 transition-all duration-1000 object-cover h-full",
       container: "max-w-full mx-auto px-0",
+      body: "text-lg text-white/60 leading-relaxed font-light",
     },
     gallery: {
-      section: "bg-neutral-950 text-white",
+      section: "bg-[#0A0A0A] text-white",
       imageRadius: "rounded-none",
+      title: "text-white",
     },
     location: {
-      section: "bg-neutral-50",
-      card: "bg-white border border-neutral-200 rounded-none p-8 shadow-md",
+      section: "bg-[#111111]",
+      card: "bg-[#1A1A1A] border border-white/10 rounded-none p-8",
+      title: "text-white",
     },
     schedule: {
-      section: "bg-black text-white",
-      card: "border border-white/10 rounded-none p-8",
+      section: "bg-[#0A0A0A] text-white",
+      card: "border border-white/10 rounded-none p-8 bg-[#1A1A1A]",
+      title: "text-white",
+      time: "text-white/60",
     },
     gifts: {
-      section: "",
-      card: "rounded-none border border-neutral-200 bg-white shadow-md",
+      section: "bg-[#111111]",
+      card: "rounded-none border border-white/10 bg-[#1A1A1A] shadow-lg",
+      title: "text-white",
     },
     cagnotte: {
-      section: "bg-neutral-950 text-white",
+      section: "bg-[#0A0A0A] text-white",
+      title: "text-white",
+      icon: "text-white/50",
+    },
+    countdown: {
+      section: "bg-[#0A0A0A]",
+      box: "w-18 h-18 md:w-22 md:h-22 rounded-none bg-[#1A1A1A] border border-white/10",
+      number: "text-2xl md:text-3xl font-sans font-black text-white",
+      label: "text-xs text-white/40 mt-2 font-sans uppercase tracking-widest",
     },
     footer: {
-      section: "bg-black text-white",
+      section: "bg-black text-white/70",
     },
   },
   minimal: {
@@ -206,51 +260,69 @@ export const templateTokens: Record<TemplateId, TemplateTokens> = {
     name: "Minimal",
     font: "sans",
     page: {
-      bg: "bg-background",
+      bg: "bg-white",
     },
     hero: {
-      overlay: "from-transparent via-transparent to-background",
-      wrapper: "text-center max-w-3xl space-y-12",
-      title: "text-5xl md:text-[6rem] font-thin text-foreground tracking-[-0.07em] leading-[0.9]",
-      subtitle: "text-[10px] tracking-[1.2em] uppercase text-muted-foreground mb-12",
-      date: "text-xl md:text-2xl font-light text-muted-foreground mt-6 flex items-center justify-center gap-6 before:h-[0.5px] before:w-12 before:bg-foreground/10 after:h-[0.5px] after:w-12 after:bg-foreground/10",
-      button: "px-12 py-6 text-[11px] tracking-[0.6em] uppercase font-medium border border-foreground/20 text-foreground transition-all rounded-full",
-      shell: "rounded-[3rem] bg-white/55 backdrop-blur-md border border-white/50 px-8 py-10 md:px-12 md:py-12 shadow-[0_30px_120px_rgba(0,0,0,0.10)]",
-      imageOpacity: "opacity-75",
+      overlay: "from-white/50 via-transparent to-white",
+      wrapper: "text-center max-w-3xl space-y-10",
+      title: "text-5xl md:text-[5.5rem] font-extralight text-[#2D2D2D] tracking-[-0.04em] leading-[0.95] drop-shadow-[0_2px_20px_rgba(0,0,0,0.1)]",
+      subtitle: "text-[10px] tracking-[1em] uppercase text-[#2D2D2D]/60 mb-10",
+      date: "text-lg md:text-xl font-light text-[#2D2D2D]/60 mt-6 flex items-center justify-center gap-6 before:h-[0.5px] before:w-10 before:bg-[#2D2D2D]/20 after:h-[0.5px] after:w-10 after:bg-[#2D2D2D]/20",
+      button: "px-10 py-6 text-[11px] tracking-[0.5em] uppercase font-medium border border-[#2D2D2D]/20 text-[#2D2D2D] bg-transparent hover:bg-[#2D2D2D] hover:text-white transition-all rounded-full",
+      shell: "rounded-3xl bg-white/70 backdrop-blur-2xl border border-black/5 px-8 py-10 md:px-14 md:py-14 shadow-[0_20px_60px_rgba(0,0,0,0.06)]",
+      imageOpacity: "opacity-60",
       alignment: "center",
       decoration: "floral",
     },
     rsvp: {
-      section: "bg-background py-40",
-      card: "border-none shadow-[0_20px_60px_rgba(0,0,0,0.03)] bg-card rounded-2xl p-16 max-w-2xl mx-auto",
+      section: "bg-[#FAFAFA] py-32",
+      card: "border border-black/6 shadow-[0_12px_40px_rgba(0,0,0,0.04)] bg-white rounded-2xl p-12 md:p-14 max-w-2xl mx-auto",
+      label: "text-xs uppercase tracking-widest font-medium text-[#2D2D2D]/50",
+      input: "h-14 rounded-xl bg-[#F5F5F5] border-black/8 text-[#2D2D2D] placeholder:text-[#2D2D2D]/30 focus:ring-[#2D2D2D]/10 focus:border-[#2D2D2D]/30",
+      title: "text-4xl md:text-5xl font-extralight text-[#2D2D2D] tracking-tight",
+      description: "text-[#2D2D2D]/50",
     },
     story: {
-      title: "text-5xl md:text-7xl font-extralight text-foreground text-center mb-24 tracking-tighter",
-      layout: "max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center px-6 pb-40",
-      image: "rounded-2xl opacity-95 shadow-2xl border border-black/5 transition-opacity hover:opacity-100 duration-1000",
-      container: "max-w-4xl mx-auto px-6",
+      title: "text-4xl md:text-6xl font-extralight text-[#2D2D2D] text-center mb-20 tracking-tight",
+      layout: "max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-14 items-center px-6",
+      image: "rounded-2xl opacity-95 shadow-lg border border-black/5 transition-opacity hover:opacity-100 duration-1000",
+      container: "max-w-5xl mx-auto px-6",
+      body: "text-base text-[#2D2D2D]/50 leading-[1.8] font-light",
     },
     gallery: {
-      section: "",
-      imageRadius: "rounded-2xl",
+      section: "bg-white",
+      imageRadius: "rounded-xl",
+      title: "text-[#2D2D2D]",
     },
     location: {
-      section: "",
-      card: "border border-black/5 rounded-2xl p-8 shadow-sm",
+      section: "bg-[#FAFAFA]",
+      card: "border border-black/5 rounded-xl p-6 bg-white shadow-sm",
+      title: "text-[#2D2D2D]",
     },
     schedule: {
       section: "",
-      card: "border border-black/5 rounded-2xl p-8",
+      card: "border border-black/5 rounded-xl p-6 bg-white",
+      title: "text-[#2D2D2D]",
+      time: "text-[#2D2D2D]/40",
     },
     gifts: {
       section: "",
-      card: "rounded-2xl border border-black/5 bg-white shadow-sm",
+      card: "rounded-xl border border-black/5 bg-white shadow-sm",
+      title: "text-[#2D2D2D]",
     },
     cagnotte: {
-      section: "",
+      section: "bg-[#FAFAFA]",
+      title: "text-[#2D2D2D]",
+      icon: "text-[#2D2D2D]/30",
+    },
+    countdown: {
+      section: "bg-white",
+      box: "w-18 h-18 md:w-22 md:h-22 rounded-xl bg-[#FAFAFA] border border-black/5",
+      number: "text-2xl md:text-3xl font-extralight text-[#2D2D2D]",
+      label: "text-xs text-[#2D2D2D]/40 mt-2 font-sans",
     },
     footer: {
-      section: "bg-neutral-900 text-white",
+      section: "bg-[#2D2D2D] text-white/80",
     },
   },
 };

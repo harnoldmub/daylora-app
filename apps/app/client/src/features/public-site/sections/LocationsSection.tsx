@@ -22,7 +22,7 @@ export function LocationsSection({
       className={`scroll-mt-24 py-24 px-6 ${tokens.location.section}`}
     >
       <div className="max-w-4xl mx-auto text-center space-y-6">
-        <h2 className="text-3xl md:text-4xl font-serif font-light tracking-wide">
+        <h2 className={`text-3xl md:text-4xl font-serif font-light tracking-wide ${tokens.location.title}`}>
           <InlineEditor
             value={locationTitle}
             onSave={(val) => onSaveText("locationTitle", val)}
@@ -30,7 +30,7 @@ export function LocationsSection({
             className="uppercase"
           />
         </h2>
-        <div className="text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+        <div className="opacity-60 leading-relaxed max-w-2xl mx-auto">
           <InlineEditor
             value={locationDescription}
             onSave={(val) => onSaveText("locationDescription", val)}
@@ -41,7 +41,7 @@ export function LocationsSection({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 text-left">
           {locationItems.map((item, idx) => (
             <div key={`${item.title}-${idx}`} className={tokens.location.card}>
-              <h3 className="text-lg font-serif font-semibold text-foreground mb-1">
+              <h3 className="text-lg font-serif font-semibold mb-1">
                 <InlineEditor
                   value={item.title}
                   onSave={(val) => onUpdateLocationItem(idx, { title: val })}
@@ -68,7 +68,7 @@ export function LocationsSection({
                   {item.address}
                 </a>
               ) : null}
-              <div className="text-sm text-muted-foreground leading-relaxed">
+              <div className="text-sm opacity-60 leading-relaxed">
                 <InlineEditor
                   value={item.description}
                   onSave={(val) => onUpdateLocationItem(idx, { description: val })}

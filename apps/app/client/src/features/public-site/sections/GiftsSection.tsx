@@ -29,14 +29,14 @@ export function GiftsSection({
     >
       <div className="max-w-6xl mx-auto">
         <div className="text-center max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-serif font-light tracking-wide uppercase">
+          <h2 className={`text-3xl md:text-4xl font-serif font-light tracking-wide uppercase ${tokens.gifts.title}`}>
             <InlineEditor
               value={giftsTitle}
               onSave={(val) => onSaveText("giftsTitle", val)}
               canEdit={canEdit && editMode}
             />
           </h2>
-          <div className="mt-4 text-muted-foreground leading-relaxed">
+          <div className="mt-4 opacity-60 leading-relaxed">
             <InlineEditor
               value={giftsDescription}
               onSave={(val) => onSaveText("giftsDescription", val)}
@@ -89,7 +89,7 @@ export function GiftsSection({
                       <div className="min-w-0">
                         <div className="font-semibold text-lg leading-tight truncate">{gift.name}</div>
                         {gift.description ? (
-                          <div className="text-sm text-muted-foreground mt-1 line-clamp-2">{gift.description}</div>
+                          <div className="text-sm opacity-60 mt-1 line-clamp-2">{gift.description}</div>
                         ) : null}
                       </div>
                       {gift.isReserved ? (
@@ -101,7 +101,7 @@ export function GiftsSection({
 
                     {price > 0 ? (
                       <div className="pt-2">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                        <div className="flex items-center justify-between text-xs opacity-60 mb-2">
                           <span>
                             {contributed}€ / {price}€
                           </span>
@@ -117,7 +117,7 @@ export function GiftsSection({
               );
             })
           ) : (
-            <div className="md:col-span-3 text-center text-sm text-muted-foreground py-10">
+            <div className="md:col-span-3 text-center text-sm opacity-60 py-10">
               Aucun cadeau pour le moment.
             </div>
           )}
