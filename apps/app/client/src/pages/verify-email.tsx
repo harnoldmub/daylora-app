@@ -57,7 +57,7 @@ export default function VerifyEmail() {
                         <div className="flex flex-col items-center space-y-4 py-8">
                             <CheckCircle2 className="h-16 w-16 text-green-500" />
                             <p className="font-medium text-lg text-foreground">{message}</p>
-                            <Link href="/app/login" title="Se connecter">
+                            <Link href="/login" title="Se connecter">
                                 <Button className="w-full rounded-full mt-4">Se connecter maintenant</Button>
                             </Link>
                         </div>
@@ -67,7 +67,7 @@ export default function VerifyEmail() {
                         <div className="flex flex-col items-center space-y-4 py-8">
                             <XCircle className="h-16 w-16 text-destructive" />
                             <p className="font-medium text-lg text-destructive">{message}</p>
-                            <Link href="/app/login" title="Retour à la connexion">
+                            <Link href="/login" title="Retour à la connexion">
                                 <Button variant="outline" className="w-full rounded-full mt-4">Retour à la connexion</Button>
                             </Link>
                         </div>

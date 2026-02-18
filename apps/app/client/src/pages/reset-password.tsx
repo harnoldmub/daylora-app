@@ -76,7 +76,7 @@ export default function ResetPassword() {
                             <p className="text-muted-foreground text-sm">
                                 Vous pouvez maintenant vous connecter avec vos nouveaux identifiants.
                             </p>
-                            <Link href="/app/login" title="Se connecter">
+                            <Link href="/login" title="Se connecter">
                                 <Button className="w-full rounded-full mt-4">Se connecter</Button>
                             </Link>
                         </div>
@@ -119,7 +119,7 @@ export default function ResetPassword() {
 
                     {!isSuccess && (
                         <div className="text-center border-t pt-4">
-                            <Link href="/app/login" title="Annuler" className="text-sm text-muted-foreground hover:text-primary">
+                            <Link href="/login" title="Annuler" className="text-sm text-muted-foreground hover:text-primary">
                                 Annuler et retourner à la connexion
                             </Link>
                         </div>

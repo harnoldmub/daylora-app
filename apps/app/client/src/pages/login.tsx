@@ -107,7 +107,7 @@ export default function Login() {
                   <FormItem>
                     <div className="flex items-center justify-between">
                       <FormLabel className="text-[#6B5B4F] uppercase tracking-widest text-[10px] font-bold">Mot de passe</FormLabel>
-                      <Link href="/app/forgot-password" title="Mot de passe oublié ?" className="text-[10px] text-primary hover:underline uppercase tracking-widest font-bold">Oublié ?</Link>
+                      <Link href="/forgot-password" title="Mot de passe oublié ?" className="text-[10px] text-primary hover:underline uppercase tracking-widest font-bold">Oublié ?</Link>
                     </div>
                     <FormControl>
                       <Input type="password" autoComplete="current-password" {...field} className="bg-white border-[#E6DCCF] h-12 focus:border-primary/50 transition-colors" />
@@ -128,7 +128,7 @@ export default function Login() {
 
           <div className="text-center text-sm pt-4">
             <span className="text-[#7A6B5E] font-medium">Pas encore de compte ?</span>{" "}
-            <Link href="/app/signup" title="Créer un compte Nocely" className="text-primary font-bold hover:text-primary/80 transition-colors ml-1">
+            <Link href="/signup" title="Créer un compte Nocely" className="text-primary font-bold hover:text-primary/80 transition-colors ml-1">
               Inscrivez-vous
             </Link>
           </div>

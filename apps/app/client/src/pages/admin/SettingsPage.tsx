@@ -220,7 +220,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
-              onClick={() => setLocation("/app/login")}
+              onClick={() => setLocation("/login")}
             >
               Changer de compte
             </Button>

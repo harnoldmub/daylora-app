@@ -1,5 +1,7 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-/;
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -9,10 +11,28 @@ async function throwIfResNotOk(res: Response) {
         throw new Error(json.message);
       }
     } catch (e) {
-      // ignore json parse error
     }
     throw new Error(`${res.status}: ${text}`);
   }
+}
+
+function resolveWeddingContext() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const path = window.location.pathname;
+  const segments = path.split("/").filter(Boolean);
+  const firstSegment = segments[0] || "";
+
+  const isAdminRoute = UUID_REGEX.test(firstSegment);
+  const previewMatch = path.match(/^\/preview\/([^/]+)/);
+
+  const pathSlug = previewMatch?.[1] || (!isAdminRoute && firstSegment && !["login", "signup", "verify-email", "forgot-password", "reset-password", "onboarding", "contribution", "invitation", "checkin", "dashboard", "preview", "assets"].includes(firstSegment) ? firstSegment : null);
+
+  const slug = urlParams.get("wedding") || pathSlug || localStorage.getItem("last_wedding_slug") || null;
+  const isUuid = !!slug && /^[0-9a-fA-F-]{36}$/.test(slug);
+  const appWeddingId = isAdminRoute ? firstSegment : null;
+  const weddingId = appWeddingId || (isUuid ? slug : null);
+
+  return { slug, isUuid, weddingId };
 }
 
 export async function apiRequest(
@@ -21,18 +41,7 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<Response> {
   const isAuthEndpoint = url.startsWith("/api/auth");
-  // Resolve wedding context from URL (admin) or slug (public)
-  const urlParams = new URLSearchParams(window.location.search);
-  const path = window.location.pathname;
-  const previewMatch = path.match(/^\/preview\/([^/]+)/);
-  const publicMatch = path.match(/^\/([^/]+)/);
-  const pathSlug = previewMatch?.[1] || (!path.startsWith("/app/") ? publicMatch?.[1] : null);
-  const slug = urlParams.get("wedding") || pathSlug || localStorage.getItem("last_wedding_slug") || null;
-  const isUuid = !!slug && /^[0-9a-fA-F-]{36}$/.test(slug);
-  const appMatch = path.match(/^\/app\/([^/]+)/);
-  const appPathPart = appMatch?.[1] || null;
-  const appWeddingId = appPathPart && /^[0-9a-fA-F-]{36}$/.test(appPathPart) ? appPathPart : null;
-  const weddingId = appWeddingId || (isUuid ? slug : null);
+  const { slug, isUuid, weddingId } = resolveWeddingContext();
 
   const res = await fetch(url, {
     method,
@@ -57,17 +66,7 @@ export const getQueryFn: <T>(options: {
     async ({ queryKey }) => {
       const url = String(queryKey[0] || "");
       const isAuthEndpoint = url.startsWith("/api/auth");
-      const urlParams = new URLSearchParams(window.location.search);
-      const path = window.location.pathname;
-      const previewMatch = path.match(/^\/preview\/([^/]+)/);
-      const publicMatch = path.match(/^\/([^/]+)/);
-      const pathSlug = previewMatch?.[1] || (!path.startsWith("/app/") ? publicMatch?.[1] : null);
-      const slug = urlParams.get("wedding") || pathSlug || localStorage.getItem("last_wedding_slug") || null;
-      const isUuid = !!slug && /^[0-9a-fA-F-]{36}$/.test(slug);
-      const appMatch = path.match(/^\/app\/([^/]+)/);
-      const appPathPart = appMatch?.[1] || null;
-      const appWeddingId = appPathPart && /^[0-9a-fA-F-]{36}$/.test(appPathPart) ? appPathPart : null;
-      const weddingId = appWeddingId || (isUuid ? slug : null);
+      const { slug, isUuid, weddingId } = resolveWeddingContext();
 
       const res = await fetch(url, {
         headers: {

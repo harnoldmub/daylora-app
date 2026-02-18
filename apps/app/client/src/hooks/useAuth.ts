@@ -77,7 +77,7 @@ export function useAuth() {
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/auth/me"], null);
-      setLocation("/app/login");
+      setLocation("/login");
     },
   });
 

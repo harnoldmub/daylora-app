@@ -454,7 +454,7 @@ export default function DesignPage() {
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" asChild>
-            <a href={`/app/${wedding.id}/dashboard`}>Retour au backoffice</a>
+            <a href={`/{wedding.id}/dashboard`}>Retour au backoffice</a>
           </Button>
           <Button variant="outline" asChild>
             <a href={previewUrl} target="_blank" rel="noopener noreferrer">Ouvrir l'aperçu</a>

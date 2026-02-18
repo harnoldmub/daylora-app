@@ -105,7 +105,7 @@ export function DashboardWidgets({ responses, onFilterChange }: DashboardWidgets
       icon: Palette,
       color: "text-primary",
       bgColor: "bg-primary/10",
-      href: `/app/:weddingId/design`,
+      href: `/:weddingId/design`,
       clickable: true,
     }
   ];

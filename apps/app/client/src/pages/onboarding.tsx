@@ -207,7 +207,7 @@ export default function Onboarding() {
       }
 
       const wedding = await response.json();
-      setLocation(`/app/${wedding.id}/welcome`);
+      setLocation(`/{wedding.id}/welcome`);
     } catch (error: any) {
       setIsLoading(false);
       toast({

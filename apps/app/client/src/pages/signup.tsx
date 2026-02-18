@@ -46,7 +46,7 @@ export default function Signup() {
             }
 
             // User must authenticate first; onboarding is available after login.
-            setLocation(`/app/login?email=${encodeURIComponent(data.email)}`);
+            setLocation(`/login?email=${encodeURIComponent(data.email)}`);
         } catch (error) {
             // Error is handled by the mutation or toast
         }
@@ -122,7 +122,7 @@ export default function Signup() {
 
                     <div className="text-center text-sm pt-4">
                         <span className="text-[#7A6B5E] font-medium">Déjà parmi nous ?</span>{" "}
-                        <Link href="/app/login" title="Se connecter à Nocely" className="text-primary font-bold hover:text-primary/80 transition-colors ml-1">
+                        <Link href="/login" title="Se connecter à Nocely" className="text-primary font-bold hover:text-primary/80 transition-colors ml-1">
                             Connectez-vous
                         </Link>
                     </div>

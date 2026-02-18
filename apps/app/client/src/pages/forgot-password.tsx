@@ -63,7 +63,7 @@ export default function ForgotPassword() {
                             <p className="text-muted-foreground">
                                 Si un compte est associé à l'adresse <strong>{form.getValues("email")}</strong>, vous recevrez un email sous peu.
                             </p>
-                            <Link href="/app/login" title="Retour à la connexion">
+                            <Link href="/login" title="Retour à la connexion">
                                 <Button variant="outline" className="w-full rounded-full mt-4">Retour à la connexion</Button>
                             </Link>
                         </div>
@@ -93,7 +93,7 @@ export default function ForgotPassword() {
 
                     {!isSent && (
                         <div className="text-center border-t pt-4">
-                            <Link href="/app/login" title="Se connecter" className="text-sm text-primary hover:underline">
+                            <Link href="/login" title="Se connecter" className="text-sm text-primary hover:underline">
                                 Pas besoin ? Retour à la connexion
                             </Link>
                         </div>

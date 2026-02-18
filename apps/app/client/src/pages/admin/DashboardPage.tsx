@@ -106,7 +106,7 @@ export default function DashboardPage() {
                 responses={responses || []}
                 onFilterChange={(filter) => {
                     // This would ideally redirect to guests page with filter
-                    window.location.href = `/app/${weddingId}/guests?availability=${filter}`;
+                    window.location.href = `/{weddingId}/guests?availability=${filter}`;
                 }}
             />
 

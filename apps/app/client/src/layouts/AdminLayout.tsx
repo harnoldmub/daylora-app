@@ -29,18 +29,18 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     const isDesignRoute = location.includes("/design");
 
     const navItems = [
-        { name: "Accueil", icon: Home, href: `/app/${weddingId}/welcome` },
-        { name: "Dashboard", icon: LayoutDashboard, href: `/app/${weddingId}/dashboard` },
-        { name: "Invités", icon: Users, href: `/app/${weddingId}/guests` },
-        { name: "Cadeaux", icon: Gift, href: `/app/${weddingId}/gifts` },
-        { name: "Blagues Live", icon: Laugh, href: `/app/${weddingId}/live` },
-        { name: "Emails", icon: Mail, href: `/app/${weddingId}/emails` },
-        { name: "Templates", icon: Palette, href: `/app/${weddingId}/templates` },
-        { name: "Design", icon: Paintbrush, href: `/app/${weddingId}/design` },
-        { name: "Pages", icon: FileText, href: `/app/${weddingId}/pages` },
-        { name: "Site & Menus", icon: ListTree, href: `/app/${weddingId}/site` },
-        { name: "Facturation", icon: CreditCard, href: `/app/${weddingId}/billing` },
-        { name: "Paramètres", icon: Settings, href: `/app/${weddingId}/settings` },
+        { name: "Accueil", icon: Home, href: `/{weddingId}/welcome` },
+        { name: "Dashboard", icon: LayoutDashboard, href: `/{weddingId}/dashboard` },
+        { name: "Invités", icon: Users, href: `/{weddingId}/guests` },
+        { name: "Cadeaux", icon: Gift, href: `/{weddingId}/gifts` },
+        { name: "Blagues Live", icon: Laugh, href: `/{weddingId}/live` },
+        { name: "Emails", icon: Mail, href: `/{weddingId}/emails` },
+        { name: "Templates", icon: Palette, href: `/{weddingId}/templates` },
+        { name: "Design", icon: Paintbrush, href: `/{weddingId}/design` },
+        { name: "Pages", icon: FileText, href: `/{weddingId}/pages` },
+        { name: "Site & Menus", icon: ListTree, href: `/{weddingId}/site` },
+        { name: "Facturation", icon: CreditCard, href: `/{weddingId}/billing` },
+        { name: "Paramètres", icon: Settings, href: `/{weddingId}/settings` },
     ];
 
     return (
@@ -103,7 +103,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                         <select
                             className="h-9 rounded-md border border-border bg-background px-3 text-sm"
                             value={weddingId}
-                            onChange={(e) => setLocation(`/app/${e.target.value}/dashboard`)}
+                            onChange={(e) => setLocation(`/{e.target.value}/dashboard`)}
                         >
                             {weddings.map((w) => (
                                 <option key={w.id} value={w.id}>{w.title}</option>

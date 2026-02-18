@@ -168,7 +168,7 @@ export default function TemplatesPage() {
 						Le design est synchronisé sur toutes les pages publiques (RSVP, cagnotte, live).
 					</div>
 					<Button asChild className="w-full">
-						<Link href={`/app/${wedding.id}/design`}>Ouvrir l'éditeur visuel</Link>
+						<Link href={`/{wedding.id}/design`}>Ouvrir l'éditeur visuel</Link>
 					</Button>
 				</Card>
 			</div>
