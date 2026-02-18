@@ -36,7 +36,7 @@ export function GiftsSection({
               canEdit={canEdit && editMode}
             />
           </h2>
-          <div className="mt-4 opacity-60 leading-relaxed">
+          <div className={`mt-4 leading-relaxed ${tokens.gifts.description}`}>
             <InlineEditor
               value={giftsDescription}
               onSave={(val) => onSaveText("giftsDescription", val)}
@@ -87,13 +87,13 @@ export function GiftsSection({
                   <div className="p-6 space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="font-semibold text-lg leading-tight truncate">{gift.name}</div>
+                        <div className={`font-semibold text-lg leading-tight truncate ${tokens.gifts.text}`}>{gift.name}</div>
                         {gift.description ? (
-                          <div className="text-sm opacity-60 mt-1 line-clamp-2">{gift.description}</div>
+                          <div className={`text-sm mt-1 line-clamp-2 ${tokens.gifts.description}`}>{gift.description}</div>
                         ) : null}
                       </div>
                       {gift.isReserved ? (
-                        <span className="shrink-0 text-xs font-semibold rounded-full px-3 py-1 bg-muted text-muted-foreground">
+                        <span className={`shrink-0 text-xs font-semibold rounded-full px-3 py-1 ${tokens.gifts.badge}`}>
                           Réservé
                         </span>
                       ) : null}
@@ -101,14 +101,14 @@ export function GiftsSection({
 
                     {price > 0 ? (
                       <div className="pt-2">
-                        <div className="flex items-center justify-between text-xs opacity-60 mb-2">
+                        <div className={`flex items-center justify-between text-xs mb-2 ${tokens.gifts.description}`}>
                           <span>
                             {contributed}€ / {price}€
                           </span>
                           <span>{pct}%</span>
                         </div>
-                        <div className="h-2 rounded-full bg-muted overflow-hidden">
-                          <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+                        <div className={`h-2 rounded-full overflow-hidden ${tokens.gifts.progressTrack}`}>
+                          <div className={`h-full ${tokens.gifts.progress}`} style={{ width: `${pct}%` }} />
                         </div>
                       </div>
                     ) : null}
@@ -117,7 +117,7 @@ export function GiftsSection({
               );
             })
           ) : (
-            <div className="md:col-span-3 text-center text-sm opacity-60 py-10">
+            <div className={`md:col-span-3 text-center text-sm py-10 ${tokens.gifts.description}`}>
               Aucun cadeau pour le moment.
             </div>
           )}

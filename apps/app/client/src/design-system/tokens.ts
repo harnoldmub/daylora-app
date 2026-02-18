@@ -97,6 +97,11 @@ export interface TemplateTokens {
     section: string;
     card: string;
     title: string;
+    text: string;
+    description: string;
+    badge: string;
+    progress: string;
+    progressTrack: string;
   };
   cagnotte: {
     section: string;
@@ -169,6 +174,11 @@ export const templateTokens: Record<TemplateId, TemplateTokens> = {
       section: "",
       card: "rounded-2xl border border-[#E5DFD5] bg-white shadow-sm",
       title: "text-[#3D3428]",
+      text: "text-[#3D3428]",
+      description: "text-[#6B5E50]",
+      badge: "bg-[#F3EDE4] text-[#6B5E50]",
+      progress: "bg-primary",
+      progressTrack: "bg-[#E5DFD5]",
     },
     cagnotte: {
       section: "bg-[#F3EDE4]/40",
@@ -239,6 +249,11 @@ export const templateTokens: Record<TemplateId, TemplateTokens> = {
       section: "bg-[#111111]",
       card: "rounded-none border border-white/10 bg-[#1A1A1A] shadow-lg",
       title: "text-white",
+      text: "text-white",
+      description: "text-white/50",
+      badge: "bg-white/10 text-white/60",
+      progress: "bg-white",
+      progressTrack: "bg-white/10",
     },
     cagnotte: {
       section: "bg-[#0A0A0A] text-white",
@@ -309,6 +324,11 @@ export const templateTokens: Record<TemplateId, TemplateTokens> = {
       section: "",
       card: "rounded-xl border border-black/5 bg-white shadow-sm",
       title: "text-[#2D2D2D]",
+      text: "text-[#2D2D2D]",
+      description: "text-[#2D2D2D]/50",
+      badge: "bg-[#F5F5F5] text-[#2D2D2D]/60",
+      progress: "bg-[#2D2D2D]",
+      progressTrack: "bg-black/5",
     },
     cagnotte: {
       section: "bg-[#FAFAFA]",

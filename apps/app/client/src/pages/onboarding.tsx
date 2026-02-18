@@ -72,7 +72,7 @@ export default function Onboarding() {
   const [, setLocation] = useLocation();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [plan, setPlan] = useState<"free" | "premium">("free");
+  const [plan, setPlan] = useState<"free" | "premium" | "lifetime">("free");
   const [toneId, setToneId] = useState<string>(COLOR_TONES[0].id);
   const [modules, setModules] = useState<ModulesState>({
     cagnotteEnabled: true,
@@ -182,7 +182,7 @@ export default function Onboarding() {
         credentials: "include",
         body: JSON.stringify({
           ...data,
-          currentPlan: plan,
+          currentPlan: plan === "free" ? "free" : "premium",
           weddingDate: data.weddingDate,
           features: {
             cagnotteEnabled: modules.cagnotteEnabled,
@@ -509,7 +509,7 @@ export default function Onboarding() {
                 )}
 
                 {step === 6 && (
-                  <motion.div key="s6" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <motion.div key="s6" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <button
                       type="button"
                       className={`p-6 rounded-3xl border text-left transition-all ${plan === "free" ? "border-primary ring-2 ring-primary/20" : "border-[#E6DCCF]"}`}
@@ -520,7 +520,7 @@ export default function Onboarding() {
                       <ul className="mt-4 text-sm text-[#6B5B4F] space-y-2">
                         <li>1 template</li>
                         <li>RSVP + exports</li>
-                        <li>Jusqu'a 50 invites</li>
+                        <li>Jusqu'à 50 invités</li>
                       </ul>
                     </button>
                     <button
@@ -529,11 +529,30 @@ export default function Onboarding() {
                       onClick={() => setPlan("premium")}
                     >
                       <div className="text-xs uppercase tracking-widest text-muted-foreground">Premium</div>
-                      <div className="text-4xl font-bold mt-1">29€</div>
+                      <div className="flex items-baseline gap-1 mt-1">
+                        <span className="text-4xl font-bold">19€</span>
+                        <span className="text-sm text-muted-foreground">/ mois</span>
+                      </div>
                       <ul className="mt-4 text-sm text-[#6B5B4F] space-y-2">
-                        <li>Invites illimites</li>
+                        <li>Invités illimités</li>
                         <li>Cagnotte + live + PDF</li>
                         <li>Support prioritaire</li>
+                      </ul>
+                    </button>
+                    <button
+                      type="button"
+                      className={`p-6 rounded-3xl border text-left transition-all ${plan === "lifetime" ? "border-primary ring-2 ring-primary/20" : "border-[#E6DCCF]"}`}
+                      onClick={() => setPlan("lifetime")}
+                    >
+                      <div className="text-xs uppercase tracking-widest text-muted-foreground">Accès à vie</div>
+                      <div className="flex items-baseline gap-1 mt-1">
+                        <span className="text-4xl font-bold">149€</span>
+                        <span className="text-sm text-muted-foreground">une fois</span>
+                      </div>
+                      <ul className="mt-4 text-sm text-[#6B5B4F] space-y-2">
+                        <li>Tout le Premium inclus</li>
+                        <li>Paiement unique</li>
+                        <li>Sans abonnement</li>
                       </ul>
                     </button>
                   </motion.div>
@@ -553,7 +572,7 @@ export default function Onboarding() {
                       </div>
                       <div className="rounded-2xl border border-[#E6DCCF] p-4">
                         <div className="text-muted-foreground uppercase tracking-wider text-xs">Plan</div>
-                        <div className="font-semibold mt-1">{plan === "premium" ? "Premium" : "Gratuit"}</div>
+                        <div className="font-semibold mt-1">{plan === "lifetime" ? "Accès à vie" : plan === "premium" ? "Premium" : "Gratuit"}</div>
                       </div>
                     </div>
                   </motion.div>
