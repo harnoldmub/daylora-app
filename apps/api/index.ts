@@ -40,10 +40,15 @@ if (process.env.NODE_ENV !== "production") {
   ].forEach((origin) => allowedOrigins.add(origin));
 }
 
+if (process.env.REPLIT_DEV_DOMAIN) {
+  allowedOrigins.add(`https://${process.env.REPLIT_DEV_DOMAIN}`);
+}
+
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
     if (allowedOrigins.has(origin)) return cb(null, true);
+    if (origin && /\.replit\.dev$/.test(origin)) return cb(null, true);
     return cb(new Error("Not allowed by CORS"));
   },
   credentials: true,
