@@ -12,7 +12,7 @@
     "dev:api": "PORT=3000 NODE_ENV=development tsx apps/api/index.ts",
     "dev:app": "npm --prefix apps/app run dev",
     "dev:marketing": "npm --prefix apps/marketing run dev",
-    "build": "npm --prefix apps/app run build && node -e \"require('esbuild').buildSync({entryPoints:['apps/api/index.ts'],bundle:true,platform:'node',format:'esm',outfile:'dist/index.js',external:['argon2','bcryptjs','better-sqlite3','stripe-replit-sync','@neondatabase/serverless','pg-native','bufferutil','utf-8-validate'],banner:{js:\\\"import{createRequire}from'module';const require=createRequire(import.meta.url);\\\"},packages:'external'})\"",
+    "build": "npm --prefix apps/app run build && mkdir -p dist && cp -r apps/app/dist/public dist/public && node -e \"require('esbuild').buildSync({entryPoints:['apps/api/index.ts'],bundle:true,platform:'node',format:'esm',outfile:'dist/index.js',external:['argon2','bcryptjs','better-sqlite3','stripe-replit-sync','@neondatabase/serverless','pg-native','bufferutil','utf-8-validate'],banner:{js:\\\"import{createRequire}from'module';const require=createRequire(import.meta.url);\\\"},packages:'external'})\"",
     "start:api": "NODE_ENV=production node dist/index.js",
     "check": "npm --prefix apps/app run check && npm --prefix apps/marketing run check && tsc -p apps/api/tsconfig.json",
     "db:push": "drizzle-kit push",
