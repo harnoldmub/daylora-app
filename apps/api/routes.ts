@@ -1094,11 +1094,18 @@ export async function registerRoutes(app: Express) {
     try {
       const wedding = (req as any).wedding;
       const { type } = req.body as { type: "subscription" | "one_time" };
-      const stripe = await getUncachableStripeClient();
+
+      let stripe;
+      try {
+        stripe = await getUncachableStripeClient();
+      } catch {
+        return res.status(503).json({ message: "Stripe n'est pas configuré. Veuillez connecter votre compte Stripe." });
+      }
+
       const priceId = type === "subscription"
         ? process.env.STRIPE_PRICE_SUBSCRIPTION
         : process.env.STRIPE_PRICE_LIFETIME;
-      if (!priceId) return res.status(500).json({ message: "Stripe price not configured" });
+      if (!priceId) return res.status(500).json({ message: type === "subscription" ? "Le prix d'abonnement Stripe n'est pas configuré (STRIPE_PRICE_SUBSCRIPTION)." : "Le prix à vie Stripe n'est pas configuré (STRIPE_PRICE_LIFETIME)." });
 
       const session = await stripe.checkout.sessions.create({
         mode: type === "subscription" ? "subscription" : "payment",
@@ -1115,11 +1122,16 @@ export async function registerRoutes(app: Express) {
     }
   });
 
-  // Billing: sync plan state from Stripe (useful when webhooks are delayed/misconfigured)
   app.post("/api/billing/sync", isAuthenticated, withWedding, async (req, res) => {
     try {
       const wedding = (req as any).wedding;
-      const stripe = await getUncachableStripeClient();
+
+      let stripe;
+      try {
+        stripe = await getUncachableStripeClient();
+      } catch {
+        return res.status(503).json({ message: "Stripe n'est pas configuré. Veuillez connecter votre compte Stripe." });
+      }
 
       let subs: any[] = [];
       try {
@@ -1129,14 +1141,16 @@ export async function registerRoutes(app: Express) {
         });
         subs = result?.data || [];
       } catch {
-        // Fallback for accounts without search enabled: list and filter.
-        const result = await stripe.subscriptions.list({ limit: 100, status: "all" as any });
-        subs = (result?.data || []).filter((s: any) => s?.metadata?.weddingId === wedding.id);
+        try {
+          const result = await stripe.subscriptions.list({ limit: 100, status: "all" as any });
+          subs = (result?.data || []).filter((s: any) => s?.metadata?.weddingId === wedding.id);
+        } catch {
+          return res.json({ ok: true, found: false, currentPlan: wedding.currentPlan || "free" });
+        }
       }
 
       if (!subs.length) {
-        await storage.updateWedding(wedding.id, { currentPlan: "free" });
-        return res.json({ ok: true, found: false, currentPlan: "free" });
+        return res.json({ ok: true, found: false, currentPlan: wedding.currentPlan || "free" });
       }
 
       const preferred = subs.find((s: any) => ["active", "trialing"].includes(String(s.status))) || subs[0];
@@ -1153,7 +1167,7 @@ export async function registerRoutes(app: Express) {
 
       res.json({ ok: true, found: true, status: preferred.status, currentPlan: isPremium ? "premium" : "free" });
     } catch (error: any) {
-      res.status(500).json({ message: "Sync Stripe impossible" });
+      res.status(500).json({ message: "Sync Stripe impossible : " + (error?.message || "erreur inconnue") });
     }
   });
 
