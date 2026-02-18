@@ -1,66 +1,86 @@
-# Marie & Julien Wedding Website - Golden Love 2026
+# Nocely — Wedding SaaS Platform
 
 ## Overview
 
-This project is an elegant, mobile-first wedding website for Marie & Julien's 2026 wedding. It functions as a public landing page for guests to view details and RSVP, and a private admin dashboard for managing guest responses and table assignments. The design embodies a romantic, sophisticated aesthetic with a gold and ivory color palette, aiming to create an emotional and memorable experience for wedding guests.
+Multi-tenant wedding website SaaS. Couples create accounts, pick a template (Classic/Modern/Minimal), customize text/media inline, and share a public URL. Includes Stripe Connect for cagnotte (money pot), SSE live updates, RSVP management, gift lists, and a full admin dashboard.
 
 ## User Preferences
 
-Preferred communication style: Simple, everyday language.
+- Preferred communication style: Simple, everyday language
+- Code style: Senior Airbnb frontend engineer — clean architecture, modularity, performance
+- No comments in generated code unless explicitly requested
+
+## Recent Changes (Feb 2026)
+
+- **Frontend refactoring**: Broke monolithic InvitationPage.tsx (1958 lines) into modular architecture:
+  - Design system tokens at `apps/app/client/src/design-system/tokens.ts`
+  - 9 section components at `apps/app/client/src/features/public-site/sections/`
+  - TemplateRenderer at `apps/app/client/src/features/public-site/templates/TemplateRenderer.tsx`
+  - InvitationPage.tsx is now a thin orchestrator (~300 lines) handling state/mutations, delegating rendering to TemplateRenderer
+  - Types at `apps/app/client/src/features/public-site/types.ts`
 
 ## System Architecture
 
 ### Frontend Architecture
 
-**Framework**: React 18 with TypeScript, using Vite.
-**UI Component System**: Shadcn/ui (based on Radix UI) with Tailwind CSS.
-**Routing**: Wouter for client-side routing (`/`, `/login`, `/admin`, `/cagnotte`, `/contribution/merci`).
-**State Management**: TanStack Query for server state.
-**Form Handling**: React Hook Form with Zod validation.
-**Styling System**: Tailwind CSS with custom CSS variables for light/dark modes and a gold/ivory palette.
-**Typography**: Google Fonts (Playfair Display, Lato, Great Vibes).
+**Framework**: React 18 with TypeScript, using Vite (port 5000).
+**UI Components**: Shadcn/ui (Radix UI) + Tailwind CSS.
+**Routing**: Wouter (`/`, `/login`, `/admin/*`, `/:slug`, `/preview/:slug`).
+**State**: TanStack Query for server state.
+**Forms**: React Hook Form + Zod validation.
+**Fonts**: Google Fonts (Playfair Display, Manrope, Inter).
+**Animation**: Framer Motion for hero parallax.
 
 ### Backend Architecture
 
-**Runtime**: Node.js with Express.js (TypeScript).
-**API Design**: RESTful API for RSVP management, login, and user session.
-**Authentication**: Local authentication using Passport-local with bcrypt and `express-session` (PostgreSQL-backed).
-**Data Layer**: Storage abstraction with Drizzle ORM for PostgreSQL.
-**Development Server**: Vite with HMR.
+**Runtime**: Node.js + Express.js (TypeScript).
+**API**: RESTful — RSVP, gifts, contributions, auth, SSE events.
+**Auth**: Passport-local with bcrypt, express-session (PostgreSQL-backed).
+**ORM**: Drizzle ORM for PostgreSQL.
+**Payments**: Stripe Connect for cagnotte contributions.
 
-### Data Storage
+### Database
 
-**Database**: PostgreSQL (via Neon serverless driver).
-**ORM**: Drizzle ORM for type-safe queries.
-**Schema Design**: `sessions`, `users`, `rsvp_responses`, and `contributions` tables storing guest details, availability, table assignments, and wedding contributions.
-**Type Safety**: Full type inference from database schema to TypeScript using Drizzle and Zod for runtime validation.
+**Engine**: PostgreSQL (Neon serverless).
+**Tables**: sessions, users, weddings, rsvp_responses, contributions, gifts, custom_pages.
+**Config JSON**: `weddings.config` column stores all customization (texts, media, theme, navigation, sections, features, payments).
 
-### UI/UX Decisions
+### Key Patterns
 
-The design is inspired by luxury wedding platforms, featuring a gold and ivory color palette.
-- **Hero Section**: Large elegant names with a subtle background image.
-- **Notre Histoire**: Separated portrait layout with a centered quote.
-- **Dates Section**: Clean heading with a large date display and countdown timer.
-- **Gallery**: 3-column grid with aspect-ratio 3:4 images and hover effects, including a lightbox and social sharing.
-- **Footer**: Organized 4-column structure with navigation.
-- **General**: Increased white space, light font weights, consistent `tracking-wide` and `uppercase` styling for section headers, and smooth scroll navigation.
+- **Multi-tenant**: Each wedding has a `slug`; public site at `/:slug`, preview at `/preview/:slug`
+- **Inline editing**: PublicEditContext provides `canEdit`/`editMode` flags; InlineEditor component for click-to-edit text
+- **Template system**: 3 templates (classic/modern/minimal) driven by `templateTokens` in design-system/tokens.ts
+- **Section ordering**: `wedding.config.navigation.menuItems` array determines section display order
+- **SSE**: Server-sent events for real-time contribution updates
+
+## Project Structure
+
+```
+apps/
+  app/
+    client/src/
+      design-system/       # tokens.ts — colors, typography, template tokens
+      features/
+        public-site/
+          sections/         # HeroSection, CountdownSection, RSVPSection, StorySection, 
+                            # GallerySection, LocationsSection, ScheduleSection, GiftsSection, CagnotteSection
+          templates/         # TemplateRenderer.tsx — composes sections with template tokens
+          types.ts           # TypeScript interfaces for all section props
+      pages/                # InvitationPage.tsx (orchestrator), admin pages, auth pages
+      contexts/             # public-edit.tsx — edit mode context
+      hooks/                # use-api.ts, use-toast.ts
+      components/ui/        # Shadcn components, InlineEditor
+      layouts/              # PublicLayout.tsx, AdminLayout.tsx
+      lib/                  # queryClient.ts, design-presets.ts, image.ts
+    server/                 # Express routes, storage, Stripe, SSE
+  marketing/               # Landing page (DO NOT TOUCH)
+packages/
+  shared/                  # schema.ts — Drizzle schema, Zod validators
+```
 
 ## External Dependencies
 
-**Database Service**: Neon PostgreSQL serverless database.
-**CDN Services**: Google Fonts CDN.
-**UI Component Libraries**: Radix UI, Shadcn/ui, Lucide React.
-**Session Storage**: `connect-pg-simple` for PostgreSQL-backed `express-session`.
-**Payment Processing**: Stripe integration via Replit connector for wedding contributions (cagnotte).
-
-## Cagnotte (Wedding Contribution) Feature
-
-**Dedicated Page**: `/cagnotte` - A standalone page with the couple's photo, countdown timer, total collected amount, and contribution form.
-**Message Field**: Contributors can leave an optional message for the couple.
-**Stripe Integration**: Secure payment processing with Stripe Checkout.
-**Thank You Page**: `/contribution/merci` - Displays contribution confirmation and total collected amount.
-**Database**: Contributions stored with donor name, amount (cents), optional message, and Stripe session/payment IDs.
-
-## Pending Features
-
-**WhatsApp API Integration**: Automatic WhatsApp messaging via API is deferred. Currently uses WhatsApp Web URL method (opens wa.me link). To enable automatic sending, user needs to provide WhatsApp Business API credentials (Twilio, Meta, or other provider) and store them as secrets.
+- **Database**: Neon PostgreSQL
+- **Payments**: Stripe Connect
+- **Email**: Resend
+- **Auth**: Local passport + express-session
