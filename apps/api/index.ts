@@ -12,7 +12,6 @@ import { fileURLToPath } from "url";
 const app = express();
 const isProduction = process.env.NODE_ENV === "production";
 
-// Security Hardening
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -28,12 +27,26 @@ app.use(helmet({
   },
 }));
 
+if (isProduction) {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const publicDir = path.resolve(__dirname, "public");
+  app.use(express.static(publicDir));
+}
+
 const allowedOrigins = new Set([
   process.env.APP_BASE_URL || "http://localhost:5174",
   process.env.MARKETING_BASE_URL || "http://localhost:5173",
 ]);
 
-if (process.env.NODE_ENV !== "production") {
+if (isProduction) {
+  [
+    "https://app.nocely.app",
+    "https://nocely.app",
+    "https://www.nocely.app",
+  ].forEach((origin) => allowedOrigins.add(origin));
+}
+
+if (!isProduction) {
   [
     "http://localhost:5174",
     "http://127.0.0.1:5174",
@@ -46,23 +59,27 @@ if (process.env.REPLIT_DEV_DOMAIN) {
   allowedOrigins.add(`https://${process.env.REPLIT_DEV_DOMAIN}`);
 }
 
+if (process.env.REPLIT_DEPLOYMENT_URL) {
+  allowedOrigins.add(`https://${process.env.REPLIT_DEPLOYMENT_URL}`);
+}
+
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
     if (allowedOrigins.has(origin)) return cb(null, true);
-    if (origin && /\.replit\.dev$/.test(origin)) return cb(null, true);
+    if (origin && /\.replit\.(dev|app)$/.test(origin)) return cb(null, true);
+    if (origin && /\.nocely\.app$/.test(origin)) return cb(null, true);
     return cb(new Error("Not allowed by CORS"));
   },
   credentials: true,
 }));
 
-// Rate Limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 100, // Limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  limit: 100,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  skip: (req) => req.path.startsWith('/api/live'), // Don't rate limit SSE
+  skip: (req) => req.path.startsWith('/api/live'),
 });
 
 app.use("/api", limiter);
@@ -76,7 +93,6 @@ const authLimiter = rateLimit({
 
 app.use("/api/auth", authLimiter);
 
-// Stripe webhook must use raw body
 app.post("/api/webhooks/stripe", express.raw({ type: "application/json" }), handleStripeWebhook);
 
 app.use(express.json({ limit: "50mb" }));
@@ -84,7 +100,7 @@ app.use(express.urlencoded({ extended: false, limit: "50mb" }));
 
 app.use((req, res, next) => {
   const start = Date.now();
-  const path = req.path;
+  const reqPath = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
   const originalResJson = res.json;
@@ -95,8 +111,8 @@ app.use((req, res, next) => {
 
   res.on("finish", () => {
     const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+    if (reqPath.startsWith("/api")) {
+      let logLine = `${req.method} ${reqPath} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
@@ -126,7 +142,6 @@ app.use((req, res, next) => {
   if (isProduction) {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     const publicDir = path.resolve(__dirname, "public");
-    app.use(express.static(publicDir, { maxAge: "1d" }));
     app.get("*", (_req, res) => {
       res.sendFile(path.join(publicDir, "index.html"));
     });
