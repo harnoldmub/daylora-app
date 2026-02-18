@@ -129,7 +129,7 @@ export default function Signup() {
 
                     <div className="pt-8 border-t border-[#EFE7DD] text-center">
                         <button
-                            onClick={() => setLocation("/")}
+                            onClick={() => window.location.href = "https://nocely.app/"}
                             className="text-[10px] uppercase tracking-widest text-[#B6A796] hover:text-primary transition-all font-bold"
                         >
                             ← Découvrir Nocely
