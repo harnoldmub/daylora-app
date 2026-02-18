@@ -24,7 +24,9 @@
     "test:api:watch": "vitest --config tests/vitest.config.api.ts",
     "test:component": "vitest run --config tests/vitest.config.component.ts",
     "test:coverage": "vitest run --config tests/vitest.config.unit.ts --coverage && vitest run --config tests/vitest.config.api.ts --coverage",
-    "test:all": "npm run test:unit && npm run test:api && npm run test:component"
+    "test:all": "npm run test:unit && npm run test:api && npm run test:component",
+    "test:e2e": "npx playwright test --config tests/e2e/playwright.config.ts",
+    "test:e2e:ui": "npx playwright test --config tests/e2e/playwright.config.ts --ui"
   },
   "dependencies": {
     "@jridgewell/trace-mapping": "^0.3.25",

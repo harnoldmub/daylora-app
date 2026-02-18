@@ -1,10 +1,10 @@
-modules = ["nodejs-20", "web"]
+modules = ["nodejs-20", "web", "postgresql-16"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["ghostscript"]
+packages = ["ghostscript", "glib", "nss", "nspr", "at-spi2-atk", "cups", "libdrm", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXfixes", "xorg.libXrandr", "xorg.libxcb", "xorg.libX11", "xorg.libxshmfence", "mesa", "expat", "alsa-lib", "pango", "cairo", "dbus", "atk", "chromium"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -40,8 +40,11 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev"
+args = "SESSION_STORE=db npm run dev"
 waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
 
 [agent]
 integrations = ["javascript_database:1.0.0", "javascript_log_in_with_replit:1.0.0", "resend:1.0.0", "stripe:2.0.0"]

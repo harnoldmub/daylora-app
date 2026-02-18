@@ -12,6 +12,15 @@ Multi-tenant wedding website SaaS. Couples create accounts, pick a template (Cla
 
 ## Recent Changes (Feb 2026)
 
+- **E2E test suite**: Playwright-based E2E tests covering auth, preview, public pages, RSVP/gifts, cagnotte/live, and multi-tenant isolation
+  - Config: `tests/e2e/playwright.config.ts`
+  - Global setup: `tests/e2e/global-setup.ts` — seeds 25 users + sessions + weddings into PostgreSQL
+  - Helpers: `tests/e2e/helpers.ts` — session cookie injection, user data factory
+  - 5 spec files, 12 tests total: auth, preview, rsvp-gifts, cagnotte-live, permissions-edit
+  - Run with: `npm run test:e2e` (requires `SESSION_STORE=db` for the dev server)
+  - Rate limiter constraint: 100 API requests / 15 min — tests stay under by using pre-seeded DB sessions and minimizing page loads
+  - No business logic modified
+
 - **Frontend refactoring**: Broke monolithic InvitationPage.tsx (1958 lines) into modular architecture:
   - Design system tokens at `apps/app/client/src/design-system/tokens.ts`
   - 9 section components at `apps/app/client/src/features/public-site/sections/`
@@ -74,6 +83,16 @@ apps/
       lib/                  # queryClient.ts, design-presets.ts, image.ts
     server/                 # Express routes, storage, Stripe, SSE
   marketing/               # Landing page (DO NOT TOUCH)
+tests/
+  e2e/                     # Playwright E2E tests
+    playwright.config.ts   # Test configuration
+    global-setup.ts        # Seeds users, sessions, weddings
+    helpers.ts             # Session injection, user data factory
+    auth.spec.ts           # Auth & backoffice tests
+    preview.spec.ts        # Preview & public page tests
+    rsvp-gifts.spec.ts     # RSVP & gifts section tests
+    cagnotte-live.spec.ts  # Cagnotte & live page tests
+    permissions-edit.spec.ts # Multi-tenant isolation & editing tests
 packages/
   shared/                  # schema.ts — Drizzle schema, Zod validators
 ```
