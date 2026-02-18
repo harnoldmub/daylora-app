@@ -9,11 +9,15 @@ packages = ["ghostscript", "glib", "nss", "nspr", "at-spi2-atk", "cups", "libdrm
 [deployment]
 deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
-run = ["npm", "run", "start"]
+run = ["npm", "run", "start:api"]
 
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 5001
+externalPort = 3001
 
 [[ports]]
 localPort = 5174
