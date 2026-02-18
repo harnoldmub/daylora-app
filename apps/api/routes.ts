@@ -242,38 +242,6 @@ export async function registerRoutes(app: Express) {
     isActive: z.boolean().optional(),
   });
 
-  if (process.env.NODE_ENV !== "production") {
-    app.get("/", (req, res) => {
-      res.send(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Nocely API</title>
-            <style>
-              body { font-family: system-ui, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; line-height: 1.6; }
-              h1 { color: #333; }
-              .card { background: #f5f5f5; padding: 20px; border-radius: 8px; border: 1px solid #ddd; }
-              a { color: #0066cc; text-decoration: none; font-weight: bold; }
-              a:hover { text-decoration: underline; }
-              ul { padding-left: 20px; }
-              li { margin-bottom: 10px; }
-            </style>
-          </head>
-          <body>
-            <div class="card">
-              <h1>Backend Server Running</h1>
-              <p>This is the API server for Nocely.</p>
-              <ul>
-                <li><strong>Marketing (Public Site):</strong> <a href="http://localhost:5173">http://localhost:5173</a></li>
-                <li><strong>App (Admin):</strong> <a href="http://localhost:5174">http://localhost:5174</a></li>
-              </ul>
-            </div>
-          </body>
-        </html>
-      `);
-    });
-  }
-
   // Public: publishable key
   app.get("/api/stripe/publishable-key", async (_req, res) => {
     try {
