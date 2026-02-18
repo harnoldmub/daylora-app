@@ -63,7 +63,7 @@ export function HeroSection({
       <div className={`absolute inset-0 bg-gradient-to-b ${tokens.hero.overlay}`} />
 
       <div className={`relative z-10 mx-auto ${tokens.hero.wrapper}`}>
-        <div className={tokens.hero.shell}>
+        <div>
           {tokens.hero.decoration === "floral" && <FloralDecoration />}
 
           <div className={`flex items-center mb-10 ${isLeft ? "justify-start" : "justify-center"}`}>
