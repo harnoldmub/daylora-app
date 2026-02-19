@@ -101,32 +101,6 @@ function PublicRoutes({ slug }: { slug: string }) {
   );
 }
 
-function DynamicRoute() {
-  const { user, isLoading } = useAuth();
-  const loadingView = (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
-    </div>
-  );
-
-  return (
-    <Route path="/:firstSegment" nest>
-      {(params) => {
-        const segment = params.firstSegment || "";
-        const isAdmin = UUID_REGEX.test(segment);
-
-        if (isAdmin) {
-          if (isLoading) return loadingView;
-          if (!user) return <Redirect to="/login" />;
-          return <AdminRoutes weddingId={segment} />;
-        }
-
-        return <PublicRoutes slug={segment} />;
-      }}
-    </Route>
-  );
-}
-
 function AppRouter() {
   const { user, isLoading } = useAuth();
   const loadingView = (
@@ -157,7 +131,20 @@ function AppRouter() {
         {isLoading ? loadingView : (!user ? <Redirect to="/login" /> : <AppRoot />)}
       </Route>
 
-      <DynamicRoute />
+      <Route path="/:firstSegment" nest>
+        {(params) => {
+          const segment = params.firstSegment || "";
+          const isAdmin = UUID_REGEX.test(segment);
+
+          if (isAdmin) {
+            if (isLoading) return loadingView;
+            if (!user) return <Redirect to="/login" />;
+            return <AdminRoutes weddingId={segment} />;
+          }
+
+          return <PublicRoutes slug={segment} />;
+        }}
+      </Route>
 
       <Route path="/">
         {isLoading ? loadingView : (!user ? <Redirect to="/login" /> : <AppRoot />)}
