@@ -3,7 +3,7 @@ import { type Wedding, type EmailLog } from "@shared/schema";
 import { storage } from "./storage";
 
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
   port: parseInt(process.env.SMTP_PORT || '587'),
   secure: process.env.SMTP_SECURE === 'true',
   auth: {

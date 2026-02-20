@@ -1,25 +1,28 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const fromEmail = process.env.RESEND_FROM || "onboarding@resend.dev";
-const siteUrl = process.env.APP_BASE_URL || process.env.SITE_URL || "http://localhost:5174";
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: process.env.SMTP_SECURE === 'true',
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
-/**
- * AuthEmails handles transactional emails for the SaaS Auth system.
- */
+const fromEmail = process.env.SMTP_FROM || process.env.SMTP_USER || "noreply@nocely.app";
+const siteUrl = process.env.APP_BASE_URL || (process.env.REPLIT_DEPLOYMENT_URL ? `https://${process.env.REPLIT_DEPLOYMENT_URL}` : (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : "http://localhost:5000"));
+
 export const authEmails = {
-  /**
-   * Send a verification email with a secure link.
-   */
   async sendVerificationEmail(email: string, firstName: string, token: string) {
-    const verifyLink = `${siteUrl}/app/verify-email?token=${token}`;
+    const verifyLink = `${siteUrl}/verify-email?token=${token}`;
 
-    if (!resend) {
-      console.log("RESEND_API_KEY not found. Verification Link (Dev):", verifyLink);
+    if (!process.env.SMTP_USER) {
+      console.log("SMTP not configured. Verification Link (Dev):", verifyLink);
       return;
     }
 
-    await resend.emails.send({
+    await transporter.sendMail({
       from: fromEmail,
       to: email,
       subject: "Vérifiez votre adresse email - Nocely",
@@ -38,18 +41,15 @@ export const authEmails = {
     });
   },
 
-  /**
-   * Send a password reset email.
-   */
   async sendPasswordResetEmail(email: string, token: string) {
-    const resetLink = `${siteUrl}/app/reset-password?token=${token}`;
+    const resetLink = `${siteUrl}/reset-password?token=${token}`;
 
-    if (!resend) {
-      console.log("RESEND_API_KEY not found. Reset Link (Dev):", resetLink);
+    if (!process.env.SMTP_USER) {
+      console.log("SMTP not configured. Reset Link (Dev):", resetLink);
       return;
     }
 
-    await resend.emails.send({
+    await transporter.sendMail({
       from: fromEmail,
       to: email,
       subject: "Réinitialisation de votre mot de passe - Nocely",
