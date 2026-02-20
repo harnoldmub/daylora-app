@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation, Link } from "wouter";
@@ -15,11 +15,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { signupSchema } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, Heart } from "lucide-react";
+import { Loader2, Heart, Eye, EyeOff } from "lucide-react";
 
 export default function Signup() {
     const [, setLocation] = useLocation();
     const { signupMutation } = useAuth();
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         document.title = "Nocely – Inscription";
@@ -38,17 +39,14 @@ export default function Signup() {
         try {
             const result: any = await signupMutation.mutateAsync(data);
 
-            // In local/dev, backend can return a debug verification token when email provider is unavailable.
             if (result?.debugVerifyToken) {
                 await fetch(`/api/auth/verify-email?token=${encodeURIComponent(result.debugVerifyToken)}`, {
                     credentials: "include",
                 });
             }
 
-            // User must authenticate first; onboarding is available after login.
             setLocation(`/login?email=${encodeURIComponent(data.email)}`);
         } catch (error) {
-            // Error is handled by the mutation or toast
         }
     };
 
@@ -104,7 +102,22 @@ export default function Signup() {
                                     <FormItem>
                                         <FormLabel className="text-[#6B5B4F] uppercase tracking-widest text-[10px] font-bold">Mot de passe secret</FormLabel>
                                         <FormControl>
-                                            <Input type="password" autoComplete="new-password" {...field} className="bg-white border-[#E6DCCF] h-12 focus:border-primary/50 transition-colors" />
+                                            <div className="relative">
+                                                <Input
+                                                    type={showPassword ? "text" : "password"}
+                                                    autoComplete="new-password"
+                                                    {...field}
+                                                    className="bg-white border-[#E6DCCF] h-12 focus:border-primary/50 transition-colors pr-12"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B6A796] hover:text-[#6B5B4F] transition-colors"
+                                                    tabIndex={-1}
+                                                >
+                                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                                </button>
+                                            </div>
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

@@ -290,7 +290,7 @@ export async function registerRoutes(app: Express) {
   app.get("/api/stripe/connect/callback", isAuthenticated, async (req, res) => {
     const appBase = process.env.APP_BASE_URL || "http://localhost:5174";
     const redirectTo = (weddingId?: string, params?: string) =>
-      `${appBase}/app/${weddingId || ""}/settings${params ? `?${params}` : ""}`;
+      `${appBase}/${weddingId || ""}/settings${params ? `?${params}` : ""}`;
 
     try {
       const code = req.query.code as string | undefined;
@@ -302,7 +302,7 @@ export async function registerRoutes(app: Express) {
         | undefined;
 
       if (!sessionState) {
-        return res.redirect(`${appBase}/app/login`);
+        return res.redirect(`${appBase}/login`);
       }
 
       const { weddingId } = sessionState;
@@ -1082,8 +1082,8 @@ export async function registerRoutes(app: Express) {
         metadata: { weddingId: wedding.id, purpose: "billing", billingType: type },
         subscription_data: type === "subscription" ? { metadata: { weddingId: wedding.id, purpose: "billing" } } : undefined,
         payment_intent_data: type === "one_time" ? { metadata: { weddingId: wedding.id, purpose: "billing" } } : undefined,
-        success_url: `${process.env.APP_BASE_URL || "http://localhost:5174"}/app/${wedding.id}/billing?success=1&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.APP_BASE_URL || "http://localhost:5174"}/app/${wedding.id}/billing?canceled=1`,
+        success_url: `${process.env.APP_BASE_URL || "http://localhost:5174"}/${wedding.id}/billing?success=1&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.APP_BASE_URL || "http://localhost:5174"}/${wedding.id}/billing?canceled=1`,
       });
       res.json({ url: session.url });
     } catch (error) {

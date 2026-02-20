@@ -54,7 +54,7 @@ router.post("/signup", signupLimiter, validateRequest(signupSchema), async (req,
 
         const isDev = process.env.NODE_ENV !== "production";
         const debugVerifyUrl = isDev
-            ? `${process.env.APP_BASE_URL || "http://localhost:5174"}/app/verify-email?token=${rawToken}`
+            ? `${process.env.APP_BASE_URL || "http://localhost:5174"}/verify-email?token=${rawToken}`
             : undefined;
         const debugVerifyToken = isDev ? rawToken : undefined;
 
@@ -157,7 +157,7 @@ router.post("/resend-verification", resendLimiter, async (req, res) => {
 
         const isDev = process.env.NODE_ENV !== "production";
         const debugVerifyUrl = isDev
-            ? `${process.env.APP_BASE_URL || "http://localhost:5174"}/app/verify-email?token=${rawToken}`
+            ? `${process.env.APP_BASE_URL || "http://localhost:5174"}/verify-email?token=${rawToken}`
             : undefined;
         const debugVerifyToken = isDev ? rawToken : undefined;
 
@@ -198,7 +198,7 @@ router.post("/forgot-password", resendLimiter, async (req, res) => {
                 console.error("Password reset email failed:", mailError);
             }
             if (process.env.NODE_ENV !== "production") {
-                debugResetUrl = `${process.env.APP_BASE_URL || "http://localhost:5174"}/app/reset-password?token=${rawToken}`;
+                debugResetUrl = `${process.env.APP_BASE_URL || "http://localhost:5174"}/reset-password?token=${rawToken}`;
             }
         }
         res.json({

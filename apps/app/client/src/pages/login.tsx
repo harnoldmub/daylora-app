@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation, Link } from "wouter";
@@ -15,12 +15,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { signupSchema, loginSchema } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, Mail, Heart } from "lucide-react";
+import { Loader2, Mail, Heart, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function Login() {
   const [, setLocation] = useLocation();
   const { loginMutation, resendVerificationMutation } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(loginSchema),
@@ -110,7 +111,22 @@ export default function Login() {
                       <Link href="/forgot-password" title="Mot de passe oublié ?" className="text-[10px] text-primary hover:underline uppercase tracking-widest font-bold">Oublié ?</Link>
                     </div>
                     <FormControl>
-                      <Input type="password" autoComplete="current-password" {...field} className="bg-white border-[#E6DCCF] h-12 focus:border-primary/50 transition-colors" />
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          autoComplete="current-password"
+                          {...field}
+                          className="bg-white border-[#E6DCCF] h-12 focus:border-primary/50 transition-colors pr-12"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B6A796] hover:text-[#6B5B4F] transition-colors"
+                          tabIndex={-1}
+                        >
+                          {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

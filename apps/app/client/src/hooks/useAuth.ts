@@ -39,7 +39,7 @@ export function useAuth() {
     onSuccess: (data) => {
       queryClient.setQueryData(["/api/auth/me"], data.user);
       toast({ title: "Connexion réussie", description: "Bon retour parmi nous !" });
-      setLocation("/app");
+      setLocation("/");
     },
     onError: (error: Error) => {
       // Specialized error handling for unverified emails or invalid credentials

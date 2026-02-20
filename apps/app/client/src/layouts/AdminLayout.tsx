@@ -15,11 +15,14 @@ import {
     Paintbrush,
     ListTree,
     FileText,
-    ExternalLink
+    ExternalLink,
+    Menu,
+    X
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useWeddings } from "@/hooks/use-api";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 export function AdminLayout({ children }: { children: ReactNode }) {
     const { weddingId } = useParams<{ weddingId: string }>();
@@ -27,28 +30,28 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     const { logoutMutation, user } = useAuth();
     const { data: weddings = [] } = useWeddings();
     const isDesignRoute = location.includes("/design");
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const navItems = [
-        { name: "Accueil", icon: Home, href: `/{weddingId}/welcome` },
-        { name: "Dashboard", icon: LayoutDashboard, href: `/{weddingId}/dashboard` },
-        { name: "Invités", icon: Users, href: `/{weddingId}/guests` },
-        { name: "Cadeaux", icon: Gift, href: `/{weddingId}/gifts` },
-        { name: "Blagues Live", icon: Laugh, href: `/{weddingId}/live` },
-        { name: "Emails", icon: Mail, href: `/{weddingId}/emails` },
-        { name: "Templates", icon: Palette, href: `/{weddingId}/templates` },
-        { name: "Design", icon: Paintbrush, href: `/{weddingId}/design` },
-        { name: "Pages", icon: FileText, href: `/{weddingId}/pages` },
-        { name: "Site & Menus", icon: ListTree, href: `/{weddingId}/site` },
-        { name: "Facturation", icon: CreditCard, href: `/{weddingId}/billing` },
-        { name: "Paramètres", icon: Settings, href: `/{weddingId}/settings` },
+        { name: "Accueil", icon: Home, href: `/${weddingId}/welcome` },
+        { name: "Dashboard", icon: LayoutDashboard, href: `/${weddingId}/dashboard` },
+        { name: "Invités", icon: Users, href: `/${weddingId}/guests` },
+        { name: "Cadeaux", icon: Gift, href: `/${weddingId}/gifts` },
+        { name: "Blagues Live", icon: Laugh, href: `/${weddingId}/live` },
+        { name: "Emails", icon: Mail, href: `/${weddingId}/emails` },
+        { name: "Templates", icon: Palette, href: `/${weddingId}/templates` },
+        { name: "Design", icon: Paintbrush, href: `/${weddingId}/design` },
+        { name: "Pages", icon: FileText, href: `/${weddingId}/pages` },
+        { name: "Site & Menus", icon: ListTree, href: `/${weddingId}/site` },
+        { name: "Facturation", icon: CreditCard, href: `/${weddingId}/billing` },
+        { name: "Paramètres", icon: Settings, href: `/${weddingId}/settings` },
     ];
 
     return (
         <div className="flex min-h-screen bg-muted/30">
-            {/* Sidebar */}
             <aside className="w-64 hidden md:flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
                 <div className="p-6 border-b border-sidebar-border">
-                    <Link href="/app">
+                    <Link href="/">
                         <a className="flex items-center space-x-2">
                             <span className="text-xl font-semibold tracking-tight text-sidebar-foreground">Nocely Admin</span>
                         </a>
@@ -88,22 +91,64 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                 </div>
             </aside>
 
-            {/* Main Content */}
+            {mobileMenuOpen && (
+                <div className="fixed inset-0 z-50 md:hidden">
+                    <div className="fixed inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
+                    <aside className="fixed inset-y-0 left-0 w-72 bg-sidebar text-sidebar-foreground flex flex-col z-50 shadow-xl">
+                        <div className="p-4 flex items-center justify-between border-b border-sidebar-border">
+                            <span className="text-lg font-semibold">Nocely Admin</span>
+                            <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
+                                <X className="h-5 w-5" />
+                            </Button>
+                        </div>
+                        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+                            {navItems.map((item) => (
+                                <Link key={item.href} href={item.href}>
+                                    <a
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location === item.href
+                                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                            }`}
+                                    >
+                                        <item.icon className="h-4 w-4" />
+                                        <span>{item.name}</span>
+                                    </a>
+                                </Link>
+                            ))}
+                        </nav>
+                        <div className="p-4 border-t border-sidebar-border">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="w-full justify-start text-sidebar-foreground/70 hover:text-destructive"
+                                onClick={() => logoutMutation.mutate()}
+                            >
+                                <LogOut className="mr-2 h-4 w-4" />
+                                Déconnexion
+                            </Button>
+                        </div>
+                    </aside>
+                </div>
+            )}
+
             <main className="flex-1 flex flex-col min-w-0">
-                <header className="h-16 border-b bg-background/80 backdrop-blur flex items-center px-8">
+                <header className="h-16 border-b bg-background/80 backdrop-blur flex items-center px-4 md:px-8">
+                    <Button variant="ghost" size="icon" className="md:hidden mr-2" onClick={() => setMobileMenuOpen(true)}>
+                        <Menu className="h-5 w-5" />
+                    </Button>
                     <div className="flex items-center text-sm text-muted-foreground">
-                        <Link href="/app">
-                            <a className="hover:text-foreground">App</a>
+                        <Link href="/">
+                            <a className="hover:text-foreground">Nocely</a>
                         </Link>
                         <ChevronRight className="h-4 w-4 mx-2" />
                         <span className="text-foreground font-medium">Gestion du mariage</span>
                     </div>
                     <div className="ml-auto flex items-center gap-3">
-                        <span className="text-xs text-muted-foreground">Projet</span>
                         <select
-                            className="h-9 rounded-md border border-border bg-background px-3 text-sm"
+                            className="h-9 rounded-md border border-border bg-background px-3 text-sm hidden sm:block"
                             value={weddingId}
-                            onChange={(e) => setLocation(`/{e.target.value}/dashboard`)}
+                            onChange={(e) => setLocation(`/${e.target.value}/dashboard`)}
                         >
                             {weddings.map((w) => (
                                 <option key={w.id} value={w.id}>{w.title}</option>
@@ -123,9 +168,18 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                                 <span className="hidden sm:inline">Voir le site</span>
                             </Button>
                         )}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground hover:text-destructive"
+                            onClick={() => logoutMutation.mutate()}
+                            title="Se déconnecter"
+                        >
+                            <LogOut className="h-4 w-4" />
+                        </Button>
                     </div>
                 </header>
-                <div className={`flex-1 overflow-y-auto ${isDesignRoute ? "p-0" : "p-8"}`}>
+                <div className={`flex-1 overflow-y-auto ${isDesignRoute ? "p-0" : "p-4 md:p-8"}`}>
                     <div className={isDesignRoute ? "w-full" : "max-w-6xl mx-auto"}>
                         {children}
                     </div>
