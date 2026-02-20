@@ -62,3 +62,7 @@ expertMode = true
 
 [userenv.production]
 SITE_URL = "https://ar2k26.com"
+APP_BASE_URL = "https://app.nocely.app"
+
+[userenv.development]
+APP_BASE_URL = "https://app.nocely.app"

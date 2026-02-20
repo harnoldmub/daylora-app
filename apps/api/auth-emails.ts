@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const fromEmail = process.env.SMTP_FROM || process.env.SMTP_USER || "noreply@nocely.app";
-const siteUrl = process.env.APP_BASE_URL || (process.env.REPLIT_DEPLOYMENT_URL ? `https://${process.env.REPLIT_DEPLOYMENT_URL}` : (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : "http://localhost:5000"));
+const siteUrl = process.env.APP_BASE_URL || "https://app.nocely.app";
 
 export const authEmails = {
   async sendVerificationEmail(email: string, firstName: string, token: string) {
