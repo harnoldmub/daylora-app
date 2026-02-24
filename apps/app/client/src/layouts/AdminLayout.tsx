@@ -48,6 +48,59 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
         { name: "Paramètres", icon: Settings, href: "/settings" },
     ];
 
+    if (isDesignRoute) {
+        const currentWedding = weddings.find(w => w.id === weddingId);
+        return (
+            <div className="flex flex-col min-h-screen bg-muted/30">
+                <header className="h-14 border-b bg-background/95 backdrop-blur flex items-center px-4 gap-3 shrink-0 z-50">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setLocation("/dashboard")}
+                    >
+                        <ChevronRight className="h-4 w-4 rotate-180" />
+                        <span>Retour</span>
+                    </Button>
+                    <div className="h-6 w-px bg-border" />
+                    <div className="flex items-center gap-2">
+                        <Paintbrush className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-semibold">Design</span>
+                    </div>
+                    <div className="ml-auto flex items-center gap-3">
+                        {currentWedding && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2 border-primary/20 hover:border-primary/40 text-primary"
+                                onClick={() => window.open(`/preview/${currentWedding.slug}`, "_blank")}
+                            >
+                                <Paintbrush className="h-4 w-4" />
+                                <span className="hidden sm:inline">Modifier en live</span>
+                            </Button>
+                        )}
+                        {currentWedding && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2"
+                                onClick={() => window.open(`/${currentWedding.slug}`, "_blank")}
+                            >
+                                <ExternalLink className="h-4 w-4" />
+                                <span className="hidden sm:inline">Voir le site</span>
+                            </Button>
+                        )}
+                    </div>
+                </header>
+                <div className="flex-1 overflow-y-auto p-0">
+                    <div className="w-full">
+                        {children}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex min-h-screen bg-muted/30">
             <aside className="w-64 hidden md:flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
@@ -180,8 +233,8 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                         </Button>
                     </div>
                 </header>
-                <div className={`flex-1 overflow-y-auto ${isDesignRoute ? "p-0" : "p-4 md:p-8"}`}>
-                    <div className={isDesignRoute ? "w-full" : "max-w-6xl mx-auto"}>
+                <div className="flex-1 overflow-y-auto p-4 md:p-8">
+                    <div className="max-w-6xl mx-auto">
                         {children}
                     </div>
                 </div>
