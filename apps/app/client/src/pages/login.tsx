@@ -33,9 +33,12 @@ export default function Login() {
 
   const isUnverified = loginMutation.error?.message.includes("Veuillez confirmer votre adresse email");
 
+  const searchParams = new URLSearchParams(window.location.search);
+  const justCreated = searchParams.get("created") === "1";
+
   useEffect(() => {
     document.title = "Nocely – Connexion";
-    const emailFromQuery = new URLSearchParams(window.location.search).get("email");
+    const emailFromQuery = searchParams.get("email");
     if (emailFromQuery && !form.getValues("email")) {
       form.setValue("email", emailFromQuery);
     }
@@ -58,6 +61,16 @@ export default function Login() {
         </CardHeader>
 
         <CardContent className="space-y-6 p-10 pt-4">
+          {justCreated && (
+            <Alert className="bg-green-50 text-green-800 border-green-200 rounded-2xl">
+              <Heart className="h-4 w-4" />
+              <AlertTitle className="font-bold">Compte créé avec succès !</AlertTitle>
+              <AlertDescription className="text-xs">
+                Vérifiez vos emails pour activer votre compte, puis connectez-vous.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {isUnverified && (
             <Alert variant="destructive" className="bg-destructive/5 text-destructive border-destructive/20 rounded-2xl">
               <Mail className="h-4 w-4" />
@@ -144,7 +157,7 @@ export default function Login() {
 
           <div className="text-center text-sm pt-4">
             <span className="text-[#7A6B5E] font-medium">Pas encore de compte ?</span>{" "}
-            <Link href="/signup" title="Créer un compte Nocely" className="text-primary font-bold hover:text-primary/80 transition-colors ml-1">
+            <Link href="/onboarding" title="Créer un compte Nocely" className="text-primary font-bold hover:text-primary/80 transition-colors ml-1">
               Inscrivez-vous
             </Link>
           </div>

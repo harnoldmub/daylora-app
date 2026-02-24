@@ -234,6 +234,122 @@ export async function registerRoutes(app: Express) {
   setupAuth(app);
   app.use("/api/auth", authRoutes);
 
+  const signupWithWeddingLimiter = (await import("express-rate-limit")).default({ windowMs: 60 * 1000, max: 5, message: "Trop de tentatives. Réessayez dans une minute." });
+  const { authService } = await import("./auth-service");
+  const { authEmails } = await import("./auth-emails");
+
+  app.post("/api/auth/signup-with-wedding", signupWithWeddingLimiter, async (req, res) => {
+    try {
+      const { email, password, firstName, title, slug, weddingDate, templateId, storyBody, toneId, features, paymentMode, externalCagnotteUrl, externalProvider, heroImage, couplePhoto, galleryImages, plan } = req.body || {};
+
+      if (!email || !password || !firstName) return res.status(400).json({ message: "Email, mot de passe et prénom requis." });
+      if (!title || !slug) return res.status(400).json({ message: "Titre et URL du site requis." });
+      if (password.length < 8) return res.status(400).json({ message: "Le mot de passe doit contenir au moins 8 caractères." });
+      if (paymentMode === "external" && features?.cagnotteEnabled && !externalCagnotteUrl?.trim()) {
+        return res.status(400).json({ message: "Ajoutez un lien de cagnotte externe." });
+      }
+
+      const existing = await storage.getUserByEmail(email);
+      if (existing) return res.status(400).json({ message: "Cet email est déjà utilisé." });
+
+      const existingSlug = await storage.getWeddingBySlug(slug);
+      if (existingSlug) return res.status(400).json({ message: "Cette URL est déjà prise. Choisissez-en une autre." });
+
+      const isHugeDataUrl = (value: unknown, limit: number) =>
+        typeof value === "string" && value.startsWith("data:image/") && value.length > limit;
+      if (isHugeDataUrl(heroImage, 3_000_000) || isHugeDataUrl(couplePhoto, 3_000_000)) {
+        return res.status(413).json({ message: "Image trop volumineuse." });
+      }
+      if (Array.isArray(galleryImages)) {
+        if (galleryImages.length > 10) return res.status(400).json({ message: "Maximum 10 photos." });
+        if (galleryImages.some((img: any) => isHugeDataUrl(img, 1_200_000))) return res.status(413).json({ message: "Une photo est trop volumineuse." });
+      }
+
+      const passwordHash = await authService.hashPassword(password);
+      const user = await storage.upsertUser({
+        email: email.toLowerCase(),
+        passwordHash,
+        firstName,
+        isAdmin: false,
+      });
+
+      const { rawToken, hashedToken } = authService.generateToken();
+      await storage.createEmailVerificationToken({
+        userId: user.id,
+        tokenHash: hashedToken,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      });
+
+      try {
+        await authEmails.sendVerificationEmail(user.email, user.firstName || "Inconnu", rawToken);
+      } catch (mailError) {
+        console.error("Verification email sending failed:", mailError);
+      }
+
+      const config = applyTemplateConfig(templateId || "classic", DEFAULT_WEDDING_CONFIG);
+      const tone = resolveTone(toneId);
+      const mergedConfig = {
+        ...config,
+        theme: { ...config.theme, toneId: tone.id, primaryColor: tone.primaryColor, secondaryColor: tone.secondaryColor },
+        features: { ...config.features, ...(features || {}) },
+        payments: {
+          ...config.payments,
+          mode: paymentMode === "external" ? "external" : "stripe",
+          externalProvider: externalProvider || config.payments.externalProvider || "other",
+          externalUrl: externalCagnotteUrl || config.payments.externalUrl || "",
+          stripeStatus: paymentMode === "external" ? "not_connected" : (config.payments.stripeStatus || "not_connected"),
+        },
+        media: { ...config.media, heroImage: heroImage || config.media.heroImage, couplePhoto: couplePhoto || config.media.couplePhoto },
+        texts: { ...config.texts, storyBody: storyBody || config.texts.storyBody },
+        sections: { ...config.sections, cagnotteExternalUrl: externalCagnotteUrl || config.sections.cagnotteExternalUrl || "", galleryImages: galleryImages || config.sections.galleryImages },
+        navigation: {
+          ...config.navigation,
+          pages: {
+            ...config.navigation.pages,
+            cagnotte: features?.cagnotteEnabled ?? config.navigation.pages.cagnotte,
+            gifts: features?.giftsEnabled ?? (config.navigation.pages as any).gifts,
+            live: features?.liveEnabled ?? config.navigation.pages.live,
+          },
+          menuItems: (config.navigation.menuItems || []).map((item: any) => {
+            if (item.id === "cagnotte") return { ...item, enabled: features?.cagnotteEnabled ?? item.enabled };
+            if (item.id === "gifts") return { ...item, enabled: features?.giftsEnabled ?? item.enabled };
+            if (item.id === "live") return { ...item, enabled: features?.liveEnabled ?? item.enabled };
+            return item;
+          }),
+        },
+      };
+
+      let wedding;
+      try {
+        wedding = await storage.createWedding({
+          ownerId: user.id,
+          title,
+          slug,
+          templateId: templateId || "classic",
+          weddingDate: weddingDate ? new Date(weddingDate) : null,
+          currentPlan: plan === "premium" || plan === "lifetime" ? "premium" : "free",
+          config: mergedConfig,
+          status: "draft",
+        });
+      } catch (weddingError) {
+        console.error("Wedding creation failed after user creation, cleaning up user:", weddingError);
+        try { await storage.deleteUser(user.id); } catch (_) {}
+        return res.status(500).json({ message: "Erreur lors de la création du site. Réessayez." });
+      }
+
+      const isDev = process.env.NODE_ENV !== "production";
+      res.status(201).json({
+        message: "Compte créé et site généré ! Vérifiez vos emails pour activer votre compte.",
+        user: { id: user.id, email: user.email },
+        wedding: { id: wedding.id, slug: wedding.slug },
+        debugVerifyToken: isDev ? rawToken : undefined,
+      });
+    } catch (error) {
+      console.error("Signup with wedding error:", error);
+      res.status(500).json({ message: "Erreur lors de la création. Réessayez." });
+    }
+  });
+
   const liveJokeInputSchema = z.object({
     content: z.string().min(1),
     tone: z.string().optional(),

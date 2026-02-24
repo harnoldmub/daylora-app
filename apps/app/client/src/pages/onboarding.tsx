@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -34,6 +34,12 @@ import {
   Upload,
   Plus,
   X,
+  Eye,
+  EyeOff,
+  ExternalLink,
+  Lock,
+  Mail,
+  User,
 } from "lucide-react";
 import { compressImageFileToJpegDataUrl } from "@/lib/image";
 
@@ -54,6 +60,9 @@ const onboardingSchema = z.object({
   weddingDate: z.string().min(1, "La date est requise"),
   templateId: z.string().default("classic"),
   storyBody: z.string().optional(),
+  email: z.string().email("Email invalide"),
+  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+  firstName: z.string().min(1, "Le prénom est requis"),
 });
 
 type OnboardingForm = z.infer<typeof onboardingSchema>;
@@ -65,7 +74,8 @@ type ModulesState = {
   liveEnabled: boolean;
 };
 
-const stepLabels = ["Mariage", "Style", "Photos", "Galerie", "Modules", "Offre", "Final"];
+const TOTAL_STEPS = 7;
+const stepLabels = ["Mariage", "Style", "Photos", "Galerie", "Modules", "Aperçu", "Compte"];
 
 export default function Onboarding() {
   const { toast } = useToast();
@@ -83,11 +93,11 @@ export default function Onboarding() {
   const [paymentMode, setPaymentMode] = useState<"stripe" | "external">("stripe");
   const [externalCagnotteUrl, setExternalCagnotteUrl] = useState("");
   const [externalProvider, setExternalProvider] = useState("other");
-
   const [heroImage, setHeroImage] = useState<string>("");
   const [couplePhoto, setCouplePhoto] = useState<string>("");
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<OnboardingForm>({
     resolver: zodResolver(onboardingSchema),
@@ -97,6 +107,9 @@ export default function Onboarding() {
       weddingDate: "",
       templateId: "classic",
       storyBody: "",
+      email: "",
+      password: "",
+      firstName: "",
     },
   });
 
@@ -158,32 +171,46 @@ export default function Onboarding() {
     form.setValue("slug", generatedSlug, { shouldValidate: true });
   }, [title, form]);
 
-  const progress = useMemo(() => (step / 7) * 100, [step]);
+  const progress = useMemo(() => (step / TOTAL_STEPS) * 100, [step]);
 
   const goNext = async () => {
     if (step === 1) {
-      const valid = await form.trigger(["title", "slug", "weddingDate"]);
+      const valid = await form.trigger(["title", "slug", "weddingDate", "firstName"]);
       if (!valid) return;
     }
-    setStep((s) => Math.min(7, s + 1));
+    if (step === 5 && paymentMode === "external" && modules.cagnotteEnabled && !externalCagnotteUrl.trim()) {
+      toast({ title: "URL requise", description: "Ajoutez un lien de cagnotte externe ou choisissez Stripe.", variant: "destructive" });
+      return;
+    }
+    if (step === 6) {
+      const valid = await form.trigger(["email", "password"]);
+      if (!valid) return;
+    }
+    setStep((s) => Math.min(TOTAL_STEPS, s + 1));
   };
 
   const goBack = () => setStep((s) => Math.max(1, s - 1));
 
+  const selectedTemplate = TEMPLATES.find(t => t.id === form.watch("templateId")) || TEMPLATES[0];
+  const selectedTone = COLOR_TONES.find(t => t.id === toneId) || COLOR_TONES[0];
+
   const onSubmit = async (data: OnboardingForm) => {
     setIsLoading(true);
     try {
-      if (paymentMode === "external" && !externalCagnotteUrl.trim()) {
-        throw new Error("Ajoutez un lien de cagnotte externe.");
-      }
-      const response = await fetch("/api/weddings", {
+      const response = await fetch("/api/auth/signup-with-wedding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          ...data,
-          currentPlan: plan === "free" ? "free" : "premium",
+          email: data.email,
+          password: data.password,
+          firstName: data.firstName,
+          title: data.title,
+          slug: data.slug,
           weddingDate: data.weddingDate,
+          templateId: data.templateId,
+          storyBody: data.storyBody,
+          toneId,
           features: {
             cagnotteEnabled: modules.cagnotteEnabled,
             giftsEnabled: modules.giftsEnabled,
@@ -193,54 +220,68 @@ export default function Onboarding() {
           paymentMode,
           externalCagnotteUrl: externalCagnotteUrl.trim(),
           externalProvider,
-          toneId,
           heroImage,
           couplePhoto,
           galleryImages,
-          storyBody: data.storyBody,
+          plan,
         }),
       });
 
       if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || "Creation impossible");
+        const body = await response.json().catch(() => ({ message: "Erreur inconnue" }));
+        throw new Error(body.message || "Création impossible");
       }
 
-      const wedding = await response.json();
-      setLocation(`/{wedding.id}/welcome`);
+      const result = await response.json();
+
+      if (result?.debugVerifyToken) {
+        await fetch(`/api/auth/verify-email?token=${encodeURIComponent(result.debugVerifyToken)}`, {
+          credentials: "include",
+        });
+      }
+
+      setLocation(`/login?email=${encodeURIComponent(data.email)}&created=1`);
     } catch (error: any) {
       setIsLoading(false);
       toast({
         title: "Erreur",
-        description: error?.message || "Impossible de créer votre projet. Vérifiez le slug et réessayez.",
+        description: error?.message || "Impossible de créer votre projet. Réessayez.",
         variant: "destructive",
       });
     }
   };
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "";
+    try {
+      return new Date(dateStr).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+    } catch { return dateStr; }
+  };
+
   return (
-    <div className="min-h-screen bg-[#F7F3EE] text-[#2b2320] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#F7F3EE] text-[#2b2320] flex items-center justify-center p-4 md:p-6">
       <div className="w-full max-w-6xl">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 text-[10px] font-semibold tracking-wider uppercase text-primary border border-[#E9DFD2] mb-6">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 text-[10px] font-semibold tracking-wider uppercase text-primary border border-[#E9DFD2] mb-4">
             <Sparkles className="h-3 w-3" />
-            Wizard rapide
+            Créez votre site de mariage
           </div>
-          <h1 className="text-4xl md:text-5xl font-serif font-bold mb-3">Créez votre projet en 3 minutes</h1>
-          <p className="text-[#7A6B5E] max-w-3xl mx-auto">
-            Nocely est une plateforme moderne pour créer une expérience digitale élégante en quelques minutes.
-            Site public premium, backoffice complet, tout reste modifiable ensuite.
+          <h1 className="text-3xl md:text-5xl font-serif font-bold mb-2">Votre site en quelques minutes</h1>
+          <p className="text-[#7A6B5E] max-w-2xl mx-auto text-sm md:text-base">
+            Configurez tout, visualisez le résultat, puis créez votre compte pour le publier.
           </p>
         </div>
 
-        <Card className="p-6 md:p-8 bg-white border border-[#E6DCCF] rounded-[2rem] shadow-sm">
-          <div className="mb-8">
+        <Card className="p-5 md:p-8 bg-white border border-[#E6DCCF] rounded-[2rem] shadow-sm">
+          <div className="mb-6">
             <div className="flex items-center justify-between text-xs uppercase tracking-widest text-[#8C7A6B] font-semibold mb-3">
-              <span>Étape {step}/7</span>
+              <span>Étape {step}/{TOTAL_STEPS}</span>
               <span>{stepLabels[step - 1]}</span>
             </div>
-            <div className="h-2 rounded-full bg-[#EFE5D9] overflow-hidden">
-              <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+            <div className="flex gap-1">
+              {stepLabels.map((_, i) => (
+                <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${i < step ? 'bg-primary' : 'bg-[#EFE5D9]'}`} />
+              ))}
             </div>
           </div>
 
@@ -248,74 +289,99 @@ export default function Onboarding() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <AnimatePresence mode="wait">
                 {step === 1 && (
-                  <motion.div key="s1" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel>Titre du projet</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Ex: Alex et Sam" {...field} className="h-12" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="slug"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>URL publique</FormLabel>
-                          <FormControl>
-                            <Input {...field} className="h-12" placeholder="marie-et-sophie" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="weddingDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Date principale</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                              <Input type="date" {...field} className="h-12 pl-10" />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="storyBody"
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel>Quelques mots sur votre histoire</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Nous nous sommes rencontrés..." {...field} className="h-12" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <motion.div key="s1" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="space-y-6">
+                    <div className="text-center mb-2">
+                      <h2 className="text-2xl font-serif font-bold">Parlez-nous de votre mariage</h2>
+                      <p className="text-[#7A6B5E] text-sm mt-1">Ces informations apparaîtront sur votre site</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <FormField
+                        control={form.control}
+                        name="title"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>Titre du projet</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Ex: Marie & Pierre" {...field} className="h-12" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="slug"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>URL publique</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">app.nocely.app/</span>
+                                <Input {...field} className="h-12 pl-[8.5rem]" placeholder="marie-et-pierre" />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="weddingDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Date du mariage</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input type="date" {...field} className="h-12 pl-10" />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="firstName"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>Votre prénom</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Marie" {...field} className="h-12" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="storyBody"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>Quelques mots sur votre histoire <span className="text-muted-foreground font-normal">(optionnel)</span></FormLabel>
+                            <FormControl>
+                              <Input placeholder="Nous nous sommes rencontrés..." {...field} className="h-12" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </motion.div>
                 )}
 
                 {step === 2 && (
                   <motion.div key="s2" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="space-y-6">
+                    <div className="text-center mb-2">
+                      <h2 className="text-2xl font-serif font-bold">Choisissez votre style</h2>
+                      <p className="text-[#7A6B5E] text-sm mt-1">Template et palette de couleurs de votre site</p>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                       {TEMPLATES.map((tmpl) => (
                         <button
                           type="button"
                           key={tmpl.id}
-                          className={`text-left border rounded-3xl overflow-hidden transition-all ${form.watch("templateId") === tmpl.id ? "border-primary ring-2 ring-primary/20" : "border-[#E6DCCF]"
-                            }`}
+                          className={`text-left border rounded-3xl overflow-hidden transition-all ${form.watch("templateId") === tmpl.id ? "border-primary ring-2 ring-primary/20" : "border-[#E6DCCF]"}`}
                           onClick={() => form.setValue("templateId", tmpl.id)}
                         >
                           <img src={tmpl.image} alt={tmpl.name} className="w-full h-56 object-cover" />
@@ -326,19 +392,15 @@ export default function Onboarding() {
                         </button>
                       ))}
                     </div>
-
                     <div className="rounded-3xl border border-[#E6DCCF] p-5 bg-[#FBF8F3]">
-                      <div className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">
-                        Ton de couleurs
-                      </div>
+                      <div className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">Ton de couleurs</div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {COLOR_TONES.map((tone) => (
                           <button
                             key={tone.id}
                             type="button"
                             onClick={() => setToneId(tone.id)}
-                            className={`w-full text-left border rounded-2xl p-4 transition-all ${toneId === tone.id ? "border-primary ring-2 ring-primary/20 bg-white" : "border-[#E6DCCF] bg-white/80"
-                              }`}
+                            className={`w-full text-left border rounded-2xl p-4 transition-all ${toneId === tone.id ? "border-primary ring-2 ring-primary/20 bg-white" : "border-[#E6DCCF] bg-white/80"}`}
                           >
                             <div className="flex items-center gap-2 mb-2">
                               <span className="h-4 w-4 rounded-full border" style={{ backgroundColor: tone.primaryColor }} />
@@ -355,6 +417,10 @@ export default function Onboarding() {
 
                 {step === 3 && (
                   <motion.div key="s3" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="space-y-8">
+                    <div className="text-center mb-2">
+                      <h2 className="text-2xl font-serif font-bold">Vos photos</h2>
+                      <p className="text-[#7A6B5E] text-sm mt-1">Ajoutez vos plus belles photos pour personnaliser le site</p>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-4">
                         <FormLabel className="text-lg">Photo principale (Hero)</FormLabel>
@@ -362,11 +428,7 @@ export default function Onboarding() {
                           {heroImage ? (
                             <>
                               <img src={heroImage} className="w-full h-full object-cover" alt="Hero" />
-                              <button
-                                type="button"
-                                onClick={() => setHeroImage("")}
-                                className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
+                              <button type="button" onClick={() => setHeroImage("")} className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity">
                                 <X className="h-5 w-5" />
                               </button>
                             </>
@@ -380,18 +442,13 @@ export default function Onboarding() {
                           )}
                         </div>
                       </div>
-
                       <div className="space-y-4">
                         <FormLabel className="text-lg">Photo secondaire (Histoire)</FormLabel>
                         <div className="relative aspect-square rounded-3xl overflow-hidden border-2 border-dashed border-[#E6DCCF] bg-[#FBF8F3] group transition-all hover:border-primary/30 max-w-[320px] mx-auto md:mx-0">
                           {couplePhoto ? (
                             <>
                               <img src={couplePhoto} className="w-full h-full object-cover" alt="Couple" />
-                              <button
-                                type="button"
-                                onClick={() => setCouplePhoto("")}
-                                className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
+                              <button type="button" onClick={() => setCouplePhoto("")} className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity">
                                 <X className="h-5 w-5" />
                               </button>
                             </>
@@ -399,7 +456,7 @@ export default function Onboarding() {
                             <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer">
                               <ImageIcon className="h-10 w-10 text-[#8C7A6B] mb-2" />
                               <span className="text-sm font-semibold text-[#8C7A6B]">Photo du couple</span>
-                              <span className="text-[10px] text-[#A69585] mt-1 uppercase tracking-wider">Format carre</span>
+                              <span className="text-[10px] text-[#A69585] mt-1 uppercase tracking-wider">Format carré</span>
                               <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoUpload(e, 'couple')} />
                             </label>
                           )}
@@ -411,25 +468,19 @@ export default function Onboarding() {
 
                 {step === 4 && (
                   <motion.div key="s4" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="space-y-6">
-                    <div className="text-center mb-6">
-                      <h3 className="text-2xl font-serif font-bold mb-2">Configurez votre galerie</h3>
-                      <p className="text-[#7A6B5E]">Importez jusqu'a {MAX_ONBOARDING_GALLERY_IMAGES} photos de vos meilleurs moments.</p>
+                    <div className="text-center mb-2">
+                      <h2 className="text-2xl font-serif font-bold">Votre galerie</h2>
+                      <p className="text-[#7A6B5E] text-sm mt-1">Importez jusqu'à {MAX_ONBOARDING_GALLERY_IMAGES} photos de vos meilleurs moments</p>
                     </div>
-
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {galleryImages.map((src, idx) => (
                         <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden border border-[#E6DCCF] group">
                           <img src={src} className="w-full h-full object-cover" alt={`Gallery ${idx}`} />
-                          <button
-                            type="button"
-                            onClick={() => setGalleryImages(prev => prev.filter((_, i) => i !== idx))}
-                            className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
+                          <button type="button" onClick={() => setGalleryImages(prev => prev.filter((_, i) => i !== idx))} className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity">
                             <X className="h-4 w-4" />
                           </button>
                         </div>
                       ))}
-
                       {galleryImages.length < MAX_ONBOARDING_GALLERY_IMAGES && (
                         <label className="aspect-square rounded-2xl border-2 border-dashed border-[#E6DCCF] bg-[#FBF8F3] flex flex-col items-center justify-center cursor-pointer hover:border-primary/30 transition-all">
                           <Plus className="h-8 w-8 text-[#8C7A6B] mb-1" />
@@ -443,6 +494,10 @@ export default function Onboarding() {
 
                 {step === 5 && (
                   <motion.div key="s5" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="space-y-4">
+                    <div className="text-center mb-2">
+                      <h2 className="text-2xl font-serif font-bold">Fonctionnalités</h2>
+                      <p className="text-[#7A6B5E] text-sm mt-1">Activez les modules dont vous avez besoin</p>
+                    </div>
                     {[
                       { key: "cagnotteEnabled", label: "Cagnotte", icon: <Wallet className="h-4 w-4" /> },
                       { key: "giftsEnabled", label: "Liste cadeaux", icon: <Gift className="h-4 w-4" /> },
@@ -460,7 +515,7 @@ export default function Onboarding() {
                         />
                       </div>
                     ))}
-                    <p className="text-xs text-muted-foreground">Tous les modules sont modifiables plus tard dans le backoffice.</p>
+                    <p className="text-xs text-muted-foreground">Tous les modules sont modifiables plus tard dans votre espace admin.</p>
 
                     <div className="rounded-2xl border border-[#E6DCCF] p-4 space-y-4">
                       <div className="text-sm font-semibold">Mode de cagnotte</div>
@@ -482,7 +537,6 @@ export default function Onboarding() {
                           <div className="text-xs text-muted-foreground mt-1">Leetchi, PayPal, Lydia, etc.</div>
                         </button>
                       </div>
-
                       {paymentMode === "external" ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <Input
@@ -509,71 +563,164 @@ export default function Onboarding() {
                 )}
 
                 {step === 6 && (
-                  <motion.div key="s6" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <button
-                      type="button"
-                      className={`p-6 rounded-3xl border text-left transition-all ${plan === "free" ? "border-primary ring-2 ring-primary/20" : "border-[#E6DCCF]"}`}
-                      onClick={() => setPlan("free")}
-                    >
-                      <div className="text-xs uppercase tracking-widest text-muted-foreground">Gratuit</div>
-                      <div className="text-4xl font-bold mt-1">0€</div>
-                      <ul className="mt-4 text-sm text-[#6B5B4F] space-y-2">
-                        <li>1 template</li>
-                        <li>RSVP + exports</li>
-                        <li>Jusqu'à 50 invités</li>
-                      </ul>
-                    </button>
-                    <button
-                      type="button"
-                      className={`p-6 rounded-3xl border text-left transition-all ${plan === "premium" ? "border-primary ring-2 ring-primary/20" : "border-[#E6DCCF]"}`}
-                      onClick={() => setPlan("premium")}
-                    >
-                      <div className="text-xs uppercase tracking-widest text-muted-foreground">Premium</div>
-                      <div className="flex items-baseline gap-1 mt-1">
-                        <span className="text-4xl font-bold">19€</span>
-                        <span className="text-sm text-muted-foreground">/ mois</span>
+                  <motion.div key="s6" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="space-y-6">
+                    <div className="text-center mb-2">
+                      <h2 className="text-2xl font-serif font-bold">Aperçu de votre site</h2>
+                      <p className="text-[#7A6B5E] text-sm mt-1">Voici à quoi ressemblera votre site de mariage</p>
+                    </div>
+
+                    <div className="rounded-3xl border border-[#E6DCCF] overflow-hidden shadow-lg">
+                      <div className="relative h-64 md:h-80 overflow-hidden" style={{ backgroundColor: selectedTone.secondaryColor }}>
+                        {heroImage ? (
+                          <img src={heroImage} className="w-full h-full object-cover" alt="Preview hero" />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-b from-[#D7C6B2]/30 to-[#E7D9C8]/50 flex items-center justify-center">
+                            <Camera className="h-12 w-12 text-[#B6A796]" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center text-white">
+                          <div className="text-sm uppercase tracking-[0.3em] font-semibold mb-2 opacity-80">Le mariage de</div>
+                          <h3 className="text-3xl md:text-5xl font-serif font-bold mb-3">{form.watch("title") || "Marie & Pierre"}</h3>
+                          {form.watch("weddingDate") && (
+                            <div className="text-lg font-light opacity-90">{formatDate(form.watch("weddingDate"))}</div>
+                          )}
+                          <button type="button" className="mt-6 px-8 py-3 rounded-full text-sm font-semibold transition-all" style={{ backgroundColor: selectedTone.primaryColor, color: "#fff" }}>
+                            Confirmer votre présence
+                          </button>
+                        </div>
                       </div>
-                      <ul className="mt-4 text-sm text-[#6B5B4F] space-y-2">
-                        <li>Invités illimités</li>
-                        <li>Cagnotte + live + PDF</li>
-                        <li>Support prioritaire</li>
-                      </ul>
-                    </button>
-                    <button
-                      type="button"
-                      className={`p-6 rounded-3xl border text-left transition-all ${plan === "lifetime" ? "border-primary ring-2 ring-primary/20" : "border-[#E6DCCF]"}`}
-                      onClick={() => setPlan("lifetime")}
-                    >
-                      <div className="text-xs uppercase tracking-widest text-muted-foreground">Accès à vie</div>
-                      <div className="flex items-baseline gap-1 mt-1">
-                        <span className="text-4xl font-bold">149€</span>
-                        <span className="text-sm text-muted-foreground">une fois</span>
+
+                      <div className="p-6 md:p-8 space-y-6" style={{ backgroundColor: selectedTone.secondaryColor }}>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          {[
+                            { label: "Template", value: selectedTemplate.name },
+                            { label: "Couleur", value: selectedTone.name },
+                            { label: "RSVP", value: "Activé" },
+                            { label: "Cagnotte", value: modules.cagnotteEnabled ? "Activée" : "Désactivée" },
+                          ].map((item, i) => (
+                            <div key={i} className="rounded-2xl bg-white/80 border border-[#E6DCCF]/50 p-3 text-center">
+                              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{item.label}</div>
+                              <div className="font-semibold text-sm mt-1">{item.value}</div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 justify-center">
+                          {["Accueil", "RSVP", modules.giftsEnabled && "Cadeaux", "Histoire", "Photos", "Lieux", "Programme", modules.cagnotteEnabled && "Cagnotte"].filter(Boolean).map((item, i) => (
+                            <span key={i} className="px-3 py-1.5 rounded-full text-xs font-semibold border" style={{ borderColor: selectedTone.primaryColor, color: selectedTone.primaryColor }}>
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+
+                        {(couplePhoto || form.watch("storyBody")) && (
+                          <div className="flex items-center gap-6 rounded-2xl bg-white/60 p-5 border border-[#E6DCCF]/50">
+                            {couplePhoto && <img src={couplePhoto} className="w-20 h-20 rounded-2xl object-cover flex-shrink-0" alt="Couple" />}
+                            <div>
+                              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Notre histoire</div>
+                              <div className="text-sm text-[#6B5B4F]">{form.watch("storyBody") || "Votre histoire d'amour..."}</div>
+                            </div>
+                          </div>
+                        )}
+
+                        {galleryImages.length > 0 && (
+                          <div>
+                            <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3 text-center">Galerie</div>
+                            <div className="flex gap-2 overflow-x-auto pb-2">
+                              {galleryImages.map((src, idx) => (
+                                <img key={idx} src={src} className="w-20 h-20 rounded-xl object-cover flex-shrink-0" alt={`Preview ${idx}`} />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="text-center pt-4">
+                          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-50 text-green-700 text-sm font-semibold border border-green-200">
+                            <Check className="h-4 w-4" />
+                            Votre site est prêt à être publié
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-3">URL : <span className="font-semibold">app.nocely.app/{form.watch("slug")}</span></p>
+                        </div>
                       </div>
-                      <ul className="mt-4 text-sm text-[#6B5B4F] space-y-2">
-                        <li>Tout le Premium inclus</li>
-                        <li>Paiement unique</li>
-                        <li>Sans abonnement</li>
-                      </ul>
-                    </button>
+                    </div>
                   </motion.div>
                 )}
 
                 {step === 7 && (
                   <motion.div key="s7" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="space-y-6">
-                    <div className="rounded-3xl border border-[#E6DCCF] p-6 bg-[#FBF8F3]">
-                      <div className="text-2xl font-serif font-bold mb-2">Votre site est prêt</div>
-                      <p className="text-[#7A6B5E]">Confirmez et nous générons tout automatiquement : site public, admin, modules et URLs.</p>
+                    <div className="text-center mb-2">
+                      <h2 className="text-2xl font-serif font-bold">Créez votre compte</h2>
+                      <p className="text-[#7A6B5E] text-sm mt-1">Dernière étape pour publier votre site</p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                      <div className="rounded-2xl border border-[#E6DCCF] p-4">
-                        <div className="text-muted-foreground uppercase tracking-wider text-xs">Projet</div>
-                        <div className="font-semibold mt-1">{form.getValues("title")}</div>
-                        <div className="text-muted-foreground">/{form.getValues("slug")}</div>
+
+                    <div className="max-w-md mx-auto space-y-5">
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[#6B5B4F] uppercase tracking-widest text-[10px] font-bold">Email</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input type="email" autoComplete="username" placeholder="marie@exemple.com" {...field} className="h-12 pl-10" />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[#6B5B4F] uppercase tracking-widest text-[10px] font-bold">Mot de passe</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                  type={showPassword ? "text" : "password"}
+                                  autoComplete="new-password"
+                                  placeholder="8 caractères minimum"
+                                  {...field}
+                                  className="h-12 pl-10 pr-12"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setShowPassword(!showPassword)}
+                                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B6A796] hover:text-[#6B5B4F] transition-colors"
+                                  tabIndex={-1}
+                                >
+                                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </button>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="rounded-2xl bg-[#FBF8F3] border border-[#E6DCCF] p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Check className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <div className="font-semibold text-sm">Récapitulatif</div>
+                            <div className="text-xs text-[#7A6B5E] mt-1 space-y-1">
+                              <div>Site : <span className="font-semibold">{form.watch("title")}</span></div>
+                              <div>URL : <span className="font-semibold">app.nocely.app/{form.watch("slug")}</span></div>
+                              <div>Template : <span className="font-semibold">{selectedTemplate.name}</span></div>
+                              <div>Date : <span className="font-semibold">{formatDate(form.watch("weddingDate"))}</span></div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="rounded-2xl border border-[#E6DCCF] p-4">
-                        <div className="text-muted-foreground uppercase tracking-wider text-xs">Plan</div>
-                        <div className="font-semibold mt-1">{plan === "lifetime" ? "Accès à vie" : plan === "premium" ? "Premium" : "Gratuit"}</div>
-                      </div>
+
+                      <p className="text-xs text-center text-muted-foreground">
+                        Un email de vérification sera envoyé à votre adresse pour activer votre compte.
+                      </p>
                     </div>
                   </motion.div>
                 )}
@@ -585,20 +732,21 @@ export default function Onboarding() {
                 </Button>
 
                 <div className="flex items-center gap-2">
-                  {step < 7 && (
+                  {step < TOTAL_STEPS && step !== 6 && (
                     <Button type="button" variant="outline" onClick={goNext} disabled={isLoading || isUploading}>
                       Passer
                     </Button>
                   )}
 
-                  {step < 7 ? (
+                  {step < TOTAL_STEPS ? (
                     <Button type="button" onClick={goNext} disabled={isLoading || isUploading}>
-                      {isUploading ? "Import..." : "Continuer"}
+                      {isUploading ? "Import..." : step === 6 ? "Tout est bon, je continue" : "Continuer"}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   ) : (
-                    <Button type="submit" disabled={isLoading || isUploading}>
-                      {isLoading ? "Création..." : "Créer mon site"}
+                    <Button type="submit" disabled={isLoading || isUploading} className="px-8">
+                      {isLoading ? "Création en cours..." : "Créer mon compte et publier"}
+                      {!isLoading && <Heart className="ml-2 h-4 w-4" />}
                     </Button>
                   )}
                 </div>
@@ -607,9 +755,17 @@ export default function Onboarding() {
           </Form>
         </Card>
 
-        <div className="text-center mt-6 text-xs text-[#8C7A6B]">
-          <Heart className="inline h-3.5 w-3.5 mr-1" />
-          Tout est editable plus tard depuis le studio design.
+        <div className="text-center mt-5 space-y-2">
+          <div className="text-xs text-[#8C7A6B]">
+            <Heart className="inline h-3.5 w-3.5 mr-1" />
+            Tout est modifiable plus tard depuis votre espace admin.
+          </div>
+          <div className="text-sm">
+            <span className="text-[#7A6B5E]">Déjà un compte ?</span>{" "}
+            <Link href="/login" className="text-primary font-bold hover:text-primary/80 transition-colors">
+              Connectez-vous
+            </Link>
+          </div>
         </div>
       </div>
     </div>

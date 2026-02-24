@@ -112,7 +112,7 @@ function AppRouter() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
-      <Route path="/signup" component={Signup} />
+      <Route path="/signup">{() => <Redirect to="/onboarding" />}</Route>
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />

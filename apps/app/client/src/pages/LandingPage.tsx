@@ -58,7 +58,7 @@ export default function LandingPage() {
                         <Link href="/login" title="Connexion">
                             <Button variant="ghost" className="text-sm text-white/70 hover:text-white hover:bg-white/5">Connexion</Button>
                         </Link>
-                        <Link href="/signup" title="Commencer">
+                        <Link href="/onboarding" title="Commencer">
                             <Button className="rounded-full px-6 h-10 bg-primary text-white hover:bg-primary/90 shadow-[0_0_20px_rgba(200,169,106,0.3)] border-none">
                                 C'est parti
                             </Button>
@@ -97,7 +97,7 @@ export default function LandingPage() {
                         </motion.p>
 
                         <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4">
-                            <Link href="/signup" title="Créer mon site">
+                            <Link href="/onboarding" title="Créer mon site">
                                 <Button size="lg" className="rounded-full px-10 h-14 text-lg bg-primary hover:bg-primary/90 group border-none">
                                     Créer mon site
                                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -241,7 +241,7 @@ export default function LandingPage() {
                                     ))}
                                 </ul>
                             </div>
-                            <Link href="/signup" title="Passer au Premium">
+                            <Link href="/onboarding" title="Passer au Premium">
                                 <Button className="w-full rounded-full h-12 bg-white text-primary hover:bg-white/90 font-bold border-none">
                                     Choisir Premium
                                 </Button>
@@ -280,7 +280,7 @@ export default function LandingPage() {
                         Nocely : votre mariage, sublimé en ligne. Élégant, fluide, sans complexité.
                     </p>
                     <div className="pt-8">
-                        <Link href="/signup" title="Créer mon site">
+                        <Link href="/onboarding" title="Créer mon site">
                             <Button size="lg" className="rounded-full px-16 h-16 text-xl bg-primary hover:shadow-[0_0_30px_rgba(200,169,106,0.4)] transition-all border-none">
                                 C'est parti, c'est gratuit
                             </Button>

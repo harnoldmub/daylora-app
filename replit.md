@@ -12,6 +12,15 @@ Multi-tenant wedding website SaaS. Couples create accounts, pick a template (Cla
 
 ## Recent Changes (Feb 2026)
 
+- **Signup wizard refactoring**: Account creation moved to the end of the onboarding wizard
+  - New flow: Wedding info → Template → Photos → Gallery → Modules → Preview → Account creation
+  - Users can see a preview of their site before creating an account
+  - New API endpoint `POST /api/auth/signup-with-wedding` creates user + wedding atomically
+  - `/signup` redirects to `/onboarding`
+  - Login page shows success banner after signup with `?created=1`
+  - Email links now point to `app.nocely.app` (APP_BASE_URL configured)
+
+
 - **E2E test suite**: Playwright-based E2E tests covering auth, preview, public pages, RSVP/gifts, cagnotte/live, and multi-tenant isolation
   - Config: `tests/e2e/playwright.config.ts`
   - Global setup: `tests/e2e/global-setup.ts` — seeds 25 users + sessions + weddings into PostgreSQL
