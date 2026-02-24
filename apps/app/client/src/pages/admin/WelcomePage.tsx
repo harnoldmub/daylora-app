@@ -30,10 +30,8 @@ export default function WelcomePage() {
 
     if (isLoading || !wedding) return <div className="animate-pulse h-screen bg-muted" />;
 
-    const appBaseUrl = siteConfig?.appBaseUrl || "http://localhost:5174";
-    const appOrigin = typeof window !== "undefined" ? window.location.origin : appBaseUrl;
-    const marketingBaseUrl = siteConfig?.marketingBaseUrl || "http://localhost:5173";
-    const publicUrl = `${marketingBaseUrl}/${wedding.slug || wedding.id}`;
+    const appOrigin = typeof window !== "undefined" ? window.location.origin : (siteConfig?.appBaseUrl || "https://app.nocely.app");
+    const publicUrl = `${appOrigin}/${wedding.slug || wedding.id}`;
     const previewUrl = `${appOrigin}/preview/${wedding.slug || wedding.id}`;
 
     const handlePublishToggle = async () => {

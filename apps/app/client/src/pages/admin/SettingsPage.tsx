@@ -114,8 +114,8 @@ export default function SettingsPage() {
     );
   }
 
-  const publicUrl = siteConfig ? `${siteConfig.marketingBaseUrl}/${slug || wedding.id}` : `/${slug || wedding.id}`;
-  const appOrigin = typeof window !== "undefined" ? window.location.origin : (siteConfig?.appBaseUrl || "http://localhost:5174");
+  const appOrigin = typeof window !== "undefined" ? window.location.origin : (siteConfig?.appBaseUrl || "https://app.nocely.app");
+  const publicUrl = `${appOrigin}/${slug || wedding.id}`;
   const previewUrl = useMemo(() => `${appOrigin}/preview/${slug || wedding.id}?t=${previewToken}`, [appOrigin, slug, wedding.id, previewToken]);
 
   const handleSave = async () => {

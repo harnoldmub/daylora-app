@@ -221,7 +221,7 @@ export default function DesignPage() {
   };
 
   const previewUrl = useMemo(() => {
-    const appBase = typeof window !== "undefined" ? window.location.origin : "http://localhost:5174";
+    const appBase = typeof window !== "undefined" ? window.location.origin : "https://app.nocely.app";
     if (!wedding) return `${appBase}/preview/preview?t=${previewToken}`;
     const slug = wedding.slug || wedding.id;
     return `${appBase}/preview/${slug}?t=${previewToken}`;

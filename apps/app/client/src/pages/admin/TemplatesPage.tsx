@@ -58,7 +58,7 @@ export default function TemplatesPage() {
 
         if (isLoading || !wedding) return <div className="animate-pulse h-64 bg-muted rounded-xl" />;
 
-        const base = typeof window !== "undefined" ? window.location.origin : "http://localhost:5174";
+        const base = typeof window !== "undefined" ? window.location.origin : "https://app.nocely.app";
         const slug = wedding.slug || wedding.id;
         const previewUrl = `${base}/preview/${slug}?t=${previewToken}`;
 
