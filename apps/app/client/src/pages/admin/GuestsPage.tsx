@@ -120,9 +120,9 @@ export default function GuestsPage() {
             return true;
         });
 
-    const total = responses.length;
-    const confirmed = responses.filter((r) => r.availability === "confirmed").length;
-    const declined = responses.filter((r) => r.availability === "declined").length;
+    const total = responses.reduce((sum, r) => sum + (r.partySize || 1), 0);
+    const confirmed = responses.filter((r) => r.availability === "confirmed").reduce((sum, r) => sum + (r.partySize || 1), 0);
+    const declined = responses.filter((r) => r.availability === "declined").reduce((sum, r) => sum + (r.partySize || 1), 0);
     const pending = total - confirmed - declined;
 
     const createGuestMutation = useMutation({
