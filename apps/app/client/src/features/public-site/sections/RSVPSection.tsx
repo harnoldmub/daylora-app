@@ -203,28 +203,24 @@ export function RSVPSection({
                               onValueChange={(v) => field.onChange(Number(v))}
                               disabled={watchedAvailability === "declined"}
                             >
-                              <button
-                                type="button"
-                                className={`text-left flex items-center gap-3 px-4 py-4 transition-colors ${tokens.rsvp.input} hover:opacity-80`}
-                                onClick={() => field.onChange(1)}
+                              <label
+                                className={`text-left flex items-center gap-3 px-4 py-4 transition-colors cursor-pointer ${tokens.rsvp.input} hover:opacity-80`}
                               >
                                 <RadioGroupItem value="1" />
                                 <div className="flex flex-col">
-                                  <span className="text-sm font-semibold">Solo</span>
+                                  <span className="text-sm font-semibold">Seul(e)</span>
                                   <span className="text-xs opacity-60">Je viens seul(e)</span>
                                 </div>
-                              </button>
-                              <button
-                                type="button"
-                                className={`text-left flex items-center gap-3 px-4 py-4 transition-colors ${tokens.rsvp.input} hover:opacity-80`}
-                                onClick={() => field.onChange(2)}
+                              </label>
+                              <label
+                                className={`text-left flex items-center gap-3 px-4 py-4 transition-colors cursor-pointer ${tokens.rsvp.input} hover:opacity-80`}
                               >
                                 <RadioGroupItem value="2" />
                                 <div className="flex flex-col">
-                                  <span className="text-sm font-semibold">Couple</span>
+                                  <span className="text-sm font-semibold">Accompagné(e)</span>
                                   <span className="text-xs opacity-60">Je viens avec mon/ma partenaire</span>
                                 </div>
-                              </button>
+                              </label>
                             </RadioGroup>
                           </FormControl>
                           <FormMessage />

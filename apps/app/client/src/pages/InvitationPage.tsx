@@ -128,16 +128,16 @@ export default function InvitationPage() {
     return v || "rsvp";
   };
 
-  const basePath = "/";
+  const basePath = "";
 
   const resolveInternalHref = (path: string) => {
     const raw = String(path || "").trim();
-    if (!raw) return basePath;
+    if (!raw) return "/";
     if (/^https?:\/\//i.test(raw)) return raw;
     const normalized = normalizeCtaPath(raw);
-    if (normalized === "home") return basePath;
-    if (normalized.startsWith("page:")) return `${basePath}/page/${normalized.replace(/^page:/, "")}`;
-    return `${basePath}/${normalized}`.replace(/\/+$/, "") || basePath;
+    if (normalized === "home") return "/";
+    if (normalized.startsWith("page:")) return `/page/${normalized.replace(/^page:/, "")}`;
+    return `/${normalized}`;
   };
 
   const handleSaveText = async (key: string, value: string) => {

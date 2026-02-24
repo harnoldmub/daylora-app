@@ -78,9 +78,9 @@ function AdminRoutes({ weddingId }: { weddingId: string }) {
   );
 }
 
-function PublicRoutes({ slug }: { slug: string }) {
+function PublicRoutes({ slug, isPreview }: { slug: string; isPreview?: boolean }) {
   return (
-    <PublicLayout slug={slug}>
+    <PublicLayout slug={slug} isPreview={isPreview}>
       <Switch>
         <Route path="/" component={InvitationPage} />
         <Route path="/rsvp" component={InvitationPage} />
@@ -124,7 +124,7 @@ function AppRouter() {
       <Route path="/checkin" component={CheckIn} />
 
       <Route path="/preview/:slug" nest>
-        {(params) => <PublicRoutes slug={params.slug} />}
+        {(params) => <PublicRoutes slug={params.slug} isPreview />}
       </Route>
 
       <Route path="/dashboard">

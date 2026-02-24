@@ -12,15 +12,12 @@ import { InlineEditor } from "@/components/ui/inline-editor";
 import { compressImageFileToJpegDataUrl } from "@/lib/image";
 import { useToast } from "@/hooks/use-toast";
 
-export function PublicLayout({ children, slug: slugProp }: { children: ReactNode; slug?: string }) {
+export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewProp }: { children: ReactNode; slug?: string; isPreview?: boolean }) {
     const params = useParams();
     const [routePath] = useLocation();
     const slug = slugProp || (params as any).slug || (params as any).weddingId || "";
     const isUuid = !!slug && /^[0-9a-fA-F-]{36}$/.test(slug);
-    const isPreviewRoute = useMemo(() => {
-        if (!slug) return false;
-        return routePath.startsWith(`/preview/${slug}`);
-    }, [routePath, slug]);
+    const isPreviewRoute = isPreviewProp ?? false;
     const [marketingBaseUrl, setMarketingBaseUrl] = useState<string>("");
 
     const { data: wedding, isLoading } = useQuery<Wedding>({
