@@ -84,6 +84,8 @@ export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
     const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);
     const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
     const tooltipRef = useRef<HTMLDivElement>(null);
+    const rafRef = useRef<number>(0);
+    const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const step = TOUR_STEPS[currentStep];
 
@@ -93,17 +95,27 @@ export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
             setTooltipPos(null);
             return;
         }
-        const rect = getElementRect(step.target);
-        if (!rect) {
+
+        const el = document.querySelector(step.target);
+        if (!el) {
             setHighlightRect(null);
             setTooltipPos(null);
             return;
         }
+
+        const rect = el.getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) {
+            setHighlightRect(null);
+            setTooltipPos(null);
+            return;
+        }
+
         setHighlightRect(rect);
 
         const pad = 16;
         const tooltipW = 340;
-        const tooltipH = 200;
+        const tooltipEl = tooltipRef.current;
+        const tooltipH = tooltipEl ? tooltipEl.offsetHeight : 200;
         let top = 0;
         let left = 0;
 
@@ -111,18 +123,30 @@ export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
             case "right":
                 top = rect.top + rect.height / 2 - tooltipH / 2;
                 left = rect.right + pad;
+                if (left + tooltipW > window.innerWidth - 8) {
+                    left = rect.left - tooltipW - pad;
+                }
                 break;
             case "left":
                 top = rect.top + rect.height / 2 - tooltipH / 2;
                 left = rect.left - tooltipW - pad;
+                if (left < 8) {
+                    left = rect.right + pad;
+                }
                 break;
             case "bottom":
                 top = rect.bottom + pad;
                 left = rect.left + rect.width / 2 - tooltipW / 2;
+                if (top + tooltipH > window.innerHeight - 8) {
+                    top = rect.top - tooltipH - pad;
+                }
                 break;
             case "top":
                 top = rect.top - tooltipH - pad;
                 left = rect.left + rect.width / 2 - tooltipW / 2;
+                if (top < 8) {
+                    top = rect.bottom + pad;
+                }
                 break;
         }
 
@@ -131,6 +155,13 @@ export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
 
         setTooltipPos({ top, left });
     }, [step]);
+
+    const scheduleUpdate = useCallback(() => {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = requestAnimationFrame(() => {
+            updatePosition();
+        });
+    }, [updatePosition]);
 
     useEffect(() => {
         const alreadyDone = localStorage.getItem(TOUR_STORAGE_KEY);
@@ -146,22 +177,54 @@ export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
         onComplete?.();
     }, [onComplete]);
 
+    const isStepVisible = useCallback((idx: number) => {
+        const s = TOUR_STEPS[idx];
+        if (!s.target || s.position === "center") return true;
+        const el = document.querySelector(s.target);
+        if (!el) return false;
+        const r = el.getBoundingClientRect();
+        return r.width > 0 && r.height > 0;
+    }, []);
+
     const next = useCallback(() => {
-        if (currentStep < TOUR_STEPS.length - 1) {
-            setCurrentStep((s) => s + 1);
+        let nextIdx = currentStep + 1;
+        while (nextIdx < TOUR_STEPS.length && !isStepVisible(nextIdx)) {
+            nextIdx++;
+        }
+        if (nextIdx < TOUR_STEPS.length) {
+            setCurrentStep(nextIdx);
         } else {
             finish();
         }
-    }, [currentStep, finish]);
+    }, [currentStep, finish, isStepVisible]);
 
     const prev = useCallback(() => {
-        if (currentStep > 0) setCurrentStep((s) => s - 1);
-    }, [currentStep]);
+        let prevIdx = currentStep - 1;
+        while (prevIdx > 0 && !isStepVisible(prevIdx)) {
+            prevIdx--;
+        }
+        if (prevIdx >= 0) setCurrentStep(prevIdx);
+    }, [currentStep, isStepVisible]);
 
     useEffect(() => {
         if (!isVisible) return;
-        updatePosition();
-        const handleResize = () => updatePosition();
+
+        if (retryRef.current) clearTimeout(retryRef.current);
+
+        const tryUpdate = (attempts: number) => {
+            scheduleUpdate();
+            if (attempts > 0 && step.target) {
+                const el = document.querySelector(step.target);
+                if (!el || (el.getBoundingClientRect().width === 0)) {
+                    retryRef.current = setTimeout(() => tryUpdate(attempts - 1), 100);
+                    return;
+                }
+            }
+            retryRef.current = setTimeout(() => scheduleUpdate(), 300);
+        };
+        tryUpdate(10);
+
+        const handleResize = () => scheduleUpdate();
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") finish();
             if (e.key === "ArrowRight") next();
@@ -174,8 +237,10 @@ export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
             window.removeEventListener("resize", handleResize);
             window.removeEventListener("scroll", handleResize, true);
             window.removeEventListener("keydown", handleKeyDown);
+            cancelAnimationFrame(rafRef.current);
+            if (retryRef.current) clearTimeout(retryRef.current);
         };
-    }, [isVisible, currentStep, updatePosition, finish, next, prev]);
+    }, [isVisible, currentStep, scheduleUpdate, step, finish, next, prev]);
 
     if (!isVisible) return null;
 
