@@ -52,10 +52,8 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
         <div className="flex min-h-screen bg-muted/30">
             <aside className="w-64 hidden md:flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
                 <div className="p-6 border-b border-sidebar-border">
-                    <Link href="/">
-                        <a className="flex items-center space-x-2">
-                            <span className="text-xl font-semibold tracking-tight text-sidebar-foreground">Nocely Admin</span>
-                        </a>
+                    <Link href="/" className="flex items-center space-x-2">
+                        <span className="text-xl font-semibold tracking-tight text-sidebar-foreground">Nocely Admin</span>
                     </Link>
                 </div>
                 <nav className="flex-1 p-4 space-y-1">
@@ -63,14 +61,12 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                         const itemPath = item.href.replace(`/${weddingId}`, "");
                         const isActive = location === itemPath || location === item.href;
                         return (
-                            <Link key={item.href} href={item.href}>
-                                <a className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive
+                            <Link key={item.href} href={item.href} className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive
                                     ? "bg-sidebar-accent text-sidebar-accent-foreground"
                                     : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                                     }`}>
-                                    <item.icon className="h-4 w-4" />
-                                    <span>{item.name}</span>
-                                </a>
+                                <item.icon className="h-4 w-4" />
+                                <span>{item.name}</span>
                             </Link>
                         );
                     })}
@@ -111,17 +107,15 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                                 const itemPath = item.href.replace(`/${weddingId}`, "");
                                 const isActive = location === itemPath || location === item.href;
                                 return (
-                                    <Link key={item.href} href={item.href}>
-                                        <a
-                                            onClick={() => setMobileMenuOpen(false)}
-                                            className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive
-                                                ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                                                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                                                }`}
-                                        >
-                                            <item.icon className="h-4 w-4" />
-                                            <span>{item.name}</span>
-                                        </a>
+                                    <Link key={item.href} href={item.href}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive
+                                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                            }`}
+                                    >
+                                        <item.icon className="h-4 w-4" />
+                                        <span>{item.name}</span>
                                     </Link>
                                 );
                             })}
@@ -147,9 +141,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                         <Menu className="h-5 w-5" />
                     </Button>
                     <div className="flex items-center text-sm text-muted-foreground">
-                        <Link href="/">
-                            <a className="hover:text-foreground">Nocely</a>
-                        </Link>
+                        <Link href="/" className="hover:text-foreground">Nocely</Link>
                         <ChevronRight className="h-4 w-4 mx-2" />
                         <span className="text-foreground font-medium">Gestion du mariage</span>
                     </div>

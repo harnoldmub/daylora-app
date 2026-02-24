@@ -1,5 +1,5 @@
 import { useWedding, useUpdateWedding } from "@/hooks/use-api";
-import { useParams } from "wouter";
+import { useParams, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -454,7 +454,7 @@ export default function DesignPage() {
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" asChild>
-            <a href={`/{wedding.id}/dashboard`}>Retour au backoffice</a>
+            <Link href="/dashboard">Retour au backoffice</Link>
           </Button>
           <Button variant="outline" asChild>
             <a href={previewUrl} target="_blank" rel="noopener noreferrer">Ouvrir l'aperçu</a>

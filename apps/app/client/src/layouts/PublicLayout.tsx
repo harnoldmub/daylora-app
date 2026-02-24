@@ -395,7 +395,7 @@ export function PublicLayout({ children, slug: slugProp }: { children: ReactNode
                             <div className="container mx-auto flex h-16 items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <Link
-                                        href={basePath}
+                                        href="/"
                                         className="flex items-center space-x-2"
                                         onClick={(e) => {
                                             if (canEdit && editMode) e.preventDefault();
@@ -526,7 +526,7 @@ export function PublicLayout({ children, slug: slugProp }: { children: ReactNode
 
                                     {/* Keep "Live" as a CTA button on section routes (homepage already shows it in the menu). */}
                                     {!isHome && liveItem ? (
-                                        <Link href={liveItem.href} onClick={(e) => (canEdit && editMode ? e.preventDefault() : undefined)}>
+                                        <Link href="/live" onClick={(e) => (canEdit && editMode ? e.preventDefault() : undefined)}>
                                             <Button size="sm" variant="outline" className="rounded-full px-5">
                                                 <InlineEditor
                                                     value={liveItem.label}

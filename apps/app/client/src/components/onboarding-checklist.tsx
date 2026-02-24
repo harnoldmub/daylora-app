@@ -27,7 +27,7 @@ export function OnboardingChecklist({ wedding }: { wedding: Wedding }) {
             id: 'template',
             label: 'Choisir un design',
             description: 'Sélectionnez le template parfait pour votre mariage',
-            href: `/{wedding.id}/templates`,
+            href: `/templates`,
             isCompleted: !!wedding.templateId,
             icon: Layout
         },
@@ -43,7 +43,7 @@ export function OnboardingChecklist({ wedding }: { wedding: Wedding }) {
             id: 'guests',
             label: 'Ajouter des invités',
             description: 'Importez ou ajoutez votre liste d\'invités',
-            href: `/{wedding.id}/guests`,
+            href: `/guests`,
             isCompleted: (guests as any[])?.length > 0,
             icon: Users
         },
@@ -51,7 +51,7 @@ export function OnboardingChecklist({ wedding }: { wedding: Wedding }) {
             id: 'features',
             label: 'Activer les modules',
             description: 'Cagnotte, liste de cadeaux, livre d\'or',
-            href: `/{wedding.id}/gifts`,
+            href: `/gifts`,
             isCompleted: !!wedding.config?.features?.cagnotteEnabled || !!wedding.config?.features?.giftsEnabled,
             icon: Gift
         },
@@ -59,7 +59,7 @@ export function OnboardingChecklist({ wedding }: { wedding: Wedding }) {
             id: 'publish',
             label: 'Publier le site',
             description: 'Rendez votre site visible pour vos invités',
-            href: `/{wedding.id}/welcome`,
+            href: `/welcome`,
             isCompleted: wedding.isPublished,
             icon: CheckCircle2
         }

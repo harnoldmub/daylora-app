@@ -39,13 +39,13 @@ export default function PagesManagerPage() {
         description="Vue d'ensemble des pages actives et de la navigation publique."
         actions={
           <>
-            <Link href={`/{wedding.id}/design`}>
+            <Link href="/design">
               <Button variant="outline">
                 <Palette className="h-4 w-4 mr-2" />
                 Studio design
               </Button>
             </Link>
-            <Link href={`/{wedding.id}/site`}>
+            <Link href="/site">
               <Button>
                 <ListTree className="h-4 w-4 mr-2" />
                 Configurer menus

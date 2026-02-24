@@ -132,13 +132,13 @@ export default function WelcomePage() {
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <Button variant="outline" asChild className="w-full">
-                            <Link href={`/{wedding.id}/dashboard`}>
+                            <Link href="/dashboard">
                                 <Layout className="h-4 w-4 mr-2" />
                                 Tableau de bord
                             </Link>
                         </Button>
                         <Button asChild className="w-full">
-                            <Link href={`/{wedding.id}/templates`}>
+                            <Link href="/templates">
                                 <ExternalLink className="h-4 w-4 mr-2" />
                                 Templates & design
                             </Link>
