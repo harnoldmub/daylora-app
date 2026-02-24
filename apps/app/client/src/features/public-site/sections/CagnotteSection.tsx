@@ -29,15 +29,17 @@ export function CagnotteSection({
       className={`scroll-mt-24 py-24 px-6 ${tokens.cagnotte.section}`}
     >
       <div className="max-w-3xl mx-auto text-center space-y-6">
-        <GiftIcon className={`h-12 w-12 mx-auto mb-6 ${tokens.cagnotte.icon}`} />
-        <h2 className={`text-4xl md:text-5xl font-serif font-light mb-4 tracking-wide ${tokens.cagnotte.title}`}>
+        <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-6" style={{ backgroundColor: 'color-mix(in srgb, var(--wedding-primary) 10%, transparent)' }}>
+          <GiftIcon className="h-8 w-8" style={{ color: 'var(--wedding-primary)' }} />
+        </div>
+        <h2 className="text-4xl md:text-5xl font-serif font-light mb-4 tracking-wide" style={{ color: 'var(--wedding-primary)' }}>
           <InlineEditor
             value={cagnotteTitle}
             onSave={(val) => onSaveText("cagnotteTitle", val)}
             canEdit={canEdit && editMode}
           />
         </h2>
-        <div className="opacity-60 leading-relaxed max-w-2xl mx-auto">
+        <div className="opacity-60 leading-relaxed max-w-2xl mx-auto text-base">
           <InlineEditor
             value={cagnotteDescription}
             onSave={(val) => onSaveText("cagnotteDescription", val)}
@@ -68,7 +70,12 @@ export function CagnotteSection({
             <a href={cagnotteCtaUrl} target={cagnotteMode === "external" ? "_blank" : undefined} rel={cagnotteMode === "external" ? "noopener noreferrer" : undefined}>
               <Button
                 size="lg"
-                className={`px-14 py-7 text-xs tracking-[0.3em] uppercase font-black shadow-2xl transition-all hover:scale-[1.02] ${buttonToneClass} ${buttonRadiusClass}`}
+                className={`px-14 py-7 text-xs tracking-[0.3em] uppercase font-black shadow-2xl transition-all hover:scale-[1.02] ${buttonRadiusClass}`}
+                style={{
+                  backgroundColor: 'var(--wedding-primary)',
+                  borderColor: 'var(--wedding-primary)',
+                  color: '#FFFFFF',
+                }}
               >
                 {cagnotteSubmitLabel}
               </Button>

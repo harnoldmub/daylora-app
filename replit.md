@@ -56,6 +56,18 @@ Multi-tenant wedding website SaaS. Couples create accounts, pick a template (Cla
   - Production limits unchanged: global API 100/15min, auth 30/15min, signup 5/min, login 10/min, resend 3/min
   - No business logic modified
 
+- **Dynamic color system & section redesign** (ar2k26.com-inspired):
+  - CSS custom properties injected from `wedding.config.theme`: `--wedding-primary`, `--wedding-secondary`, `--wedding-text-dark`, `--wedding-text-subtle`
+  - `hexToHSL()` utility in TemplateRenderer derives dark/subtle text colors from primary
+  - HeroSection: ornamental SVG dividers, stacked invitation text, serif couple names, border-framed date
+  - ScheduleSection: vertical timeline with dots/connectors replacing grid cards, Google Maps links
+  - LocationsSection: vertical layout with MapPin icons, Google Maps integration
+  - CountdownSection: animated flip-style numbers with CSS variable theming
+  - CagnotteSection: centered gift icon, dynamic button colors
+  - StorySection: hover effects, decorative dividers, responsive layout
+  - All sections (RSVP, Gallery, Gifts, Story, Cagnotte) use `var(--wedding-primary)` for headings/accents
+  - Back-office DesignPage color pickers now functionally change public site colors
+
 - **Frontend refactoring**: Broke monolithic InvitationPage.tsx (1958 lines) into modular architecture:
   - Design system tokens at `apps/app/client/src/design-system/tokens.ts`
   - 9 section components at `apps/app/client/src/features/public-site/sections/`

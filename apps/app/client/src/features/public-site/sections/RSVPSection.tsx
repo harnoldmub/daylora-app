@@ -100,7 +100,7 @@ export function RSVPSection({
       <div className="max-w-3xl mx-auto">
         {!isSubmitted ? (
           <>
-            <h1 className={`text-center mb-6 ${tokens.rsvp.title}`}>
+            <h1 className={`text-center mb-6 ${tokens.rsvp.title}`} style={{ color: 'var(--wedding-primary)' }}>
               <InlineEditor
                 value={rsvpTitle}
                 onSave={(val) => onSaveText("rsvpTitle", val)}
@@ -229,7 +229,7 @@ export function RSVPSection({
                     />
                     <div className="hidden md:block" />
                   </div>
-                  <Button type="submit" size="lg" className={`w-full h-16 text-lg font-bold shadow-xl shadow-primary/20 ${buttonRadiusClass} ${buttonToneClass}`} disabled={rsvpMutation.isPending}>
+                  <Button type="submit" size="lg" className={`w-full h-16 text-lg font-bold shadow-xl ${buttonRadiusClass}`} style={{ backgroundColor: 'var(--wedding-primary)', borderColor: 'var(--wedding-primary)', color: '#fff' }} disabled={rsvpMutation.isPending}>
                     {rsvpMutation.isPending ? "Envoi..." : rsvpButton}
                   </Button>
                 </form>

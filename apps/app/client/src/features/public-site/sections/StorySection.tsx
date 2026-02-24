@@ -2,13 +2,6 @@ import { Button } from "@/components/ui/button";
 import { InlineEditor } from "@/components/ui/inline-editor";
 import type { StorySectionProps } from "@/features/public-site/types";
 
-const FloralDecoration = () => (
-  <svg viewBox="0 0 100 100" className="w-16 h-16 mx-auto mb-6 text-black/10 transition-transform hover:scale-110 duration-700" fill="currentColor">
-    <path d="M50,10 C60,30 90,40 50,90 C10,40 40,30 50,10 Z" />
-    <path d="M50,40 C70,50 80,80 50,90 C20,80 30,50 50,40 Z" opacity="0.5" />
-  </svg>
-);
-
 export function StorySection({
   tokens,
   storyTitle,
@@ -29,7 +22,7 @@ export function StorySection({
       className="scroll-mt-24 py-32 px-6"
     >
       <div className={tokens.story.container}>
-        <h2 className={`${tokens.story.title} mb-12`}>
+        <h2 className="text-4xl md:text-5xl font-serif font-light tracking-wide text-center mb-16" style={{ color: 'var(--wedding-primary)' }}>
           <InlineEditor
             value={storyTitle}
             onSave={(val) => onSaveText("storyTitle", val)}
@@ -38,7 +31,7 @@ export function StorySection({
         </h2>
         <div className={tokens.story.layout}>
           <div className="relative group">
-            <div className="absolute -inset-4 bg-primary/10 rounded-[4rem] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute -inset-4 rounded-[4rem] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: 'color-mix(in srgb, var(--wedding-primary) 10%, transparent)' }} />
             <img
               src={couplePhoto || "/defaults/couple_default.jpg"}
               alt="Le couple"
@@ -58,7 +51,7 @@ export function StorySection({
             ) : null}
           </div>
           <div className="space-y-8 flex flex-col justify-center">
-            {tokens.hero.decoration === "floral" && <FloralDecoration />}
+            <div className="w-16 h-px mx-auto lg:mx-0" style={{ backgroundColor: 'color-mix(in srgb, var(--wedding-primary) 30%, transparent)' }} />
             <div className={`max-w-lg mx-auto lg:mx-0 ${tokens.story.body}`}>
               <InlineEditor
                 value={storyBody}
@@ -67,9 +60,7 @@ export function StorySection({
                 isTextArea
               />
             </div>
-            {tokens.hero.decoration === "serif-border" && (
-              <div className="h-px w-24 bg-primary/30 mx-auto lg:mx-0" />
-            )}
+            <div className="w-16 h-px mx-auto lg:mx-0" style={{ backgroundColor: 'color-mix(in srgb, var(--wedding-primary) 30%, transparent)' }} />
           </div>
         </div>
       </div>

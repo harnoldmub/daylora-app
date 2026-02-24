@@ -97,6 +97,23 @@ interface TemplateRendererProps {
   fromDateInputValue: (value: string) => string;
 }
 
+function hexToHSL(hex: string): { h: number; s: number; l: number } {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0;
+  const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+    else if (max === g) h = ((b - r) / d + 2) / 6;
+    else h = ((r - g) / d + 4) / 6;
+  }
+  return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+}
+
 export function TemplateRenderer(props: TemplateRendererProps) {
   const { wedding, draftMedia, gifts, slug } = props;
   const { canEdit, editMode } = usePublicEdit();
@@ -106,6 +123,27 @@ export function TemplateRenderer(props: TemplateRendererProps) {
   const preset = getTemplatePreset(templateId);
   const activeFont = wedding.config?.theme?.fontFamily || preset.defaultFont;
   const fontClass = activeFont === "serif" ? "font-serif" : "font-sans";
+
+  const primaryColor = wedding.config?.theme?.primaryColor || "#C8A96A";
+  const secondaryColor = wedding.config?.theme?.secondaryColor || "#FFFDF9";
+  const primaryHSL = hexToHSL(primaryColor);
+  const secondaryHSL = hexToHSL(secondaryColor);
+
+  const darkL = Math.max(primaryHSL.l - 35, 10);
+  const subtleL = Math.min(primaryHSL.l + 10, 55);
+
+  const cssVars = {
+    "--wedding-primary": primaryColor,
+    "--wedding-secondary": secondaryColor,
+    "--wedding-primary-h": String(primaryHSL.h),
+    "--wedding-primary-s": `${primaryHSL.s}%`,
+    "--wedding-primary-l": `${primaryHSL.l}%`,
+    "--wedding-secondary-h": String(secondaryHSL.h),
+    "--wedding-secondary-s": `${secondaryHSL.s}%`,
+    "--wedding-secondary-l": `${secondaryHSL.l}%`,
+    "--wedding-text-dark": `hsl(${primaryHSL.h}, ${Math.min(primaryHSL.s, 30)}%, ${darkL}%)`,
+    "--wedding-text-subtle": `hsl(${primaryHSL.h}, ${Math.min(primaryHSL.s, 25)}%, ${subtleL}%)`,
+  } as React.CSSProperties;
 
   const heroTitle = wedding.config?.texts?.heroTitle || wedding.title;
   const heroSubtitle = wedding.config?.texts?.heroSubtitle || "Le Mariage de";
@@ -173,7 +211,7 @@ export function TemplateRenderer(props: TemplateRendererProps) {
   const editProps = { canEdit, editMode };
 
   return (
-    <div className={`min-h-screen relative group/page ${tokens.page.bg} ${fontClass}`}>
+    <div className={`min-h-screen relative group/page ${tokens.page.bg} ${fontClass}`} style={cssVars}>
       <HeroSection
         {...editProps}
         tokens={tokens}

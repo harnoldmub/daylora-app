@@ -29,7 +29,7 @@ export function GallerySection({
     >
       <div className="max-w-6xl mx-auto">
         <div className="text-center max-w-3xl mx-auto">
-          <h2 className={`text-3xl md:text-4xl font-serif font-light tracking-wide ${tokens.gallery.title}`}>
+          <h2 className={`text-3xl md:text-4xl font-serif font-light tracking-wide ${tokens.gallery.title}`} style={{ color: 'var(--wedding-primary)' }}>
             <InlineEditor
               value={galleryTitle}
               onSave={(val) => onSaveText("galleryTitle", val)}

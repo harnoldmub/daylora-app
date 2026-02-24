@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { InlineEditor } from "@/components/ui/inline-editor";
 import type { CountdownSectionProps } from "@/features/public-site/types";
 
-function Countdown({ tokens, weddingDate }: { tokens: CountdownSectionProps["tokens"]; weddingDate: string }) {
+function Countdown({ weddingDate }: { weddingDate: string }) {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -29,7 +29,7 @@ function Countdown({ tokens, weddingDate }: { tokens: CountdownSectionProps["tok
   }, [weddingDate]);
 
   return (
-    <div className="flex gap-4 md:gap-8 justify-center items-center flex-wrap">
+    <div className="flex gap-6 md:gap-10 justify-center items-center flex-wrap">
       {[
         { value: timeLeft.days, label: "Jours" },
         { value: timeLeft.hours, label: "Heures" },
@@ -37,12 +37,18 @@ function Countdown({ tokens, weddingDate }: { tokens: CountdownSectionProps["tok
         { value: timeLeft.seconds, label: "Secondes" },
       ].map((item, idx) => (
         <div key={idx} className="flex flex-col items-center">
-          <div className={`w-16 h-16 md:w-20 md:h-20 flex items-center justify-center ${tokens.countdown.box}`}>
-            <span className={tokens.countdown.number}>
+          <div
+            className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center rounded-xl border"
+            style={{
+              borderColor: 'color-mix(in srgb, var(--wedding-primary) 20%, transparent)',
+              backgroundColor: 'color-mix(in srgb, var(--wedding-primary) 5%, transparent)',
+            }}
+          >
+            <span className="text-2xl md:text-3xl font-serif font-bold" style={{ color: 'var(--wedding-primary)' }}>
               {item.value.toString().padStart(2, "0")}
             </span>
           </div>
-          <span className={tokens.countdown.label}>
+          <span className="text-xs mt-2 font-sans opacity-50">
             {item.label}
           </span>
         </div>
@@ -62,7 +68,7 @@ export function CountdownSection({
   return (
     <section id="countdown" className={`scroll-mt-24 py-20 px-6 ${tokens.countdown.section}`}>
       <div className="max-w-3xl mx-auto text-center">
-        <div className={`text-xs uppercase tracking-[0.35em] mb-4 ${tokens.countdown.label}`}>
+        <div className="text-xs uppercase tracking-[0.35em] mb-6 opacity-50">
           <InlineEditor
             value={countdownTitle}
             onSave={(val) => onSaveText("countdownTitle", val)}
@@ -71,7 +77,7 @@ export function CountdownSection({
           />
         </div>
         <div className="flex justify-center">
-          <Countdown tokens={tokens} weddingDate={weddingDate} />
+          <Countdown weddingDate={weddingDate} />
         </div>
       </div>
     </section>
