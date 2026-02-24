@@ -21,12 +21,29 @@ Multi-tenant wedding website SaaS. Couples create accounts, pick a template (Cla
   - Data attributes `data-tour` on AdminLayout sidebar, view-site button, onboarding checklist, design link
 
 - **Signup wizard refactoring**: Account creation moved to the end of the onboarding wizard
-  - New flow: Wedding info → Template → Photos → Gallery → Modules → Preview → Account creation
+  - New flow: Wedding info → Template → Photos → Gallery → Formule (plan) → Preview → Account creation
   - Users can see a preview of their site before creating an account
   - New API endpoint `POST /api/auth/signup-with-wedding` creates user + wedding atomically
   - `/signup` redirects to `/onboarding`
   - Login page shows success banner after signup with `?created=1`
   - Email links now point to `app.nocely.app` (APP_BASE_URL configured)
+
+- **Premium plan & referral system**:
+  - Free plan: 30 RSVPs max, cagnotte only, 6 gallery images, Nocely branding
+  - Premium: unlimited RSVPs, gifts, live, jokes, custom pages, 50 gallery images, no branding
+  - Pricing: 19€/month (min 2 months) or 149€/year
+  - Referral codes: each user gets a unique code, sharing gives €10 discount on Premium
+  - `referral_codes` table in PostgreSQL, Stripe coupon created at checkout
+  - `PLAN_LIMITS` config in `packages/shared/schema.ts`
+  - Backend enforces RSVP limit at POST /api/rsvp (402 if exceeded)
+  - `GET /api/plan-limits` returns plan, limits, and RSVP count
+  - `GET /api/referral/my-code` returns user's referral code
+  - `GET /api/referral/validate/:code` validates a referral code
+  - PremiumGate component: `apps/app/client/src/components/admin/PremiumGate.tsx`
+  - GiftsPage and LiveJokesPage wrapped with PremiumGate
+  - GuestsPage shows RSVP limit banner when approaching 30
+  - PricingPage updated: 30 RSVPs, 149€/year, referral code sharing, referral input
+  - Onboarding step 5 ("Formule"): plan selection cards + premium badges on modules
 
 
 - **E2E test suite**: Playwright-based E2E tests covering auth, preview, public pages, RSVP/gifts, cagnotte/live, and multi-tenant isolation

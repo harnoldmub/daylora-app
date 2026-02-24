@@ -12,6 +12,7 @@ import {
   emailLogs,
   stripeSubscriptions,
   stripeWebhookEvents,
+  referralCodes,
   type User,
   type InsertUser,
   type RsvpResponse,
@@ -28,6 +29,7 @@ import {
   type EmailVerificationToken,
   type InsertEmailVerificationToken,
   type PasswordResetToken,
+  type ReferralCode,
   type InsertPasswordResetToken,
   type EmailLog,
   type InsertEmailLog,
@@ -490,6 +492,57 @@ export class DatabaseStorage implements IStorage {
   async isStripeWebhookEventProcessed(id: string): Promise<boolean> {
     const [event] = await db.select().from(stripeWebhookEvents).where(eq(stripeWebhookEvents.id, id));
     return !!event;
+  }
+
+  async getRsvpCount(weddingId: string): Promise<number> {
+    const [result] = await db
+      .select({ count: sql<number>`COALESCE(SUM(party_size), 0)::int` })
+      .from(rsvpResponses)
+      .where(eq(rsvpResponses.weddingId, weddingId));
+    return result?.count ?? 0;
+  }
+
+  async createReferralCode(ownerUserId: string): Promise<ReferralCode> {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+      try {
+        const [ref] = await db.insert(referralCodes).values({ code, ownerUserId }).returning();
+        return ref;
+      } catch (err: any) {
+        if (err?.code === '23505' && attempt < 4) continue;
+        throw err;
+      }
+    }
+    throw new Error("Failed to generate unique referral code");
+  }
+
+  async getReferralCodeByUser(userId: string): Promise<ReferralCode | undefined> {
+    const [ref] = await db.select().from(referralCodes).where(eq(referralCodes.ownerUserId, userId));
+    return ref;
+  }
+
+  async getReferralCodeByCode(code: string): Promise<ReferralCode | undefined> {
+    const [ref] = await db.select().from(referralCodes).where(eq(referralCodes.code, code.toUpperCase()));
+    return ref;
+  }
+
+  async useReferralCode(code: string, usedByUserId: string): Promise<ReferralCode | null> {
+    const ref = await this.getReferralCodeByCode(code);
+    if (!ref || ref.usedByUserId || ref.ownerUserId === usedByUserId) return null;
+    const [updated] = await db
+      .update(referralCodes)
+      .set({ usedByUserId, usedAt: new Date() })
+      .where(eq(referralCodes.id, ref.id))
+      .returning();
+    return updated;
+  }
+
+  async getReferralUsageCount(userId: string): Promise<number> {
+    const [result] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(referralCodes)
+      .where(and(eq(referralCodes.ownerUserId, userId), sql`${referralCodes.usedAt} IS NOT NULL`));
+    return result?.count ?? 0;
   }
 }
 

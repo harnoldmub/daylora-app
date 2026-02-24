@@ -11,6 +11,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useWedding, useUpdateWedding } from "@/hooks/use-api";
 import type { LiveJoke } from "@shared/schema";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { PremiumGate } from "@/components/admin/PremiumGate";
 
 export default function LiveJokesPage() {
   const { weddingId } = useParams<{ weddingId: string }>();
@@ -140,6 +141,7 @@ export default function LiveJokesPage() {
   };
 
   return (
+    <PremiumGate featureName="Les blagues live" isPremium={wedding?.currentPlan === 'premium'}>
     <div className="space-y-8">
       <AdminPageHeader
         title="Blagues Live"
@@ -267,5 +269,6 @@ export default function LiveJokesPage() {
         )}
       </Card>
     </div>
+    </PremiumGate>
   );
 }

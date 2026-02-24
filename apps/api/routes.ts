@@ -10,6 +10,7 @@ import {
   updateRsvpResponseSchema,
   insertContributionSchema,
   insertGiftSchema,
+  PLAN_LIMITS,
   type InsertRsvpResponse,
 } from "@shared/schema";
 import { z } from "zod";
@@ -771,7 +772,14 @@ export async function registerRoutes(app: Express) {
   app.post("/api/rsvp", withWedding, validateRequest(insertRsvpResponseSchema), async (req, res) => {
     try {
       const wedding = (req as any).wedding;
+      const plan = wedding.currentPlan === "premium" ? "premium" : "free";
+      const limits = PLAN_LIMITS[plan];
+      const currentCount = await storage.getRsvpCount(wedding.id);
       const data = req.body as InsertRsvpResponse;
+      const incoming = data.partySize || 1;
+      if (currentCount + incoming > limits.maxRsvp) {
+        return res.status(402).json({ message: `La limite de ${limits.maxRsvp} invités est atteinte. Passez au Premium pour accueillir tous vos invités.` });
+      }
       const response = await storage.createRsvpResponse(wedding.id, data);
 
       if (response.email) {
@@ -1187,11 +1195,39 @@ export async function registerRoutes(app: Express) {
     }
   });
 
+  // Referral codes
+  app.get("/api/referral/my-code", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).user.id;
+      let code = await storage.getReferralCodeByUser(userId);
+      if (!code) {
+        code = await storage.createReferralCode(userId);
+      }
+      const usageCount = await storage.getReferralUsageCount(userId);
+      res.json({ code: code.code, usageCount });
+    } catch (error) {
+      res.status(500).json({ message: "Erreur lors de la récupération du code parrainage." });
+    }
+  });
+
+  app.get("/api/referral/validate/:code", async (req, res) => {
+    try {
+      const ref = await storage.getReferralCodeByCode(req.params.code);
+      if (!ref || ref.usedByUserId) {
+        return res.json({ valid: false });
+      }
+      res.json({ valid: true, discountCents: ref.discountCents });
+    } catch {
+      res.json({ valid: false });
+    }
+  });
+
   // Billing (Premium)
   app.post("/api/billing/checkout", isAuthenticated, withWedding, async (req, res) => {
     try {
       const wedding = (req as any).wedding;
-      const { type } = req.body as { type: "subscription" | "one_time" };
+      const userId = (req as any).user.id;
+      const { type, referralCode } = req.body as { type: "subscription" | "one_time"; referralCode?: string };
 
       let stripe;
       try {
@@ -1203,17 +1239,46 @@ export async function registerRoutes(app: Express) {
       const priceId = type === "subscription"
         ? process.env.STRIPE_PRICE_SUBSCRIPTION
         : process.env.STRIPE_PRICE_LIFETIME;
-      if (!priceId) return res.status(500).json({ message: type === "subscription" ? "Le prix d'abonnement Stripe n'est pas configuré (STRIPE_PRICE_SUBSCRIPTION)." : "Le prix à vie Stripe n'est pas configuré (STRIPE_PRICE_LIFETIME)." });
+      if (!priceId) return res.status(500).json({ message: "Le prix Stripe n'est pas configuré." });
 
-      const session = await stripe.checkout.sessions.create({
+      let discounts: any[] = [];
+      let validatedReferralCode = "";
+      if (referralCode) {
+        const ref = await storage.getReferralCodeByCode(referralCode);
+        if (ref && !ref.usedByUserId && ref.ownerUserId !== userId) {
+          try {
+            const coupon = await stripe.coupons.create({
+              amount_off: ref.discountCents,
+              currency: "eur",
+              duration: "once",
+              name: `Parrainage ${ref.code}`,
+              metadata: { referralCodeId: String(ref.id), referrerUserId: ref.ownerUserId },
+            });
+            discounts = [{ coupon: coupon.id }];
+            validatedReferralCode = ref.code;
+          } catch (couponError) {
+            console.error("Referral coupon creation failed:", couponError);
+          }
+        }
+      }
+
+      const sessionConfig: any = {
         mode: type === "subscription" ? "subscription" : "payment",
         line_items: [{ price: priceId, quantity: 1 }],
-        metadata: { weddingId: wedding.id, purpose: "billing", billingType: type },
-        subscription_data: type === "subscription" ? { metadata: { weddingId: wedding.id, purpose: "billing" } } : undefined,
-        payment_intent_data: type === "one_time" ? { metadata: { weddingId: wedding.id, purpose: "billing" } } : undefined,
+        metadata: { weddingId: wedding.id, purpose: "billing", billingType: type, referralCode: validatedReferralCode || undefined, userId },
         success_url: `${process.env.APP_BASE_URL || "http://localhost:5174"}/${wedding.id}/billing?success=1&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.APP_BASE_URL || "http://localhost:5174"}/${wedding.id}/billing?canceled=1`,
-      });
+      };
+
+      if (type === "subscription") {
+        sessionConfig.subscription_data = { metadata: { weddingId: wedding.id, purpose: "billing" } };
+        if (discounts.length > 0) sessionConfig.discounts = discounts;
+      } else {
+        sessionConfig.payment_intent_data = { metadata: { weddingId: wedding.id, purpose: "billing" } };
+        if (discounts.length > 0) sessionConfig.discounts = discounts;
+      }
+
+      const session = await stripe.checkout.sessions.create(sessionConfig);
       res.json({ url: session.url });
     } catch (error) {
       res.status(500).json({ message: "Erreur Stripe" });
@@ -1334,6 +1399,14 @@ export async function registerRoutes(app: Express) {
     const wedding = (req as any).wedding;
     const logs = await storage.getEmailLogs(wedding.id);
     res.json(logs);
+  });
+
+  app.get("/api/plan-limits", isAuthenticated, withWedding, async (req, res) => {
+    const wedding = (req as any).wedding;
+    const plan = wedding.currentPlan === "premium" ? "premium" : "free";
+    const limits = PLAN_LIMITS[plan];
+    const rsvpCount = await storage.getRsvpCount(wedding.id);
+    res.json({ plan, limits, rsvpCount });
   });
 
   // Site config (public links for admin UI)

@@ -659,3 +659,46 @@ export const passwordResetTokensRelations = relations(passwordResetTokens, ({ on
     references: [users.id],
   }),
 }));
+
+export const referralCodes = pgTable("referral_codes", {
+  id: serial("id").primaryKey(),
+  code: varchar("code", { length: 20 }).unique().notNull(),
+  ownerUserId: varchar("owner_user_id").references(() => users.id).notNull(),
+  usedByUserId: varchar("used_by_user_id").references(() => users.id),
+  discountCents: integer("discount_cents").notNull().default(1000),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type ReferralCode = typeof referralCodes.$inferSelect;
+export type InsertReferralCode = typeof referralCodes.$inferInsert;
+
+export const referralCodesRelations = relations(referralCodes, ({ one }) => ({
+  owner: one(users, {
+    fields: [referralCodes.ownerUserId],
+    references: [users.id],
+  }),
+}));
+
+export const PLAN_LIMITS = {
+  free: {
+    maxRsvp: 30,
+    giftsEnabled: false,
+    liveEnabled: false,
+    jokesEnabled: false,
+    cagnotteEnabled: true,
+    customPagesEnabled: false,
+    removeBranding: false,
+    maxGalleryImages: 6,
+  },
+  premium: {
+    maxRsvp: Infinity,
+    giftsEnabled: true,
+    liveEnabled: true,
+    jokesEnabled: true,
+    cagnotteEnabled: true,
+    customPagesEnabled: true,
+    removeBranding: true,
+    maxGalleryImages: 50,
+  },
+} as const;

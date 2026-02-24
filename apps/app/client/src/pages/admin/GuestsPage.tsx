@@ -737,9 +737,22 @@ export default function GuestsPage() {
                 </DialogContent>
             </Dialog>
 
+            {wedding?.currentPlan !== "premium" && total >= 25 && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <Users className="h-5 w-5 text-amber-600" />
+                        <div>
+                            <div className="font-semibold text-sm text-amber-900">{total}/30 invités utilisés</div>
+                            <div className="text-xs text-amber-700">Passez à Premium pour des invités illimités.</div>
+                        </div>
+                    </div>
+                    <a href={`/${weddingId}/billing`} className="text-sm font-semibold text-amber-700 hover:text-amber-900 underline">Passer à Premium</a>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                    { label: "Invités", value: total, icon: Users, hint: "Total" },
+                    { label: "Invités", value: `${total}${wedding?.currentPlan !== "premium" ? "/30" : ""}`, icon: Users, hint: wedding?.currentPlan !== "premium" ? "Limite Découverte" : "Total" },
                     { label: "Confirmés", value: confirmed, icon: CheckCircle2, hint: "Présence confirmée" },
                     { label: "En attente", value: pending, icon: Clock, hint: "À relancer" },
                     { label: "Refusés", value: declined, icon: XCircle, hint: "Indisponibles" },

@@ -47,8 +47,17 @@ export async function handleStripeWebhook(req: Request, res: Response) {
           const sub = await stripe.subscriptions.retrieve(String(session.subscription));
           await upsertSubscription(sub, weddingId);
         } else {
-          // One-time billing purchase: mark premium immediately.
           await storage.updateWedding(weddingId, { currentPlan: "premium" });
+        }
+
+        const referralCode = session.metadata?.referralCode;
+        const userId = session.metadata?.userId;
+        if (referralCode && userId) {
+          try {
+            await storage.useReferralCode(referralCode, userId);
+          } catch (e) {
+            console.error("Failed to mark referral code as used:", e);
+          }
         }
         break;
       }

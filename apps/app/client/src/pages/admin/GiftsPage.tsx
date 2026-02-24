@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { useParams } from "wouter";
 import { Button } from "@/components/ui/button";
+import { PremiumGate } from "@/components/admin/PremiumGate";
+import { useWedding } from "@/hooks/use-api";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,6 +67,7 @@ const emptyForm: GiftForm = {
 export default function GiftsPage() {
   const { weddingId } = useParams<{ weddingId: string }>();
   const { toast } = useToast();
+  const { data: wedding } = useWedding(weddingId);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -205,6 +208,7 @@ export default function GiftsPage() {
   };
 
   return (
+    <PremiumGate featureName="La liste de cadeaux" isPremium={wedding?.currentPlan === 'premium'}>
     <div className="space-y-8 animate-in fade-in duration-500">
       <AdminPageHeader
         title="Cadeaux"
@@ -429,5 +433,6 @@ export default function GiftsPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </PremiumGate>
   );
 }

@@ -40,6 +40,7 @@ import {
   Lock,
   Mail,
   User,
+  Star,
 } from "lucide-react";
 import { compressImageFileToJpegDataUrl } from "@/lib/image";
 
@@ -75,7 +76,7 @@ type ModulesState = {
 };
 
 const TOTAL_STEPS = 7;
-const stepLabels = ["Mariage", "Style", "Photos", "Galerie", "Modules", "Aperçu", "Compte"];
+const stepLabels = ["Mariage", "Style", "Photos", "Galerie", "Formule", "Aperçu", "Compte"];
 
 export default function Onboarding() {
   const { toast } = useToast();
@@ -98,6 +99,7 @@ export default function Onboarding() {
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [referralCode, setReferralCode] = useState("");
 
   const form = useForm<OnboardingForm>({
     resolver: zodResolver(onboardingSchema),
@@ -224,6 +226,7 @@ export default function Onboarding() {
           couplePhoto,
           galleryImages,
           plan,
+          referralCode: referralCode.trim() || undefined,
         }),
       });
 
@@ -495,27 +498,65 @@ export default function Onboarding() {
                 {step === 5 && (
                   <motion.div key="s5" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="space-y-4">
                     <div className="text-center mb-2">
-                      <h2 className="text-2xl font-serif font-bold">Fonctionnalités</h2>
-                      <p className="text-[#7A6B5E] text-sm mt-1">Activez les modules dont vous avez besoin</p>
+                      <h2 className="text-2xl font-serif font-bold">Votre formule</h2>
+                      <p className="text-[#7A6B5E] text-sm mt-1">Choisissez votre plan et activez vos modules</p>
                     </div>
-                    {[
-                      { key: "cagnotteEnabled", label: "Cagnotte", icon: <Wallet className="h-4 w-4" /> },
-                      { key: "giftsEnabled", label: "Liste cadeaux", icon: <Gift className="h-4 w-4" /> },
-                      { key: "jokesEnabled", label: "Blagues live", icon: <MessageCircle className="h-4 w-4" /> },
-                      { key: "liveEnabled", label: "Contributions live", icon: <Zap className="h-4 w-4" /> },
-                    ].map((item) => (
-                      <div key={item.key} className="flex items-center justify-between border border-[#E6DCCF] rounded-2xl px-5 py-4">
-                        <div className="flex items-center gap-3 font-medium">
-                          <span className="text-primary">{item.icon}</span>
-                          {item.label}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                      <button
+                        type="button"
+                        className={`rounded-2xl border-2 p-4 text-left transition-all ${plan === "free" ? "border-primary bg-primary/5" : "border-[#E6DCCF] hover:border-primary/30"}`}
+                        onClick={() => setPlan("free")}
+                      >
+                        <div className="font-bold text-lg">Découverte</div>
+                        <div className="text-3xl font-serif font-bold mt-1">0€</div>
+                        <div className="text-xs text-[#7A6B5E] mt-1">30 invités max, cagnotte incluse</div>
+                      </button>
+                      <button
+                        type="button"
+                        className={`rounded-2xl border-2 p-4 text-left transition-all relative overflow-hidden ${plan !== "free" ? "border-primary bg-primary/5" : "border-[#E6DCCF] hover:border-primary/30"}`}
+                        onClick={() => setPlan("premium")}
+                      >
+                        <div className="absolute top-2 right-2">
+                          <span className="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full">POPULAIRE</span>
                         </div>
-                        <Switch
-                          checked={modules[item.key as keyof ModulesState]}
-                          onCheckedChange={(checked) => setModules((prev) => ({ ...prev, [item.key]: checked }))}
-                        />
-                      </div>
-                    ))}
-                    <p className="text-xs text-muted-foreground">Tous les modules sont modifiables plus tard dans votre espace admin.</p>
+                        <div className="font-bold text-lg flex items-center gap-2">
+                          <Star className="h-4 w-4 text-primary" />
+                          Premium
+                        </div>
+                        <div className="flex items-baseline gap-1 mt-1">
+                          <span className="text-3xl font-serif font-bold">19€</span>
+                          <span className="text-sm text-[#7A6B5E]">/mois</span>
+                        </div>
+                        <div className="text-xs text-[#7A6B5E] mt-1">Invités illimités, tous les modules</div>
+                      </button>
+                    </div>
+
+                    {[
+                      { key: "cagnotteEnabled", label: "Cagnotte", icon: <Wallet className="h-4 w-4" />, premium: false },
+                      { key: "giftsEnabled", label: "Liste cadeaux", icon: <Gift className="h-4 w-4" />, premium: true },
+                      { key: "jokesEnabled", label: "Blagues live", icon: <MessageCircle className="h-4 w-4" />, premium: true },
+                      { key: "liveEnabled", label: "Contributions live", icon: <Zap className="h-4 w-4" />, premium: true },
+                    ].map((item) => {
+                      const isLocked = item.premium && plan === "free";
+                      return (
+                        <div key={item.key} className={`flex items-center justify-between border rounded-2xl px-5 py-4 ${isLocked ? "border-[#E6DCCF] opacity-60" : "border-[#E6DCCF]"}`}>
+                          <div className="flex items-center gap-3 font-medium">
+                            <span className="text-primary">{item.icon}</span>
+                            {item.label}
+                            {item.premium && (
+                              <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase">Premium</span>
+                            )}
+                          </div>
+                          <Switch
+                            checked={isLocked ? false : modules[item.key as keyof ModulesState]}
+                            onCheckedChange={(checked) => setModules((prev) => ({ ...prev, [item.key]: checked }))}
+                            disabled={isLocked}
+                          />
+                        </div>
+                      );
+                    })}
+                    <p className="text-xs text-muted-foreground">Vous pourrez changer de plan à tout moment depuis votre espace admin.</p>
 
                     <div className="rounded-2xl border border-[#E6DCCF] p-4 space-y-4">
                       <div className="text-sm font-semibold">Mode de cagnotte</div>
@@ -725,6 +766,17 @@ export default function Onboarding() {
                         )}
                       />
 
+                      <div>
+                        <label className="text-[#6B5B4F] uppercase tracking-widest text-[10px] font-bold block mb-2">Code parrainage (optionnel)</label>
+                        <Input
+                          value={referralCode}
+                          onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                          placeholder="Ex: ABC123"
+                          className="h-12 font-mono tracking-widest uppercase"
+                        />
+                        <p className="text-xs text-[#7A6B5E] mt-1">Vous avez un code d'un ami ? Entrez-le pour 10€ de réduction sur Premium.</p>
+                      </div>
+
                       <div className="rounded-2xl bg-[#FBF8F3] border border-[#E6DCCF] p-4">
                         <div className="flex items-start gap-3">
                           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -737,6 +789,7 @@ export default function Onboarding() {
                               <div>URL : <span className="font-semibold">app.nocely.app/{form.watch("slug")}</span></div>
                               <div>Template : <span className="font-semibold">{selectedTemplate.name}</span></div>
                               <div>Date : <span className="font-semibold">{formatDate(form.watch("weddingDate"))}</span></div>
+                              <div>Plan : <span className="font-semibold">{plan === "free" ? "Découverte (gratuit)" : "Premium (19€/mois)"}</span></div>
                             </div>
                           </div>
                         </div>
