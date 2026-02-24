@@ -104,6 +104,10 @@ export default function SettingsPage() {
       .catch(() => null);
   }, []);
 
+  const appOrigin = typeof window !== "undefined" ? window.location.origin : (siteConfig?.appBaseUrl || "https://app.nocely.app");
+  const publicUrl = `${appOrigin}/${slug || wedding?.id}`;
+  const previewUrl = useMemo(() => `${appOrigin}/preview/${slug || wedding?.id}?t=${previewToken}`, [appOrigin, slug, wedding?.id, previewToken]);
+
   if (!wedding) {
     return (
       <div className="p-6">
@@ -113,10 +117,6 @@ export default function SettingsPage() {
       </div>
     );
   }
-
-  const appOrigin = typeof window !== "undefined" ? window.location.origin : (siteConfig?.appBaseUrl || "https://app.nocely.app");
-  const publicUrl = `${appOrigin}/${slug || wedding.id}`;
-  const previewUrl = useMemo(() => `${appOrigin}/preview/${slug || wedding.id}?t=${previewToken}`, [appOrigin, slug, wedding.id, previewToken]);
 
   const handleSave = async () => {
     if (payments.mode === "external" && !payments.externalUrl.trim()) {
