@@ -34,18 +34,18 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const navItems = [
-        { name: "Accueil", icon: Home, href: `/${weddingId}/welcome` },
-        { name: "Dashboard", icon: LayoutDashboard, href: `/${weddingId}/dashboard` },
-        { name: "Invités", icon: Users, href: `/${weddingId}/guests` },
-        { name: "Cadeaux", icon: Gift, href: `/${weddingId}/gifts` },
-        { name: "Blagues Live", icon: Laugh, href: `/${weddingId}/live` },
-        { name: "Emails", icon: Mail, href: `/${weddingId}/emails` },
-        { name: "Templates", icon: Palette, href: `/${weddingId}/templates` },
-        { name: "Design", icon: Paintbrush, href: `/${weddingId}/design` },
-        { name: "Pages", icon: FileText, href: `/${weddingId}/pages` },
-        { name: "Site & Menus", icon: ListTree, href: `/${weddingId}/site` },
-        { name: "Facturation", icon: CreditCard, href: `/${weddingId}/billing` },
-        { name: "Paramètres", icon: Settings, href: `/${weddingId}/settings` },
+        { name: "Accueil", icon: Home, href: "/welcome" },
+        { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+        { name: "Invités", icon: Users, href: "/guests" },
+        { name: "Cadeaux", icon: Gift, href: "/gifts" },
+        { name: "Blagues Live", icon: Laugh, href: "/live" },
+        { name: "Emails", icon: Mail, href: "/emails" },
+        { name: "Templates", icon: Palette, href: "/templates" },
+        { name: "Design", icon: Paintbrush, href: "/design" },
+        { name: "Pages", icon: FileText, href: "/pages" },
+        { name: "Site & Menus", icon: ListTree, href: "/site" },
+        { name: "Facturation", icon: CreditCard, href: "/billing" },
+        { name: "Paramètres", icon: Settings, href: "/settings" },
     ];
 
     return (
@@ -58,9 +58,8 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                 </div>
                 <nav className="flex-1 p-4 space-y-1" data-tour="sidebar-nav">
                     {navItems.map((item) => {
-                        const itemPath = item.href.replace(`/${weddingId}`, "");
-                        const isActive = location === itemPath || location === item.href;
-                        const tourAttr = item.href.includes("/design") ? "sidebar-design" : undefined;
+                        const isActive = location === item.href;
+                        const tourAttr = item.href === "/design" ? "sidebar-design" : undefined;
                         return (
                             <Link key={item.href} href={item.href} data-tour={tourAttr} className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive
                                     ? "bg-sidebar-accent text-sidebar-accent-foreground"
@@ -105,8 +104,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                         </div>
                         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                             {navItems.map((item) => {
-                                const itemPath = item.href.replace(`/${weddingId}`, "");
-                                const isActive = location === itemPath || location === item.href;
+                                const isActive = location === item.href;
                                 return (
                                     <Link key={item.href} href={item.href}
                                         onClick={() => setMobileMenuOpen(false)}
@@ -150,7 +148,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                         <select
                             className="h-9 rounded-md border border-border bg-background px-3 text-sm hidden sm:block"
                             value={weddingId}
-                            onChange={(e) => setLocation(`/${e.target.value}/dashboard`)}
+                            onChange={(e) => setLocation(`~/${e.target.value}/dashboard`)}
                         >
                             {weddings.map((w) => (
                                 <option key={w.id} value={w.id}>{w.title}</option>

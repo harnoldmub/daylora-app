@@ -72,7 +72,7 @@ function AdminRoutes({ weddingId }: { weddingId: string }) {
         <Route path="/pages" component={PagesManagerPage} />
         <Route path="/site" component={SiteConfigPage} />
         <Route path="/settings" component={SettingsPage} />
-        <Route><Redirect to={`/${weddingId}/dashboard`} /></Route>
+        <Route><Redirect to="/dashboard" /></Route>
       </Switch>
     </AdminLayout>
   );
@@ -138,7 +138,7 @@ function AppRouter() {
 
           if (isAdmin) {
             if (isLoading) return loadingView;
-            if (!user) return <Redirect to="/login" />;
+            if (!user) return <Redirect to="~/login" />;
             return <AdminRoutes weddingId={segment} />;
           }
 
