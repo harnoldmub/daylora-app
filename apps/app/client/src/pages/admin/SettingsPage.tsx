@@ -57,10 +57,11 @@ export default function SettingsPage() {
   });
 
   const templates = [
-    { id: "classic", name: "Classique" },
-    { id: "modern", name: "Moderne" },
-    { id: "minimal", name: "Minimal" },
+    { id: "classic", name: "Classique", premium: false },
+    { id: "modern", name: "Moderne", premium: true },
+    { id: "minimal", name: "Minimal", premium: true },
   ];
+  const isPremium = wedding?.currentPlan === "premium";
 
   useEffect(() => {
     if (!wedding) return;
@@ -239,23 +240,30 @@ export default function SettingsPage() {
                 <h2 className="text-lg font-medium">Template public</h2>
         <p className="text-sm text-muted-foreground">Choisissez la base visuelle qui sera reprise dans le Studio Design.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {templates.map((t) => (
-            <button
-              key={t.id}
-              className={`rounded-lg border p-4 text-left transition ${wedding.templateId === t.id
-                ? "border-primary bg-primary/5"
-                : "border-border hover:border-primary/50"
-                }`}
-              onClick={async () => {
-                await updateWedding.mutateAsync({ id: wedding.id, templateId: t.id });
-                setPreviewToken(Date.now());
-                toast({ title: "Template mis à jour", description: "Le nouveau style est appliqué." });
-              }}
-            >
-              <div className="text-sm font-medium">{t.name}</div>
-              <div className="text-xs text-muted-foreground">Id: {t.id}</div>
-            </button>
-          ))}
+            {templates.map((t) => {
+              const locked = t.premium && !isPremium;
+              return (
+                <button
+                  key={t.id}
+                  disabled={locked}
+                  className={`rounded-lg border p-4 text-left transition ${wedding.templateId === t.id
+                    ? "border-primary bg-primary/5"
+                    : locked ? "border-border opacity-50 cursor-not-allowed" : "border-border hover:border-primary/50"
+                    }`}
+                  onClick={async () => {
+                    if (locked) return;
+                    await updateWedding.mutateAsync({ id: wedding.id, templateId: t.id });
+                    setPreviewToken(Date.now());
+                    toast({ title: "Template mis à jour", description: "Le nouveau style est appliqué." });
+                  }}
+                >
+                  <div className="text-sm font-medium flex items-center gap-2">
+                    {t.name}
+                    {locked && <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary rounded font-semibold uppercase">Premium</span>}
+                  </div>
+                </button>
+              );
+            })}
         </div>
       </Card>
 
@@ -284,22 +292,30 @@ export default function SettingsPage() {
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-medium">Liste cadeaux</p>
+            <p className="font-medium flex items-center gap-2">
+              Liste cadeaux
+              {!isPremium && <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary rounded font-semibold uppercase">Premium</span>}
+            </p>
             <p className="text-sm text-muted-foreground">Affiche la liste de cadeaux sur la page d'accueil.</p>
           </div>
           <Switch
             checked={features.giftsEnabled}
             onCheckedChange={(v) => setFeatures({ ...features, giftsEnabled: v })}
+            disabled={!isPremium}
           />
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-medium">Blagues live</p>
+            <p className="font-medium flex items-center gap-2">
+              Blagues live
+              {!isPremium && <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary rounded font-semibold uppercase">Premium</span>}
+            </p>
             <p className="text-sm text-muted-foreground">Active les blagues et animations en direct.</p>
           </div>
           <Switch
             checked={features.jokesEnabled}
             onCheckedChange={(v) => setFeatures({ ...features, jokesEnabled: v })}
+            disabled={!isPremium}
           />
         </div>
       </Card>

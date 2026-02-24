@@ -109,7 +109,7 @@ export default function PricingPage() {
                                         hint={isPremium ? "Modules illimités" : "30 invités max"}
                                         icon={<Crown className="h-5 w-5" />}
                                 />
-                                <KpiCard label="Abonnement" value="19€" hint="Par mois (min. 2 mois)" icon={<Check className="h-5 w-5" />} />
+                                <KpiCard label="Abonnement" value="23,99€" hint="Par mois (min. 2 mois)" icon={<Check className="h-5 w-5" />} />
                                 <KpiCard label="Annuel" value="149€" hint="Pour 1 an complet" icon={<CalendarDays className="h-5 w-5" />} />
                         </div>
 
@@ -194,7 +194,7 @@ export default function PricingPage() {
                                                         <p className="text-muted-foreground">Best seller</p>
                                                 </div>
                                                 <div className="flex items-baseline gap-2">
-                                                        <span className="text-4xl font-bold font-serif">19€</span>
+                                                        <span className="text-4xl font-bold font-serif">23,99€</span>
                                                         <span className="text-muted-foreground">/ mois</span>
                                                 </div>
                                                 <ul className="space-y-3">
@@ -228,7 +228,7 @@ export default function PricingPage() {
                                                         onClick={() => checkoutMutation.mutate("subscription")}
                                                 >
                                                         {checkoutMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                                        {isPremium ? "Déjà Premium" : "S'abonner — 19€/mois"}
+                                                        {isPremium ? "Déjà Premium" : "S'abonner — 23,99€/mois"}
                                                 </Button>
                                                 <p className="text-center text-xs text-muted-foreground">Minimum 2 mois, puis sans engagement.</p>
                                         </div>

@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { BUTTON_RADIUS_OPTIONS, BUTTON_STYLE_OPTIONS, COLOR_TONES } from "@/lib/design-presets";
 
 const MAX_LOGO_DATA_URL_LENGTH = 220_000;
@@ -60,11 +60,8 @@ export default function DesignPage() {
   const updateWedding = useUpdateWedding();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
-  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [isApplyingTemplate, setIsApplyingTemplate] = useState(false);
   const [previewToken, setPreviewToken] = useState<number>(Date.now());
-  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isInitialized = useRef(false);
 
   const [templateId, setTemplateId] = useState<string>("classic");
 
@@ -205,56 +202,7 @@ export default function DesignPage() {
         ? cfgSections.programItems
         : DEFAULT_PROGRAM_ITEMS,
     });
-    setTimeout(() => { isInitialized.current = true; }, 500);
   }, [wedding?.id, (wedding as any)?.updatedAt]);
-
-  useEffect(() => {
-    if (!isInitialized.current || !wedding) return;
-    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => {
-      setAutoSaveStatus("saving");
-      const doSave = async () => {
-        try {
-          let safeBranding = { ...branding };
-          if (safeBranding.logoUrl?.startsWith("data:image/") && safeBranding.logoUrl.length > MAX_LOGO_DATA_URL_LENGTH) return;
-          const dataUrlFields = [
-            { value: media.heroImage || "", limit: MAX_IMAGE_DATA_URL_LENGTH },
-            { value: media.couplePhoto || "", limit: MAX_IMAGE_DATA_URL_LENGTH },
-          ];
-          for (const field of dataUrlFields) {
-            if (field.value.startsWith("data:image/") && field.value.length > field.limit) return;
-          }
-          await updateWedding.mutateAsync({
-            id: wedding.id,
-            config: {
-              ...wedding.config,
-              texts: { ...wedding.config.texts, ...texts },
-              navigation: {
-                ...(wedding.config.navigation || {}),
-                menuItems: (wedding.config.navigation?.menuItems || []).map((item) => {
-                  if (item.id === "rsvp") return { ...item, label: texts.navRsvp || item.label };
-                  if (item.id === "cagnotte") return { ...item, label: texts.navCagnotte || item.label };
-                  if (item.id === "live") return { ...item, label: texts.navLive || item.label };
-                  return item;
-                }),
-              },
-              theme: { ...wedding.config.theme, ...theme },
-              media: { ...wedding.config.media, ...media },
-              branding: { ...wedding.config.branding, ...safeBranding },
-              sections: { ...wedding.config.sections, ...sections },
-            },
-          });
-          setPreviewToken(Date.now());
-          setAutoSaveStatus("saved");
-          setTimeout(() => setAutoSaveStatus("idle"), 2000);
-        } catch {
-          setAutoSaveStatus("idle");
-        }
-      };
-      doSave();
-    }, 1500);
-    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
-  }, [texts, theme, media, branding, sections]);
 
   const toDateInputValue = (value: string) => {
     if (!value) return "";
@@ -512,17 +460,9 @@ export default function DesignPage() {
           <Button variant="outline" asChild>
             <a href={previewUrl} target="_blank" rel="noopener noreferrer">Ouvrir l'aperçu</a>
           </Button>
-          <div className="flex items-center gap-2">
-            {autoSaveStatus === "saving" && (
-              <span className="text-xs text-muted-foreground animate-pulse">Sauvegarde...</span>
-            )}
-            {autoSaveStatus === "saved" && (
-              <span className="text-xs text-green-600">Sauvegardé</span>
-            )}
-            <Button onClick={saveDesign} disabled={isSaving} variant="outline" size="sm">
-              {isSaving ? "Enregistrement..." : "Sauvegarder"}
-            </Button>
-          </div>
+          <Button onClick={saveDesign} disabled={isSaving}>
+            {isSaving ? "Enregistrement..." : "Appliquer les modifications"}
+          </Button>
         </div>
       </div>
 
