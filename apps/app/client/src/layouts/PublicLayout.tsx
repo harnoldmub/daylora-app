@@ -13,9 +13,9 @@ import { compressImageFileToJpegDataUrl } from "@/lib/image";
 import { useToast } from "@/hooks/use-toast";
 
 export function PublicLayout({ children, slug: slugProp }: { children: ReactNode; slug?: string }) {
-    const params = useParams<{ slug: string }>();
+    const params = useParams();
     const [routePath] = useLocation();
-    const slug = slugProp || params.slug;
+    const slug = slugProp || (params as any).slug || (params as any).weddingId || "";
     const isUuid = !!slug && /^[0-9a-fA-F-]{36}$/.test(slug);
     const isPreviewRoute = useMemo(() => {
         if (!slug) return false;

@@ -172,7 +172,8 @@ function AnimatedMessages({ messages }: { messages: string[] }) {
 export default function CagnottePage() {
   const { toast } = useToast();
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
-  const { slug } = useParams<{ slug: string }>();
+  const _params = useParams();
+  const slug = (_params as any).slug || (_params as any).weddingId || "";
   const { data: wedding } = useWedding(slug);
   const basePath = useMemo(() => {
     if (!slug) return "/";
@@ -319,15 +320,15 @@ export default function CagnottePage() {
 
   return (
     !cagnotteEnabled ? (
-	      <div className="min-h-screen flex items-center justify-center p-6">
-	        <Card className="p-8 max-w-lg text-center">
-	          <h2 className="text-2xl font-serif font-bold mb-3">Cagnotte indisponible</h2>
-	          <p className="text-muted-foreground mb-6">Cette page a été désactivée par les mariés.</p>
-		          <Link href={basePath}>
-		            <Button>Retour au site</Button>
-		          </Link>
-	        </Card>
-	      </div>
+              <div className="min-h-screen flex items-center justify-center p-6">
+                <Card className="p-8 max-w-lg text-center">
+                  <h2 className="text-2xl font-serif font-bold mb-3">Cagnotte indisponible</h2>
+                  <p className="text-muted-foreground mb-6">Cette page a été désactivée par les mariés.</p>
+                          <Link href={basePath}>
+                            <Button>Retour au site</Button>
+                          </Link>
+                </Card>
+              </div>
     ) : (
     <div className={`min-h-screen ${templateTheme.pageBg}`}>
       <div className="relative">
@@ -345,12 +346,12 @@ export default function CagnottePage() {
         </div>
 
         <div className="relative z-10 pt-6 px-6">
-	          <Link href={basePath}>
-	            <Button variant="ghost" className={`text-white hover:bg-white/20 ${buttonRadiusClass}`} data-testid="button-back-home">
-	              <ArrowLeft className="h-4 w-4 mr-2" />
-	              {cagnotteBackLabel}
-	            </Button>
-	          </Link>
+                  <Link href={basePath}>
+                    <Button variant="ghost" className={`text-white hover:bg-white/20 ${buttonRadiusClass}`} data-testid="button-back-home">
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      {cagnotteBackLabel}
+                    </Button>
+                  </Link>
         </div>
 
         <div className="relative z-10 pt-24 md:pt-32 pb-8 px-6 text-center">

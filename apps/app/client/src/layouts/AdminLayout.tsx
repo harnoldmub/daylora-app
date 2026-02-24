@@ -24,8 +24,9 @@ import { useWeddings } from "@/hooks/use-api";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
-export function AdminLayout({ children }: { children: ReactNode }) {
-    const { weddingId } = useParams<{ weddingId: string }>();
+export function AdminLayout({ children, weddingId: weddingIdProp }: { children: ReactNode; weddingId?: string }) {
+    const params = useParams<{ weddingId: string }>();
+    const weddingId = weddingIdProp || params.weddingId || "";
     const [location, setLocation] = useLocation();
     const { logoutMutation, user } = useAuth();
     const { data: weddings = [] } = useWeddings();
@@ -58,17 +59,21 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                     </Link>
                 </div>
                 <nav className="flex-1 p-4 space-y-1">
-                    {navItems.map((item) => (
-                        <Link key={item.href} href={item.href}>
-                            <a className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${location === item.href
-                                ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                                }`}>
-                                <item.icon className="h-4 w-4" />
-                                <span>{item.name}</span>
-                            </a>
-                        </Link>
-                    ))}
+                    {navItems.map((item) => {
+                        const itemPath = item.href.replace(`/${weddingId}`, "");
+                        const isActive = location === itemPath || location === item.href;
+                        return (
+                            <Link key={item.href} href={item.href}>
+                                <a className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive
+                                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                    }`}>
+                                    <item.icon className="h-4 w-4" />
+                                    <span>{item.name}</span>
+                                </a>
+                            </Link>
+                        );
+                    })}
                 </nav>
                 <div className="p-4 border-t border-sidebar-border space-y-4">
                     <div className="flex items-center space-x-3 px-3">
@@ -102,20 +107,24 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                             </Button>
                         </div>
                         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                            {navItems.map((item) => (
-                                <Link key={item.href} href={item.href}>
-                                    <a
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location === item.href
-                                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                                            }`}
-                                    >
-                                        <item.icon className="h-4 w-4" />
-                                        <span>{item.name}</span>
-                                    </a>
-                                </Link>
-                            ))}
+                            {navItems.map((item) => {
+                                const itemPath = item.href.replace(`/${weddingId}`, "");
+                                const isActive = location === itemPath || location === item.href;
+                                return (
+                                    <Link key={item.href} href={item.href}>
+                                        <a
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive
+                                                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                                }`}
+                                        >
+                                            <item.icon className="h-4 w-4" />
+                                            <span>{item.name}</span>
+                                        </a>
+                                    </Link>
+                                );
+                            })}
                         </nav>
                         <div className="p-4 border-t border-sidebar-border">
                             <Button

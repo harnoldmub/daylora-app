@@ -58,7 +58,7 @@ function AppRoot() {
 
 function AdminRoutes({ weddingId }: { weddingId: string }) {
   return (
-    <AdminLayout>
+    <AdminLayout weddingId={weddingId}>
       <Switch>
         <Route path="/dashboard" component={DashboardPage} />
         <Route path="/welcome" component={WelcomePage} />
@@ -131,9 +131,9 @@ function AppRouter() {
         {isLoading ? loadingView : (!user ? <Redirect to="/login" /> : <AppRoot />)}
       </Route>
 
-      <Route path="/:firstSegment" nest>
+      <Route path="/:weddingId" nest>
         {(params) => {
-          const segment = params.firstSegment || "";
+          const segment = params.weddingId || "";
           const isAdmin = UUID_REGEX.test(segment);
 
           if (isAdmin) {

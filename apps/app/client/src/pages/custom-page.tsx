@@ -3,7 +3,9 @@ import { useWedding } from "@/hooks/use-api";
 import { Card } from "@/components/ui/card";
 
 export default function CustomPage() {
-  const { slug, customSlug } = useParams<{ slug: string; customSlug: string }>();
+  const _params = useParams();
+  const slug = (_params as any).slug || (_params as any).weddingId || "";
+  const customSlug = (_params as any).customSlug || "";
   const { data: wedding, isLoading } = useWedding(slug);
 
   if (isLoading) {

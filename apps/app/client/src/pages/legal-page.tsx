@@ -48,7 +48,9 @@ function getBasePath(slug: string) {
 }
 
 export default function LegalPage() {
-  const { slug, legalSlug } = useParams<{ slug: string; legalSlug: string }>();
+  const _params = useParams();
+  const slug = (_params as any).slug || (_params as any).weddingId || "";
+  const legalSlug = (_params as any).legalSlug || "";
   const basePath = useMemo(() => getBasePath(slug), [slug]);
 
   const key = (legalSlug || "") as LegalKey;

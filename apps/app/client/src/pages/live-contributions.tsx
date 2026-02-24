@@ -191,7 +191,8 @@ function formatAmount(cents: number): string {
 }
 
 export default function LiveContributions() {
-  const { slug } = useParams<{ slug: string }>();
+  const _params = useParams();
+  const slug = (_params as any).slug || (_params as any).weddingId || "";
   const { data: wedding } = useWedding(slug);
   const basePath = useMemo(() => {
     if (!slug) return "/";
@@ -328,19 +329,19 @@ export default function LiveContributions() {
     return list;
   }, [recent]);
 
-	  if (!liveEnabled) {
-	    return (
-	      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
-	        <Card className="p-8 max-w-lg text-center">
-	          <h2 className="text-2xl font-serif font-bold mb-3">Live indisponible</h2>
-	          <p className="text-muted-foreground mb-6">Cette page a été désactivée dans la configuration du site.</p>
-	          <Link href={basePath}>
-	            <Button>Retour au site</Button>
-	          </Link>
-	        </Card>
-	      </div>
-	    );
-	  }
+          if (!liveEnabled) {
+            return (
+              <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+                <Card className="p-8 max-w-lg text-center">
+                  <h2 className="text-2xl font-serif font-bold mb-3">Live indisponible</h2>
+                  <p className="text-muted-foreground mb-6">Cette page a été désactivée dans la configuration du site.</p>
+                  <Link href={basePath}>
+                    <Button>Retour au site</Button>
+                  </Link>
+                </Card>
+              </div>
+            );
+          }
 
   return (
     <div className={`h-screen ${liveTheme.pageClass} text-foreground relative overflow-hidden`}>

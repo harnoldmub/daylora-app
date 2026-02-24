@@ -72,9 +72,9 @@ function Countdown({ targetDate }: { targetDate: Date }) {
 }
 
 export default function GuestInvitationPage() {
-  const params = useParams<{ slug: string; guestId: string }>();
-  const slug = params.slug || window.location.pathname.split("/")[1] || "";
-  const guestId = params.guestId;
+  const params = useParams();
+  const slug = (params as any).slug || (params as any).weddingId || window.location.pathname.split("/")[1] || "";
+  const guestId = (params as any).guestId;
   const { data: wedding } = useWedding(slug);
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
 

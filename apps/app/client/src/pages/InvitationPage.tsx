@@ -59,10 +59,10 @@ const MAX_GALLERY_IMAGES = 10;
 const MAX_GIFT_IMAGE_DATA_URL_LENGTH = 900_000;
 
 export default function InvitationPage() {
-  const params = useParams<{ slug: string }>();
+  const params = useParams();
   const [routePath, setLocation] = useLocation();
   const search = useSearch();
-  const slug = params.slug || "";
+  const slug = (params as any).slug || (params as any).weddingId || "";
 
   const { data: wedding, isLoading } = useWedding(slug || undefined);
   const updateWedding = useUpdateWedding();
