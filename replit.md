@@ -12,6 +12,16 @@ Multi-tenant wedding website SaaS. Couples create accounts, pick a template (Cla
 
 ## Recent Changes (Feb 2026)
 
+- **Server-side OG meta tags & publication guard**: Dynamic meta tag injection for social sharing
+  - Server-side catch-all in `apps/api/index.ts` (production only) intercepts `/:slug` routes
+  - Looks up wedding by slug, injects `og:title`, `og:description`, `og:image` from wedding config
+  - Title format: "Mariage de {coupleNames}" with custom SEO overrides from `wedding.config.seo`
+  - Unpublished/nonexistent weddings get HTTP 404 status (not 200) preventing indexing
+  - `escapeHtml()` helper prevents XSS in injected meta content
+  - Known route prefixes (login, dashboard, etc.) bypass slug lookup
+  - PublicLayout sends `x-preview-mode: true` header for `/preview/:slug` routes
+  - "Mariage introuvable" page now shows explanation + link to nocely.app (not internal `/`)
+
 - **Guest invitation page redesign**: Elegant full-page invitation at `/:slug/guest/:token`
   - Component: `apps/app/client/src/pages/dot-invitation.tsx`
   - Top-level route in App.tsx (bypasses PublicLayout for unpublished weddings)

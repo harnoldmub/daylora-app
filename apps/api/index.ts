@@ -12,6 +12,14 @@ import { fileURLToPath } from "url";
 const app = express();
 const isProduction = process.env.NODE_ENV === "production";
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -155,9 +163,73 @@ app.use((req, res, next) => {
   if (isProduction) {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     const publicDir = path.resolve(__dirname, "public");
-    app.get("*", (_req, res) => {
+    const fs = await import("fs");
+    const indexHtml = fs.readFileSync(path.join(publicDir, "index.html"), "utf-8");
+    const { storage } = await import("./storage");
+
+    const knownPrefixes = new Set([
+      "login", "signup", "dashboard", "onboarding", "onboarding-preview",
+      "verify-email", "forgot-password", "reset-password", "contribution",
+      "invitation", "checkin", "preview", "api", "assets", "src",
+    ]);
+
+    app.get("*", async (req, res) => {
       res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-      res.sendFile(path.join(publicDir, "index.html"));
+
+      const segments = req.path.split("/").filter(Boolean);
+      const firstSegment = segments[0] || "";
+
+      if (!firstSegment || knownPrefixes.has(firstSegment) || firstSegment.startsWith("_")) {
+        return res.send(indexHtml);
+      }
+
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(firstSegment);
+      if (isUuid) {
+        return res.send(indexHtml);
+      }
+
+      if (segments.length >= 3 && segments[1] === "guest") {
+        return res.send(indexHtml);
+      }
+
+      try {
+        const wedding = await storage.getWeddingBySlug(firstSegment);
+
+        if (!wedding) {
+          res.status(404);
+          return res.send(indexHtml);
+        }
+
+        if (!wedding.isPublished) {
+          const isAuthenticated = !!(req as any).user;
+          if (!isAuthenticated) {
+            res.status(404);
+            return res.send(indexHtml);
+          }
+        }
+
+        const appUrl = process.env.APP_BASE_URL || "https://app.nocely.app";
+        const heroTitle = wedding.config?.texts?.heroTitle || wedding.title || "Notre Mariage";
+        const seoTitle = wedding.config?.seo?.title || `Mariage de ${heroTitle}`;
+        const seoDesc = wedding.config?.seo?.description || `Vous êtes invité(e) au mariage de ${heroTitle}. Découvrez tous les détails et confirmez votre présence.`;
+        const seoImage = wedding.config?.seo?.ogImage || wedding.config?.media?.couplePhoto || `${appUrl}/og-image.png`;
+        const pageUrl = `${appUrl}/${wedding.slug}`;
+
+        const injected = indexHtml
+          .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(seoTitle)}</title>`)
+          .replace(/<meta name="description"[^>]*>/, `<meta name="description" content="${escapeHtml(seoDesc)}">`)
+          .replace(/<meta property="og:title"[^>]*>/, `<meta property="og:title" content="${escapeHtml(seoTitle)}">`)
+          .replace(/<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${escapeHtml(seoDesc)}">`)
+          .replace(/<meta property="og:image" content="[^"]*">/, `<meta property="og:image" content="${escapeHtml(seoImage)}">`)
+          .replace(/<meta property="og:url"[^>]*>/, `<meta property="og:url" content="${escapeHtml(pageUrl)}">`)
+          .replace(/<meta name="twitter:title"[^>]*>/, `<meta name="twitter:title" content="${escapeHtml(seoTitle)}">`)
+          .replace(/<meta name="twitter:description"[^>]*>/, `<meta name="twitter:description" content="${escapeHtml(seoDesc)}">`)
+          .replace(/<meta name="twitter:image"[^>]*>/, `<meta name="twitter:image" content="${escapeHtml(seoImage)}">`);
+
+        return res.send(injected);
+      } catch {
+        return res.send(indexHtml);
+      }
     });
   } else {
     app.get("/", (_req, res) => res.status(200).type("text/plain").send("ok"));

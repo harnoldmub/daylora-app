@@ -31,6 +31,9 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
                     headers["x-wedding-slug"] = slug;
                 }
             }
+            if (isPreviewRoute) {
+                headers["x-preview-mode"] = "true";
+            }
             const res = await fetch("/api/weddings", {
                 headers,
                 credentials: "include"
@@ -180,11 +183,12 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
 
     if (!wedding) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen">
-                <h1 className="text-2xl font-bold mb-4">Mariage introuvable</h1>
-                <Link href="/" className="text-primary hover:underline">
-                    Retour à l'accueil
-                </Link>
+            <div className="flex flex-col items-center justify-center min-h-screen bg-[#F5F2ED]">
+                <h1 className="text-2xl font-bold mb-2 text-[#2b2320]">Mariage introuvable</h1>
+                <p className="text-sm text-[#7A6B5E] mb-6">Ce site n'existe pas ou n'est pas encore publié.</p>
+                <a href="https://nocely.app" className="text-primary hover:underline text-sm">
+                    Découvrir Nocely
+                </a>
             </div>
         );
     }
