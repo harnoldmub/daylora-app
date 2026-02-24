@@ -74,9 +74,11 @@ app.use(cors({
   credentials: true,
 }));
 
+const isDevMode = process.env.NODE_ENV !== "production";
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 100,
+  limit: isDevMode ? 2000 : 100,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   skip: (req) => req.path.startsWith('/api/live'),
@@ -86,7 +88,7 @@ app.use("/api", limiter);
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 30,
+  limit: isDevMode ? 500 : 30,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
 });

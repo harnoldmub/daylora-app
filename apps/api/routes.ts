@@ -234,7 +234,8 @@ export async function registerRoutes(app: Express) {
   setupAuth(app);
   app.use("/api/auth", authRoutes);
 
-  const signupWithWeddingLimiter = (await import("express-rate-limit")).default({ windowMs: 60 * 1000, max: 5, message: "Trop de tentatives. Réessayez dans une minute." });
+  const isDevEnv = process.env.NODE_ENV !== "production";
+  const signupWithWeddingLimiter = (await import("express-rate-limit")).default({ windowMs: 60 * 1000, max: isDevEnv ? 100 : 5, message: "Trop de tentatives. Réessayez dans une minute." });
   const { authService } = await import("./auth-service");
   const { authEmails } = await import("./auth-emails");
 
@@ -300,8 +301,20 @@ export async function registerRoutes(app: Express) {
           stripeStatus: paymentMode === "external" ? "not_connected" : (config.payments.stripeStatus || "not_connected"),
         },
         media: { ...config.media, heroImage: heroImage || config.media.heroImage, couplePhoto: couplePhoto || config.media.couplePhoto },
-        texts: { ...config.texts, storyBody: storyBody || config.texts.storyBody },
-        sections: { ...config.sections, cagnotteExternalUrl: externalCagnotteUrl || config.sections.cagnotteExternalUrl || "", galleryImages: galleryImages || config.sections.galleryImages },
+        texts: {
+          ...config.texts,
+          siteTitle: title || config.texts.siteTitle || "",
+          heroTitle: title || config.texts.heroTitle || "",
+          heroSubtitle: config.texts.heroSubtitle || "Le Mariage de",
+          weddingDate: weddingDate || config.texts.weddingDate || "",
+          storyBody: storyBody || config.texts.storyBody || "",
+        },
+        sections: {
+          ...config.sections,
+          cagnotteExternalUrl: externalCagnotteUrl || config.sections.cagnotteExternalUrl || "",
+          galleryImages: (Array.isArray(galleryImages) && galleryImages.length > 0) ? galleryImages : config.sections.galleryImages,
+          countdownDate: weddingDate || config.sections.countdownDate || "",
+        },
         navigation: {
           ...config.navigation,
           pages: {

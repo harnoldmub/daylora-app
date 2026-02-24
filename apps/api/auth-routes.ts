@@ -10,9 +10,10 @@ import { storage } from "./storage";
 const router = Router();
 
 // Rate limiters for auth safety
-const signupLimiter = rateLimit({ windowMs: 60 * 1000, max: 5, message: "Trop de tentatives d'inscription. Réessayez dans une minute." });
-const loginLimiter = rateLimit({ windowMs: 60 * 1000, max: 10, message: "Trop de tentatives de connexion." });
-const resendLimiter = rateLimit({ windowMs: 60 * 1000, max: 3 });
+const isDev = process.env.NODE_ENV !== "production";
+const signupLimiter = rateLimit({ windowMs: 60 * 1000, max: isDev ? 100 : 5, message: "Trop de tentatives d'inscription. Réessayez dans une minute." });
+const loginLimiter = rateLimit({ windowMs: 60 * 1000, max: isDev ? 100 : 10, message: "Trop de tentatives de connexion." });
+const resendLimiter = rateLimit({ windowMs: 60 * 1000, max: isDev ? 100 : 3 });
 
 /**
  * SIGNUP

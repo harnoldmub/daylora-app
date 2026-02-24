@@ -27,7 +27,8 @@ Multi-tenant wedding website SaaS. Couples create accounts, pick a template (Cla
   - Helpers: `tests/e2e/helpers.ts` — session cookie injection, user data factory
   - 5 spec files, 12 tests total: auth, preview, rsvp-gifts, cagnotte-live, permissions-edit
   - Run with: `npm run test:e2e` (requires `SESSION_STORE=db` for the dev server)
-  - Rate limiter constraint: 100 API requests / 15 min — tests stay under by using pre-seeded DB sessions and minimizing page loads
+  - Rate limiters use dev-friendly limits (NODE_ENV !== "production"): global API 2000/15min, auth 500/15min, route-level 100/min
+  - Production limits unchanged: global API 100/15min, auth 30/15min, signup 5/min, login 10/min, resend 3/min
   - No business logic modified
 
 - **Frontend refactoring**: Broke monolithic InvitationPage.tsx (1958 lines) into modular architecture:
