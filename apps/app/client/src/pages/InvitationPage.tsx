@@ -333,7 +333,18 @@ export default function InvitationPage() {
   const handleHeroCtaClick = () => {
     if (!slug) return;
     if (canEdit && editMode) return;
-    setLocation(resolveInternalHref(ctaPath || "rsvp"));
+    const target = ctaPath || "rsvp";
+    if (/^https?:\/\//i.test(target)) {
+      window.open(target, "_blank", "noopener");
+      return;
+    }
+    const anchor = target.replace(/^#/, "");
+    const el = document.getElementById(anchor);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    } else {
+      window.location.hash = anchor;
+    }
   };
 
   const showGifts = (((wedding?.config?.navigation?.pages as any)?.gifts ?? true) as boolean) && (wedding?.config?.features?.giftsEnabled ?? true);
