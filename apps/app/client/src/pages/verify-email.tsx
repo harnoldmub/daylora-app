@@ -1,19 +1,25 @@
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function VerifyEmail() {
     const [params] = useState(() => new URLSearchParams(window.location.search));
     const token = params.get("token");
     const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
     const [message, setMessage] = useState("");
+    const [showResend, setShowResend] = useState(false);
+    const [resendEmail, setResendEmail] = useState("");
+    const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+    const [resendMessage, setResendMessage] = useState("");
 
     useEffect(() => {
         if (!token) {
             setStatus("error");
-            setMessage("Token de vérification manquant.");
+            setMessage("Le lien de vérification est incomplet. Vérifiez votre email ou demandez un nouveau lien.");
+            setShowResend(true);
             return;
         }
 
@@ -27,16 +33,41 @@ export default function VerifyEmail() {
                     setMessage(data.message);
                 } else {
                     setStatus("error");
-                    setMessage(data.message || "Le lien est invalide ou a expiré.");
+                    setMessage(data.message || "Ce lien n'est plus valide.");
+                    setShowResend(true);
                 }
             } catch (err) {
                 setStatus("error");
-                setMessage("Une erreur est survenue lors de la vérification.");
+                setMessage("Impossible de vérifier votre compte pour le moment. Réessayez plus tard.");
+                setShowResend(true);
             }
         }
 
         verify();
     }, [token]);
+
+    const handleResend = async () => {
+        if (!resendEmail.trim()) return;
+        setResendStatus("sending");
+        try {
+            const res = await fetch("/api/auth/resend-verification", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: resendEmail.trim().toLowerCase() }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setResendStatus("sent");
+                setResendMessage("Si un compte existe avec cet email, un nouveau lien vous a été envoyé.");
+            } else {
+                setResendStatus("error");
+                setResendMessage(data.message || "Impossible d'envoyer l'email. Réessayez.");
+            }
+        } catch {
+            setResendStatus("error");
+            setResendMessage("Une erreur est survenue. Réessayez plus tard.");
+        }
+    };
 
     return (
         <div className="min-h-screen bg-muted/30 flex items-center justify-center p-6">
@@ -49,7 +80,7 @@ export default function VerifyEmail() {
                     {status === "loading" && (
                         <div className="flex flex-col items-center space-y-4 py-8">
                             <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                            <p className="text-muted-foreground">Vérification de votre lien en cours...</p>
+                            <p className="text-muted-foreground">Vérification en cours...</p>
                         </div>
                     )}
 
@@ -67,6 +98,43 @@ export default function VerifyEmail() {
                         <div className="flex flex-col items-center space-y-4 py-8">
                             <XCircle className="h-16 w-16 text-destructive" />
                             <p className="font-medium text-lg text-destructive">{message}</p>
+
+                            {showResend && resendStatus !== "sent" && (
+                                <div className="w-full space-y-3 pt-4 border-t">
+                                    <p className="text-sm text-muted-foreground">Recevoir un nouveau lien de vérification :</p>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            type="email"
+                                            placeholder="Votre adresse email"
+                                            value={resendEmail}
+                                            onChange={(e) => setResendEmail(e.target.value)}
+                                            className="flex-1"
+                                        />
+                                        <Button
+                                            onClick={handleResend}
+                                            disabled={resendStatus === "sending" || !resendEmail.trim()}
+                                            size="sm"
+                                            className="shrink-0"
+                                        >
+                                            {resendStatus === "sending" ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <Mail className="h-4 w-4" />
+                                            )}
+                                        </Button>
+                                    </div>
+                                    {resendStatus === "error" && (
+                                        <p className="text-xs text-destructive">{resendMessage}</p>
+                                    )}
+                                </div>
+                            )}
+
+                            {resendStatus === "sent" && (
+                                <div className="w-full pt-4 border-t">
+                                    <p className="text-sm text-green-600 font-medium">{resendMessage}</p>
+                                </div>
+                            )}
+
                             <Link href="/login" title="Retour à la connexion">
                                 <Button variant="outline" className="w-full rounded-full mt-4">Retour à la connexion</Button>
                             </Link>
