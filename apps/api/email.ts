@@ -1,19 +1,6 @@
-import nodemailer from "nodemailer";
 import { type Wedding, type EmailLog } from "@shared/schema";
 import { storage } from "./storage";
-
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "smtp.gmail.com",
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
-
-const fromEmail =
-  process.env.SMTP_FROM || process.env.SMTP_USER || "noreply@example.com";
+import { getUncachableResendClient } from "./resend-client";
 
 async function logEmail(
   weddingId: string,
@@ -40,6 +27,11 @@ async function logEmail(
   }
 }
 
+async function sendEmail(to: string, subject: string, html: string) {
+  const { client, fromEmail } = await getUncachableResendClient();
+  return client.emails.send({ from: fromEmail, to, subject, html });
+}
+
 export async function sendRsvpConfirmationEmail(wedding: Wedding, guestData: {
   firstName: string;
   lastName: string;
@@ -47,7 +39,7 @@ export async function sendRsvpConfirmationEmail(wedding: Wedding, guestData: {
 }) {
   const type = 'rsvp_received_admin';
   const subject = `Nouvelle réponse RSVP - ${guestData.firstName} ${guestData.lastName}`;
-  const recipient = wedding.config.seo.title.includes('Marie') ? "we@ar2k26.com" : wedding.ownerId; // Fallback or logic
+  const recipient = wedding.config.seo.title.includes('Marie') ? "we@ar2k26.com" : wedding.ownerId;
 
   try {
     const availabilityText =
@@ -87,15 +79,8 @@ export async function sendRsvpConfirmationEmail(wedding: Wedding, guestData: {
       </html>
     `;
 
-    const info = await transporter.sendMail({
-      from: fromEmail,
-      to: recipient,
-      subject,
-      html: emailHtml,
-    });
-
+    await sendEmail(recipient, subject, emailHtml);
     await logEmail(wedding.id, recipient, subject, type, 'sent', undefined, guestData);
-    return info;
   } catch (error) {
     await logEmail(wedding.id, recipient, subject, type, 'failed', (error as Error).message, guestData);
     throw error;
@@ -148,15 +133,8 @@ export async function sendGuestConfirmationEmail(wedding: Wedding, guestData: {
       </html>
     `;
 
-    const info = await transporter.sendMail({
-      from: fromEmail,
-      to: guestData.email,
-      subject,
-      html: emailHtml,
-    });
-
+    await sendEmail(guestData.email, subject, emailHtml);
     await logEmail(wedding.id, guestData.email, subject, type, 'sent', undefined, guestData);
-    return info;
   } catch (error) {
     await logEmail(wedding.id, guestData.email, subject, type, 'failed', (error as Error).message, guestData);
     throw error;
@@ -173,7 +151,7 @@ export async function sendContributionNotification(wedding: Wedding, contributio
   const formattedAmount = (contributionData.amount / 100).toFixed(2);
   const currencySymbol = contributionData.currency === 'eur' ? '€' : contributionData.currency.toUpperCase();
   const subject = `Nouvelle contribution - ${contributionData.donorName} : ${formattedAmount}${currencySymbol}`;
-  const recipient = wedding.ownerId; // Logic for admin recipient
+  const recipient = wedding.ownerId;
 
   try {
     const emailHtml = `
@@ -204,15 +182,8 @@ export async function sendContributionNotification(wedding: Wedding, contributio
       </html>
     `;
 
-    const info = await transporter.sendMail({
-      from: fromEmail,
-      to: recipient,
-      subject,
-      html: emailHtml,
-    });
-
+    await sendEmail(recipient, subject, emailHtml);
     await logEmail(wedding.id, recipient, subject, type, 'sent', undefined, contributionData);
-    return info;
   } catch (error) {
     await logEmail(wedding.id, recipient, subject, type, 'failed', (error as Error).message, contributionData);
     throw error;
@@ -228,7 +199,7 @@ export async function sendContributorThankYou(wedding: Wedding, contributorData:
   const type = 'contribution_thank_you_guest';
   const formattedAmount = (contributorData.amount / 100).toFixed(2);
   const currencySymbol = contributorData.currency === 'eur' ? '€' : contributorData.currency.toUpperCase();
-  const subject = `Merci ${contributorData.donorName} ! 💕 - ${wedding.title}`;
+  const subject = `Merci ${contributorData.donorName} ! - ${wedding.title}`;
 
   try {
     const emailHtml = `
@@ -257,15 +228,8 @@ export async function sendContributorThankYou(wedding: Wedding, contributorData:
       </html>
     `;
 
-    const info = await transporter.sendMail({
-      from: fromEmail,
-      to: contributorData.email,
-      subject,
-      html: emailHtml,
-    });
-
+    await sendEmail(contributorData.email, subject, emailHtml);
     await logEmail(wedding.id, contributorData.email, subject, type, 'sent', undefined, contributorData);
-    return info;
   } catch (error) {
     await logEmail(wedding.id, contributorData.email, subject, type, 'failed', (error as Error).message, contributorData);
     throw error;
@@ -315,15 +279,8 @@ export async function sendPersonalizedInvitation(wedding: Wedding, recipientData
       </html>
     `;
 
-    const info = await transporter.sendMail({
-      from: fromEmail,
-      to: recipientData.email,
-      subject,
-      html: emailHtml,
-    });
-
+    await sendEmail(recipientData.email, subject, emailHtml);
     await logEmail(wedding.id, recipientData.email, subject, type, 'sent', undefined, recipientData);
-    return info;
   } catch (error) {
     await logEmail(wedding.id, recipientData.email, subject, type, 'failed', (error as Error).message, recipientData);
     throw error;
@@ -357,15 +314,8 @@ export async function sendDateChangeApologyEmail(wedding: Wedding, guestData: {
       </html>
     `;
 
-    const info = await transporter.sendMail({
-      from: fromEmail,
-      to: guestData.email,
-      subject,
-      html: emailHtml,
-    });
-
+    await sendEmail(guestData.email, subject, emailHtml);
     await logEmail(wedding.id, guestData.email, subject, type, 'sent', undefined, guestData);
-    return info;
   } catch (error) {
     await logEmail(wedding.id, guestData.email, subject, type, 'failed', (error as Error).message, guestData);
     throw error;
