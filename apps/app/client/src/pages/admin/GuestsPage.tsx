@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -1009,62 +1010,88 @@ export default function GuestsPage() {
                                         </span>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={async () => {
-                                                    const token = (guest as any)?.publicToken as string | undefined;
-                                                    if (!token) {
-                                                        toast({ title: "Lien indisponible", description: "Aucun lien d'invitation n'est disponible pour cet invité.", variant: "destructive" });
-                                                        return;
-                                                    }
-                                                    window.open(`${publicBasePath}/guest/${token}`, "_blank", "noopener,noreferrer");
-                                                }}
-                                                title="Ouvrir l'invitation"
-                                            >
-                                                <ExternalLink className="h-4 w-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => {
-                                                    if (!guest.email) {
-                                                        toast({ title: "Email manquant", description: "Ajoutez un email pour contacter cet invité.", variant: "destructive" });
-                                                        return;
-                                                    }
-                                                    window.location.href = `mailto:${guest.email}`;
-                                                }}
-                                            >
-                                                <Mail className="h-4 w-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => {
-                                                    if (!guest.phone) {
-                                                        toast({ title: "Téléphone manquant", description: "Ajoutez un numéro pour contacter cet invité.", variant: "destructive" });
-                                                        return;
-                                                    }
-                                                    const phone = guest.phone.replace(/\\s+/g, "");
-                                                    window.open(`https://wa.me/${phone}`, "_blank");
-                                                }}
-                                            >
-                                                <MessageCircle className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => openEditGuest(guest)}>
-                                                <Edit className="h-4 w-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="text-destructive"
-                                                onClick={() => handleDeleteGuest(guest)}
-                                                disabled={deleteGuestMutation.isPending}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
+                                        <TooltipProvider delayDuration={200}>
+                                        <div className="flex justify-end gap-1">
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={async () => {
+                                                            const token = (guest as any)?.publicToken as string | undefined;
+                                                            if (!token) {
+                                                                toast({ title: "Lien indisponible", description: "Aucun lien d'invitation n'est disponible pour cet invité.", variant: "destructive" });
+                                                                return;
+                                                            }
+                                                            window.open(`${publicBasePath}/guest/${token}`, "_blank", "noopener,noreferrer");
+                                                        }}
+                                                    >
+                                                        <ExternalLink className="h-4 w-4" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>Voir l'invitation</TooltipContent>
+                                            </Tooltip>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => {
+                                                            if (!guest.email) {
+                                                                toast({ title: "Email manquant", description: "Ajoutez un email pour contacter cet invité.", variant: "destructive" });
+                                                                return;
+                                                            }
+                                                            window.location.href = `mailto:${guest.email}`;
+                                                        }}
+                                                    >
+                                                        <Mail className="h-4 w-4" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>Envoyer un email</TooltipContent>
+                                            </Tooltip>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => {
+                                                            if (!guest.phone) {
+                                                                toast({ title: "Téléphone manquant", description: "Ajoutez un numéro pour contacter cet invité.", variant: "destructive" });
+                                                                return;
+                                                            }
+                                                            const phone = guest.phone.replace(/\\s+/g, "");
+                                                            window.open(`https://wa.me/${phone}`, "_blank");
+                                                        }}
+                                                    >
+                                                        <MessageCircle className="h-4 w-4" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>WhatsApp</TooltipContent>
+                                            </Tooltip>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button variant="ghost" size="icon" onClick={() => openEditGuest(guest)}>
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>Modifier</TooltipContent>
+                                            </Tooltip>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="text-destructive"
+                                                        onClick={() => handleDeleteGuest(guest)}
+                                                        disabled={deleteGuestMutation.isPending}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>Supprimer</TooltipContent>
+                                            </Tooltip>
                                         </div>
+                                        </TooltipProvider>
                                     </TableCell>
                                 </TableRow>
                             ))}
