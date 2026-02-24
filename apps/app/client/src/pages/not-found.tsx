@@ -1,16 +1,9 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 
 export default function NotFound() {
-  const [path] = useLocation();
-
-  const homeHref = (() => {
-    const parts = path.split("?")[0].split("#")[0].split("/").filter(Boolean);
-    if (!parts.length) return "/";
-    if (parts[0] === "preview" && parts[1]) return `/preview/${parts[1]}`;
-    return `/${parts[0]}`;
-  })();
+  const homeHref = "/";
 
   return (
     <div className="w-full flex flex-1 items-center justify-center bg-background py-16">

@@ -128,13 +128,7 @@ export default function InvitationPage() {
     return v || "rsvp";
   };
 
-  const basePath = useMemo(() => {
-    if (!slug) return "/";
-    if (typeof window === "undefined") return `/${slug}`;
-    const pathname = window.location.pathname || "";
-    const previewPrefix = `/preview/${slug}`;
-    return pathname.startsWith(previewPrefix) ? previewPrefix : `/${slug}`;
-  }, [slug]);
+  const basePath = "/";
 
   const resolveInternalHref = (path: string) => {
     const raw = String(path || "").trim();
