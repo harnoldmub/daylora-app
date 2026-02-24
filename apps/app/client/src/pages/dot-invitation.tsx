@@ -1,7 +1,7 @@
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, MapPin, Gift, ExternalLink, Calendar } from "lucide-react";
+import { Loader2, MapPin, Gift, ExternalLink, Bed } from "lucide-react";
 import { useWedding } from "@/hooks/use-api";
 import QRCodeLib from "qrcode";
 
@@ -34,51 +34,23 @@ function hexToHSL(hex: string): { h: number; s: number; l: number } {
 
 function OrnamentDivider({ color }: { color: string }) {
   return (
-    <svg viewBox="0 0 200 24" className="w-32 md:w-40 h-6 mx-auto" fill="none" stroke={color} strokeWidth="1" opacity={0.5}>
+    <svg viewBox="0 0 200 24" className="w-28 h-5 mx-auto" fill="none" stroke={color} strokeWidth="1" opacity={0.4}>
       <line x1="0" y1="12" x2="80" y2="12" />
-      <circle cx="100" cy="12" r="4" fill={color} />
+      <circle cx="100" cy="12" r="3" fill={color} />
       <line x1="120" y1="12" x2="200" y2="12" />
     </svg>
   );
 }
 
-function Countdown({ targetDate, primaryColor, textDark }: { targetDate: Date; primaryColor: string; textDark: string }) {
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-
-  useEffect(() => {
-    const tick = () => {
-      const diff = targetDate.getTime() - Date.now();
-      if (diff <= 0) return;
-      setTimeLeft({
-        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((diff / 1000 / 60) % 60),
-        seconds: Math.floor((diff / 1000) % 60),
-      });
-    };
-    tick();
-    const timer = setInterval(tick, 1000);
-    return () => clearInterval(timer);
-  }, [targetDate]);
-
+function WineGlasses({ color }: { color: string }) {
   return (
-    <div className="flex gap-6 md:gap-10 justify-center items-center">
-      {[
-        { value: timeLeft.days, label: "Jours" },
-        { value: timeLeft.hours, label: "Heures" },
-        { value: timeLeft.minutes, label: "Min" },
-        { value: timeLeft.seconds, label: "Sec" },
-      ].map((item) => (
-        <div key={item.label} className="flex flex-col items-center gap-2">
-          <span className="text-4xl md:text-5xl font-serif font-light" style={{ color: primaryColor }}>
-            {String(item.value).padStart(2, "0")}
-          </span>
-          <span className="text-[10px] uppercase tracking-[0.2em]" style={{ color: textDark, opacity: 0.4 }}>
-            {item.label}
-          </span>
-        </div>
-      ))}
-    </div>
+    <svg viewBox="0 0 48 48" className="w-10 h-10 mx-auto" fill="none" stroke={color} strokeWidth="1.2" opacity={0.35}>
+      <path d="M16 8 C16 8 12 18 12 22 C12 26 16 28 18 28 L18 38" />
+      <path d="M32 8 C32 8 36 18 36 22 C36 26 32 28 30 28 L30 38" />
+      <line x1="14" y1="38" x2="22" y2="38" />
+      <line x1="26" y1="38" x2="34" y2="38" />
+      <path d="M18 24 Q24 30 30 24" strokeDasharray="2 2" />
+    </svg>
   );
 }
 
@@ -106,6 +78,9 @@ export default function GuestInvitationPage() {
   const subtleL = Math.min(primaryHSL.l + 10, 55);
   const textDark = `hsl(${primaryHSL.h}, ${Math.min(primaryHSL.s, 30)}%, ${darkL}%)`;
   const textSubtle = `hsl(${primaryHSL.h}, ${Math.min(primaryHSL.s, 25)}%, ${subtleL}%)`;
+  const bgTint = `color-mix(in srgb, ${primaryColor} 3%, white)`;
+  const cardBg = `color-mix(in srgb, ${primaryColor} 4%, #FAFAF8)`;
+  const borderLight = `color-mix(in srgb, ${primaryColor} 12%, transparent)`;
 
   useEffect(() => {
     if (typeof window === "undefined" || !guestId) return;
@@ -127,11 +102,9 @@ export default function GuestInvitationPage() {
   }, [wedding?.config?.sections?.countdownDate, wedding?.weddingDate]);
 
   const title = wedding?.title || "Notre mariage";
-  const heroSubtitle = wedding?.config?.texts?.heroSubtitle || "Le Mariage de";
   const heroTitle = wedding?.config?.texts?.heroTitle || title;
-  const heroImage = wedding?.config?.media?.heroImage || "";
   const couplePhoto = wedding?.config?.media?.couplePhoto || "";
-  const storyBody = wedding?.config?.texts?.storyBody || "";
+  const logoUrl = wedding?.config?.branding?.logoUrl || "";
   const programItems = wedding?.config?.sections?.programItems || [];
   const locations = wedding?.config?.sections?.locationItems || [];
   const cagnotteExternalUrl = (wedding?.config?.payments?.externalUrl || (wedding?.config?.sections as any)?.cagnotteExternalUrl || "") as string;
@@ -141,17 +114,19 @@ export default function GuestInvitationPage() {
   const weddingSlug = (wedding as any)?.slug || "";
   const basePath = weddingSlug ? `/${weddingSlug}` : "/";
   const cagnotteHref = cagnotteMode === "external" ? cagnotteExternalUrl : `${basePath}#cagnotte`;
-  const rsvpHref = `${basePath}#rsvp`;
-
-  const weddingDateStr = wedding?.config?.texts?.weddingDate ||
-    (wedding?.weddingDate
-      ? new Date(wedding.weddingDate).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
-      : "");
 
   const dateObj = wedding?.weddingDate ? new Date(wedding.weddingDate) : null;
-  const dayName = dateObj ? dateObj.toLocaleDateString("fr-FR", { weekday: "long" }) : "";
+  const monthName = dateObj ? dateObj.toLocaleDateString("fr-FR", { month: "long" }).toUpperCase() : "";
+  const dayName = dateObj ? dateObj.toLocaleDateString("fr-FR", { weekday: "long" }).toUpperCase() : "";
   const dayNum = dateObj ? dateObj.getDate() : "";
-  const monthYear = dateObj ? dateObj.toLocaleDateString("fr-FR", { month: "long", year: "numeric" }) : "";
+  const yearStr = dateObj ? dateObj.getFullYear().toString() : "";
+  const timeStr = dateObj && (dateObj.getHours() > 0 || dateObj.getMinutes() > 0)
+    ? `À ${dateObj.getHours()}H${dateObj.getMinutes() > 0 ? String(dateObj.getMinutes()).padStart(2, "0") : "00"}`
+    : "";
+
+  const firstLocation = locations[0];
+  const venueText = firstLocation?.title || "";
+  const venueAddress = firstLocation?.address || "";
 
   if (isLoading) {
     return (
@@ -173,162 +148,204 @@ export default function GuestInvitationPage() {
   }
 
   const isCouple = guest.partySize >= 2;
-  const guestGreeting = isCouple ? `${guest.firstName} ${guest.lastName}` : guest.firstName;
 
   return (
-    <div className="min-h-screen font-serif" style={{ backgroundColor: secondaryColor, color: textDark }}>
+    <div className="min-h-screen" style={{ backgroundColor: bgTint, color: textDark }}>
 
-      {/* HERO */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {heroImage ? (
-          <>
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${heroImage})` }} />
-            <div className="absolute inset-0 bg-black/40" />
-          </>
-        ) : (
-          <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, ${secondaryColor} 0%, color-mix(in srgb, ${primaryColor} 5%, ${secondaryColor}) 100%)` }} />
-        )}
+      <section className="min-h-screen flex flex-col items-center justify-center px-6 py-16 relative">
+        <div className="w-full max-w-md mx-auto text-center space-y-6">
 
-        <div className="relative z-10 text-center max-w-3xl mx-auto px-6 py-20 space-y-8">
-          <OrnamentDivider color={heroImage ? "#FFFFFF" : primaryColor} />
+          {logoUrl || couplePhoto ? (
+            <div className="flex justify-center mb-2">
+              <div className="w-20 h-20 rounded-full overflow-hidden border-2 shadow-sm" style={{ borderColor: borderLight }}>
+                <img src={logoUrl || couplePhoto} alt="" className="w-full h-full object-cover" />
+              </div>
+            </div>
+          ) : null}
 
-          <p className="text-xs md:text-sm tracking-[0.3em] uppercase font-light" style={{ color: heroImage ? "rgba(255,255,255,0.7)" : textSubtle }}>
-            {guest.firstName}, vous êtes cordialement invité{isCouple ? "(e)s" : "(e)"}
+          <p className="text-[11px] tracking-[0.35em] uppercase font-light" style={{ color: textSubtle }}>
+            Pour célébrer le mariage de
           </p>
 
-          <p className="text-xs tracking-[0.2em] uppercase font-light" style={{ color: heroImage ? "rgba(255,255,255,0.5)" : textSubtle }}>
-            au mariage de
-          </p>
-
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold leading-[0.95] tracking-tight" style={{
-            color: heroImage ? "#FFFFFF" : textDark,
-            textShadow: heroImage ? "0 4px 30px rgba(0,0,0,0.4)" : "none",
+          <h1 className="font-serif font-bold tracking-tight leading-[0.95]" style={{
+            color: textDark,
+            fontSize: "clamp(2.5rem, 10vw, 4.5rem)",
           }}>
-            {heroTitle}
+            {heroTitle.split(" et ").length === 2 ? (
+              <>
+                {heroTitle.split(" et ")[0]}
+                <span className="block text-[0.45em] font-light tracking-[0.15em] my-2" style={{ color: textSubtle }}>&</span>
+                {heroTitle.split(" et ")[1]}
+              </>
+            ) : heroTitle}
           </h1>
 
-          {storyBody ? (
-            <p className="text-sm md:text-base italic max-w-xl mx-auto leading-relaxed" style={{ color: heroImage ? "rgba(255,255,255,0.8)" : textSubtle }}>
-              {storyBody.length > 120 ? storyBody.slice(0, 120) + "…" : storyBody}
-            </p>
-          ) : null}
+          <OrnamentDivider color={primaryColor} />
 
-          <p className="text-sm max-w-md mx-auto" style={{ color: heroImage ? "rgba(255,255,255,0.7)" : textSubtle }}>
-            Nous vous invitons à partager la célébration de notre mariage.
+          <p className="text-[10px] tracking-[0.3em] uppercase" style={{ color: textSubtle }}>
+            Vous invitent à célébrer
           </p>
 
-          <OrnamentDivider color={heroImage ? "#FFFFFF" : primaryColor} />
+          <h2 className="text-5xl md:text-6xl font-serif font-light tracking-[0.08em] uppercase" style={{ color: primaryColor }}>
+            Mariage
+          </h2>
 
-          {dateObj ? (
+          <p className="text-sm italic font-serif" style={{ color: textSubtle }}>
+            deux cœurs, un amour, un jour inoubliable
+          </p>
+
+          {dateObj && (
+            <div className="pt-6 space-y-3">
+              <p className="text-lg md:text-xl font-serif font-bold tracking-[0.15em] uppercase" style={{ color: textDark }}>
+                {monthName}
+              </p>
+
+              <div className="flex items-center justify-center gap-6">
+                <div className="text-right flex-1">
+                  <p className="text-xs tracking-[0.2em] uppercase" style={{ color: textSubtle }}>{dayName}</p>
+                </div>
+                <div className="relative">
+                  <span className="text-7xl md:text-8xl font-serif font-light leading-none" style={{ color: primaryColor }}>
+                    {dayNum}
+                  </span>
+                </div>
+                <div className="text-left flex-1">
+                  <p className="text-xs tracking-[0.2em] uppercase" style={{ color: textSubtle }}>{timeStr || yearStr}</p>
+                </div>
+              </div>
+
+              <p className="text-sm tracking-[0.15em] uppercase" style={{ color: textDark }}>
+                {yearStr}
+              </p>
+            </div>
+          )}
+
+          {venueText && (
             <div className="pt-4 space-y-1">
-              <p className="text-sm tracking-[0.2em] uppercase font-light capitalize" style={{ color: heroImage ? "rgba(255,255,255,0.6)" : textSubtle }}>
-                {dayName}
+              <p className="text-sm font-serif font-semibold tracking-wide uppercase" style={{ color: textDark }}>
+                {venueText}
               </p>
-              <p className="text-6xl md:text-7xl font-serif font-light" style={{ color: heroImage ? "#FFFFFF" : primaryColor }}>
-                {dayNum}
-              </p>
-              <p className="text-sm tracking-[0.2em] uppercase font-light capitalize" style={{ color: heroImage ? "rgba(255,255,255,0.6)" : textSubtle }}>
-                {monthYear}
-              </p>
+              {venueAddress && (
+                <p className="text-xs tracking-wide uppercase" style={{ color: textSubtle }}>
+                  {venueAddress}
+                </p>
+              )}
             </div>
-          ) : weddingDateStr ? (
-            <div className="inline-flex flex-col items-center gap-1 py-4 px-10 border-y" style={{ borderColor: heroImage ? "rgba(255,255,255,0.25)" : `color-mix(in srgb, ${primaryColor} 30%, transparent)` }}>
-              <span className="text-lg md:text-2xl font-serif tracking-widest" style={{ color: heroImage ? "rgba(255,255,255,0.9)" : textDark }}>
-                {weddingDateStr}
-              </span>
-            </div>
-          ) : null}
+          )}
+
+          <div className="pt-6">
+            <WineGlasses color={primaryColor} />
+          </div>
         </div>
       </section>
 
-      {/* COUNTDOWN */}
-      <section className="py-16 px-6" style={{ borderTop: `1px solid color-mix(in srgb, ${primaryColor} 15%, transparent)` }}>
-        <Countdown targetDate={countdownDate} primaryColor={primaryColor} textDark={textDark} />
+      <section className="py-10 px-6">
+        <div className="max-w-md mx-auto text-center space-y-2">
+          <p className="text-[10px] tracking-[0.3em] uppercase" style={{ color: textSubtle }}>
+            {guest.firstName}, nous vous invitons
+          </p>
+          <OrnamentDivider color={primaryColor} />
+        </div>
       </section>
 
-      {/* PROGRAMME */}
-      {programItems.length > 0 ? (
-        <section className="py-20 px-6">
-          <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-16 space-y-3">
-              <h2 className="text-3xl md:text-4xl font-serif font-light tracking-wide" style={{ color: primaryColor }}>
-                Programme
-              </h2>
-              <p className="text-sm" style={{ color: textSubtle }}>de la journée</p>
-            </div>
+      {locations.length > 0 && (
+        <section className="py-10 px-6">
+          <div className="max-w-md mx-auto space-y-6">
+            {locations.map((loc: any, idx: number) => (
+              <div
+                key={idx}
+                className="rounded-xl p-6 text-center space-y-3"
+                style={{
+                  backgroundColor: cardBg,
+                  border: `1px solid ${borderLight}`,
+                }}
+              >
+                <h3 className="text-xs tracking-[0.3em] uppercase font-bold" style={{ color: textDark }}>
+                  {loc.title}
+                </h3>
+                <div className="w-8 h-px mx-auto" style={{ backgroundColor: primaryColor, opacity: 0.3 }} />
+                {loc.description && (
+                  <p className="text-xs leading-relaxed uppercase tracking-wide" style={{ color: textSubtle }}>
+                    {loc.description}
+                  </p>
+                )}
+                {loc.address && (
+                  <p className="text-xs uppercase tracking-wide" style={{ color: textSubtle }}>
+                    {loc.address}
+                  </p>
+                )}
+                {loc.address && (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase font-semibold hover:opacity-80 transition-opacity"
+                    style={{ color: primaryColor }}
+                  >
+                    <MapPin className="h-3 w-3" />
+                    Itinéraire
+                  </a>
+                )}
 
-            <div className="relative">
-              <div className="absolute left-6 md:left-8 top-0 bottom-0 w-px" style={{ backgroundColor: `color-mix(in srgb, ${primaryColor} 20%, transparent)` }} />
-
-              <div className="space-y-12">
-                {programItems.map((item: any, idx: number) => (
-                  <div key={idx} className="relative flex items-start gap-6 md:gap-8 pl-0">
-                    <div className="relative z-10 flex-shrink-0 w-12 md:w-16 text-right">
-                      <span className="text-lg md:text-xl font-serif font-light" style={{ color: primaryColor }}>
-                        {item.time || ""}
-                      </span>
+                {loc.accommodations && loc.accommodations.length > 0 && (
+                  <div className="pt-3 border-t space-y-2" style={{ borderColor: borderLight }}>
+                    <div className="flex items-center justify-center gap-1.5">
+                      <Bed className="h-3 w-3" style={{ color: primaryColor }} />
+                      <span className="text-[10px] tracking-[0.2em] uppercase font-semibold" style={{ color: textDark }}>Hébergement</span>
                     </div>
-                    <div className="absolute left-6 md:left-8 top-2 w-3 h-3 rounded-full border-2 -translate-x-1/2" style={{ borderColor: primaryColor, backgroundColor: secondaryColor }} />
-                    <div className="flex-1 pt-0 min-w-0">
-                      <h3 className="text-base md:text-lg font-serif font-medium" style={{ color: textDark }}>
-                        {item.title || ""}
-                      </h3>
-                      {item.description ? (
-                        <p className="text-sm mt-1" style={{ color: textSubtle }}>{item.description}</p>
-                      ) : null}
-                      {item.location ? (
-                        <a
-                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 mt-2 text-xs font-sans hover:underline"
-                          style={{ color: primaryColor }}
-                        >
-                          <MapPin className="h-3 w-3" />
-                          Voir sur Google Maps
-                        </a>
-                      ) : null}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-      ) : locations.length > 0 ? (
-        <section className="py-20 px-6">
-          <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-16 space-y-3">
-              <h2 className="text-3xl md:text-4xl font-serif font-light tracking-wide" style={{ color: primaryColor }}>
-                Lieux
-              </h2>
-            </div>
-            <div className="relative">
-              <div className="absolute left-6 md:left-8 top-0 bottom-0 w-px" style={{ backgroundColor: `color-mix(in srgb, ${primaryColor} 20%, transparent)` }} />
-              <div className="space-y-12">
-                {locations.map((loc: any, idx: number) => (
-                  <div key={idx} className="relative flex items-start gap-6 md:gap-8 pl-0">
-                    <div className="relative z-10 flex-shrink-0 w-12 md:w-16 flex justify-center">
-                      <MapPin className="h-5 w-5" style={{ color: primaryColor }} />
-                    </div>
-                    <div className="absolute left-6 md:left-8 top-2 w-3 h-3 rounded-full border-2 -translate-x-1/2" style={{ borderColor: primaryColor, backgroundColor: secondaryColor }} />
-                    <div className="flex-1 pt-0 min-w-0">
-                      <h3 className="text-base md:text-lg font-serif font-medium" style={{ color: textDark }}>{loc.title}</h3>
-                      {loc.address ? (
-                        <>
-                          <p className="text-sm mt-1" style={{ color: textSubtle }}>{loc.address}</p>
+                    {loc.accommodations.map((acc: any, accIdx: number) => (
+                      <div key={accIdx} className="text-xs" style={{ color: textSubtle }}>
+                        <span className="font-medium" style={{ color: textDark }}>{acc.name}</span>
+                        {acc.address && <span> — {acc.address}</span>}
+                        {acc.url && (
                           <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.address)}`}
+                            href={acc.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 mt-2 text-xs font-sans hover:underline"
+                            className="ml-1 inline-flex items-center gap-0.5 hover:opacity-80"
                             style={{ color: primaryColor }}
                           >
-                            Voir sur Google Maps
+                            <ExternalLink className="h-2.5 w-2.5" />
                           </a>
-                        </>
-                      ) : null}
-                      {loc.description ? <p className="text-sm mt-1" style={{ color: textSubtle }}>{loc.description}</p> : null}
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {programItems.length > 0 && (
+        <section className="py-10 px-6">
+          <div className="max-w-md mx-auto">
+            <div
+              className="rounded-xl p-6 space-y-4"
+              style={{
+                backgroundColor: cardBg,
+                border: `1px solid ${borderLight}`,
+              }}
+            >
+              <h3 className="text-xs tracking-[0.3em] uppercase font-bold text-center" style={{ color: textDark }}>
+                Programme
+              </h3>
+              <div className="w-8 h-px mx-auto" style={{ backgroundColor: primaryColor, opacity: 0.3 }} />
+
+              <div className="space-y-4">
+                {programItems.map((item: any, idx: number) => (
+                  <div key={idx} className="flex items-start gap-4">
+                    <span className="text-sm font-serif font-semibold shrink-0 w-14 text-right" style={{ color: primaryColor }}>
+                      {item.time}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs uppercase tracking-wide font-semibold" style={{ color: textDark }}>
+                        {item.title}
+                      </p>
+                      {item.description && (
+                        <p className="text-xs mt-0.5" style={{ color: textSubtle }}>{item.description}</p>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -336,93 +353,73 @@ export default function GuestInvitationPage() {
             </div>
           </div>
         </section>
-      ) : null}
+      )}
 
-      {/* MESSAGE */}
-      <section className="py-16 px-6 text-center" style={{ borderTop: `1px solid color-mix(in srgb, ${primaryColor} 10%, transparent)` }}>
-        <div className="max-w-lg mx-auto space-y-4">
-          <p className="text-base md:text-lg font-serif italic leading-relaxed" style={{ color: textDark }}>
-            Nous nous réjouissons de partager ce moment avec vous.
-          </p>
-          <p className="text-sm" style={{ color: textSubtle }}>
-            Apportez votre bonne humeur, préparez vos plus beaux pas de danse.
-          </p>
-        </div>
-      </section>
-
-      {/* CAGNOTTE */}
-      {cagnotteHref ? (
-        <section className="py-20 px-6" style={{ borderTop: `1px solid color-mix(in srgb, ${primaryColor} 10%, transparent)` }}>
-          <div className="max-w-lg mx-auto text-center space-y-6">
-            <div className="w-14 h-14 mx-auto rounded-full flex items-center justify-center" style={{ backgroundColor: `color-mix(in srgb, ${primaryColor} 10%, transparent)` }}>
-              <Gift className="h-7 w-7" style={{ color: primaryColor }} />
-            </div>
-            <h2 className="text-3xl md:text-4xl font-serif font-light" style={{ color: primaryColor }}>
-              {cagnotteTitle}
-            </h2>
-            <p className="text-sm leading-relaxed" style={{ color: textSubtle }}>
-              {cagnotteDescription}
-            </p>
-            <a
-              href={cagnotteHref}
-              target={cagnotteMode === "external" ? "_blank" : undefined}
-              rel={cagnotteMode === "external" ? "noopener noreferrer" : undefined}
-              className="inline-flex items-center gap-2 px-10 py-4 text-xs tracking-[0.2em] uppercase font-bold text-white transition-all hover:opacity-90"
-              style={{ backgroundColor: primaryColor }}
+      {cagnotteHref && (
+        <section className="py-10 px-6">
+          <div className="max-w-md mx-auto">
+            <div
+              className="rounded-xl p-6 text-center space-y-4"
+              style={{
+                backgroundColor: cardBg,
+                border: `1px solid ${borderLight}`,
+              }}
             >
-              Participer
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
+              <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center" style={{ backgroundColor: `color-mix(in srgb, ${primaryColor} 10%, transparent)` }}>
+                <Gift className="h-5 w-5" style={{ color: primaryColor }} />
+              </div>
+              <h3 className="text-xs tracking-[0.3em] uppercase font-bold" style={{ color: textDark }}>
+                {cagnotteTitle}
+              </h3>
+              <div className="w-8 h-px mx-auto" style={{ backgroundColor: primaryColor, opacity: 0.3 }} />
+              <p className="text-xs leading-relaxed uppercase tracking-wide" style={{ color: textSubtle }}>
+                {cagnotteDescription}
+              </p>
+              <a
+                href={cagnotteHref}
+                target={cagnotteMode === "external" ? "_blank" : undefined}
+                rel={cagnotteMode === "external" ? "noopener noreferrer" : undefined}
+                className="inline-block px-8 py-3 text-[10px] tracking-[0.25em] uppercase font-bold text-white transition-all hover:opacity-90 rounded-sm"
+                style={{ backgroundColor: primaryColor }}
+              >
+                Cagnotte
+              </a>
+            </div>
           </div>
         </section>
-      ) : null}
+      )}
 
-      {/* QR CODE */}
-      {qrDataUrl ? (
-        <section className="py-16 px-6" style={{ borderTop: `1px solid color-mix(in srgb, ${primaryColor} 10%, transparent)` }}>
-          <div className="max-w-sm mx-auto text-center space-y-4">
-            <div className="rounded-2xl p-6 inline-block" style={{ backgroundColor: `color-mix(in srgb, ${primaryColor} 5%, ${secondaryColor})`, border: `1px solid color-mix(in srgb, ${primaryColor} 15%, transparent)` }}>
-              <img src={qrDataUrl} alt="QR code invitation" className="h-32 w-32 mx-auto" />
+      {qrDataUrl && (
+        <section className="py-10 px-6">
+          <div className="max-w-md mx-auto text-center space-y-3">
+            <div className="inline-block p-5 rounded-xl" style={{ backgroundColor: cardBg, border: `1px solid ${borderLight}` }}>
+              <img src={qrDataUrl} alt="QR code invitation" className="h-28 w-28 mx-auto" />
             </div>
-            <p className="text-xs" style={{ color: textSubtle }}>
-              Scannez ce code pour ouvrir votre invitation
+            <p className="text-[10px] tracking-[0.15em] uppercase" style={{ color: textSubtle }}>
+              Scannez pour ouvrir votre invitation
             </p>
           </div>
         </section>
-      ) : null}
+      )}
 
-      {/* FOOTER NOTE */}
-      <section className="py-12 px-6 text-center" style={{ borderTop: `1px solid color-mix(in srgb, ${primaryColor} 10%, transparent)` }}>
-        <p className="text-xs max-w-md mx-auto" style={{ color: textSubtle }}>
-          Pour des raisons d'organisation, nous vous remercions de ne pas inviter de personnes supplémentaires.
-        </p>
+      <section className="py-10 px-6 text-center">
+        <div className="max-w-sm mx-auto space-y-4">
+          <OrnamentDivider color={primaryColor} />
+          <p className="text-sm font-serif italic leading-relaxed" style={{ color: textDark }}>
+            Nous nous réjouissons de partager ce jour avec vous.
+          </p>
+          <p className="text-[10px] tracking-[0.2em] uppercase" style={{ color: textSubtle }}>
+            Avec tout notre amour
+          </p>
+          <OrnamentDivider color={primaryColor} />
+        </div>
       </section>
 
-      {/* COUPLE PHOTO */}
-      {couplePhoto ? (
-        <section className="pb-8 px-6 flex justify-center">
-          <img
-            src={couplePhoto}
-            alt={heroTitle}
-            className="max-w-xs w-full rounded-2xl object-cover shadow-lg"
-            style={{ border: `1px solid color-mix(in srgb, ${primaryColor} 20%, transparent)` }}
-          />
-        </section>
-      ) : null}
-
-      {/* RSVP FLOATING BUTTON */}
-      {(guest.availability === "confirmed" || guest.availability === "pending") ? (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-          <a
-            href={rsvpHref}
-            className="flex items-center gap-2 px-8 py-4 text-xs tracking-[0.2em] uppercase font-bold text-white shadow-2xl transition-all hover:scale-105"
-            style={{ backgroundColor: primaryColor, borderRadius: "9999px" }}
-          >
-            <Calendar className="h-4 w-4" />
-            Confirmer ma présence
-          </a>
-        </div>
-      ) : null}
+      <footer className="py-8 px-6 text-center">
+        <p className="text-[10px] tracking-[0.15em] uppercase" style={{ color: textSubtle, opacity: 0.5 }}>
+          {heroTitle}
+        </p>
+      </footer>
     </div>
   );
 }
