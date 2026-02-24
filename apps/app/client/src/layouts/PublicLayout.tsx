@@ -381,7 +381,7 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
         { id: "cgu", label: "CGU", href: `${basePath}/legal/cgu` },
         { id: "cookies", label: "Cookies", href: `${basePath}/legal/cookies` },
     ];
-    const nocelyHref = marketingBaseUrl || "http://localhost:5173";
+    const nocelyHref = marketingBaseUrl || "https://nocely.app";
 
     return (
         <ThemeProvider wedding={wedding}>
