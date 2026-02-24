@@ -8,13 +8,16 @@ const router = Router();
 const APP_BASE_URL = process.env.APP_BASE_URL
   || (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : "http://localhost:5000");
 
+const googleCallbackURL = `${APP_BASE_URL}/api/auth/google/callback`;
+console.log("[google-oauth] callbackURL:", googleCallbackURL);
+
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(
     new GoogleStrategy(
       {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: `${APP_BASE_URL}/api/auth/google/callback`,
+        callbackURL: googleCallbackURL,
         scope: ["profile", "email"],
       },
       async (_accessToken, _refreshToken, profile, done) => {
@@ -75,9 +78,24 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 
   router.get(
     "/google/callback",
-    passport.authenticate("google", { failureRedirect: "/login?error=google" }),
-    (_req, res) => {
-      res.redirect("/dashboard");
+    (req, res, next) => {
+      passport.authenticate("google", (err: any, user: any, info: any) => {
+        if (err) {
+          console.error("[google-oauth] Strategy error:", err.message);
+          return res.redirect("/login?error=google");
+        }
+        if (!user) {
+          console.error("[google-oauth] No user returned:", info);
+          return res.redirect("/login?error=google");
+        }
+        req.logIn(user, (loginErr) => {
+          if (loginErr) {
+            console.error("[google-oauth] Login error:", loginErr.message);
+            return res.redirect("/login?error=google");
+          }
+          return res.redirect("/dashboard");
+        });
+      })(req, res, next);
     }
   );
 }
