@@ -460,97 +460,102 @@ export default function SiteConfigPage() {
       </Card>
 
       <Card className="p-6 space-y-4">
-        <h2 className="text-lg font-medium">Menu principal</h2>
-        <p className="text-sm text-muted-foreground">
-          Chaque onglet peut être une ancre one-page ou un lien externe. Par défaut, "Accueil" pointe sur l'ancre hero.
-        </p>
-        <div className="space-y-3">
-          {navigation.menuItems.map((item, index) => (
-            <div key={item.id} className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 rounded-xl border p-3">
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                <Input
-                  value={item.label}
-                  onChange={(e) =>
-                    setNavigation((prev) => ({
-                      ...prev,
-                      menuItems: prev.menuItems.map((m) => (m.id === item.id ? { ...m, label: e.target.value } : m)),
-                    }))
-                  }
-                  placeholder="Label"
-                />
-                <Input value={item.path} disabled />
-                <select
-                  className="h-10 rounded-md border border-border bg-background px-3 text-sm"
-                  value={item.linkType || "anchor"}
-                  onChange={(e) =>
-                    setNavigation((prev) => ({
-                      ...prev,
-                      menuItems: prev.menuItems.map((m) =>
-                        m.id === item.id
-                          ? {
-                              ...m,
-                              linkType: e.target.value as "anchor" | "external",
-                              anchorId: e.target.value === "anchor" ? m.anchorId || (m.path === "home" ? "hero" : m.path) : "",
-                              externalUrl: e.target.value === "external" ? m.externalUrl || "" : "",
-                            }
-                          : m
-                      ),
-                    }))
-                  }
-                >
-                  <option value="anchor">Ancre</option>
-                  <option value="external">Lien externe</option>
-                </select>
-                {(item.linkType || "anchor") === "anchor" ? (
-                  <Input
-                    value={item.anchorId || (item.path === "home" ? "hero" : item.path)}
-                    onChange={(e) =>
-                      setNavigation((prev) => ({
-                        ...prev,
-                        menuItems: prev.menuItems.map((m) =>
-                          m.id === item.id ? { ...m, anchorId: normalizeSlug(e.target.value) || "hero", externalUrl: "" } : m
-                        ),
-                      }))
-                    }
-                    placeholder="hero, rsvp, gallery..."
-                  />
-                ) : (
-                  <Input
-                    value={item.externalUrl || ""}
-                    onChange={(e) =>
-                      setNavigation((prev) => ({
-                        ...prev,
-                        menuItems: prev.menuItems.map((m) =>
-                          m.id === item.id ? { ...m, externalUrl: e.target.value, anchorId: "" } : m
-                        ),
-                      }))
-                    }
-                    placeholder="https://..."
-                  />
-                )}
-                <div className="flex items-center justify-between rounded-md border px-3">
-                  <span className="text-sm text-muted-foreground">Visible</span>
-                  <Switch
-                    checked={item.enabled}
-                    onCheckedChange={(value) =>
-                      setNavigation((prev) => ({
-                        ...prev,
-                        menuItems: prev.menuItems.map((m) => (m.id === item.id ? { ...m, enabled: value } : m)),
-                      }))
-                    }
-                  />
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-medium">Menu principal</h2>
+            <p className="text-sm text-muted-foreground">Organisez les sections visibles sur votre site.</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const id = `ext-${Date.now()}`;
+              setNavigation((prev) => ({
+                ...prev,
+                menuItems: [
+                  ...prev.menuItems,
+                  { id, label: "Nouveau lien", path: id, enabled: true, linkType: "external" as const, anchorId: "", externalUrl: "" },
+                ],
+              }));
+            }}
+          >
+            <Plus className="h-4 w-4 mr-1.5" />
+            Lien externe
+          </Button>
+        </div>
+        <div className="space-y-2">
+          {navigation.menuItems.map((item, index) => {
+            const isExternal = item.linkType === "external";
+            const isHome = item.id === "home";
+            return (
+              <div key={item.id} className="flex items-center gap-3 rounded-lg border px-4 py-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={item.label}
+                      onChange={(e) =>
+                        setNavigation((prev) => ({
+                          ...prev,
+                          menuItems: prev.menuItems.map((m) => (m.id === item.id ? { ...m, label: e.target.value } : m)),
+                        }))
+                      }
+                      className="h-8 text-sm font-medium max-w-[140px]"
+                    />
+                    {isExternal && (
+                      <Input
+                        value={item.externalUrl || ""}
+                        onChange={(e) =>
+                          setNavigation((prev) => ({
+                            ...prev,
+                            menuItems: prev.menuItems.map((m) =>
+                              m.id === item.id ? { ...m, externalUrl: e.target.value } : m
+                            ),
+                          }))
+                        }
+                        placeholder="https://..."
+                        className="h-8 text-sm flex-1"
+                      />
+                    )}
+                    {!isExternal && (
+                      <span className="text-xs text-muted-foreground truncate">{item.path}</span>
+                    )}
+                  </div>
                 </div>
+                <Switch
+                  checked={item.enabled}
+                  onCheckedChange={(value) =>
+                    setNavigation((prev) => ({
+                      ...prev,
+                      menuItems: prev.menuItems.map((m) => (m.id === item.id ? { ...m, enabled: value } : m)),
+                    }))
+                  }
+                />
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveMenuItem(index, -1)} disabled={isHome || index === 0}>
+                    <ArrowUp className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveMenuItem(index, 1)} disabled={isHome || index === navigation.menuItems.length - 1}>
+                    <ArrowDown className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+                {isExternal && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    onClick={() =>
+                      setNavigation((prev) => ({
+                        ...prev,
+                        menuItems: prev.menuItems.filter((m) => m.id !== item.id),
+                      }))
+                    }
+                  >
+                    <span className="text-sm">×</span>
+                  </Button>
+                )}
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={() => moveMenuItem(index, -1)} disabled={item.id === "home" || index === 0}>
-                  <ArrowUp className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="icon" onClick={() => moveMenuItem(index, 1)} disabled={item.id === "home"}>
-                  <ArrowDown className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </Card>
 
