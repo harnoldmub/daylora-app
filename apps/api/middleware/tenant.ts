@@ -47,6 +47,13 @@ export async function withWeddingFromRequest(req: Request, res: Response, next: 
     }
 
     (req as any).wedding = wedding;
+
+    const isPreview = req.headers["x-preview-mode"] === "true";
+    const isAuthenticated = !!(req as any).user;
+    if (!wedding.isPublished && !isPreview && !isAuthenticated) {
+      return res.status(404).json({ message: "Ce site n'est pas encore publié." });
+    }
+
     next();
   } catch (error) {
     res.status(500).json({ message: "Erreur résolution mariage" });

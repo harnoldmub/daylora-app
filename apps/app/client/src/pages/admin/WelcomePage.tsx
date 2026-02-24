@@ -2,7 +2,7 @@ import { useWedding, useUpdateWedding } from "@/hooks/use-api";
 import { useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Layout, Sparkles, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { ExternalLink, Layout, Sparkles, CheckCircle2, Eye, EyeOff, FileEdit } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
@@ -138,6 +138,12 @@ export default function WelcomePage() {
                             </Link>
                         </Button>
                         <Button asChild className="w-full">
+                            <Link href="/design">
+                                <FileEdit className="h-4 w-4 mr-2" />
+                                Modifier l'invitation
+                            </Link>
+                        </Button>
+                        <Button variant="outline" asChild className="w-full">
                             <Link href="/templates">
                                 <ExternalLink className="h-4 w-4 mr-2" />
                                 Templates & design

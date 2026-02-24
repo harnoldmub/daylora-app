@@ -450,8 +450,8 @@ export default function DesignPage() {
     <div className="h-[calc(100vh-64px)] w-full flex flex-col">
       <div className="px-8 pt-6 pb-4 border-b bg-background/80 backdrop-blur flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-serif font-bold text-foreground">Studio Design</h1>
-          <p className="text-muted-foreground text-sm">Personnalisez chaque section publique avec un rendu instantané.</p>
+          <h1 className="text-2xl font-serif font-bold text-foreground">Modifier l'invitation</h1>
+          <p className="text-muted-foreground text-sm">Personnalisez chaque section et appliquez les changements.</p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" asChild>
@@ -459,9 +459,6 @@ export default function DesignPage() {
           </Button>
           <Button variant="outline" asChild>
             <a href={previewUrl} target="_blank" rel="noopener noreferrer">Ouvrir l'aperçu</a>
-          </Button>
-          <Button onClick={saveDesign} disabled={isSaving}>
-            {isSaving ? "Enregistrement..." : "Appliquer les modifications"}
           </Button>
         </div>
       </div>
@@ -495,7 +492,7 @@ export default function DesignPage() {
                         })}
                       </SelectContent>
                     </Select>
-                    <Button onClick={applyTemplate} disabled={isApplyingTemplate} className="w-full">
+                    <Button onClick={applyTemplate} disabled={isApplyingTemplate} size="sm" className="w-full">
                       {isApplyingTemplate ? "Application..." : "Appliquer ce template"}
                     </Button>
                   </div>
@@ -531,6 +528,9 @@ export default function DesignPage() {
                       <label className="text-xs font-medium">Texte fallback</label>
                       <Input value={branding.logoText} onChange={(e) => setBranding({ ...branding, logoText: e.target.value })} />
                     </div>
+                    <Button onClick={saveDesign} disabled={isSaving} size="sm" className="w-full mt-2">
+                      {isSaving ? "Enregistrement..." : "Appliquer"}
+                    </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -629,6 +629,9 @@ export default function DesignPage() {
                         </select>
                       </div>
                     </div>
+                    <Button onClick={saveDesign} disabled={isSaving} size="sm" className="w-full mt-2">
+                      {isSaving ? "Enregistrement..." : "Appliquer"}
+                    </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -681,6 +684,9 @@ export default function DesignPage() {
                         />
                       ) : null}
                     </div>
+                    <Button onClick={saveDesign} disabled={isSaving} size="sm" className="w-full mt-2">
+                      {isSaving ? "Enregistrement..." : "Appliquer"}
+                    </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -706,6 +712,9 @@ export default function DesignPage() {
                       <label className="text-xs font-medium">Bouton hero</label>
                       <Input value={texts.heroCta} onChange={(e) => setTexts({ ...texts, heroCta: e.target.value })} />
                     </div>
+                    <Button onClick={saveDesign} disabled={isSaving} size="sm" className="w-full mt-2">
+                      {isSaving ? "Enregistrement..." : "Appliquer"}
+                    </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -727,6 +736,9 @@ export default function DesignPage() {
                       />
                       <p className="text-[11px] text-muted-foreground">Référence utilisée par le compteur principal.</p>
                     </div>
+                    <Button onClick={saveDesign} disabled={isSaving} size="sm" className="w-full mt-2">
+                      {isSaving ? "Enregistrement..." : "Appliquer"}
+                    </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -747,6 +759,9 @@ export default function DesignPage() {
                       <label className="text-xs font-medium">Libellé menu: Live</label>
                       <Input value={texts.navLive} onChange={(e) => setTexts({ ...texts, navLive: e.target.value })} />
                     </div>
+                    <Button onClick={saveDesign} disabled={isSaving} size="sm" className="w-full mt-2">
+                      {isSaving ? "Enregistrement..." : "Appliquer"}
+                    </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -767,6 +782,9 @@ export default function DesignPage() {
                       <label className="text-xs font-medium">Bouton RSVP</label>
                       <Input value={texts.rsvpButton} onChange={(e) => setTexts({ ...texts, rsvpButton: e.target.value })} />
                     </div>
+                    <Button onClick={saveDesign} disabled={isSaving} size="sm" className="w-full mt-2">
+                      {isSaving ? "Enregistrement..." : "Appliquer"}
+                    </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -810,6 +828,9 @@ export default function DesignPage() {
                         placeholder="20, 50, 100, 150, 200"
                       />
                     </div>
+                    <Button onClick={saveDesign} disabled={isSaving} size="sm" className="w-full mt-2">
+                      {isSaving ? "Enregistrement..." : "Appliquer"}
+                    </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -834,6 +855,9 @@ export default function DesignPage() {
                       <label className="text-xs font-medium">Texte sous QR code</label>
                       <Input value={texts.liveQrCaption} onChange={(e) => setTexts({ ...texts, liveQrCaption: e.target.value })} />
                     </div>
+                    <Button onClick={saveDesign} disabled={isSaving} size="sm" className="w-full mt-2">
+                      {isSaving ? "Enregistrement..." : "Appliquer"}
+                    </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -858,6 +882,9 @@ export default function DesignPage() {
                       <label className="text-xs font-medium">Description programme</label>
                       <Textarea rows={3} value={texts.programDescription} onChange={(e) => setTexts({ ...texts, programDescription: e.target.value })} />
                     </div>
+                    <Button onClick={saveDesign} disabled={isSaving} size="sm" className="w-full mt-2">
+                      {isSaving ? "Enregistrement..." : "Appliquer"}
+                    </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -1017,6 +1044,9 @@ export default function DesignPage() {
                     >
                       Ajouter un lieu
                     </Button>
+                    <Button onClick={saveDesign} disabled={isSaving} size="sm" className="w-full mt-2">
+                      {isSaving ? "Enregistrement..." : "Appliquer"}
+                    </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -1094,6 +1124,9 @@ export default function DesignPage() {
                     >
                       Ajouter une étape
                     </Button>
+                    <Button onClick={saveDesign} disabled={isSaving} size="sm" className="w-full mt-2">
+                      {isSaving ? "Enregistrement..." : "Appliquer"}
+                    </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -1110,6 +1143,9 @@ export default function DesignPage() {
                       <label className="text-xs font-medium">Texte</label>
                       <Textarea rows={4} value={texts.storyBody} onChange={(e) => setTexts({ ...texts, storyBody: e.target.value })} />
                     </div>
+                    <Button onClick={saveDesign} disabled={isSaving} size="sm" className="w-full mt-2">
+                      {isSaving ? "Enregistrement..." : "Appliquer"}
+                    </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>

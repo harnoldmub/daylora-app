@@ -463,104 +463,116 @@ export default function GuestsPage() {
                                 Ajouter un invité
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
+                        <DialogContent className="max-w-md">
                             <DialogHeader>
                                 <DialogTitle>Ajouter un invité</DialogTitle>
                                 <DialogDescription>Créez un nouveau contact pour le suivi RSVP.</DialogDescription>
                             </DialogHeader>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Prénom *</Label>
-                                    <Input value={newGuest.firstName} onChange={(e) => setNewGuest({ ...newGuest, firstName: e.target.value })} />
+                            <div className="space-y-3">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Prénom *</Label>
+                                        <Input className="h-9" value={newGuest.firstName} onChange={(e) => setNewGuest({ ...newGuest, firstName: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Nom *</Label>
+                                        <Input className="h-9" value={newGuest.lastName} onChange={(e) => setNewGuest({ ...newGuest, lastName: e.target.value })} />
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label>Nom *</Label>
-                                    <Input value={newGuest.lastName} onChange={(e) => setNewGuest({ ...newGuest, lastName: e.target.value })} />
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Email</Label>
+                                        <Input className="h-9" type="email" value={newGuest.email} onChange={(e) => setNewGuest({ ...newGuest, email: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Téléphone</Label>
+                                        <Input className="h-9" value={newGuest.phone} onChange={(e) => setNewGuest({ ...newGuest, phone: e.target.value })} />
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label>Email</Label>
-                                    <Input type="email" value={newGuest.email} onChange={(e) => setNewGuest({ ...newGuest, email: e.target.value })} />
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Nb. invités</Label>
+                                        <Input className="h-9" type="number" min={1} value={newGuest.partySize} onChange={(e) => setNewGuest({ ...newGuest, partySize: Number(e.target.value || 1) })} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Disponibilité</Label>
+                                        <select
+                                            className="h-9 rounded-md border border-border bg-background px-3 text-xs w-full"
+                                            value={newGuest.availability}
+                                            onChange={(e) => setNewGuest({ ...newGuest, availability: e.target.value })}
+                                        >
+                                            <option value="pending">En attente</option>
+                                            <option value="confirmed">Confirmé</option>
+                                            <option value="declined">Refusé</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label>Téléphone</Label>
-                                    <Input value={newGuest.phone} onChange={(e) => setNewGuest({ ...newGuest, phone: e.target.value })} />
+                                <div className="space-y-1">
+                                    <Label className="text-xs">Notes</Label>
+                                    <Textarea rows={2} className="text-sm" value={newGuest.notes} onChange={(e) => setNewGuest({ ...newGuest, notes: e.target.value })} />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label>Nombre d'invités</Label>
-                                    <Input type="number" min={1} value={newGuest.partySize} onChange={(e) => setNewGuest({ ...newGuest, partySize: Number(e.target.value || 1) })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Disponibilité</Label>
-                                    <select
-                                        className="h-10 rounded-md border border-border bg-background px-3 text-sm w-full"
-                                        value={newGuest.availability}
-                                        onChange={(e) => setNewGuest({ ...newGuest, availability: e.target.value })}
-                                    >
-                                        <option value="pending">En attente</option>
-                                        <option value="confirmed">Confirmé</option>
-                                        <option value="declined">Refusé</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Notes</Label>
-                                <Textarea rows={3} value={newGuest.notes} onChange={(e) => setNewGuest({ ...newGuest, notes: e.target.value })} />
                             </div>
                             <div className="flex justify-end gap-2">
-                                <Button variant="outline" onClick={() => setAddGuestOpen(false)}>Annuler</Button>
-                                <Button onClick={handleAddGuest} disabled={createGuestMutation.isPending}>
+                                <Button variant="outline" size="sm" onClick={() => setAddGuestOpen(false)}>Annuler</Button>
+                                <Button size="sm" onClick={handleAddGuest} disabled={createGuestMutation.isPending}>
                                     {createGuestMutation.isPending ? "Ajout..." : "Ajouter"}
                                 </Button>
                             </div>
                         </DialogContent>
                     </Dialog>
                     <Dialog open={editGuestOpen} onOpenChange={setEditGuestOpen}>
-                        <DialogContent className="max-w-2xl">
+                        <DialogContent className="max-w-md">
                             <DialogHeader>
                                 <DialogTitle>Modifier l'invité</DialogTitle>
                                 <DialogDescription>Mettez à jour les informations de ce contact.</DialogDescription>
                             </DialogHeader>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Prénom *</Label>
-                                    <Input value={editGuest.firstName} onChange={(e) => setEditGuest({ ...editGuest, firstName: e.target.value })} />
+                            <div className="space-y-3">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Prénom *</Label>
+                                        <Input className="h-9" value={editGuest.firstName} onChange={(e) => setEditGuest({ ...editGuest, firstName: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Nom *</Label>
+                                        <Input className="h-9" value={editGuest.lastName} onChange={(e) => setEditGuest({ ...editGuest, lastName: e.target.value })} />
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label>Nom *</Label>
-                                    <Input value={editGuest.lastName} onChange={(e) => setEditGuest({ ...editGuest, lastName: e.target.value })} />
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Email</Label>
+                                        <Input className="h-9" type="email" value={editGuest.email} onChange={(e) => setEditGuest({ ...editGuest, email: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Téléphone</Label>
+                                        <Input className="h-9" value={editGuest.phone} onChange={(e) => setEditGuest({ ...editGuest, phone: e.target.value })} />
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label>Email</Label>
-                                    <Input type="email" value={editGuest.email} onChange={(e) => setEditGuest({ ...editGuest, email: e.target.value })} />
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Nb. invités</Label>
+                                        <Input className="h-9" type="number" min={1} value={editGuest.partySize} onChange={(e) => setEditGuest({ ...editGuest, partySize: Number(e.target.value || 1) })} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Disponibilité</Label>
+                                        <select
+                                            className="h-9 rounded-md border border-border bg-background px-3 text-xs w-full"
+                                            value={editGuest.availability}
+                                            onChange={(e) => setEditGuest({ ...editGuest, availability: e.target.value })}
+                                        >
+                                            <option value="pending">En attente</option>
+                                            <option value="confirmed">Confirmé</option>
+                                            <option value="declined">Refusé</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label>Téléphone</Label>
-                                    <Input value={editGuest.phone} onChange={(e) => setEditGuest({ ...editGuest, phone: e.target.value })} />
+                                <div className="space-y-1">
+                                    <Label className="text-xs">Notes</Label>
+                                    <Textarea rows={2} className="text-sm" value={editGuest.notes} onChange={(e) => setEditGuest({ ...editGuest, notes: e.target.value })} />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label>Nombre d'invités</Label>
-                                    <Input type="number" min={1} value={editGuest.partySize} onChange={(e) => setEditGuest({ ...editGuest, partySize: Number(e.target.value || 1) })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Disponibilité</Label>
-                                    <select
-                                        className="h-10 rounded-md border border-border bg-background px-3 text-sm w-full"
-                                        value={editGuest.availability}
-                                        onChange={(e) => setEditGuest({ ...editGuest, availability: e.target.value })}
-                                    >
-                                        <option value="pending">En attente</option>
-                                        <option value="confirmed">Confirmé</option>
-                                        <option value="declined">Refusé</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Notes</Label>
-                                <Textarea rows={3} value={editGuest.notes} onChange={(e) => setEditGuest({ ...editGuest, notes: e.target.value })} />
                             </div>
                             <div className="flex justify-end gap-2">
-                                <Button variant="outline" onClick={() => setEditGuestOpen(false)}>Annuler</Button>
-                                <Button onClick={handleUpdateGuest} disabled={updateGuestMutation.isPending}>
+                                <Button variant="outline" size="sm" onClick={() => setEditGuestOpen(false)}>Annuler</Button>
+                                <Button size="sm" onClick={handleUpdateGuest} disabled={updateGuestMutation.isPending}>
                                     {updateGuestMutation.isPending ? "Sauvegarde..." : "Enregistrer"}
                                 </Button>
                             </div>

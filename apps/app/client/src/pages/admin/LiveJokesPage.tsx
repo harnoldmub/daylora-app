@@ -148,6 +148,13 @@ export default function LiveJokesPage() {
         description="Activez le module et gérez vos blagues pour l'affichage en direct."
         actions={
           <div className="flex items-center gap-3">
+            {wedding?.slug && (
+              <Button variant="outline" size="sm" asChild>
+                <a href={`/${wedding.slug}/live`} target="_blank" rel="noopener noreferrer">
+                  Voir la page live
+                </a>
+              </Button>
+            )}
             <span className="text-sm text-muted-foreground">Activer</span>
             <Switch
               checked={!!wedding?.config?.features?.jokesEnabled}
