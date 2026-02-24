@@ -56,12 +56,13 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                         <span className="text-xl font-semibold tracking-tight text-sidebar-foreground">Nocely Admin</span>
                     </Link>
                 </div>
-                <nav className="flex-1 p-4 space-y-1">
+                <nav className="flex-1 p-4 space-y-1" data-tour="sidebar-nav">
                     {navItems.map((item) => {
                         const itemPath = item.href.replace(`/${weddingId}`, "");
                         const isActive = location === itemPath || location === item.href;
+                        const tourAttr = item.href.includes("/design") ? "sidebar-design" : undefined;
                         return (
-                            <Link key={item.href} href={item.href} className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive
+                            <Link key={item.href} href={item.href} data-tour={tourAttr} className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive
                                     ? "bg-sidebar-accent text-sidebar-accent-foreground"
                                     : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                                     }`}>
@@ -157,6 +158,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                         </select>
                         {weddings.find(w => w.id === weddingId) && (
                             <Button
+                                data-tour="view-site"
                                 variant="outline"
                                 size="sm"
                                 className="gap-2 border-primary/20 hover:border-primary/40 text-primary"

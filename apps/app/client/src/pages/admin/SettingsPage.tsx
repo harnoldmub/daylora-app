@@ -10,9 +10,10 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { useMemo } from "react";
-import { Copy, ExternalLink } from "lucide-react";
+import { Copy, ExternalLink, HelpCircle } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { apiRequest } from "@/lib/queryClient";
+import { resetTour } from "@/components/guided-tour";
 
 type SiteConfig = {
   appBaseUrl: string;
@@ -460,6 +461,23 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+      </Card>
+
+      <Card className="p-6 space-y-3">
+        <h2 className="text-lg font-medium flex items-center gap-2">
+          <HelpCircle className="h-5 w-5 text-muted-foreground" />
+          Guide d'utilisation
+        </h2>
+        <p className="text-sm text-muted-foreground">Revoir le guide interactif qui explique comment utiliser la plateforme.</p>
+        <Button
+          variant="outline"
+          onClick={() => {
+            resetTour();
+            toast({ title: "Guide réinitialisé", description: "Retournez au Dashboard pour revoir le guide." });
+          }}
+        >
+          Relancer le guide
+        </Button>
       </Card>
 
       <div className="flex justify-end">

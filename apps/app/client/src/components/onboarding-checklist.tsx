@@ -71,7 +71,7 @@ export function OnboardingChecklist({ wedding }: { wedding: Wedding }) {
     if (progress === 100 && wedding.isPublished) return null; // Hide when fully done
 
     return (
-        <Card className="border-primary/20 bg-primary/5">
+        <Card className="border-primary/20 bg-primary/5" data-tour="checklist">
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>

@@ -12,6 +12,14 @@ Multi-tenant wedding website SaaS. Couples create accounts, pick a template (Cla
 
 ## Recent Changes (Feb 2026)
 
+- **Guided tour (onboarding animation)**: Interactive step-by-step product tour on first login
+  - Component: `apps/app/client/src/components/guided-tour.tsx`
+  - 6 steps: Welcome → Sidebar menu → View site button → Checklist → Design link → Done
+  - SVG mask spotlight effect highlights targeted UI elements with animated ring
+  - Keyboard navigation (Escape to close, arrow keys for next/prev)
+  - Persisted in localStorage (`nocely_tour_completed`), replayable from Settings page
+  - Data attributes `data-tour` on AdminLayout sidebar, view-site button, onboarding checklist, design link
+
 - **Signup wizard refactoring**: Account creation moved to the end of the onboarding wizard
   - New flow: Wedding info → Template → Photos → Gallery → Modules → Preview → Account creation
   - Users can see a preview of their site before creating an account
