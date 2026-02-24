@@ -68,6 +68,35 @@ Multi-tenant wedding website SaaS. Couples create accounts, pick a template (Cla
   - All sections (RSVP, Gallery, Gifts, Story, Cagnotte) use `var(--wedding-primary)` for headings/accents
   - Back-office DesignPage color pickers now functionally change public site colors
 
+- **Location accommodations**: Each location item can now have accommodation suggestions (name, address, booking URL)
+  - Admin: DesignPage Lieux & Accès section has "Hébergements à proximité" sub-section per location
+  - Public: LocationsSection displays accommodations with bed icon and external links
+  - Types: `AccommodationItem` type added to `types.ts`, `LocationItem` extended with optional `accommodations` array
+
+- **Template restriction (free plan)**: Free users can only use Classic template
+  - DesignPage template selector locks Modern/Minimal with "Premium" label
+  - TemplatesPage shows lock overlay on premium templates with "Passer en Premium" link
+  - `TEMPLATES` array has `premium` boolean flag
+
+- **Help chatbot**: Floating FAQ panel in admin layout
+  - Component: `apps/app/client/src/components/admin/HelpChatbot.tsx`
+  - 15 pre-defined Q&A items, categorized, searchable, with links to relevant admin pages
+
+- **Default gift suggestions**: GiftsPage has "Ajouter des suggestions" button
+  - Pre-populates 10 gift ideas (Voyage de noces, Appareil photo, etc.) via API
+
+- **Modern template lightened**: Changed from dark (#0A0A0A) to light editorial style
+
+- **PricingPage improved**: "Recommandé" badge on Premium card, larger CTA button
+
+- **DesignPage UX**: Helper text descriptions added to accordion sections (Hero, Logo, Couleurs, Lieux)
+
+- **Email system**: Migrated from nodemailer/SMTP to Resend via Replit connector
+  - `apps/api/resend-client.ts` — uses `getUncachableResendClient()` (tokens expire)
+  - `apps/api/auth-emails.ts` and `apps/api/email.ts` updated
+
+- **DesignPage auto-save**: 1.5s debounced auto-save with saving/saved status indicator
+
 - **Frontend refactoring**: Broke monolithic InvitationPage.tsx (1958 lines) into modular architecture:
   - Design system tokens at `apps/app/client/src/design-system/tokens.ts`
   - 9 section components at `apps/app/client/src/features/public-site/sections/`

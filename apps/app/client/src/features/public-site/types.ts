@@ -66,10 +66,17 @@ export interface StorySectionProps extends SectionEditProps {
   order?: number;
 }
 
+export type AccommodationItem = {
+  name: string;
+  address: string;
+  url: string;
+};
+
 export type LocationItem = {
   title: string;
   address: string;
   description: string;
+  accommodations?: AccommodationItem[];
 };
 
 export type ProgramItem = {

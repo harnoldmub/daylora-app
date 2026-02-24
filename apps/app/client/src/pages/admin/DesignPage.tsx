@@ -6,17 +6,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BUTTON_RADIUS_OPTIONS, BUTTON_STYLE_OPTIONS, COLOR_TONES } from "@/lib/design-presets";
 
-const LOGO_GENERATOR_URL = "https://www.logo.com/";
 const MAX_LOGO_DATA_URL_LENGTH = 220_000;
 const MAX_IMAGE_DATA_URL_LENGTH = 3_000_000;
 
 const TEMPLATES = [
-  { id: "classic", name: "Classique" },
-  { id: "modern", name: "Moderne" },
-  { id: "minimal", name: "Minimal" },
+  { id: "classic", name: "Classique", premium: false },
+  { id: "modern", name: "Moderne", premium: true },
+  { id: "minimal", name: "Minimal", premium: true },
 ];
 
 const DEFAULT_LOCATION_ITEMS = [
@@ -24,11 +23,13 @@ const DEFAULT_LOCATION_ITEMS = [
     title: "Cérémonie civile",
     address: "Mairie de Lille — 10 Rue Pierre Mauroy",
     description: "Rendez-vous à 14h30 pour accueillir les invités.",
+    accommodations: [] as Array<{ name: string; address: string; url: string }>,
   },
   {
     title: "Réception",
     address: "Château de la Verrière — Salle des Roses",
     description: "Cocktail et dîner à partir de 18h.",
+    accommodations: [] as Array<{ name: string; address: string; url: string }>,
   },
 ];
 
@@ -59,8 +60,11 @@ export default function DesignPage() {
   const updateWedding = useUpdateWedding();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [isApplyingTemplate, setIsApplyingTemplate] = useState(false);
   const [previewToken, setPreviewToken] = useState<number>(Date.now());
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isInitialized = useRef(false);
 
   const [templateId, setTemplateId] = useState<string>("classic");
 
@@ -201,7 +205,56 @@ export default function DesignPage() {
         ? cfgSections.programItems
         : DEFAULT_PROGRAM_ITEMS,
     });
+    setTimeout(() => { isInitialized.current = true; }, 500);
   }, [wedding?.id, (wedding as any)?.updatedAt]);
+
+  useEffect(() => {
+    if (!isInitialized.current || !wedding) return;
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      setAutoSaveStatus("saving");
+      const doSave = async () => {
+        try {
+          let safeBranding = { ...branding };
+          if (safeBranding.logoUrl?.startsWith("data:image/") && safeBranding.logoUrl.length > MAX_LOGO_DATA_URL_LENGTH) return;
+          const dataUrlFields = [
+            { value: media.heroImage || "", limit: MAX_IMAGE_DATA_URL_LENGTH },
+            { value: media.couplePhoto || "", limit: MAX_IMAGE_DATA_URL_LENGTH },
+          ];
+          for (const field of dataUrlFields) {
+            if (field.value.startsWith("data:image/") && field.value.length > field.limit) return;
+          }
+          await updateWedding.mutateAsync({
+            id: wedding.id,
+            config: {
+              ...wedding.config,
+              texts: { ...wedding.config.texts, ...texts },
+              navigation: {
+                ...(wedding.config.navigation || {}),
+                menuItems: (wedding.config.navigation?.menuItems || []).map((item) => {
+                  if (item.id === "rsvp") return { ...item, label: texts.navRsvp || item.label };
+                  if (item.id === "cagnotte") return { ...item, label: texts.navCagnotte || item.label };
+                  if (item.id === "live") return { ...item, label: texts.navLive || item.label };
+                  return item;
+                }),
+              },
+              theme: { ...wedding.config.theme, ...theme },
+              media: { ...wedding.config.media, ...media },
+              branding: { ...wedding.config.branding, ...safeBranding },
+              sections: { ...wedding.config.sections, ...sections },
+            },
+          });
+          setPreviewToken(Date.now());
+          setAutoSaveStatus("saved");
+          setTimeout(() => setAutoSaveStatus("idle"), 2000);
+        } catch {
+          setAutoSaveStatus("idle");
+        }
+      };
+      doSave();
+    }, 1500);
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
+  }, [texts, theme, media, branding, sections]);
 
   const toDateInputValue = (value: string) => {
     if (!value) return "";
@@ -459,9 +512,17 @@ export default function DesignPage() {
           <Button variant="outline" asChild>
             <a href={previewUrl} target="_blank" rel="noopener noreferrer">Ouvrir l'aperçu</a>
           </Button>
-          <Button onClick={saveDesign} disabled={isSaving}>
-            {isSaving ? "Enregistrement..." : "Enregistrer les changements"}
-          </Button>
+          <div className="flex items-center gap-2">
+            {autoSaveStatus === "saving" && (
+              <span className="text-xs text-muted-foreground animate-pulse">Sauvegarde...</span>
+            )}
+            {autoSaveStatus === "saved" && (
+              <span className="text-xs text-green-600">Sauvegardé</span>
+            )}
+            <Button onClick={saveDesign} disabled={isSaving} variant="outline" size="sm">
+              {isSaving ? "Enregistrement..." : "Sauvegarder"}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -475,14 +536,23 @@ export default function DesignPage() {
                 <AccordionContent>
                   <div className="space-y-3">
                     <div className="text-xs text-muted-foreground">Choisissez une direction visuelle globale (couleurs + typographie).</div>
-                    <Select value={templateId} onValueChange={(value) => setTemplateId(value)}>
+                    <Select value={templateId} onValueChange={(value) => {
+                      const tmpl = TEMPLATES.find(t => t.id === value);
+                      if (tmpl?.premium && wedding.currentPlan !== "premium") return;
+                      setTemplateId(value);
+                    }}>
                       <SelectTrigger className="h-10">
                         <SelectValue placeholder="Choisir un template" />
                       </SelectTrigger>
                       <SelectContent>
-                        {TEMPLATES.map((tmpl) => (
-                          <SelectItem key={tmpl.id} value={tmpl.id}>{tmpl.name}</SelectItem>
-                        ))}
+                        {TEMPLATES.map((tmpl) => {
+                          const locked = tmpl.premium && wedding.currentPlan !== "premium";
+                          return (
+                            <SelectItem key={tmpl.id} value={tmpl.id} disabled={locked}>
+                              {tmpl.name}{locked ? " 🔒 Premium" : ""}
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                     <Button onClick={applyTemplate} disabled={isApplyingTemplate} className="w-full">
@@ -496,10 +566,8 @@ export default function DesignPage() {
                 <AccordionTrigger className="hover:no-underline">Logo</AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-3">
+                    <div className="text-xs text-muted-foreground">Ajoutez votre logo ou monogramme. Il apparaîtra en haut du site.</div>
                     <div className="flex items-center gap-2">
-                      <Button asChild variant="outline" size="sm">
-                        <a href={LOGO_GENERATOR_URL} target="_blank" rel="noopener noreferrer">Générer un logo</a>
-                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -531,6 +599,7 @@ export default function DesignPage() {
                 <AccordionTrigger className="hover:no-underline">Couleurs & Typo</AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4">
+                    <div className="text-xs text-muted-foreground">Définissez les couleurs et la typographie de votre site. Les changements s'appliquent en temps réel.</div>
                     <div className="space-y-2">
                       <label className="text-xs font-medium">Palette de couleurs</label>
                       <div className="grid grid-cols-1 gap-2">
@@ -680,6 +749,7 @@ export default function DesignPage() {
                 <AccordionTrigger className="hover:no-underline">Hero</AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-3">
+                    <div className="text-xs text-muted-foreground">La première impression de votre site : titre, photo, date du mariage et bouton d'action.</div>
                     <div className="space-y-2">
                       <label className="text-xs font-medium">Titre du site</label>
                       <Input value={texts.siteTitle} onChange={(e) => setTexts({ ...texts, siteTitle: e.target.value })} />
@@ -907,6 +977,90 @@ export default function DesignPage() {
                           }
                           placeholder="Description"
                         />
+
+                        <div className="pt-2 border-t border-border/50 mt-2">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs text-muted-foreground font-medium">Hébergements à proximité</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 text-xs"
+                              onClick={() =>
+                                setSections((prev) => {
+                                  const items = [...prev.locationItems];
+                                  const accs = [...(items[idx].accommodations || []), { name: "", address: "", url: "" }];
+                                  items[idx] = { ...items[idx], accommodations: accs };
+                                  return { ...prev, locationItems: items };
+                                })
+                              }
+                            >
+                              + Ajouter
+                            </Button>
+                          </div>
+                          {(item.accommodations || []).map((acc: any, accIdx: number) => (
+                            <div key={accIdx} className="flex gap-2 mb-2 items-start">
+                              <div className="flex-1 space-y-1">
+                                <Input
+                                  value={acc.name}
+                                  onChange={(e) =>
+                                    setSections((prev) => {
+                                      const items = [...prev.locationItems];
+                                      const accs = [...(items[idx].accommodations || [])];
+                                      accs[accIdx] = { ...accs[accIdx], name: e.target.value };
+                                      items[idx] = { ...items[idx], accommodations: accs };
+                                      return { ...prev, locationItems: items };
+                                    })
+                                  }
+                                  placeholder="Nom (ex: Hôtel Le Royal)"
+                                  className="h-8 text-xs"
+                                />
+                                <Input
+                                  value={acc.address}
+                                  onChange={(e) =>
+                                    setSections((prev) => {
+                                      const items = [...prev.locationItems];
+                                      const accs = [...(items[idx].accommodations || [])];
+                                      accs[accIdx] = { ...accs[accIdx], address: e.target.value };
+                                      items[idx] = { ...items[idx], accommodations: accs };
+                                      return { ...prev, locationItems: items };
+                                    })
+                                  }
+                                  placeholder="Adresse ou distance"
+                                  className="h-8 text-xs"
+                                />
+                                <Input
+                                  value={acc.url}
+                                  onChange={(e) =>
+                                    setSections((prev) => {
+                                      const items = [...prev.locationItems];
+                                      const accs = [...(items[idx].accommodations || [])];
+                                      accs[accIdx] = { ...accs[accIdx], url: e.target.value };
+                                      items[idx] = { ...items[idx], accommodations: accs };
+                                      return { ...prev, locationItems: items };
+                                    })
+                                  }
+                                  placeholder="Lien de réservation (optionnel)"
+                                  className="h-8 text-xs"
+                                />
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-destructive shrink-0 mt-0"
+                                onClick={() =>
+                                  setSections((prev) => {
+                                    const items = [...prev.locationItems];
+                                    const accs = [...(items[idx].accommodations || [])].filter((_, i) => i !== accIdx);
+                                    items[idx] = { ...items[idx], accommodations: accs };
+                                    return { ...prev, locationItems: items };
+                                  })
+                                }
+                              >
+                                ×
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     ))}
                     <Button
@@ -916,7 +1070,7 @@ export default function DesignPage() {
                           ...prev,
                           locationItems: [
                             ...prev.locationItems,
-                            { title: "Nouveau lieu", address: "", description: "" },
+                            { title: "Nouveau lieu", address: "", description: "", accommodations: [] },
                           ],
                         }))
                       }

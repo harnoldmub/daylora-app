@@ -2,16 +2,16 @@ import { useWedding, useUpdateWedding } from "@/hooks/use-api";
 import { useParams } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2, Sparkles } from "lucide-react";
+import { Check, Loader2, Lock, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { useState } from "react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 const TEMPLATES = [
-        { id: 'classic', name: 'Classique', description: 'Élégant et intemporel', image: '/previews/template_classic_preview_v2.png' },
-        { id: 'modern', name: 'Moderne', description: 'Épuré et minimaliste', image: '/previews/template_modern_preview_v2.png' },
-        { id: 'minimal', name: 'Minimal', description: 'Audacieux et chic', image: '/previews/template_minimal_preview_v2.png' },
+        { id: 'classic', name: 'Classique', description: 'Élégant et intemporel', image: '/previews/template_classic_preview_v2.png', premium: false },
+        { id: 'modern', name: 'Moderne', description: 'Éditorial et lumineux', image: '/previews/template_modern_preview_v2.png', premium: true },
+        { id: 'minimal', name: 'Minimal', description: 'Graphique et épuré', image: '/previews/template_minimal_preview_v2.png', premium: true },
 ];
 
 export default function TemplatesPage() {
@@ -27,6 +27,11 @@ export default function TemplatesPage() {
                 if (!wedding) return;
                 if (isApplying) return;
                 if (wedding.templateId === templateId) return;
+                const tmpl = TEMPLATES.find(t => t.id === templateId);
+                if (tmpl?.premium && wedding.currentPlan !== "premium") {
+                        toast({ title: "Template Premium", description: "Passez au plan Premium pour accéder à ce template.", variant: "destructive" });
+                        return;
+                }
                 setIsApplying(true);
                 setPendingTemplateId(templateId);
                 try {
@@ -79,12 +84,13 @@ export default function TemplatesPage() {
                         <div className={`grid grid-cols-3 gap-4 ${isApplying ? "pointer-events-none" : ""}`}>
                                 {TEMPLATES.map((tmpl) => {
                                         const isCurrent = wedding?.templateId === tmpl.id;
+                                        const isLocked = tmpl.premium && wedding.currentPlan !== "premium";
                                         return (
                                                 <Card
                                                         key={tmpl.id}
                                                         className={`relative cursor-pointer transition-all duration-300 overflow-hidden border ${isCurrent
                                                                 ? "border-primary shadow-lg ring-2 ring-primary/20"
-                                                                : "hover:border-primary/40"
+                                                                : isLocked ? "opacity-70 hover:opacity-90" : "hover:border-primary/40"
                                                                 } ${isApplying && pendingTemplateId !== tmpl.id ? "opacity-60" : ""}`}
                                                         onClick={() => handleSelect(tmpl.id)}
                                                 >
@@ -98,15 +104,27 @@ export default function TemplatesPage() {
                                                                                         </div>
                                                                                 </div>
                                                                         )}
+                                                                        {isLocked && !isCurrent && (
+                                                                                <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                                                                        <Lock size={14} className="text-white drop-shadow" />
+                                                                                </div>
+                                                                        )}
                                                                 </div>
                                                                 <div className="flex-1 min-w-0">
-                                                                        <CardTitle className="text-base font-serif">{tmpl.name}</CardTitle>
+                                                                        <div className="flex items-center gap-2">
+                                                                                <CardTitle className="text-base font-serif">{tmpl.name}</CardTitle>
+                                                                                {isLocked && (
+                                                                                        <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary rounded font-semibold uppercase tracking-wider">Premium</span>
+                                                                                )}
+                                                                        </div>
                                                                         <CardDescription className="text-xs mt-1">{tmpl.description}</CardDescription>
                                                                         <div className="mt-2">
                                                                                 {isCurrent ? (
                                                                                         <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary">
                                                                                                 <Check size={12} /> Actuel
                                                                                         </span>
+                                                                                ) : isLocked ? (
+                                                                                        <Link href="/billing" className="text-xs text-primary hover:underline">Passer en Premium</Link>
                                                                                 ) : (
                                                                                         <span className="text-xs text-muted-foreground">Sélectionner</span>
                                                                                 )}

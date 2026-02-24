@@ -1,4 +1,4 @@
-import { MapPin } from "lucide-react";
+import { MapPin, Bed, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InlineEditor } from "@/components/ui/inline-editor";
 import type { LocationsSectionProps } from "@/features/public-site/types";
@@ -98,6 +98,35 @@ export function LocationsSection({
                     <MapPin className="h-3.5 w-3.5" />
                     Voir sur Google Maps
                   </a>
+                )}
+                {!canEdit && item.accommodations && item.accommodations.length > 0 && (
+                  <div className="mt-4 pt-3 border-t" style={{ borderColor: 'color-mix(in srgb, var(--wedding-primary) 10%, transparent)' }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Bed className="h-3.5 w-3.5" style={{ color: 'var(--wedding-primary)' }} />
+                      <span className="text-xs font-medium uppercase tracking-wider opacity-60">Hébergements</span>
+                    </div>
+                    <div className="space-y-2">
+                      {item.accommodations.map((acc, accIdx) => (
+                        <div key={accIdx} className="text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{acc.name}</span>
+                            {acc.url && (
+                              <a
+                                href={acc.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 hover:underline"
+                                style={{ color: 'var(--wedding-primary)' }}
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            )}
+                          </div>
+                          {acc.address && <p className="text-xs opacity-50">{acc.address}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
                 {canEdit && editMode ? (
                   <div className="pt-3">

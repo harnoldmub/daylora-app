@@ -22,6 +22,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useWeddings } from "@/hooks/use-api";
 import { Button } from "@/components/ui/button";
+import { HelpChatbot } from "@/components/admin/HelpChatbot";
 import { useState } from "react";
 
 export function AdminLayout({ children, weddingId: weddingIdProp }: { children: ReactNode; weddingId?: string }) {
@@ -97,6 +98,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                         {children}
                     </div>
                 </div>
+                <HelpChatbot />
             </div>
         );
     }
@@ -239,6 +241,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                     </div>
                 </div>
             </main>
+            <HelpChatbot />
         </div>
     );
 }

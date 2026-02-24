@@ -9,6 +9,7 @@ import {
   Euro,
   TrendingUp,
   ListChecks,
+  Sparkles,
 } from "lucide-react";
 import { useParams } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,19 @@ const emptyForm: GiftForm = {
   imageUrl: "",
   price: null,
 };
+
+const SUGGESTION_GIFTS: GiftForm[] = [
+  { name: "Voyage de noces", description: "Contribuez à notre lune de miel de rêve.", imageUrl: "", price: 500 },
+  { name: "Appareil photo", description: "Pour immortaliser nos plus beaux souvenirs.", imageUrl: "", price: 350 },
+  { name: "Service de table", description: "Un beau service pour nos dîners en amoureux.", imageUrl: "", price: 200 },
+  { name: "Grille-pain", description: "Pour des petits-déjeuners gourmands.", imageUrl: "", price: 60 },
+  { name: "Robot cuisine", description: "Pour préparer de bons petits plats ensemble.", imageUrl: "", price: 300 },
+  { name: "Linge de maison", description: "Draps, serviettes et accessoires pour notre nid douillet.", imageUrl: "", price: 150 },
+  { name: "Expérience bien-être", description: "Un moment de détente en duo dans un spa.", imageUrl: "", price: 180 },
+  { name: "Cours de cuisine", description: "Un atelier culinaire pour apprendre à deux.", imageUrl: "", price: 120 },
+  { name: "Panier gourmet", description: "Une sélection de produits fins et délicieux.", imageUrl: "", price: 80 },
+  { name: "Cadre photo", description: "Pour encadrer nos plus belles photos de mariage.", imageUrl: "", price: 50 },
+];
 
 export default function GiftsPage() {
   const { weddingId } = useParams<{ weddingId: string }>();
@@ -159,6 +173,42 @@ export default function GiftsPage() {
     },
   });
 
+  const addSuggestionsMutation = useMutation({
+    mutationFn: async () => {
+      const existingNames = new Set(gifts.map((g) => g.name.toLowerCase()));
+      const newGifts = SUGGESTION_GIFTS.filter(
+        (sg) => !existingNames.has(sg.name.toLowerCase())
+      );
+      if (newGifts.length === 0) {
+        throw new Error("Toutes les suggestions existent déjà dans votre liste.");
+      }
+      for (const gift of newGifts) {
+        const payload = {
+          name: gift.name,
+          description: gift.description || null,
+          imageUrl: gift.imageUrl || null,
+          price: gift.price,
+        };
+        await apiRequest("POST", "/api/gifts", payload);
+      }
+      return newGifts.length;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/gifts"] });
+      toast({
+        title: "Suggestions ajoutées",
+        description: `${count} idée${count > 1 ? "s" : ""} de cadeaux ${count > 1 ? "ont été ajoutées" : "a été ajoutée"} à votre liste.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Impossible d'ajouter les suggestions",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const totalCollected = (totalData?.total || 0) / 100;
   const totalTarget = useMemo(
     () => gifts.reduce((sum, gift) => sum + (gift.price || 0), 0),
@@ -214,6 +264,19 @@ export default function GiftsPage() {
         title="Cadeaux"
         description="Gérez votre liste de cadeaux et suivez sa progression."
         actions={
+          <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => addSuggestionsMutation.mutate()}
+            disabled={addSuggestionsMutation.isPending}
+          >
+            {addSuggestionsMutation.isPending ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4 mr-2" />
+            )}
+            Ajouter des suggestions
+          </Button>
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -266,6 +329,7 @@ export default function GiftsPage() {
             </div>
           </DialogContent>
         </Dialog>
+          </div>
         }
       />
 
