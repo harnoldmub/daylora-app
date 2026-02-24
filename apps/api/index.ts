@@ -30,7 +30,18 @@ app.use(helmet({
 if (isProduction) {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const publicDir = path.resolve(__dirname, "public");
-  app.use(express.static(publicDir));
+  app.use(express.static(publicDir, {
+    maxAge: 0,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith(".html")) {
+        res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      } else if (/\.(js|css)$/.test(filePath) && /\.[a-f0-9]{8,}\./.test(filePath)) {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      } else {
+        res.setHeader("Cache-Control", "no-cache");
+      }
+    },
+  }));
 }
 
 const allowedOrigins = new Set([
@@ -145,6 +156,7 @@ app.use((req, res, next) => {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     const publicDir = path.resolve(__dirname, "public");
     app.get("*", (_req, res) => {
+      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
       res.sendFile(path.join(publicDir, "index.html"));
     });
   } else {
