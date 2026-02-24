@@ -11,6 +11,7 @@ async function throwIfResNotOk(res: Response) {
         throw new Error(json.message);
       }
     } catch (e) {
+      if (e instanceof Error && e.message !== text) throw e;
     }
     throw new Error(`${res.status}: ${text}`);
   }
