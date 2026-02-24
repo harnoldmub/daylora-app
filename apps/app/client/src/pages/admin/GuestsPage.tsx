@@ -9,6 +9,7 @@ import {
     Trash2,
     Mail,
     ExternalLink,
+    FileEdit,
     MessageCircle,
     Loader2,
     CheckCircle2,
@@ -454,8 +455,8 @@ export default function GuestsPage() {
                         Exporter CSV
                     </Button>
                     <Button variant="outline" onClick={openInvitationSettings} disabled={!wedding}>
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Invitation
+                        <FileEdit className="h-4 w-4 mr-2" />
+                        Modifier l'invitation
                     </Button>
                     <Dialog open={addGuestOpen} onOpenChange={setAddGuestOpen}>
                         <DialogTrigger asChild>

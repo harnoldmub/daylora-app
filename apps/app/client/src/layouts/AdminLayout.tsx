@@ -37,7 +37,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
     const navItems = [
         { name: "Accueil", icon: Home, href: "/welcome" },
         { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-        { name: "Invitation", icon: Paintbrush, href: "/design" },
+        { name: "Design", icon: Paintbrush, href: "/design" },
         { name: "Invités", icon: Users, href: "/guests" },
         { name: "Templates", icon: Palette, href: "/templates" },
         { name: "Site & Menus", icon: ListTree, href: "/site" },
