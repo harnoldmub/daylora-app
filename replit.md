@@ -12,6 +12,20 @@ Multi-tenant wedding website SaaS. Couples create accounts, pick a template (Cla
 
 ## Recent Changes (Feb 2026)
 
+- **Guest invitation page redesign**: Elegant full-page invitation at `/:slug/guest/:token`
+  - Component: `apps/app/client/src/pages/dot-invitation.tsx`
+  - Top-level route in App.tsx (bypasses PublicLayout for unpublished weddings)
+  - Dedicated API: `GET /api/invitation/guest/:token/wedding` returns wedding data without publication check
+  - Cormorant Garamond + Playfair Display serif fonts
+  - MonogramSeal SVG with couple initials, CornerOrnament SVG decorations
+  - FloralDivider star-shaped ornament between sections
+  - Scroll-triggered AnimatedSection with IntersectionObserver + fade-up transitions
+  - Sections: Hero (monogram, guest name, couple names, date capsule), Couple photo, Programme (alternating timeline), Lieux (cards with MapPin + accommodations), Dress code, Cagnotte, Gallery (2x2 grid), QR code, Footer
+  - Dynamic colors from `wedding.config.theme` via `hexToHSL()` — textDark, textSubtle, bgBase, cardBg, borderLight computed from primary
+  - CSS `color-mix()` for subtle tinted backgrounds and borders
+  - Schema: `googleId` and `appleId` columns added to users table
+  - OAuth routes: `apps/api/oauth-routes.ts` with Google OAuth strategy + Apple Sign In
+
 - **Guided tour (onboarding animation)**: Interactive step-by-step product tour on first login
   - Component: `apps/app/client/src/components/guided-tour.tsx`
   - 6 steps: Welcome → Sidebar menu → View site button → Checklist → Design link → Done

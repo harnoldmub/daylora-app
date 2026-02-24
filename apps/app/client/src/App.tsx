@@ -125,6 +125,8 @@ function AppRouter() {
       <Route path="/invitation/:id" component={Invitation} />
       <Route path="/checkin" component={CheckIn} />
 
+      <Route path="/:slug/guest/:guestId" component={GuestInvitation} />
+
       <Route path="/preview/:slug" nest>
         {(params) => <PublicRoutes slug={params.slug} isPreview />}
       </Route>

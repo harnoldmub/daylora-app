@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
 import authRoutes from "./auth-routes";
+import oauthRoutes from "./oauth-routes";
 import { validateRequest, withWedding, requireRole } from "./middleware/guards";
 import {
   insertRsvpResponseSchema,
@@ -234,6 +235,7 @@ function applyTemplateConfig(templateId: string, currentConfig: any) {
 export async function registerRoutes(app: Express) {
   setupAuth(app);
   app.use("/api/auth", authRoutes);
+  app.use("/api/auth", oauthRoutes);
 
   const isDevEnv = process.env.NODE_ENV !== "production";
   const signupWithWeddingLimiter = (await import("express-rate-limit")).default({ windowMs: 60 * 1000, max: isDevEnv ? 100 : 5, message: "Trop de tentatives. Réessayez dans une minute." });
@@ -886,6 +888,19 @@ export async function registerRoutes(app: Express) {
     const guest = await storage.getRsvpResponseByPublicToken(token);
     if (!guest) return res.status(404).json({ message: "Invitation non trouvée" });
     res.json(guest);
+  });
+
+  app.get("/api/invitation/guest/:token/wedding", async (req, res) => {
+    try {
+      const token = req.params.token;
+      const guest = await storage.getRsvpResponseByPublicToken(token);
+      if (!guest) return res.status(404).json({ message: "Invitation non trouvée" });
+      const wedding = await storage.getWedding(guest.weddingId);
+      if (!wedding) return res.status(404).json({ message: "Mariage non trouvé" });
+      res.json(wedding);
+    } catch {
+      res.status(500).json({ message: "Erreur serveur" });
+    }
   });
 
   // Public PDF download (token-based, non-guessable)
