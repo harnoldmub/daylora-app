@@ -5,13 +5,14 @@ import {
   Search,
   ChevronRight,
   ChevronDown,
-  Palette,
+  Paintbrush,
   Users,
   Gift,
   Share2,
   CreditCard,
   FileText,
   ExternalLink,
+  Radio,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -25,119 +26,139 @@ interface FAQItem {
 
 const faqItems: FAQItem[] = [
   {
-    category: "Édition",
-    question: "Comment modifier les textes de mon site ?",
+    category: "Invitation",
+    question: "Comment modifier les textes de mon invitation ?",
     answer:
-      "Rendez-vous dans la page Design, puis ouvrez la section que vous souhaitez modifier (Hero, Programme, Histoire…). Vous pouvez modifier chaque texte directement dans les champs correspondants. Les changements sont sauvegardés automatiquement.",
-    link: { label: "Aller au Design", href: "/design" },
+      "Allez dans « Invitation » depuis le menu latéral. Chaque section (Hero, Programme, Histoire, Lieux, RSVP, Cagnotte…) a ses propres champs. Modifiez les textes puis cliquez sur « Appliquer » en bas de la section pour enregistrer.",
+    link: { label: "Modifier l'invitation", href: "/design" },
   },
   {
-    category: "Édition",
-    question: "Comment modifier en live sur mon site ?",
+    category: "Invitation",
+    question: "Comment changer les couleurs et la typographie ?",
     answer:
-      "Depuis la page Design, cliquez sur « Modifier en live » dans la barre supérieure. Vous pourrez éditer les textes directement sur votre site en cliquant dessus. Les modifications sont enregistrées instantanément.",
-    link: { label: "Aller au Design", href: "/design" },
+      "Dans la page Invitation, ouvrez la section « Couleurs & Typo ». Choisissez une palette prédéfinie ou personnalisez les couleurs primaire et secondaire. Vous pouvez aussi changer la famille typographique (serif ou sans-serif) et le style des boutons.",
+    link: { label: "Modifier l'invitation", href: "/design" },
   },
   {
-    category: "Design",
-    question: "Comment changer les couleurs et polices ?",
-    answer:
-      "Dans la page Design, ouvrez la section « Couleurs & Polices ». Vous pouvez choisir parmi des palettes prédéfinies ou personnaliser chaque couleur individuellement. Les polices sont également modifiables pour les titres et le texte courant.",
-    link: { label: "Aller au Design", href: "/design" },
-  },
-  {
-    category: "Design",
+    category: "Invitation",
     question: "Comment changer de template ?",
     answer:
-      "Rendez-vous dans la page Templates pour voir les modèles disponibles : Classique, Moderne et Minimal. Cliquez sur celui qui vous plaît pour l'appliquer. Certains templates sont réservés aux abonnements Premium.",
+      "Rendez-vous dans « Templates » pour voir les 3 modèles disponibles : Classique (gratuit), Modern et Minimal (Premium). Vous pouvez aussi changer de template depuis la section « Template » de la page Invitation.",
     link: { label: "Voir les Templates", href: "/templates" },
   },
   {
-    category: "Design",
+    category: "Invitation",
     question: "Comment ajouter ou changer mon logo ?",
     answer:
-      "Dans la page Design, section « Logo & Identité », vous pouvez télécharger votre logo personnalisé. Formats acceptés : PNG, JPG, SVG. Taille recommandée : 200×200 pixels minimum.",
-    link: { label: "Aller au Design", href: "/design" },
+      "Dans la page Invitation, ouvrez la section « Logo ». Importez votre logo (PNG, JPG ou SVG) ou définissez un texte de remplacement. Le logo apparaît en haut de votre site public.",
+    link: { label: "Modifier l'invitation", href: "/design" },
+  },
+  {
+    category: "Invitation",
+    question: "Comment ajouter des lieux et hébergements ?",
+    answer:
+      "Dans la page Invitation, section « Lieux & Accès », ajoutez vos lieux (cérémonie, réception…) avec titre, adresse et description. Pour chaque lieu, vous pouvez aussi ajouter des suggestions d'hébergements à proximité avec nom, adresse et lien de réservation.",
+    link: { label: "Modifier l'invitation", href: "/design" },
   },
   {
     category: "Invités",
     question: "Comment ajouter des invités ?",
     answer:
-      "Allez dans la page Invités, puis cliquez sur « Ajouter un invité ». Remplissez le nom, l'email et le nombre d'accompagnants. Vous pouvez aussi importer une liste depuis un fichier CSV.",
-    link: { label: "Gérer les Invités", href: "/guests" },
+      "Allez dans « Invités », puis cliquez sur « Ajouter un invité ». Remplissez le prénom, nom, email, téléphone et le nombre d'accompagnants. Vous pouvez aussi exporter la liste au format CSV.",
+    link: { label: "Gérer les invités", href: "/guests" },
   },
   {
     category: "Invités",
-    question: "Comment gérer les RSVP ?",
+    question: "Comment suivre les RSVP ?",
     answer:
-      "Les réponses RSVP apparaissent automatiquement dans la page Invités. Vous pouvez voir qui a confirmé, décliné ou n'a pas encore répondu. Le tableau de bord affiche un récapitulatif en temps réel.",
-    link: { label: "Voir les Invités", href: "/guests" },
+      "Les réponses RSVP apparaissent automatiquement dans la page Invités avec un statut (confirmé, en attente, refusé). Utilisez les filtres pour trier par statut. Le tableau de bord affiche un récapitulatif en temps réel. En formule gratuite, la limite est de 30 RSVP.",
+    link: { label: "Voir les invités", href: "/guests" },
   },
   {
-    category: "Partage",
-    question: "Comment partager mon site de mariage ?",
+    category: "Invités",
+    question: "Comment envoyer les invitations ?",
     answer:
-      "Votre site est accessible via un lien unique basé sur votre slug (ex: nocely.com/votre-slug). Vous pouvez le partager par email, WhatsApp ou sur les réseaux sociaux. Retrouvez le lien depuis le bouton « Voir le site » en haut de page.",
-  },
-  {
-    category: "Partage",
-    question: "Comment envoyer des invitations ?",
-    answer:
-      "Depuis la page Invités, vous pouvez envoyer des invitations par email à vos invités. Chaque invité reçoit un lien personnalisé vers votre site avec son nom pré-rempli pour le RSVP.",
-    link: { label: "Gérer les Invités", href: "/guests" },
+      "Chaque invité reçoit un lien personnalisé vers une invitation élégante à son nom. Depuis le tableau des invités, utilisez les boutons d'action pour ouvrir l'invitation, envoyer un email ou contacter par WhatsApp.",
+    link: { label: "Gérer les invités", href: "/guests" },
   },
   {
     category: "Cadeaux",
     question: "Comment gérer la liste de cadeaux ?",
     answer:
-      "Dans la page Cadeaux, ajoutez les cadeaux souhaités avec un nom, une description et un prix suggéré. Vos invités pourront les consulter et contribuer directement depuis votre site de mariage.",
-    link: { label: "Gérer les Cadeaux", href: "/gifts" },
+      "Dans « Cadeaux », ajoutez des cadeaux avec nom, description et prix. Utilisez le bouton « Ajouter des suggestions » pour pré-remplir 10 idées populaires. Vos invités peuvent réserver un cadeau en cliquant sur « Je m'en occupe » depuis votre site public.",
+    link: { label: "Gérer les cadeaux", href: "/gifts" },
   },
   {
     category: "Cadeaux",
     question: "Comment fonctionne la cagnotte en ligne ?",
     answer:
-      "La cagnotte permet à vos invités de contribuer financièrement à votre projet (voyage de noces, etc.). Les paiements sont sécurisés via Stripe. Vous recevez les fonds directement sur votre compte.",
-    link: { label: "Gérer les Cadeaux", href: "/gifts" },
+      "La cagnotte permet à vos invités de contribuer financièrement via Stripe. Ils choisissent un montant parmi les suggestions ou saisissent un montant libre, et laissent un message. Vous suivez les contributions en temps réel depuis le tableau de bord.",
+  },
+  {
+    category: "Partage",
+    question: "Comment partager mon site ?",
+    answer:
+      "Votre site est accessible via un lien unique (app.nocely.app/votre-slug). Publiez-le depuis les Paramètres quand vous êtes prêt. Tant qu'il n'est pas publié, seul vous pouvez le voir en mode aperçu. Partagez le lien par email, WhatsApp ou réseaux sociaux.",
+  },
+  {
+    category: "Partage",
+    question: "Comment publier ou dépublier mon site ?",
+    answer:
+      "Rendez-vous dans « Paramètres » pour activer ou désactiver la publication de votre site. Quand le site est dépublié, les visiteurs non connectés verront une page 404.",
+    link: { label: "Paramètres", href: "/settings" },
+  },
+  {
+    category: "Live",
+    question: "Comment utiliser l'affichage live ?",
+    answer:
+      "La page live affiche les contributions en temps réel — idéale pour projeter pendant votre soirée. Un QR code est inclus pour que vos invités participent sur place. Accédez-y depuis « Blagues Live » puis « Voir la page live ».",
+    link: { label: "Blagues Live", href: "/live" },
   },
   {
     category: "Abonnement",
     question: "Comment passer au plan Premium ?",
     answer:
-      "Rendez-vous dans la page Facturation pour découvrir les avantages du plan Premium : templates exclusifs, nombre d'invités illimité, domaine personnalisé et plus encore. Le paiement est sécurisé.",
-    link: { label: "Voir les Tarifs", href: "/billing" },
+      "Rendez-vous dans « Facturation » pour souscrire au plan Premium à 23,99 €/mois ou 149 €/an. Le Premium débloque les 3 templates, les RSVP illimités, la liste de cadeaux, les blagues live, les pages personnalisées, 50 photos en galerie et retire le branding Nocely.",
+    link: { label: "Voir les tarifs", href: "/billing" },
   },
   {
     category: "Abonnement",
     question: "Quelles sont les différences entre les plans ?",
     answer:
-      "Le plan Gratuit inclut le template Classique, jusqu'à 50 invités et les fonctionnalités de base. Le plan Premium débloque tous les templates, un nombre d'invités illimité, la cagnotte en ligne, l'envoi d'emails et la personnalisation avancée.",
-    link: { label: "Comparer les Plans", href: "/billing" },
+      "Gratuit : template Classique, 30 RSVP max, cagnotte, 6 photos en galerie, branding Nocely. Premium : 3 templates, RSVP illimités, liste de cadeaux avec réservation, page live et blagues, pages personnalisées, 50 photos, sans branding.",
+    link: { label: "Comparer les plans", href: "/billing" },
+  },
+  {
+    category: "Abonnement",
+    question: "Comment fonctionne le parrainage ?",
+    answer:
+      "Chaque utilisateur reçoit un code de parrainage unique. Partagez-le avec vos proches : ils bénéficieront d'une réduction de 10 € sur le plan Premium. Retrouvez votre code dans la page Facturation.",
+    link: { label: "Voir mon code", href: "/billing" },
   },
   {
     category: "Pages",
     question: "Comment ajouter des pages personnalisées ?",
     answer:
-      "Depuis la page Pages, vous pouvez créer des pages supplémentaires pour votre site (hébergement, activités, informations pratiques…). Chaque page peut contenir du texte enrichi et des images.",
-    link: { label: "Gérer les Pages", href: "/pages" },
+      "Depuis « Pages », créez des pages supplémentaires pour votre site (infos pratiques, dress code, activités…). Cette fonctionnalité est réservée au plan Premium.",
+    link: { label: "Gérer les pages", href: "/pages" },
   },
   {
     category: "Pages",
     question: "Comment configurer le menu de mon site ?",
     answer:
-      "Dans Site & Menus, vous pouvez choisir quelles sections afficher, réorganiser le menu de navigation et activer/désactiver des pages. Cela vous permet de personnaliser entièrement la structure de votre site.",
-    link: { label: "Configurer le Site", href: "/site" },
+      "Dans « Site & Menus », choisissez quelles sections afficher et réorganisez le menu de navigation. Activez ou désactivez les sections selon vos besoins.",
+    link: { label: "Configurer le site", href: "/site" },
   },
 ];
 
 const categories = Array.from(new Set(faqItems.map((item) => item.category)));
 
-const categoryIcons: Record<string, typeof Palette> = {
-  Édition: FileText,
-  Design: Palette,
+const categoryIcons: Record<string, typeof Paintbrush> = {
+  Invitation: Paintbrush,
   Invités: Users,
-  Partage: Share2,
   Cadeaux: Gift,
+  Partage: Share2,
+  Live: Radio,
   Abonnement: CreditCard,
   Pages: FileText,
 };
