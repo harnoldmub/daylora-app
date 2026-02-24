@@ -182,7 +182,7 @@ export default function Onboarding() {
       toast({ title: "URL requise", description: "Ajoutez un lien de cagnotte externe ou choisissez Stripe.", variant: "destructive" });
       return;
     }
-    if (step === 6) {
+    if (step === 7) {
       const valid = await form.trigger(["email", "password"]);
       if (!valid) return;
     }
@@ -634,12 +634,21 @@ export default function Onboarding() {
                           </div>
                         )}
 
-                        <div className="text-center pt-4">
+                        <div className="text-center pt-4 space-y-4">
                           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-50 text-green-700 text-sm font-semibold border border-green-200">
                             <Check className="h-4 w-4" />
                             Votre site est prêt à être publié
                           </div>
-                          <p className="text-xs text-muted-foreground mt-3">URL : <span className="font-semibold">app.nocely.app/{form.watch("slug")}</span></p>
+                          <p className="text-xs text-muted-foreground">URL : <span className="font-semibold">app.nocely.app/{form.watch("slug")}</span></p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="gap-2"
+                            onClick={() => window.open(`/${form.watch("slug")}`, "_blank")}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            Voir l'aperçu complet du site
+                          </Button>
                         </div>
                       </div>
                     </div>
