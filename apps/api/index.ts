@@ -150,6 +150,27 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  try {
+    const { runMigrations } = await import("stripe-replit-sync");
+    const { getStripeSync } = await import("./stripeClient");
+    
+    if (process.env.DATABASE_URL) {
+      await runMigrations({ databaseUrl: process.env.DATABASE_URL, schema: "stripe" });
+      log("Stripe schema ready");
+
+      const stripeSync = await getStripeSync();
+      const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN;
+      if (domain) {
+        const { webhook } = await stripeSync.findOrCreateManagedWebhook(`https://${domain}/api/webhooks/stripe`);
+        log(`Stripe webhook configured: ${webhook.url}`);
+      }
+
+      stripeSync.syncBackfill().then(() => log("Stripe data synced")).catch((e: any) => console.error("Stripe sync error:", e));
+    }
+  } catch (e: any) {
+    console.error("Stripe init error (non-fatal):", e.message);
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
