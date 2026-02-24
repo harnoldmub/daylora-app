@@ -9,7 +9,7 @@ packages = ["ghostscript", "glib", "nss", "nspr", "at-spi2-atk", "cups", "libdrm
 [deployment]
 deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
-run = ["bash", "-c", "SESSION_STORE=db NODE_ENV=production node dist/index.js"]
+run = ["npm", "run", "start"]
 
 [[ports]]
 localPort = 3000
