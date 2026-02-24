@@ -25,6 +25,7 @@ import VerifyEmail from "@/pages/verify-email";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import Onboarding from "@/pages/onboarding";
+import OnboardingPreview from "@/pages/OnboardingPreview";
 import ContributionMerci from "@/pages/contribution-merci";
 import NotFound from "@/pages/not-found";
 import InvitationPage from "@/pages/InvitationPage";
@@ -117,6 +118,7 @@ function AppRouter() {
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/onboarding" component={Onboarding} />
+      <Route path="/onboarding-preview" component={OnboardingPreview} />
 
       <Route path="/contribution/merci" component={ContributionMerci} />
 

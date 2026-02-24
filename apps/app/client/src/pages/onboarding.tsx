@@ -644,7 +644,22 @@ export default function Onboarding() {
                             type="button"
                             variant="outline"
                             className="gap-2"
-                            onClick={() => window.open(`/${form.watch("slug")}`, "_blank")}
+                            onClick={() => {
+                              const previewData = {
+                                title: form.getValues("title"),
+                                slug: form.getValues("slug"),
+                                weddingDate: form.getValues("weddingDate"),
+                                templateId: form.getValues("templateId"),
+                                storyBody: form.getValues("storyBody"),
+                                toneId,
+                                heroImage,
+                                couplePhoto,
+                                galleryImages,
+                                features: modules,
+                              };
+                              localStorage.setItem("nocely_onboarding_preview", JSON.stringify(previewData));
+                              window.open("/onboarding-preview", "_blank");
+                            }}
                           >
                             <ExternalLink className="h-4 w-4" />
                             Voir l'aperçu complet du site
