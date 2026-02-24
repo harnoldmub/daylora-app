@@ -5,7 +5,8 @@ import { storage } from "./storage";
 
 const router = Router();
 
-const APP_BASE_URL = process.env.APP_BASE_URL || "http://localhost:5000";
+const APP_BASE_URL = process.env.APP_BASE_URL
+  || (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : "http://localhost:5000");
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(
