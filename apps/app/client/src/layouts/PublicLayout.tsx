@@ -181,7 +181,10 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
         );
     }
 
-    if (!wedding) {
+    const isOwner = !!(user && wedding && user.id === wedding.ownerId);
+    const showNotFound = !wedding || (!wedding.isPublished && !isPreviewRoute && !isOwner);
+
+    if (showNotFound) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-[#F5F2ED]">
                 <h1 className="text-2xl font-bold mb-2 text-[#2b2320]">Mariage introuvable</h1>

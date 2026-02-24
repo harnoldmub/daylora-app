@@ -49,8 +49,8 @@ export async function withWeddingFromRequest(req: Request, res: Response, next: 
     (req as any).wedding = wedding;
 
     const isPreview = req.headers["x-preview-mode"] === "true";
-    const isAuthenticated = !!(req as any).user;
-    if (!wedding.isPublished && !isPreview && !isAuthenticated) {
+    const isOwner = !!(req as any).user && (req as any).user.id === wedding.ownerId;
+    if (!wedding.isPublished && !isPreview && !isOwner) {
       return res.status(404).json({ message: "Ce site n'est pas encore publié." });
     }
 

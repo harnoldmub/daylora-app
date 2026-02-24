@@ -222,8 +222,8 @@ app.use((req, res, next) => {
         }
 
         if (!wedding.isPublished) {
-          const isAuthenticated = !!(req as any).user;
-          if (!isAuthenticated) {
+          const isOwner = !!(req as any).user && (req as any).user.id === wedding.ownerId;
+          if (!isOwner) {
             res.status(404);
             return res.send(indexHtml);
           }
