@@ -169,6 +169,13 @@ export default function GuestInvitationPage() {
   const borderMedium = `color-mix(in srgb, ${primaryColor} 20%, transparent)`;
 
   useEffect(() => {
+    if (!wedding) return;
+    const wTitle = wedding.config?.texts?.heroTitle || wedding.title;
+    document.title = wTitle ? `${wTitle} — Invitation` : "Invitation";
+    return () => { document.title = "Nocely — Créez votre site de mariage"; };
+  }, [wedding?.id]);
+
+  useEffect(() => {
     if (typeof window === "undefined" || !guestId) return;
     let cancelled = false;
     QRCodeLib.toDataURL(window.location.href, {

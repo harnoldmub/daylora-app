@@ -86,6 +86,9 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
             logoUrl: wedding.config?.branding?.logoUrl || "",
             logoText: wedding.config?.branding?.logoText || wedding.title,
         });
+        const weddingTitle = wedding.config?.texts?.heroTitle || wedding.title;
+        document.title = weddingTitle ? `${weddingTitle} — Nocely` : "Nocely";
+        return () => { document.title = "Nocely — Créez votre site de mariage"; };
     }, [wedding?.id, (wedding as any)?.updatedAt]);
 
     const setEditMode = useCallback((value: boolean) => {
