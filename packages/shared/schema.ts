@@ -393,6 +393,7 @@ export const gifts = pgTable("gifts", {
   price: integer("price"), // Total price of the gift
   contributedAmount: integer("contributed_amount").notNull().default(0),
   isReserved: boolean("is_reserved").notNull().default(false),
+  reservedBy: varchar("reserved_by", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -565,6 +566,7 @@ export const insertGiftSchema = createInsertSchema(gifts).omit({
   weddingId: true,
   contributedAmount: true,
   isReserved: true,
+  reservedBy: true,
 });
 export const insertLiveJokeSchema = createInsertSchema(liveJokes).omit({ id: true, createdAt: true, weddingId: true });
 export const insertEmailVerificationTokenSchema = createInsertSchema(emailVerificationTokens).omit({ id: true, createdAt: true });

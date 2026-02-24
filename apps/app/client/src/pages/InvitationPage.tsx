@@ -387,6 +387,14 @@ export default function InvitationPage() {
     onError: (error: Error) => { toast({ title: "Erreur", description: error.message || "Impossible de supprimer le cadeau.", variant: "destructive" }); },
   });
 
+  const handleReserveGift = async (giftId: number, guestName: string) => {
+    const res = await apiRequest("POST", `/api/gifts/${giftId}/reserve`, { guestName });
+    if (!res.ok) { const data = await res.json().catch(() => ({})); throw new Error(data.message || "Erreur"); }
+    queryClient.invalidateQueries({ queryKey: ["/api/gifts/public"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/gifts"] });
+    toast({ title: "Cadeau réservé", description: `${guestName} prend en charge ce cadeau.` });
+  };
+
   const submitGift = () => {
     const name = giftForm.name.trim();
     if (!name) { toast({ title: "Champ requis", description: "Le nom du cadeau est requis.", variant: "destructive" }); return; }
@@ -482,6 +490,7 @@ export default function InvitationPage() {
         onCreateGift={openCreateGift}
         onEditGift={openEditGift}
         onDeleteGift={(gift) => { setGiftDeleting(gift); setGiftDeleteOpen(true); }}
+        onReserveGift={handleReserveGift}
         onSaveCagnotteExternalUrl={saveCagnotteExternalUrl}
         onSetDraftCagnotteExternalUrl={setDraftCagnotteExternalUrl}
         toDateInputValue={toDateInputValue}

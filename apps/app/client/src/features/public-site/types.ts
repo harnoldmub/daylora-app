@@ -131,6 +131,7 @@ export interface GiftsSectionProps extends SectionEditProps {
   onCreateGift: () => void;
   onEditGift: (gift: GiftDb) => void;
   onDeleteGift: (gift: GiftDb) => void;
+  onReserveGift?: (giftId: number, guestName: string) => void;
   order?: number;
 }
 

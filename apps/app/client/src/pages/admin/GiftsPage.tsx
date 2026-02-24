@@ -10,6 +10,7 @@ import {
   TrendingUp,
   ListChecks,
   Sparkles,
+  RotateCcw,
 } from "lucide-react";
 import { useParams } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -170,6 +171,17 @@ export default function GiftsPage() {
         description: error.message || "Impossible de supprimer ce cadeau.",
         variant: "destructive",
       });
+    },
+  });
+
+  const unreserveGiftMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("POST", `/api/gifts/${id}/unreserve`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/gifts"] });
+      toast({ title: "Réservation annulée" });
     },
   });
 
@@ -394,9 +406,14 @@ export default function GiftsPage() {
                       <TableCell>{gift.price ? `${gift.price.toLocaleString("fr-FR")} €` : "Libre"}</TableCell>
                       <TableCell>
                         {gift.isReserved ? (
-                          <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">
-                            Réservé
-                          </span>
+                          <div className="space-y-1">
+                            <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">
+                              Réservé
+                            </span>
+                            {(gift as any).reservedBy && (
+                              <p className="text-xs text-muted-foreground">par {(gift as any).reservedBy}</p>
+                            )}
+                          </div>
                         ) : (
                           <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-medium">
                             Disponible
@@ -405,6 +422,17 @@ export default function GiftsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          {gift.isReserved && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Annuler la réservation"
+                              onClick={() => unreserveGiftMutation.mutate(gift.id)}
+                              disabled={unreserveGiftMutation.isPending}
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button variant="ghost" size="icon" onClick={() => openEdit(gift)}>
                             <Edit className="h-4 w-4" />
                           </Button>

@@ -91,6 +91,7 @@ interface TemplateRendererProps {
   onCreateGift: () => void;
   onEditGift: (gift: GiftDb) => void;
   onDeleteGift: (gift: GiftDb) => void;
+  onReserveGift?: (giftId: number, guestName: string) => void;
   onSaveCagnotteExternalUrl: (value: string) => Promise<void>;
   onSetDraftCagnotteExternalUrl: (value: string) => void;
   toDateInputValue: (value: string) => string;
@@ -273,6 +274,7 @@ export function TemplateRenderer(props: TemplateRendererProps) {
             onCreateGift={props.onCreateGift}
             onEditGift={props.onEditGift}
             onDeleteGift={props.onDeleteGift}
+            onReserveGift={props.onReserveGift}
             order={sectionOrder.gifts ?? 1}
           />
         )}

@@ -1009,6 +1009,34 @@ export async function registerRoutes(app: Express) {
     res.json({ success: true });
   });
 
+  app.post("/api/gifts/:id/reserve", withWedding, async (req, res) => {
+    const wedding = (req as any).wedding;
+    const id = parseInt(req.params.id, 10);
+    const { guestName } = req.body || {};
+    if (!guestName || typeof guestName !== "string" || guestName.trim().length === 0) {
+      return res.status(400).json({ message: "Le nom de l'invité est requis." });
+    }
+    const allGifts = await storage.getGifts(wedding.id);
+    const gift = allGifts.find((g) => g.id === id);
+    if (!gift) return res.status(404).json({ message: "Cadeau non trouvé." });
+    if (gift.isReserved) return res.status(409).json({ message: "Ce cadeau est déjà réservé." });
+    const updated = await storage.updateGift(wedding.id, id, {
+      isReserved: true,
+      reservedBy: guestName.trim(),
+    });
+    res.json(updated);
+  });
+
+  app.post("/api/gifts/:id/unreserve", isAuthenticated, withWedding, async (req, res) => {
+    const wedding = (req as any).wedding;
+    const id = parseInt(req.params.id, 10);
+    const updated = await storage.updateGift(wedding.id, id, {
+      isReserved: false,
+      reservedBy: null,
+    });
+    res.json(updated);
+  });
+
   // Contributions
   app.get("/api/contributions", isAuthenticated, withWedding, async (req, res) => {
     const wedding = (req as any).wedding;

@@ -31,7 +31,7 @@ Multi-tenant wedding website SaaS. Couples create accounts, pick a template (Cla
 - **Premium plan & referral system**:
   - Free plan: 30 RSVPs max, cagnotte only, 6 gallery images, Nocely branding
   - Premium: unlimited RSVPs, gifts, live, jokes, custom pages, 50 gallery images, no branding
-  - Pricing: 19€/month (min 2 months) or 149€/year
+  - Pricing: 23.99€/month (min 2 months) or 149€/year
   - Referral codes: each user gets a unique code, sharing gives €10 discount on Premium
   - `referral_codes` table in PostgreSQL, Stripe coupon created at checkout
   - `PLAN_LIMITS` config in `packages/shared/schema.ts`
@@ -45,6 +45,15 @@ Multi-tenant wedding website SaaS. Couples create accounts, pick a template (Cla
   - PricingPage updated: 30 RSVPs, 149€/year, referral code sharing, referral input
   - Onboarding step 5 ("Formule"): plan selection cards + premium badges on modules
 
+
+- **Gift reservation system**: Guests can reserve gifts from the public site
+  - `reservedBy` column added to `gifts` table
+  - Public endpoint `POST /api/gifts/:id/reserve` (no auth, requires `guestName`)
+  - Admin endpoint `POST /api/gifts/:id/unreserve` (auth required)
+  - GiftsSection shows "Je m'en occupe" button on available gifts for public visitors
+  - Guest enters their name to confirm reservation
+  - Admin GiftsPage shows who reserved each gift with unreserve button (RotateCcw icon)
+  - Reserved gifts show "Réservé" badge + "Pris en charge par [name]"
 
 - **E2E test suite**: Playwright-based E2E tests covering auth, preview, public pages, RSVP/gifts, cagnotte/live, and multi-tenant isolation
   - Config: `tests/e2e/playwright.config.ts`

@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2, Plus, Check, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { InlineEditor } from "@/components/ui/inline-editor";
 import type { GiftsSectionProps } from "@/features/public-site/types";
 
@@ -14,12 +15,28 @@ export function GiftsSection({
   onCreateGift,
   onEditGift,
   onDeleteGift,
+  onReserveGift,
   canEdit,
   editMode,
   order,
 }: GiftsSectionProps) {
   const [showAll, setShowAll] = useState(false);
+  const [reservingId, setReservingId] = useState<number | null>(null);
+  const [reserveName, setReserveName] = useState("");
+  const [reserveLoading, setReserveLoading] = useState(false);
   const visibleGifts = showAll ? gifts : gifts.slice(0, 3);
+
+  const handleReserve = async (giftId: number) => {
+    if (!reserveName.trim() || !onReserveGift) return;
+    setReserveLoading(true);
+    try {
+      await onReserveGift(giftId, reserveName.trim());
+      setReservingId(null);
+      setReserveName("");
+    } finally {
+      setReserveLoading(false);
+    }
+  };
 
   return (
     <section
@@ -64,6 +81,7 @@ export function GiftsSection({
               const price = typeof gift.price === "number" ? gift.price : 0;
               const contributed = typeof gift.contributedAmount === "number" ? gift.contributedAmount : 0;
               const pct = price > 0 ? Math.min(100, Math.round((contributed / price) * 100)) : 0;
+              const isReserving = reservingId === gift.id;
               return (
                 <Card key={gift.id} className={`relative overflow-hidden ${tokens.gifts.card}`}>
                   {canEdit && editMode ? (
@@ -82,7 +100,9 @@ export function GiftsSection({
                       <img src={gift.imageUrl} alt={gift.name} className="h-full w-full object-cover" />
                     </div>
                   ) : (
-                    <div className="h-44 w-full bg-gradient-to-br from-primary/10 to-primary/0" />
+                    <div className="h-44 w-full bg-gradient-to-br from-primary/10 to-primary/0 flex items-center justify-center">
+                      <Gift className="h-10 w-10 opacity-20" style={{ color: 'var(--wedding-primary)' }} />
+                    </div>
                   )}
                   <div className="p-6 space-y-3">
                     <div className="flex items-start justify-between gap-3">
@@ -94,10 +114,17 @@ export function GiftsSection({
                       </div>
                       {gift.isReserved ? (
                         <span className={`shrink-0 text-xs font-semibold rounded-full px-3 py-1 ${tokens.gifts.badge}`}>
+                          <Check className="h-3 w-3 inline mr-1" />
                           Réservé
                         </span>
                       ) : null}
                     </div>
+
+                    {gift.isReserved && (gift as any).reservedBy ? (
+                      <p className={`text-xs italic ${tokens.gifts.description}`}>
+                        Pris en charge par {(gift as any).reservedBy}
+                      </p>
+                    ) : null}
 
                     {price > 0 ? (
                       <div className="pt-2">
@@ -110,6 +137,55 @@ export function GiftsSection({
                         <div className={`h-2 rounded-full overflow-hidden ${tokens.gifts.progressTrack}`}>
                           <div className={`h-full ${tokens.gifts.progress}`} style={{ width: `${pct}%` }} />
                         </div>
+                      </div>
+                    ) : null}
+
+                    {!canEdit && !gift.isReserved && onReserveGift ? (
+                      <div className="pt-3">
+                        {isReserving ? (
+                          <div className="space-y-2">
+                            <Input
+                              placeholder="Votre nom"
+                              value={reserveName}
+                              onChange={(e) => setReserveName(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === "Enter") handleReserve(gift.id); }}
+                              className="text-sm"
+                              autoFocus
+                            />
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                className="flex-1 rounded-full text-xs"
+                                style={{ backgroundColor: 'var(--wedding-primary)', color: '#fff' }}
+                                disabled={!reserveName.trim() || reserveLoading}
+                                onClick={() => handleReserve(gift.id)}
+                              >
+                                {reserveLoading ? "..." : "Confirmer"}
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="rounded-full text-xs"
+                                onClick={() => { setReservingId(null); setReserveName(""); }}
+                              >
+                                Annuler
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="w-full rounded-full text-xs"
+                            style={{ borderColor: 'var(--wedding-primary)', color: 'var(--wedding-primary)' }}
+                            onClick={() => setReservingId(gift.id)}
+                          >
+                            Je m'en occupe
+                          </Button>
+                        )}
                       </div>
                     ) : null}
                   </div>
