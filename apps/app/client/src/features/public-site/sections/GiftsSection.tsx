@@ -111,11 +111,23 @@ export function GiftsSection({
                         {gift.description ? (
                           <div className={`text-sm mt-1 line-clamp-2 ${tokens.gifts.description}`}>{gift.description}</div>
                         ) : null}
+                        {(gift as any).sourceUrl && (
+                          <a
+                            href={(gift as any).sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs mt-1.5 opacity-60 hover:opacity-100 transition-opacity"
+                            style={{ color: 'var(--wedding-primary)' }}
+                          >
+                            Voir le produit
+                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                          </a>
+                        )}
                       </div>
                       {gift.isReserved ? (
                         <span className={`shrink-0 text-xs font-semibold rounded-full px-3 py-1 ${tokens.gifts.badge}`}>
                           <Check className="h-3 w-3 inline mr-1" />
-                          Réservé
+                          Pris
                         </span>
                       ) : null}
                     </div>

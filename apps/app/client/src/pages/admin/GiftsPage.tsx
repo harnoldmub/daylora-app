@@ -11,6 +11,9 @@ import {
   ListChecks,
   Sparkles,
   RotateCcw,
+  Link,
+  ExternalLink,
+  Image,
 } from "lucide-react";
 import { useParams } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -56,6 +59,7 @@ type GiftForm = {
   name: string;
   description: string;
   imageUrl: string;
+  sourceUrl: string;
   price: number | null;
 };
 
@@ -63,20 +67,21 @@ const emptyForm: GiftForm = {
   name: "",
   description: "",
   imageUrl: "",
+  sourceUrl: "",
   price: null,
 };
 
 const SUGGESTION_GIFTS: GiftForm[] = [
-  { name: "Voyage de noces", description: "Contribuez à notre lune de miel de rêve.", imageUrl: "", price: 500 },
-  { name: "Appareil photo", description: "Pour immortaliser nos plus beaux souvenirs.", imageUrl: "", price: 350 },
-  { name: "Service de table", description: "Un beau service pour nos dîners en amoureux.", imageUrl: "", price: 200 },
-  { name: "Grille-pain", description: "Pour des petits-déjeuners gourmands.", imageUrl: "", price: 60 },
-  { name: "Robot cuisine", description: "Pour préparer de bons petits plats ensemble.", imageUrl: "", price: 300 },
-  { name: "Linge de maison", description: "Draps, serviettes et accessoires pour notre nid douillet.", imageUrl: "", price: 150 },
-  { name: "Expérience bien-être", description: "Un moment de détente en duo dans un spa.", imageUrl: "", price: 180 },
-  { name: "Cours de cuisine", description: "Un atelier culinaire pour apprendre à deux.", imageUrl: "", price: 120 },
-  { name: "Panier gourmet", description: "Une sélection de produits fins et délicieux.", imageUrl: "", price: 80 },
-  { name: "Cadre photo", description: "Pour encadrer nos plus belles photos de mariage.", imageUrl: "", price: 50 },
+  { name: "Voyage de noces", description: "Contribuez à notre lune de miel de rêve.", imageUrl: "", sourceUrl: "", price: 500 },
+  { name: "Appareil photo", description: "Pour immortaliser nos plus beaux souvenirs.", imageUrl: "", sourceUrl: "", price: 350 },
+  { name: "Service de table", description: "Un beau service pour nos dîners en amoureux.", imageUrl: "", sourceUrl: "", price: 200 },
+  { name: "Grille-pain", description: "Pour des petits-déjeuners gourmands.", imageUrl: "", sourceUrl: "", price: 60 },
+  { name: "Robot cuisine", description: "Pour préparer de bons petits plats ensemble.", imageUrl: "", sourceUrl: "", price: 300 },
+  { name: "Linge de maison", description: "Draps, serviettes et accessoires pour notre nid douillet.", imageUrl: "", sourceUrl: "", price: 150 },
+  { name: "Expérience bien-être", description: "Un moment de détente en duo dans un spa.", imageUrl: "", sourceUrl: "", price: 180 },
+  { name: "Cours de cuisine", description: "Un atelier culinaire pour apprendre à deux.", imageUrl: "", sourceUrl: "", price: 120 },
+  { name: "Panier gourmet", description: "Une sélection de produits fins et délicieux.", imageUrl: "", sourceUrl: "", price: 80 },
+  { name: "Cadre photo", description: "Pour encadrer nos plus belles photos de mariage.", imageUrl: "", sourceUrl: "", price: 50 },
 ];
 
 export default function GiftsPage() {
@@ -101,12 +106,40 @@ export default function GiftsPage() {
     enabled: !!weddingId,
   });
 
+  const [scraping, setScraping] = useState(false);
+
+  const scrapeUrl = async (url: string) => {
+    if (!url.trim()) return;
+    setScraping(true);
+    try {
+      const response = await apiRequest("POST", "/api/gifts/scrape-url", { url: url.trim() });
+      const data = await response.json();
+      setForm((prev) => ({
+        ...prev,
+        name: prev.name || data.title || "",
+        imageUrl: data.image || prev.imageUrl || "",
+        description: prev.description || data.description || "",
+        price: prev.price ?? data.price ?? null,
+      }));
+      toast({ title: "Informations récupérées", description: "Le nom et l'image du produit ont été importés." });
+    } catch {
+      toast({
+        title: "Récupération impossible",
+        description: "Impossible de récupérer les informations de cette page. Remplissez les champs manuellement.",
+        variant: "destructive",
+      });
+    } finally {
+      setScraping(false);
+    }
+  };
+
   const createGiftMutation = useMutation({
     mutationFn: async (data: GiftForm) => {
       const payload = {
         name: data.name,
         description: data.description || null,
         imageUrl: data.imageUrl || null,
+        sourceUrl: data.sourceUrl || null,
         price: data.price,
       };
       const response = await apiRequest("POST", "/api/gifts", payload);
@@ -133,6 +166,7 @@ export default function GiftsPage() {
         name: data.name,
         description: data.description || null,
         imageUrl: data.imageUrl || null,
+        sourceUrl: data.sourceUrl || null,
         price: data.price,
       };
       const response = await apiRequest("PATCH", `/api/gifts/${id}`, payload);
@@ -199,6 +233,7 @@ export default function GiftsPage() {
           name: gift.name,
           description: gift.description || null,
           imageUrl: gift.imageUrl || null,
+          sourceUrl: gift.sourceUrl || null,
           price: gift.price,
         };
         await apiRequest("POST", "/api/gifts", payload);
@@ -234,6 +269,7 @@ export default function GiftsPage() {
       name: gift.name,
       description: gift.description || "",
       imageUrl: gift.imageUrl || "",
+      sourceUrl: (gift as any).sourceUrl || "",
       price: gift.price ?? null,
     });
     setEditOpen(true);
@@ -310,6 +346,31 @@ export default function GiftsPage() {
             </div>
             <div className="p-6 space-y-4">
               <div className="space-y-2">
+                <Label className="flex items-center gap-1.5"><Link className="h-3.5 w-3.5" /> Lien du produit</Label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="https://www.amazon.fr/..."
+                    value={form.sourceUrl}
+                    onChange={(e) => setForm((prev) => ({ ...prev, sourceUrl: e.target.value }))}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0"
+                    disabled={!form.sourceUrl.trim() || scraping}
+                    onClick={() => scrapeUrl(form.sourceUrl)}
+                  >
+                    {scraping ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground">Collez un lien et le nom et l'image seront importés automatiquement</p>
+              </div>
+              <div className="relative py-2">
+                <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+                <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-muted-foreground">ou remplir manuellement</span></div>
+              </div>
+              <div className="space-y-2">
                 <Label>Nom</Label>
                 <Input placeholder="Ex : Voyage de noces à Bali" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
               </div>
@@ -329,13 +390,18 @@ export default function GiftsPage() {
                 <p className="text-[11px] text-muted-foreground">Laissez vide pour un montant libre</p>
               </div>
               <div className="space-y-2">
-                <Label>Image (URL)</Label>
-                <Input value={form.imageUrl} onChange={(e) => setForm((prev) => ({ ...prev, imageUrl: e.target.value }))} />
+                <Label className="flex items-center gap-1.5"><Image className="h-3.5 w-3.5" /> Image (URL)</Label>
+                <Input placeholder="https://..." value={form.imageUrl} onChange={(e) => setForm((prev) => ({ ...prev, imageUrl: e.target.value }))} />
+                {form.imageUrl && (
+                  <div className="mt-2 rounded-lg overflow-hidden border h-24 w-24">
+                    <img src={form.imageUrl} alt="Aperçu" className="h-full w-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Description</Label>
                 <Textarea
-                  rows={4}
+                  rows={3}
                   placeholder="Décrivez ce cadeau pour vos invités..."
                   value={form.description}
                   onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
@@ -403,9 +469,24 @@ export default function GiftsPage() {
                     <TableRow key={gift.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-3">
-                          <Gift className="h-4 w-4 text-primary" />
-                          <div>
-                            <div>{gift.name}</div>
+                          {gift.imageUrl ? (
+                            <div className="h-10 w-10 rounded-lg overflow-hidden border shrink-0">
+                              <img src={gift.imageUrl} alt={gift.name} className="h-full w-full object-cover" />
+                            </div>
+                          ) : (
+                            <div className="h-10 w-10 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+                              <Gift className="h-4 w-4 text-amber-600" />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="truncate">{gift.name}</span>
+                              {(gift as any).sourceUrl && (
+                                <a href={(gift as any).sourceUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 text-muted-foreground hover:text-primary transition-colors">
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              )}
+                            </div>
                             {gift.description ? (
                               <div className="text-xs text-muted-foreground line-clamp-1">{gift.description}</div>
                             ) : null}
@@ -479,6 +560,31 @@ export default function GiftsPage() {
           </div>
           <div className="p-6 space-y-4">
             <div className="space-y-2">
+              <Label className="flex items-center gap-1.5"><Link className="h-3.5 w-3.5" /> Lien du produit</Label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="https://www.amazon.fr/..."
+                  value={form.sourceUrl}
+                  onChange={(e) => setForm((prev) => ({ ...prev, sourceUrl: e.target.value }))}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  disabled={!form.sourceUrl.trim() || scraping}
+                  onClick={() => scrapeUrl(form.sourceUrl)}
+                >
+                  {scraping ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground">Collez un lien et le nom et l'image seront importés automatiquement</p>
+            </div>
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+              <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-muted-foreground">ou remplir manuellement</span></div>
+            </div>
+            <div className="space-y-2">
               <Label>Nom</Label>
               <Input placeholder="Ex : Voyage de noces à Bali" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
             </div>
@@ -498,13 +604,18 @@ export default function GiftsPage() {
               <p className="text-[11px] text-muted-foreground">Laissez vide pour un montant libre</p>
             </div>
             <div className="space-y-2">
-              <Label>Image (URL)</Label>
-              <Input value={form.imageUrl} onChange={(e) => setForm((prev) => ({ ...prev, imageUrl: e.target.value }))} />
+              <Label className="flex items-center gap-1.5"><Image className="h-3.5 w-3.5" /> Image (URL)</Label>
+              <Input placeholder="https://..." value={form.imageUrl} onChange={(e) => setForm((prev) => ({ ...prev, imageUrl: e.target.value }))} />
+              {form.imageUrl && (
+                <div className="mt-2 rounded-lg overflow-hidden border h-24 w-24">
+                  <img src={form.imageUrl} alt="Aperçu" className="h-full w-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Description</Label>
               <Textarea
-                rows={4}
+                rows={3}
                 placeholder="Décrivez ce cadeau pour vos invités..."
                 value={form.description}
                 onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}

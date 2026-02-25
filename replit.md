@@ -77,7 +77,19 @@ Multi-tenant wedding website SaaS. Couples create accounts, pick a template (Cla
   - GiftsSection shows "Je m'en occupe" button on available gifts for public visitors
   - Guest enters their name to confirm reservation
   - Admin GiftsPage shows who reserved each gift with unreserve button (RotateCcw icon)
-  - Reserved gifts show "Réservé" badge + "Pris en charge par [name]"
+  - Reserved gifts show "Pris" badge + "Pris en charge par [name]"
+
+- **Gift URL scraping**: Users can paste a product URL to auto-import name, image, description, and price
+  - `sourceUrl` column added to `gifts` table
+  - Backend endpoint `POST /api/gifts/scrape-url` fetches OG metadata (title, image, description, price)
+  - Supports og:title, og:image, og:description, product:price:amount meta tags
+  - Relative image URLs resolved to absolute using source URL
+  - 8-second timeout with AbortController
+  - Frontend: "Lien du produit" field in gift create/edit dialogs with fetch button
+  - Image preview thumbnail shown when imageUrl is set
+  - "ou remplir manuellement" separator keeps both URL and manual entry options
+  - Gift table shows image thumbnails and external link icons for gifts with sourceUrl
+  - Public GiftsSection shows "Voir le produit" link on gifts with sourceUrl
 
 - **E2E test suite**: Playwright-based E2E tests covering auth, preview, public pages, RSVP/gifts, cagnotte/live, and multi-tenant isolation
   - Config: `tests/e2e/playwright.config.ts`

@@ -392,6 +392,7 @@ export const gifts = pgTable("gifts", {
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   imageUrl: text("image_url"),
+  sourceUrl: text("source_url"),
   price: integer("price"), // Total price of the gift
   contributedAmount: integer("contributed_amount").notNull().default(0),
   isReserved: boolean("is_reserved").notNull().default(false),

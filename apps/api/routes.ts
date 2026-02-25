@@ -996,6 +996,68 @@ export async function registerRoutes(app: Express) {
     res.json(gifts);
   });
 
+  app.post("/api/gifts/scrape-url", isAuthenticated, async (req, res) => {
+    const { url } = req.body;
+    if (!url || typeof url !== "string") {
+      return res.status(400).json({ message: "URL requise." });
+    }
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; NocelyBot/1.0)",
+          "Accept": "text/html",
+        },
+      });
+      clearTimeout(timeout);
+      if (!response.ok) {
+        return res.status(422).json({ message: "Impossible d'accéder à cette page." });
+      }
+      const html = await response.text();
+      const getMetaContent = (property: string): string | null => {
+        const patterns = [
+          new RegExp(`<meta[^>]+property=["']${property}["'][^>]+content=["']([^"']+)["']`, "i"),
+          new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+property=["']${property}["']`, "i"),
+          new RegExp(`<meta[^>]+name=["']${property}["'][^>]+content=["']([^"']+)["']`, "i"),
+          new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+name=["']${property}["']`, "i"),
+        ];
+        for (const re of patterns) {
+          const match = html.match(re);
+          if (match?.[1]) return match[1];
+        }
+        return null;
+      };
+      const title = getMetaContent("og:title")
+        || getMetaContent("twitter:title")
+        || html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1]?.trim()
+        || null;
+      const image = getMetaContent("og:image")
+        || getMetaContent("twitter:image")
+        || null;
+      const description = getMetaContent("og:description")
+        || getMetaContent("description")
+        || null;
+      let priceStr = getMetaContent("product:price:amount")
+        || getMetaContent("og:price:amount")
+        || null;
+      const price = priceStr ? Math.round(parseFloat(priceStr)) : null;
+      let resolvedImage = image;
+      if (resolvedImage && !resolvedImage.startsWith("http")) {
+        try {
+          resolvedImage = new URL(resolvedImage, url).href;
+        } catch {}
+      }
+      res.json({ title, image: resolvedImage, description, price });
+    } catch (err: any) {
+      if (err.name === "AbortError") {
+        return res.status(408).json({ message: "Délai dépassé pour accéder à cette page." });
+      }
+      res.status(500).json({ message: "Erreur lors de la récupération des informations." });
+    }
+  });
+
   app.post("/api/gifts", isAuthenticated, withWedding, validateRequest(insertGiftSchema), async (req, res) => {
     const wedding = (req as any).wedding;
     const imageUrl = req.body?.imageUrl;
