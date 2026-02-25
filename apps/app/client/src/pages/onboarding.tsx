@@ -45,9 +45,9 @@ import {
 import { compressImageFileToJpegDataUrl } from "@/lib/image";
 
 const TEMPLATES = [
-  { id: "classic", name: "Classique", description: "Élégant et intemporel", image: "/previews/template_classic_preview_v2.png" },
-  { id: "modern", name: "Moderne", description: "Épuré et minimaliste", image: "/previews/template_modern_preview_v2.png" },
-  { id: "minimal", name: "Minimal", description: "Audacieux et chic", image: "/previews/template_minimal_preview_v2.png" },
+  { id: "classic", name: "Classique", description: "Élégant et intemporel", image: "/previews/template_classic_preview_v2.png", premium: false },
+  { id: "modern", name: "Moderne", description: "Épuré et minimaliste", image: "/previews/template_modern_preview_v2.png", premium: true },
+  { id: "minimal", name: "Minimal", description: "Audacieux et chic", image: "/previews/template_minimal_preview_v2.png", premium: true },
 ];
 
 const MAX_ONBOARDING_GALLERY_IMAGES = 6;
@@ -194,6 +194,7 @@ export default function Onboarding() {
   const goBack = () => setStep((s) => Math.max(1, s - 1));
 
   const selectedTemplate = TEMPLATES.find(t => t.id === form.watch("templateId")) || TEMPLATES[0];
+  const requiresPremiumTemplate = selectedTemplate.premium;
   const selectedTone = COLOR_TONES.find(t => t.id === toneId) || COLOR_TONES[0];
 
   const onSubmit = async (data: OnboardingForm) => {
@@ -384,9 +385,20 @@ export default function Onboarding() {
                         <button
                           type="button"
                           key={tmpl.id}
-                          className={`text-left border rounded-3xl overflow-hidden transition-all ${form.watch("templateId") === tmpl.id ? "border-primary ring-2 ring-primary/20" : "border-[#E6DCCF]"}`}
-                          onClick={() => form.setValue("templateId", tmpl.id)}
+                          className={`text-left border rounded-3xl overflow-hidden transition-all relative ${form.watch("templateId") === tmpl.id ? "border-primary ring-2 ring-primary/20" : "border-[#E6DCCF]"}`}
+                          onClick={() => {
+                            form.setValue("templateId", tmpl.id);
+                            if (tmpl.premium && plan === "free") {
+                              setPlan("premium");
+                            }
+                          }}
                         >
+                          {tmpl.premium && (
+                            <span className="absolute top-3 right-3 z-10 text-[10px] font-bold bg-white/90 backdrop-blur-sm text-primary px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm border border-primary/10 flex items-center gap-1">
+                              <Star className="h-3 w-3" />
+                              Premium
+                            </span>
+                          )}
                           <img src={tmpl.image} alt={tmpl.name} className="w-full h-56 object-cover" />
                           <div className="p-4 space-y-1 bg-white">
                             <div className="font-serif text-2xl font-bold">{tmpl.name}</div>
@@ -505,12 +517,17 @@ export default function Onboarding() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                       <button
                         type="button"
-                        className={`rounded-2xl border-2 p-4 text-left transition-all ${plan === "free" ? "border-primary bg-primary/5" : "border-[#E6DCCF] hover:border-primary/30"}`}
-                        onClick={() => setPlan("free")}
+                        className={`rounded-2xl border-2 p-4 text-left transition-all ${plan === "free" ? "border-primary bg-primary/5" : "border-[#E6DCCF] hover:border-primary/30"} ${requiresPremiumTemplate ? "opacity-50 cursor-not-allowed" : ""}`}
+                        onClick={() => {
+                          if (!requiresPremiumTemplate) setPlan("free");
+                        }}
                       >
                         <div className="font-bold text-lg">Découverte</div>
                         <div className="text-3xl font-serif font-bold mt-1">0€</div>
                         <div className="text-xs text-[#7A6B5E] mt-1">30 invités max, cagnotte incluse</div>
+                        {requiresPremiumTemplate && (
+                          <div className="text-[10px] text-primary font-medium mt-2">Le template choisi nécessite le plan Premium</div>
+                        )}
                       </button>
                       <button
                         type="button"
@@ -534,7 +551,7 @@ export default function Onboarding() {
 
                     {[
                       { key: "cagnotteEnabled", label: "Cagnotte", icon: <Wallet className="h-4 w-4" />, premium: false },
-                      { key: "giftsEnabled", label: "Liste cadeaux", icon: <Gift className="h-4 w-4" />, premium: true },
+                      { key: "giftsEnabled", label: "Liste cadeaux", icon: <Gift className="h-4 w-4" />, premium: false },
                       { key: "jokesEnabled", label: "Blagues live", icon: <MessageCircle className="h-4 w-4" />, premium: true },
                       { key: "liveEnabled", label: "Contributions live", icon: <Zap className="h-4 w-4" />, premium: true },
                     ].map((item) => {

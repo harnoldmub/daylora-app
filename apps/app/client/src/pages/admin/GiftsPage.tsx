@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { useParams } from "wouter";
 import { Button } from "@/components/ui/button";
-import { PremiumGate } from "@/components/admin/PremiumGate";
 import { useWedding } from "@/hooks/use-api";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -306,7 +305,6 @@ export default function GiftsPage() {
   };
 
   return (
-    <PremiumGate featureName="La liste de cadeaux" isPremium={wedding?.currentPlan === 'premium'}>
     <div className="space-y-8 animate-in fade-in duration-500">
       <AdminPageHeader
         title="Cadeaux"
@@ -654,6 +652,5 @@ export default function GiftsPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-    </PremiumGate>
   );
 }
