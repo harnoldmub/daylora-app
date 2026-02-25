@@ -205,15 +205,15 @@ export default function GuestInvitationPage() {
   const basePath = weddingSlug ? `/${weddingSlug}` : "/";
   const cagnotteHref = cagnotteMode === "external" ? cagnotteExternalUrl : `${basePath}#cagnotte`;
 
-  const invGreeting = texts.invitationGreeting || "vous êtes cordialement invité(e)";
-  const invPrelude = texts.invitationPrelude || "au mariage de";
-  const invMessage = texts.invitationMessage || "Nous nous réjouissons de partager ce moment avec vous.";
-  const invSubmessage = texts.invitationSubmessage || "Apportez votre bonne humeur, préparez vos plus beaux pas de danse.";
-  const invCagnotteTitle = texts.invitationCagnotteTitle || texts.cagnotteTitle || "Cadeau de Mariage";
-  const invCagnotteDesc = texts.invitationCagnotteDescription || texts.cagnotteDescription || "Votre présence est notre plus beau cadeau. Si vous souhaitez nous gâter, nous préférons une participation à notre cagnotte.";
-  const invCagnotteButton = texts.invitationCagnotteButton || "Participer";
+  const invGreeting = texts.invitationGreeting || "Nous avons l'honneur de vous convier";
+  const invPrelude = texts.invitationPrelude || "à célébrer l'union de";
+  const invMessage = texts.invitationMessage || "Ce jour ne serait pas le même sans votre présence à nos côtés.";
+  const invSubmessage = texts.invitationSubmessage || "Venez comme vous êtes, avec le cœur léger et l'envie de faire la fête.";
+  const invCagnotteTitle = texts.invitationCagnotteTitle || texts.cagnotteTitle || "Liste de mariage";
+  const invCagnotteDesc = texts.invitationCagnotteDescription || texts.cagnotteDescription || "Votre présence est le plus beau des cadeaux. Si toutefois vous souhaitez contribuer, une cagnotte a été mise en place pour nous aider à construire notre avenir.";
+  const invCagnotteButton = texts.invitationCagnotteButton || "Contribuer";
   const invDressCode = texts.invitationDressCode || texts.dressCode || "";
-  const invFooterNote = texts.invitationFooterNote || "Pour des raisons d'organisation, nous vous remercions de ne pas inviter de personnes supplémentaires.";
+  const invFooterNote = texts.invitationFooterNote || "Merci de confirmer votre présence avant la date indiquée. Nous avons hâte de vous retrouver.";
 
   const showProgramme = sections.invitationShowProgramme ?? true;
   const showLocations = sections.invitationShowLocations ?? true;

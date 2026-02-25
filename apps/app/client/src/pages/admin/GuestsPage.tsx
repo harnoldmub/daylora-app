@@ -386,15 +386,15 @@ export default function GuestsPage() {
         const media = (wedding as any)?.config?.media || {};
         const sections = (wedding as any)?.config?.sections || {};
         setInvitationDraft({
-            invitationGreeting: texts.invitationGreeting || "vous êtes cordialement invité(e)",
-            invitationPrelude: texts.invitationPrelude || "au mariage de",
-            invitationMessage: texts.invitationMessage || "Nous nous réjouissons de partager ce moment avec vous.",
-            invitationSubmessage: texts.invitationSubmessage || "Apportez votre bonne humeur, préparez vos plus beaux pas de danse.",
-            invitationCagnotteTitle: texts.invitationCagnotteTitle || texts.cagnotteTitle || "Cadeau de Mariage",
-            invitationCagnotteDescription: texts.invitationCagnotteDescription || texts.cagnotteDescription || "Votre présence est notre plus beau cadeau. Si vous souhaitez nous gâter, nous préférons une participation à notre cagnotte.",
-            invitationCagnotteButton: texts.invitationCagnotteButton || "Participer",
+            invitationGreeting: texts.invitationGreeting || "Nous avons l'honneur de vous convier",
+            invitationPrelude: texts.invitationPrelude || "à célébrer l'union de",
+            invitationMessage: texts.invitationMessage || "Ce jour ne serait pas le même sans votre présence à nos côtés.",
+            invitationSubmessage: texts.invitationSubmessage || "Venez comme vous êtes, avec le cœur léger et l'envie de faire la fête.",
+            invitationCagnotteTitle: texts.invitationCagnotteTitle || texts.cagnotteTitle || "Liste de mariage",
+            invitationCagnotteDescription: texts.invitationCagnotteDescription || texts.cagnotteDescription || "Votre présence est le plus beau des cadeaux. Si toutefois vous souhaitez contribuer, une cagnotte a été mise en place pour nous aider à construire notre avenir.",
+            invitationCagnotteButton: texts.invitationCagnotteButton || "Contribuer",
             invitationDressCode: texts.invitationDressCode || texts.dressCode || "",
-            invitationFooterNote: texts.invitationFooterNote || "Pour des raisons d'organisation, nous vous remercions de ne pas inviter de personnes supplémentaires.",
+            invitationFooterNote: texts.invitationFooterNote || "Merci de confirmer votre présence avant la date indiquée. Nous avons hâte de vous retrouver.",
             invitationImage: media.invitationImage || media.couplePhoto || "",
             invitationShowProgramme: (sections.invitationShowProgramme ?? true) as boolean,
             invitationShowLocations: (sections.invitationShowLocations ?? true) as boolean,
@@ -637,239 +637,288 @@ export default function GuestsPage() {
             />
 
             <Dialog open={invitationSettingsOpen} onOpenChange={setInvitationSettingsOpen}>
-                <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col">
-                    <DialogHeader>
-                        <DialogTitle>Configurer la page invitation</DialogTitle>
-                        <DialogDescription>
-                            Personnalisez chaque texte affiché sur la page invitation de vos invités.
-                        </DialogDescription>
-                    </DialogHeader>
+                <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+                    <div className="px-6 pt-6 pb-4 border-b bg-gradient-to-b from-amber-50/60 to-transparent">
+                        <DialogHeader>
+                            <DialogTitle className="text-xl font-serif">Page invitation</DialogTitle>
+                            <DialogDescription>
+                                Personnalisez les textes et sections visibles sur l'invitation envoyée à vos invités.
+                            </DialogDescription>
+                        </DialogHeader>
+                    </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
-                        <ScrollArea className="pr-4 max-h-[65vh]">
-                            <div className="space-y-6">
-                                <div className="space-y-1">
-                                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Hero</p>
-                                    <div className="h-px bg-border" />
+                    <div className="grid grid-cols-1 lg:grid-cols-2 flex-1 min-h-0">
+                        <ScrollArea className="max-h-[60vh] border-r">
+                            <div className="p-6 space-y-5">
+
+                                <div className="rounded-xl border bg-card p-4 space-y-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+                                            <span className="text-amber-700 text-xs font-bold">1</span>
+                                        </div>
+                                        <span className="text-sm font-semibold">En-tête</span>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs text-muted-foreground">Phrase d'accueil</Label>
+                                        <Input
+                                            value={invitationDraft.invitationGreeting}
+                                            onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationGreeting: e.target.value }))}
+                                            className="bg-background"
+                                            placeholder="Nous avons l'honneur de vous convier"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs text-muted-foreground">Introduction (avant les noms)</Label>
+                                        <Input
+                                            value={invitationDraft.invitationPrelude}
+                                            onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationPrelude: e.target.value }))}
+                                            className="bg-background"
+                                            placeholder="à célébrer l'union de"
+                                        />
+                                    </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label className="text-xs text-muted-foreground">Phrase d'accueil</Label>
-                                    <Input
-                                        value={invitationDraft.invitationGreeting}
-                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationGreeting: e.target.value }))}
-                                        placeholder="vous êtes cordialement invité(e)"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-xs text-muted-foreground">Prélude (avant les noms)</Label>
-                                    <Input
-                                        value={invitationDraft.invitationPrelude}
-                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationPrelude: e.target.value }))}
-                                        placeholder="au mariage de"
-                                    />
-                                </div>
-
-                                <div className="rounded-xl border p-4 space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <Label className="text-xs text-muted-foreground">Photo du couple</Label>
-                                        {invitationDraft.invitationImage && (
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-6 px-2 text-xs text-muted-foreground"
-                                                onClick={() => setInvitationDraft((p) => ({ ...p, invitationImage: "" }))}
-                                            >
-                                                <X className="h-3 w-3 mr-1" />
-                                                Supprimer
-                                            </Button>
-                                        )}
+                                <div className="rounded-xl border bg-card overflow-hidden">
+                                    <div className="p-4 flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+                                            <span className="text-amber-700 text-xs font-bold">2</span>
+                                        </div>
+                                        <span className="text-sm font-semibold">Photo</span>
                                     </div>
                                     {invitationDraft.invitationImage ? (
-                                        <img src={invitationDraft.invitationImage} alt="" className="h-32 w-full object-cover rounded-lg border" />
-                                    ) : (
-                                        <label className="h-32 w-full rounded-lg border-2 border-dashed bg-muted/20 flex flex-col items-center justify-center text-sm text-muted-foreground cursor-pointer hover:bg-muted/30 transition-colors">
-                                            <ImageIcon className="h-6 w-6 mb-2 opacity-40" />
-                                            <span>Cliquez pour ajouter une photo</span>
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                className="hidden"
-                                                onChange={async (e) => {
-                                                    const file = e.target.files?.[0];
-                                                    if (file) await onInvitationImageSelected(file);
-                                                    e.target.value = "";
-                                                }}
+                                        <div className="relative group">
+                                            <img
+                                                src={invitationDraft.invitationImage}
+                                                alt=""
+                                                className="w-full h-40 object-cover"
                                             />
-                                        </label>
-                                    )}
-                                    {invitationDraft.invitationImage && (
-                                        <label className="inline-flex items-center gap-2 text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
-                                            <ImageIcon className="h-3 w-3" />
-                                            Changer la photo
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                className="hidden"
-                                                onChange={async (e) => {
-                                                    const file = e.target.files?.[0];
-                                                    if (file) await onInvitationImageSelected(file);
-                                                    e.target.value = "";
-                                                }}
-                                            />
-                                        </label>
-                                    )}
-                                </div>
-
-                                <div className="space-y-1 pt-2">
-                                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Message central</p>
-                                    <div className="h-px bg-border" />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-xs text-muted-foreground">Message principal</Label>
-                                    <Textarea
-                                        rows={2}
-                                        value={invitationDraft.invitationMessage}
-                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationMessage: e.target.value }))}
-                                        placeholder="Nous nous réjouissons de partager ce moment avec vous."
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-xs text-muted-foreground">Sous-message</Label>
-                                    <Textarea
-                                        rows={2}
-                                        value={invitationDraft.invitationSubmessage}
-                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationSubmessage: e.target.value }))}
-                                        placeholder="Apportez votre bonne humeur, préparez vos plus beaux pas de danse."
-                                    />
-                                </div>
-
-                                <div className="space-y-1 pt-2">
-                                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dress code</p>
-                                    <div className="h-px bg-border" />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-xs text-muted-foreground">Consigne vestimentaire</Label>
-                                    <Input
-                                        value={invitationDraft.invitationDressCode}
-                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationDressCode: e.target.value }))}
-                                        placeholder="Tenue de soirée élégante"
-                                    />
-                                </div>
-
-                                <div className="space-y-1 pt-2">
-                                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cagnotte</p>
-                                    <div className="h-px bg-border" />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-xs text-muted-foreground">Titre cagnotte</Label>
-                                    <Input
-                                        value={invitationDraft.invitationCagnotteTitle}
-                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationCagnotteTitle: e.target.value }))}
-                                        placeholder="Cadeau de Mariage"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-xs text-muted-foreground">Description cagnotte</Label>
-                                    <Textarea
-                                        rows={3}
-                                        value={invitationDraft.invitationCagnotteDescription}
-                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationCagnotteDescription: e.target.value }))}
-                                        placeholder="Votre présence est notre plus beau cadeau..."
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-xs text-muted-foreground">Texte du bouton cagnotte</Label>
-                                    <Input
-                                        value={invitationDraft.invitationCagnotteButton}
-                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationCagnotteButton: e.target.value }))}
-                                        placeholder="Participer"
-                                    />
-                                </div>
-
-                                <div className="space-y-1 pt-2">
-                                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pied de page</p>
-                                    <div className="h-px bg-border" />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-xs text-muted-foreground">Note de bas de page</Label>
-                                    <Textarea
-                                        rows={2}
-                                        value={invitationDraft.invitationFooterNote}
-                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationFooterNote: e.target.value }))}
-                                        placeholder="Pour des raisons d'organisation, nous vous remercions de ne pas inviter de personnes supplémentaires."
-                                    />
-                                </div>
-
-                                <div className="space-y-1 pt-2">
-                                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sections visibles</p>
-                                    <div className="h-px bg-border" />
-                                </div>
-
-                                <div className="space-y-3 pb-4">
-                                    {[
-                                        { key: "invitationShowProgramme" as const, label: "Programme" },
-                                        { key: "invitationShowLocations" as const, label: "Lieux" },
-                                        { key: "invitationShowDressCode" as const, label: "Dress code" },
-                                        { key: "invitationShowCagnotte" as const, label: "Cagnotte" },
-                                        { key: "invitationShowQrCode" as const, label: "QR code" },
-                                    ].map((toggle) => (
-                                        <div key={toggle.key} className="flex items-center justify-between">
-                                            <span className="text-sm">{toggle.label}</span>
-                                            <Switch
-                                                checked={invitationDraft[toggle.key]}
-                                                onCheckedChange={(v) => setInvitationDraft((p) => ({ ...p, [toggle.key]: v }))}
-                                            />
+                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                                                <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/90 text-xs font-medium text-foreground hover:bg-white transition-colors">
+                                                    <ImageIcon className="h-3.5 w-3.5" />
+                                                    Changer
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={async (e) => {
+                                                            const file = e.target.files?.[0];
+                                                            if (file) await onInvitationImageSelected(file);
+                                                            e.target.value = "";
+                                                        }}
+                                                    />
+                                                </label>
+                                                <button
+                                                    onClick={() => setInvitationDraft((p) => ({ ...p, invitationImage: "" }))}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/90 text-xs font-medium text-red-600 hover:bg-white transition-colors"
+                                                >
+                                                    <X className="h-3.5 w-3.5" />
+                                                    Retirer
+                                                </button>
+                                            </div>
                                         </div>
-                                    ))}
+                                    ) : (
+                                        <label className="block mx-4 mb-4 cursor-pointer">
+                                            <div className="h-36 rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/10 flex flex-col items-center justify-center gap-2 hover:border-amber-300 hover:bg-amber-50/30 transition-all">
+                                                <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center">
+                                                    <ImageIcon className="h-5 w-5 text-amber-600" />
+                                                </div>
+                                                <span className="text-xs text-muted-foreground">Glissez ou cliquez pour ajouter</span>
+                                            </div>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) await onInvitationImageSelected(file);
+                                                    e.target.value = "";
+                                                }}
+                                            />
+                                        </label>
+                                    )}
                                 </div>
+
+                                <div className="rounded-xl border bg-card p-4 space-y-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+                                            <span className="text-amber-700 text-xs font-bold">3</span>
+                                        </div>
+                                        <span className="text-sm font-semibold">Message</span>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs text-muted-foreground">Texte principal</Label>
+                                        <Textarea
+                                            rows={2}
+                                            value={invitationDraft.invitationMessage}
+                                            onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationMessage: e.target.value }))}
+                                            className="bg-background resize-none"
+                                            placeholder="Ce jour ne serait pas le même sans votre présence à nos côtés."
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs text-muted-foreground">Sous-texte</Label>
+                                        <Textarea
+                                            rows={2}
+                                            value={invitationDraft.invitationSubmessage}
+                                            onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationSubmessage: e.target.value }))}
+                                            className="bg-background resize-none"
+                                            placeholder="Venez comme vous êtes, avec le cœur léger et l'envie de faire la fête."
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="rounded-xl border bg-card p-4 space-y-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+                                            <span className="text-amber-700 text-xs font-bold">4</span>
+                                        </div>
+                                        <span className="text-sm font-semibold">Dress code</span>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs text-muted-foreground">Consigne vestimentaire</Label>
+                                        <Input
+                                            value={invitationDraft.invitationDressCode}
+                                            onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationDressCode: e.target.value }))}
+                                            className="bg-background"
+                                            placeholder="Tenue cocktail chic"
+                                        />
+                                        <p className="text-[11px] text-muted-foreground/60">Laissez vide pour masquer cette section.</p>
+                                    </div>
+                                </div>
+
+                                <div className="rounded-xl border bg-card p-4 space-y-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+                                            <span className="text-amber-700 text-xs font-bold">5</span>
+                                        </div>
+                                        <span className="text-sm font-semibold">Cagnotte</span>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs text-muted-foreground">Titre</Label>
+                                        <Input
+                                            value={invitationDraft.invitationCagnotteTitle}
+                                            onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationCagnotteTitle: e.target.value }))}
+                                            className="bg-background"
+                                            placeholder="Liste de mariage"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs text-muted-foreground">Description</Label>
+                                        <Textarea
+                                            rows={3}
+                                            value={invitationDraft.invitationCagnotteDescription}
+                                            onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationCagnotteDescription: e.target.value }))}
+                                            className="bg-background resize-none"
+                                            placeholder="Votre présence est le plus beau des cadeaux..."
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs text-muted-foreground">Bouton</Label>
+                                        <Input
+                                            value={invitationDraft.invitationCagnotteButton}
+                                            onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationCagnotteButton: e.target.value }))}
+                                            className="bg-background"
+                                            placeholder="Contribuer"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="rounded-xl border bg-card p-4 space-y-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+                                            <span className="text-amber-700 text-xs font-bold">6</span>
+                                        </div>
+                                        <span className="text-sm font-semibold">Pied de page</span>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs text-muted-foreground">Note finale</Label>
+                                        <Textarea
+                                            rows={2}
+                                            value={invitationDraft.invitationFooterNote}
+                                            onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationFooterNote: e.target.value }))}
+                                            className="bg-background resize-none"
+                                            placeholder="Merci de confirmer votre présence avant la date indiquée."
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="rounded-xl border bg-card p-4 space-y-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+                                            <span className="text-muted-foreground text-xs font-bold">⚙</span>
+                                        </div>
+                                        <span className="text-sm font-semibold">Sections visibles</span>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {[
+                                            { key: "invitationShowProgramme" as const, label: "Programme", desc: "Timeline de la journée" },
+                                            { key: "invitationShowLocations" as const, label: "Lieux", desc: "Cérémonie, réception, hébergements" },
+                                            { key: "invitationShowDressCode" as const, label: "Dress code", desc: "Consigne vestimentaire" },
+                                            { key: "invitationShowCagnotte" as const, label: "Cagnotte", desc: "Lien vers la liste de mariage" },
+                                            { key: "invitationShowQrCode" as const, label: "QR code", desc: "Code scannable vers l'invitation" },
+                                        ].map((toggle) => (
+                                            <div key={toggle.key} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-muted/40 transition-colors">
+                                                <div>
+                                                    <span className="text-sm font-medium">{toggle.label}</span>
+                                                    <p className="text-[11px] text-muted-foreground">{toggle.desc}</p>
+                                                </div>
+                                                <Switch
+                                                    checked={invitationDraft[toggle.key]}
+                                                    onCheckedChange={(v) => setInvitationDraft((p) => ({ ...p, [toggle.key]: v }))}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
                             </div>
                         </ScrollArea>
 
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <div className="text-sm font-medium">Aperçu</div>
+                        <div className="flex flex-col">
+                            <div className="px-4 py-3 border-b flex items-center justify-between bg-muted/20">
+                                <span className="text-sm font-medium text-muted-foreground">Aperçu en direct</span>
                                 {sampleToken ? (
                                     <Button
-                                        variant="outline"
+                                        variant="ghost"
                                         size="sm"
+                                        className="text-xs h-7 gap-1.5"
                                         onClick={() => window.open(`${publicBasePath}/guest/${sampleToken}`, "_blank", "noopener,noreferrer")}
                                     >
-                                        Ouvrir
+                                        Ouvrir <ExternalLink className="h-3 w-3" />
                                     </Button>
                                 ) : null}
                             </div>
-
-                            {sampleToken ? (
-                                <div className="rounded-xl border overflow-hidden bg-background">
+                            <div className="flex-1 min-h-0">
+                                {sampleToken ? (
                                     <iframe
                                         title="Aperçu invitation"
                                         src={`${publicBasePath}/guest/${sampleToken}`}
-                                        className="w-full h-[560px]"
+                                        className="w-full h-full min-h-[400px] bg-background"
                                     />
-                                </div>
-                            ) : (
-                                <div className="rounded-xl border bg-muted/20 p-6 text-sm text-muted-foreground">
-                                    Ajoutez au moins un invité pour activer l'aperçu de l'invitation.
-                                </div>
-                            )}
+                                ) : (
+                                    <div className="h-full flex items-center justify-center p-8">
+                                        <div className="text-center space-y-3">
+                                            <div className="w-12 h-12 rounded-full bg-muted/40 flex items-center justify-center mx-auto">
+                                                <Users className="h-5 w-5 text-muted-foreground" />
+                                            </div>
+                                            <p className="text-sm text-muted-foreground">
+                                                Ajoutez au moins un invité pour voir l'aperçu de l'invitation.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex justify-end gap-2 pt-2">
+                    <div className="px-6 py-4 border-t bg-muted/10 flex justify-end gap-2">
                         <Button variant="outline" onClick={() => setInvitationSettingsOpen(false)}>
                             Annuler
                         </Button>
-                        <Button onClick={saveInvitationSettings} disabled={invitationSaving || updateWedding.isPending}>
-                            {invitationSaving || updateWedding.isPending ? "Enregistrement..." : "Enregistrer"}
+                        <Button onClick={saveInvitationSettings} disabled={invitationSaving || updateWedding.isPending} className="min-w-[140px]">
+                            {invitationSaving || updateWedding.isPending ? (
+                                <><Loader2 className="h-4 w-4 animate-spin mr-2" />Enregistrement...</>
+                            ) : "Enregistrer"}
                         </Button>
                     </div>
                 </DialogContent>

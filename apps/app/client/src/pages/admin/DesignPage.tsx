@@ -450,8 +450,8 @@ export default function DesignPage() {
     <div className="h-[calc(100vh-64px)] w-full flex flex-col">
       <div className="px-8 pt-6 pb-4 border-b bg-background/80 backdrop-blur flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-serif font-bold text-foreground">Modifier l'invitation</h1>
-          <p className="text-muted-foreground text-sm">Personnalisez chaque section et appliquez les changements.</p>
+          <h1 className="text-2xl font-serif font-bold text-foreground">Design du site</h1>
+          <p className="text-muted-foreground text-sm">Personnalisez l'apparence et le contenu de votre site de mariage.</p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" asChild>
