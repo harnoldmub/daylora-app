@@ -192,9 +192,11 @@ export default function GuestInvitationPage() {
   const sections = (wedding?.config?.sections || {}) as any;
   const media = (wedding?.config?.media || {}) as any;
   const payments = (wedding?.config?.payments || {}) as any;
+  const brandingConfig = (wedding?.config?.branding || {}) as any;
 
   const title = wedding?.title || "Notre mariage";
   const heroTitle = texts.heroTitle || title;
+  const logoUrl = brandingConfig.logoUrl || "";
   const couplePhoto = media.invitationImage || media.couplePhoto || "";
   const storyBody = texts.storyBody || "";
   const programItems = sections.programItems || [];
@@ -305,7 +307,11 @@ export default function GuestInvitationPage() {
 
         <div className="w-full max-w-md mx-auto text-center space-y-8 relative z-10">
           <div className="inv-animate">
-            <MonogramSeal names={coupleNames} color={primaryColor} />
+            {logoUrl ? (
+              <img src={logoUrl} alt="" className="mx-auto h-20 w-20 object-contain rounded-full" />
+            ) : (
+              <MonogramSeal names={coupleNames} color={primaryColor} />
+            )}
           </div>
 
           <div className="inv-animate-d1 space-y-3">
@@ -617,7 +623,11 @@ export default function GuestInvitationPage() {
       )}
 
       <footer className="py-12 px-6 text-center space-y-4">
-        <MonogramSeal names={coupleNames} color={primaryColor} />
+        {logoUrl ? (
+          <img src={logoUrl} alt="" className="mx-auto h-16 w-16 object-contain rounded-full" />
+        ) : (
+          <MonogramSeal names={coupleNames} color={primaryColor} />
+        )}
         <p className="text-[10px] tracking-[0.15em] uppercase inv-serif" style={{ color: textSubtle, opacity: 0.5 }}>
           {heroTitle}
         </p>

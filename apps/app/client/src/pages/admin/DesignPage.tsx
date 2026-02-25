@@ -91,6 +91,16 @@ export default function DesignPage() {
     liveSubtitle: "",
     liveDonorsTitle: "",
     liveQrCaption: "",
+    dressCode: "",
+    invitationGreeting: "",
+    invitationPrelude: "",
+    invitationMessage: "",
+    invitationSubmessage: "",
+    invitationCagnotteTitle: "",
+    invitationCagnotteDescription: "",
+    invitationCagnotteButton: "",
+    invitationDressCode: "",
+    invitationFooterNote: "",
   }));
 
   const [theme, setTheme] = useState(() => ({
@@ -173,6 +183,16 @@ export default function DesignPage() {
       liveSubtitle: cfgTexts.liveSubtitle || "Merci pour votre générosité",
       liveDonorsTitle: cfgTexts.liveDonorsTitle || "NOS GÉNÉREUX DONATEURS",
       liveQrCaption: cfgTexts.liveQrCaption || "Scannez pour contribuer",
+      dressCode: cfgTexts.dressCode || "",
+      invitationGreeting: cfgTexts.invitationGreeting || "",
+      invitationPrelude: cfgTexts.invitationPrelude || "",
+      invitationMessage: cfgTexts.invitationMessage || "",
+      invitationSubmessage: cfgTexts.invitationSubmessage || "",
+      invitationCagnotteTitle: cfgTexts.invitationCagnotteTitle || "",
+      invitationCagnotteDescription: cfgTexts.invitationCagnotteDescription || "",
+      invitationCagnotteButton: cfgTexts.invitationCagnotteButton || "",
+      invitationDressCode: cfgTexts.invitationDressCode || "",
+      invitationFooterNote: cfgTexts.invitationFooterNote || "",
     });
     setTheme({
       primaryColor: cfgTheme.primaryColor || "#C8A96A",
@@ -1124,6 +1144,70 @@ export default function DesignPage() {
                     >
                       Ajouter une étape
                     </Button>
+                    <Button onClick={saveDesign} disabled={isSaving} size="sm" className="w-full mt-2">
+                      {isSaving ? "Enregistrement..." : "Appliquer"}
+                    </Button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="dresscode" className="border rounded-xl px-4 mb-4">
+                <AccordionTrigger className="hover:no-underline">Dress Code</AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-3">
+                    <div className="text-xs text-muted-foreground">Indiquez le dress code pour vos invités. Il apparaîtra sur le site et dans les invitations.</div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium">Dress code</label>
+                      <Textarea rows={2} value={texts.dressCode} onChange={(e) => setTexts({ ...texts, dressCode: e.target.value })} placeholder="Ex: Tenue de cocktail – Tons pastel appréciés" />
+                    </div>
+                    <Button onClick={saveDesign} disabled={isSaving} size="sm" className="w-full mt-2">
+                      {isSaving ? "Enregistrement..." : "Appliquer"}
+                    </Button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="invitation" className="border rounded-xl px-4 mb-4">
+                <AccordionTrigger className="hover:no-underline">Page d'invitation</AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-3">
+                    <div className="text-xs text-muted-foreground">Personnalisez les textes de la page d'invitation envoyée à chaque invité.</div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium">Accroche d'accueil</label>
+                      <Input value={texts.invitationGreeting} onChange={(e) => setTexts({ ...texts, invitationGreeting: e.target.value })} placeholder="Nous avons l'honneur de vous convier" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium">Prélude</label>
+                      <Input value={texts.invitationPrelude} onChange={(e) => setTexts({ ...texts, invitationPrelude: e.target.value })} placeholder="à célébrer l'union de" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium">Message principal</label>
+                      <Textarea rows={2} value={texts.invitationMessage} onChange={(e) => setTexts({ ...texts, invitationMessage: e.target.value })} placeholder="Ce jour ne serait pas le même sans votre présence à nos côtés." />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium">Sous-message</label>
+                      <Input value={texts.invitationSubmessage} onChange={(e) => setTexts({ ...texts, invitationSubmessage: e.target.value })} placeholder="Venez comme vous êtes, avec le cœur léger et l'envie de faire la fête." />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium">Dress code (invitation)</label>
+                      <Input value={texts.invitationDressCode} onChange={(e) => setTexts({ ...texts, invitationDressCode: e.target.value })} placeholder="Tenue de cocktail" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium">Titre cagnotte (invitation)</label>
+                      <Input value={texts.invitationCagnotteTitle} onChange={(e) => setTexts({ ...texts, invitationCagnotteTitle: e.target.value })} placeholder="Liste de mariage" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium">Description cagnotte (invitation)</label>
+                      <Textarea rows={2} value={texts.invitationCagnotteDescription} onChange={(e) => setTexts({ ...texts, invitationCagnotteDescription: e.target.value })} placeholder="Votre présence est le plus beau des cadeaux..." />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium">Bouton cagnotte</label>
+                      <Input value={texts.invitationCagnotteButton} onChange={(e) => setTexts({ ...texts, invitationCagnotteButton: e.target.value })} placeholder="Contribuer" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium">Note de pied de page</label>
+                      <Textarea rows={2} value={texts.invitationFooterNote} onChange={(e) => setTexts({ ...texts, invitationFooterNote: e.target.value })} placeholder="Merci de confirmer votre présence avant la date indiquée." />
+                    </div>
                     <Button onClick={saveDesign} disabled={isSaving} size="sm" className="w-full mt-2">
                       {isSaving ? "Enregistrement..." : "Appliquer"}
                     </Button>

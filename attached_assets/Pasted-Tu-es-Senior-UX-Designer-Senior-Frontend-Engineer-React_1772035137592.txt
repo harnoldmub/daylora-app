@@ -1,0 +1,214 @@
+Tu es Senior UX Designer + Senior Frontend Engineer (React + Tailwind).
+
+Tu dois améliorer le MODE ÉDITION de mon SaaS mariage.
+
+Objectif :
+Rendre l’édition :
+
+• Plus élégante
+• Moins intrusive visuellement
+• Plus claire pour débutants
+• Plus premium
+• Plus cohérente avec un produit luxe
+
+Ne pas modifier la logique backend.
+Refactor UI uniquement.
+
+1️⃣ PROBLÈME PRINCIPAL
+
+Actuellement :
+
+Les champs apparaissent “posés” sur le site
+
+L’édition casse l’émotion du design
+
+Les inputs sont trop visibles
+
+Le mode édition ne respire pas
+
+Je veux un mode édition :
+
+• subtil
+• élégant
+• professionnel
+• non agressif
+
+2️⃣ TRANSFORMATION DU MODE ÉDITION
+A. Ajouter un vrai bandeau d’édition flottant
+
+En bas ou en haut :
+
+Card flottante glassmorphism :
+
+Blur background
+
+Border subtle
+
+Rounded-full
+
+Shadow-xl soft
+
+Contenu :
+
+🟢 Mode édition actif
+Bouton “Terminer” (primary)
+Bouton “Aperçu” (secondary)
+
+Ne plus afficher juste un bouton simple.
+
+B. Encadrer les zones éditables proprement
+
+Quand hover sur une zone éditable :
+
+border dashed subtle rose/beige
+
+fond très léger beige transparent
+
+icône ✏️ qui apparaît en haut à droite
+
+label discret : “Modifier”
+
+Ne pas afficher les vrais inputs tant que l’utilisateur ne clique pas.
+
+C. Edition inline premium
+
+Quand on clique :
+
+Transformer le texte en input élégant
+
+Input sans bordure visible
+
+Background soft beige
+
+Auto focus
+
+Bouton ✓ et ✕ discrets à droite
+
+Animation :
+
+fade + scale 0.98 → 1
+
+150ms smooth
+
+D. Supprimer le style brut des inputs
+
+Actuellement :
+
+bordures trop visibles
+
+couleur trop forte
+
+trop administratif
+
+Remplacer par :
+
+border-transparent
+
+focus:ring-2 ring-rose-300
+
+shadow-inner subtle
+
+rounded-xl
+
+E. Uniformiser tous les champs édition
+
+Règle :
+
+• même border-radius partout (16px)
+• mêmes ombres
+• même padding
+• mêmes transitions
+
+3️⃣ AMÉLIORER LE FORMULAIRE RSVP EN MODE ÉDITION
+
+Problème :
+Il ressemble trop à un formulaire classique.
+
+Solution :
+
+Espacement vertical augmenté
+
+Label plus fin et élégant
+
+Placeholder plus inspirants
+
+CTA plus dominant
+
+Ajouter micro interaction :
+
+Quand radio sélectionné :
+
+petite animation scale
+
+fond rose très léger
+
+4️⃣ AMÉLIORER MODAL “AJOUTER CADEAU”
+
+Améliorations :
+
+Animation entrée :
+opacity 0 → 1
+scale 0.95 → 1
+200ms ease-out
+
+Bouton principal plus large
+
+Footer séparé avec fond très léger
+
+Cross fermeture plus discret
+
+5️⃣ RÈGLES UX ABSOLUES
+
+Mode édition doit :
+
+• Ne jamais casser le design du site
+• Ne jamais dominer le contenu
+• Être discret mais accessible
+• Donner une sensation de contrôle
+
+6️⃣ TRANSITIONS GLOBALES
+
+Ajouter :
+
+transition-all duration-200 ease-in-out
+
+sur :
+
+boutons
+
+hover
+
+inputs
+
+cards
+
+overlays
+
+7️⃣ BONUS PREMIUM
+
+Ajouter un petit tooltip la première fois :
+
+“Cliquez sur un élément pour le modifier ✏️”
+
+Puis disparaît après 1 interaction.
+
+8️⃣ CONSTRAINTES
+
+• Mobile-first obligatoire
+• Ne pas ajouter librairie lourde
+• Utiliser Tailwind uniquement
+• Code propre et cohérent
+
+À la fin :
+
+Explique ce qui a été amélioré côté UX.
+
+🎯 Résultat attendu
+
+Le mode édition doit ressembler à :
+
+Notion (édition inline fluide)
+Webflow (édition non intrusive)
+Framer (élégant et clair)
+
+Mais adapté à un SaaS mariage premium.
