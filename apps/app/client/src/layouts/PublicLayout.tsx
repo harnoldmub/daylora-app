@@ -3,7 +3,7 @@ import { Link, useLocation, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { type Wedding } from "@shared/schema";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { Loader2 } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUpdateWedding } from "@/hooks/use-api";
 import { PublicEditProvider } from "@/contexts/public-edit";
@@ -408,26 +408,25 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
                                             if (canEdit && editMode) e.preventDefault();
                                         }}
                                     >
-                                        {headerLogoUrl ? (
+                                        {headerLogoUrl && (
                                             <img
                                                 src={headerLogoUrl}
                                                 alt={headerLogoText || wedding.title}
                                                 className="h-10 w-auto object-contain"
                                             />
-                                        ) : (
-                                            <span className="text-xl font-bold tracking-tight">
-                                                <InlineEditor
-                                                    value={siteTitle}
-                                                    onSave={saveSiteTitle}
-                                                    canEdit={canEdit && editMode}
-                                                    placeholder={wedding.title}
-                                                />
-                                            </span>
                                         )}
+                                        <span className="text-xl font-bold tracking-tight">
+                                            <InlineEditor
+                                                value={siteTitle}
+                                                onSave={saveSiteTitle}
+                                                canEdit={canEdit && editMode}
+                                                placeholder={wedding.title}
+                                            />
+                                        </span>
                                     </Link>
 
                                     {canEdit && editMode ? (
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1.5">
                                             <input
                                                 ref={logoInputRef}
                                                 type="file"
@@ -440,24 +439,24 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
                                                     e.target.value = "";
                                                 }}
                                             />
-                                            <Button
+                                            <button
                                                 type="button"
-                                                size="sm"
-                                                variant="outline"
+                                                className="h-7 px-2.5 rounded-full text-[10px] font-medium bg-white/80 backdrop-blur-sm border border-primary/15 text-primary hover:bg-primary/5 transition-all duration-200 disabled:opacity-50"
                                                 onClick={() => logoInputRef.current?.click()}
                                                 disabled={isUploadingLogo}
                                             >
                                                 {isUploadingLogo ? "Import..." : "Logo"}
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => saveBranding({ logoUrl: "" })}
-                                                disabled={!headerLogoUrl || isUploadingLogo}
-                                            >
-                                                Supprimer
-                                            </Button>
+                                            </button>
+                                            {headerLogoUrl && (
+                                                <button
+                                                    type="button"
+                                                    className="h-7 px-2.5 rounded-full text-[10px] font-medium bg-white/80 backdrop-blur-sm border border-muted-foreground/15 text-muted-foreground hover:text-destructive hover:border-destructive/20 transition-all duration-200 disabled:opacity-50"
+                                                    onClick={() => saveBranding({ logoUrl: "" })}
+                                                    disabled={isUploadingLogo}
+                                                >
+                                                    Supprimer
+                                                </button>
+                                            )}
                                         </div>
                                     ) : null}
                                 </div>
@@ -665,14 +664,28 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
 
                     {
                         canEdit ? (
-                            <div className="fixed bottom-6 right-6 z-50 flex gap-2">
+                            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
                                 {editMode ? (
-                                    <div className="bg-primary text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 animate-in slide-in-from-bottom-5">
-                                        <span className="text-sm font-medium">Mode Edition</span>
+                                    <div className="bg-white/80 backdrop-blur-xl border border-white/40 shadow-2xl px-5 py-2.5 rounded-full flex items-center gap-3 animate-in slide-in-from-bottom-5 duration-300">
+                                        <span className="flex items-center gap-2">
+                                            <span className="relative flex h-2 w-2">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                                            </span>
+                                            <span className="text-sm font-medium text-foreground/80">Mode édition</span>
+                                        </span>
+                                        <div className="w-px h-5 bg-border" />
                                         <Button
                                             size="sm"
-                                            variant="secondary"
-                                            className="h-7 px-2 rounded-full text-xs"
+                                            variant="ghost"
+                                            className="h-8 px-3 rounded-full text-xs text-muted-foreground hover:text-foreground"
+                                            onClick={() => setEditMode(false)}
+                                        >
+                                            Aperçu
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            className="h-8 px-4 rounded-full text-xs"
                                             onClick={() => setEditMode(false)}
                                         >
                                             Terminer
@@ -680,9 +693,10 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
                                     </div>
                                 ) : (
                                     <Button
-                                        className="rounded-full shadow-lg h-12 px-6 bg-primary/90 hover:bg-primary backdrop-blur-sm"
+                                        className="rounded-full shadow-xl h-11 px-6 bg-primary/90 hover:bg-primary backdrop-blur-sm transition-all duration-200 hover:shadow-2xl hover:scale-[1.02]"
                                         onClick={() => setEditMode(true)}
                                     >
+                                        <Pencil className="h-3.5 w-3.5 mr-2" />
                                         Modifier le site
                                     </Button>
                                 )}

@@ -1,8 +1,4 @@
-
 import { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Check, X, Pencil, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -12,10 +8,10 @@ interface InlineEditorProps {
     label?: string;
     isTextArea?: boolean;
     canEdit?: boolean;
-    className?: string; // Class for the display text
-    inputClassName?: string; // Class for the input/textarea
+    className?: string;
+    inputClassName?: string;
     placeholder?: string;
-    editMode?: boolean; // If true, force edit mode interaction
+    editMode?: boolean;
 }
 
 export function InlineEditor({
@@ -34,39 +30,30 @@ export function InlineEditor({
     const [isSaving, setIsSaving] = useState(false);
     const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
-    // Sync tempValue with value prop updates
-    useEffect(() => {
-        setTempValue(value);
-    }, [value]);
-
+    useEffect(() => { setTempValue(value); }, [value]);
     useEffect(() => {
         if (isEditing && inputRef.current) {
             inputRef.current.focus();
+            if (inputRef.current instanceof HTMLInputElement) {
+                inputRef.current.select();
+            }
         }
     }, [isEditing]);
 
     const handleSave = async () => {
-        if (tempValue === value) {
-            setIsEditing(false);
-            return;
-        }
-
+        if (tempValue === value) { setIsEditing(false); return; }
         try {
             setIsSaving(true);
             await onSave(tempValue);
             setIsEditing(false);
         } catch (error) {
             console.error("Failed to save:", error);
-            // Optionally handle error state
         } finally {
             setIsSaving(false);
         }
     };
 
-    const handleCancel = () => {
-        setTempValue(value);
-        setIsEditing(false);
-    };
+    const handleCancel = () => { setTempValue(value); setIsEditing(false); };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Enter" && !isTextArea && !e.shiftKey) {
@@ -77,57 +64,69 @@ export function InlineEditor({
         }
     };
 
-    // Only allow editing if user has permission AND (editMode is active or simple click-to-edit)
-    // For this implementation, we rely on canEdit passed from parent (which checks permissions + edit mode toggle)
     if (!canEdit && !isEditing) {
         return <span className={className}>{value || placeholder}</span>;
     }
 
     if (isEditing) {
         return (
-            <div className="relative group/editor min-w-[200px]">
-                {label && <label className="text-xs text-muted-foreground mb-1 block">{label}</label>}
-                <div className="flex gap-2 items-start">
+            <div className="inline-edit-active relative min-w-[180px] animate-in fade-in zoom-in-[0.98] duration-150">
+                {label && <label className="text-[10px] tracking-wider uppercase text-muted-foreground/70 mb-1 block font-medium">{label}</label>}
+                <div className="flex gap-1.5 items-start">
                     {isTextArea ? (
-                        <Textarea
+                        <textarea
                             ref={inputRef as React.RefObject<HTMLTextAreaElement>}
                             value={tempValue}
                             onChange={(e) => setTempValue(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            className={cn("min-h-[100px] resize-y bg-background text-foreground", inputClassName)}
+                            className={cn(
+                                "w-full min-h-[80px] resize-y px-3 py-2 rounded-xl",
+                                "bg-[#FAF8F5] border border-transparent",
+                                "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/20",
+                                "shadow-inner text-foreground placeholder:text-muted-foreground/40",
+                                "transition-all duration-200",
+                                "text-sm leading-relaxed",
+                                inputClassName
+                            )}
                             placeholder={placeholder}
                             disabled={isSaving}
                         />
                     ) : (
-                        <Input
+                        <input
                             ref={inputRef as React.RefObject<HTMLInputElement>}
                             value={tempValue}
                             onChange={(e) => setTempValue(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            className={cn("h-auto py-1 bg-background text-foreground", inputClassName)}
+                            className={cn(
+                                "w-full h-auto px-3 py-1.5 rounded-xl",
+                                "bg-[#FAF8F5] border border-transparent",
+                                "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/20",
+                                "shadow-inner text-foreground placeholder:text-muted-foreground/40",
+                                "transition-all duration-200",
+                                "text-sm",
+                                inputClassName
+                            )}
                             placeholder={placeholder}
                             disabled={isSaving}
                         />
                     )}
-                    <div className="flex flex-col gap-1">
-                        <Button
-                            size="icon"
-                            variant="default"
-                            className="h-8 w-8 bg-green-600 hover:bg-green-700 text-white"
+                    <div className="flex gap-1 shrink-0 pt-0.5">
+                        <button
+                            type="button"
+                            className="h-7 w-7 rounded-lg bg-primary/90 hover:bg-primary text-white flex items-center justify-center transition-all duration-200 hover:scale-105 disabled:opacity-50 shadow-sm"
                             onClick={handleSave}
                             disabled={isSaving}
                         >
-                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                        </Button>
-                        <Button
-                            size="icon"
-                            variant="destructive"
-                            className="h-8 w-8"
+                            {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                        </button>
+                        <button
+                            type="button"
+                            className="h-7 w-7 rounded-lg bg-muted hover:bg-muted-foreground/10 text-muted-foreground flex items-center justify-center transition-all duration-200 hover:scale-105 disabled:opacity-50"
                             onClick={handleCancel}
                             disabled={isSaving}
                         >
-                            <X className="h-4 w-4" />
-                        </Button>
+                            <X className="h-3.5 w-3.5" />
+                        </button>
                     </div>
                 </div>
             </div>
@@ -136,15 +135,25 @@ export function InlineEditor({
 
     return (
         <div
-            className={cn("relative group cursor-pointer border border-transparent hover:border-dashed hover:border-primary/50 rounded px-1 -mx-1 transition-colors", className)}
+            className={cn(
+                "inline-edit-zone relative group/edit cursor-pointer",
+                "rounded-xl px-2 -mx-2 py-0.5",
+                "border border-transparent",
+                "hover:border-dashed hover:border-primary/25",
+                "hover:bg-primary/[0.03]",
+                "transition-all duration-200 ease-out",
+                className
+            )}
             onClick={() => canEdit && setIsEditing(true)}
-            title="Click to edit"
         >
-            {value || <span className="opacity-50 italic">{placeholder || "Click to edit"}</span>}
+            {value || <span className="opacity-40 italic">{placeholder || "Cliquez pour modifier"}</span>}
             {canEdit && (
-                <div className="absolute -top-3 -right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-white p-1 rounded-full shadow-lg">
-                    <Pencil className="h-3 w-3" />
-                </div>
+                <span className="absolute -top-2.5 -right-2.5 opacity-0 group-hover/edit:opacity-100 transition-all duration-200 scale-90 group-hover/edit:scale-100">
+                    <span className="flex items-center gap-1 bg-white/90 backdrop-blur-sm text-primary px-1.5 py-0.5 rounded-full shadow-md border border-primary/10 text-[10px] font-medium">
+                        <Pencil className="h-2.5 w-2.5" />
+                        Modifier
+                    </span>
+                </span>
             )}
         </div>
     );
