@@ -177,7 +177,12 @@ export function TemplateRenderer(props: TemplateRendererProps) {
 
   const locationItems: LocationItem[] = (wedding.config?.sections?.locationItems?.length ? wedding.config.sections.locationItems : DEFAULT_LOCATION_ITEMS) as LocationItem[];
   const programItems: ProgramItem[] = (wedding.config?.sections?.programItems?.length ? wedding.config.sections.programItems : DEFAULT_PROGRAM_ITEMS) as ProgramItem[];
-  const galleryImages = ((wedding.config?.sections?.galleryImages?.length ? wedding.config.sections.galleryImages : DEFAULT_GALLERY_IMAGES) as string[]).slice(0, MAX_GALLERY_IMAGES);
+  const rawGallery = wedding.config?.sections?.galleryImages?.length
+    ? wedding.config.sections.galleryImages
+    : (wedding.config?.media as any)?.galleryImages?.length
+      ? (wedding.config.media as any).galleryImages
+      : DEFAULT_GALLERY_IMAGES;
+  const galleryImages = (rawGallery as string[]).slice(0, MAX_GALLERY_IMAGES);
 
   const showRsvp = wedding.config?.navigation?.pages?.rsvp ?? true;
   const showStory = wedding.config?.navigation?.pages?.story ?? true;
