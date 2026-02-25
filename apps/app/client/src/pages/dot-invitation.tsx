@@ -188,21 +188,38 @@ export default function GuestInvitationPage() {
     return () => { cancelled = true; };
   }, [guestId, primaryColor]);
 
+  const texts = (wedding?.config?.texts || {}) as any;
+  const sections = (wedding?.config?.sections || {}) as any;
+  const media = (wedding?.config?.media || {}) as any;
+  const payments = (wedding?.config?.payments || {}) as any;
+
   const title = wedding?.title || "Notre mariage";
-  const heroTitle = wedding?.config?.texts?.heroTitle || title;
-  const couplePhoto = wedding?.config?.media?.couplePhoto || "";
-  const storyBody = wedding?.config?.texts?.storyBody || "";
-  const programItems = wedding?.config?.sections?.programItems || [];
-  const locations = wedding?.config?.sections?.locationItems || [];
-  const cagnotteExternalUrl = (wedding?.config?.payments?.externalUrl || (wedding?.config?.sections as any)?.cagnotteExternalUrl || "") as string;
-  const cagnotteTitle = (wedding?.config?.texts as any)?.cagnotteTitle || "Cadeau de Mariage";
-  const cagnotteDescription = (wedding?.config?.texts as any)?.cagnotteDescription || "Votre présence est notre plus beau cadeau. Si vous souhaitez nous gâter, nous préférons une participation à notre cagnotte.";
-  const cagnotteMode = wedding?.config?.payments?.mode || (cagnotteExternalUrl ? "external" : "stripe");
+  const heroTitle = texts.heroTitle || title;
+  const couplePhoto = media.invitationImage || media.couplePhoto || "";
+  const storyBody = texts.storyBody || "";
+  const programItems = sections.programItems || [];
+  const locations = sections.locationItems || [];
+  const cagnotteExternalUrl = (payments.externalUrl || sections.cagnotteExternalUrl || "") as string;
+  const cagnotteMode = payments.mode || (cagnotteExternalUrl ? "external" : "stripe");
   const weddingSlug = (wedding as any)?.slug || "";
   const basePath = weddingSlug ? `/${weddingSlug}` : "/";
   const cagnotteHref = cagnotteMode === "external" ? cagnotteExternalUrl : `${basePath}#cagnotte`;
-  const dressCode = (wedding?.config?.texts as any)?.dressCode || "";
-  const galleryImages = wedding?.config?.sections?.galleryImages || [];
+
+  const invGreeting = texts.invitationGreeting || "vous êtes cordialement invité(e)";
+  const invPrelude = texts.invitationPrelude || "au mariage de";
+  const invMessage = texts.invitationMessage || "Nous nous réjouissons de partager ce moment avec vous.";
+  const invSubmessage = texts.invitationSubmessage || "Apportez votre bonne humeur, préparez vos plus beaux pas de danse.";
+  const invCagnotteTitle = texts.invitationCagnotteTitle || texts.cagnotteTitle || "Cadeau de Mariage";
+  const invCagnotteDesc = texts.invitationCagnotteDescription || texts.cagnotteDescription || "Votre présence est notre plus beau cadeau. Si vous souhaitez nous gâter, nous préférons une participation à notre cagnotte.";
+  const invCagnotteButton = texts.invitationCagnotteButton || "Participer";
+  const invDressCode = texts.invitationDressCode || texts.dressCode || "";
+  const invFooterNote = texts.invitationFooterNote || "Pour des raisons d'organisation, nous vous remercions de ne pas inviter de personnes supplémentaires.";
+
+  const showProgramme = sections.invitationShowProgramme ?? true;
+  const showLocations = sections.invitationShowLocations ?? true;
+  const showDressCode = sections.invitationShowDressCode ?? true;
+  const showCagnotte = sections.invitationShowCagnotte ?? true;
+  const showQrCode = sections.invitationShowQrCode ?? true;
 
   const dateObj = wedding?.weddingDate ? new Date(wedding.weddingDate) : null;
   const dayName = dateObj ? dateObj.toLocaleDateString("fr-FR", { weekday: "long" }) : "";
@@ -293,7 +310,7 @@ export default function GuestInvitationPage() {
 
           <div className="inv-animate-d1 space-y-3">
             <p className="text-[10px] tracking-[0.4em] uppercase inv-serif" style={{ color: textSubtle }}>
-              vous êtes cordialement invité{isCouple ? "(e)s" : "(e)"}
+              {invGreeting}{isCouple ? "s" : ""}
             </p>
             <h2 className="text-2xl md:text-3xl inv-display italic font-light" style={{ color: textDark }}>
               {guestDisplayName}
@@ -302,7 +319,7 @@ export default function GuestInvitationPage() {
 
           <div className="inv-animate-d2">
             <p className="text-[10px] tracking-[0.3em] uppercase inv-serif" style={{ color: textSubtle }}>
-              au mariage de
+              {invPrelude}
             </p>
           </div>
 
@@ -378,7 +395,7 @@ export default function GuestInvitationPage() {
         </AnimatedSection>
       )}
 
-      {programItems.length > 0 && (
+      {showProgramme && programItems.length > 0 && (
         <section className="py-20 px-6">
           <AnimatedSection className="max-w-lg mx-auto">
             <div className="text-center mb-16 space-y-3">
@@ -438,7 +455,7 @@ export default function GuestInvitationPage() {
         </section>
       )}
 
-      {locations.length > 0 && (
+      {showLocations && locations.length > 0 && (
         <section className="py-20 px-6" style={{ backgroundColor: cardBg }}>
           <AnimatedSection className="max-w-lg mx-auto">
             <div className="text-center mb-14 space-y-3">
@@ -514,16 +531,16 @@ export default function GuestInvitationPage() {
         <FloralDivider color={primaryColor} />
         <div className="max-w-sm mx-auto space-y-4 py-4">
           <p className="text-lg md:text-xl inv-serif italic leading-relaxed" style={{ color: textDark }}>
-            Nous nous réjouissons de partager ce moment avec vous.
+            {invMessage}
           </p>
           <p className="text-sm inv-serif" style={{ color: textSubtle }}>
-            Apportez votre bonne humeur, préparez vos plus beaux pas de danse.
+            {invSubmessage}
           </p>
         </div>
         <FloralDivider color={primaryColor} />
       </AnimatedSection>
 
-      {dressCode && (
+      {showDressCode && invDressCode && (
         <AnimatedSection className="py-6 px-6">
           <div className="max-w-sm mx-auto">
             <div
@@ -535,14 +552,14 @@ export default function GuestInvitationPage() {
                 Dress Code
               </h3>
               <p className="text-sm inv-serif" style={{ color: textDark }}>
-                {dressCode}
+                {invDressCode}
               </p>
             </div>
           </div>
         </AnimatedSection>
       )}
 
-      {cagnotteHref && (
+      {showCagnotte && cagnotteHref && (
         <AnimatedSection className="py-20 px-6">
           <div className="max-w-sm mx-auto text-center space-y-6">
             <div className="w-14 h-14 mx-auto rounded-full flex items-center justify-center" style={{ backgroundColor: cardBg, border: `1px solid ${borderLight}` }}>
@@ -553,11 +570,11 @@ export default function GuestInvitationPage() {
                 Notre cagnotte
               </p>
               <h2 className="text-3xl md:text-4xl inv-display font-medium italic" style={{ color: textDark }}>
-                {cagnotteTitle}
+                {invCagnotteTitle}
               </h2>
             </div>
             <p className="text-sm inv-serif leading-relaxed" style={{ color: textSubtle }}>
-              {cagnotteDescription}
+              {invCagnotteDesc}
             </p>
             <a
               href={cagnotteHref}
@@ -567,41 +584,22 @@ export default function GuestInvitationPage() {
               style={{ backgroundColor: primaryColor }}
             >
               <Gift className="h-3.5 w-3.5" />
-              Participer
+              {invCagnotteButton}
             </a>
           </div>
         </AnimatedSection>
       )}
 
-      {galleryImages.length > 0 && (
-        <AnimatedSection className="py-16 px-6">
-          <div className="max-w-lg mx-auto">
-            <div className="text-center mb-10 space-y-2">
-              <p className="text-[10px] tracking-[0.4em] uppercase inv-serif" style={{ color: primaryColor }}>
-                Quelques souvenirs
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {galleryImages.slice(0, 4).map((img: string, idx: number) => (
-                <AnimatedSection key={idx} delay={idx * 0.1}>
-                  <div className="aspect-square rounded-lg overflow-hidden" style={{ border: `1px solid ${borderLight}` }}>
-                    <img src={img} alt="" className="w-full h-full object-cover" />
-                  </div>
-                </AnimatedSection>
-              ))}
-            </div>
-          </div>
+      {invFooterNote && (
+        <AnimatedSection className="py-6 px-6 text-center">
+          <FloralDivider color={primaryColor} />
+          <p className="text-xs inv-serif pt-2" style={{ color: textSubtle }}>
+            {invFooterNote}
+          </p>
         </AnimatedSection>
       )}
 
-      <AnimatedSection className="py-6 px-6 text-center">
-        <FloralDivider color={primaryColor} />
-        <p className="text-xs inv-serif pt-2" style={{ color: textSubtle }}>
-          Pour des raisons d'organisation, nous vous remercions de ne pas inviter de personnes supplémentaires.
-        </p>
-      </AnimatedSection>
-
-      {qrDataUrl && (
+      {showQrCode && qrDataUrl && (
         <AnimatedSection className="py-16 px-6">
           <div className="max-w-sm mx-auto text-center space-y-4">
             <div

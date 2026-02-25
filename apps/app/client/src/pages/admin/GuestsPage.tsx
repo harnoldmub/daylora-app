@@ -17,7 +17,9 @@ import {
     Clock,
     Filter,
     Tag,
-    RefreshCw
+    RefreshCw,
+    Image as ImageIcon,
+    X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -45,6 +47,8 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { RsvpResponse } from "@shared/schema";
@@ -74,14 +78,21 @@ export default function GuestsPage() {
     const [deleteGuestTarget, setDeleteGuestTarget] = useState<RsvpResponse | null>(null);
     const [invitationSettingsOpen, setInvitationSettingsOpen] = useState(false);
     const [invitationDraft, setInvitationDraft] = useState({
-        invitationTitle: "",
-        invitationSubtitle: "",
-        invitationBody: "",
-        invitationCtaRsvp: "",
-        invitationCtaCagnotte: "",
+        invitationGreeting: "",
+        invitationPrelude: "",
+        invitationMessage: "",
+        invitationSubmessage: "",
+        invitationCagnotteTitle: "",
+        invitationCagnotteDescription: "",
+        invitationCagnotteButton: "",
+        invitationDressCode: "",
+        invitationFooterNote: "",
         invitationImage: "",
+        invitationShowProgramme: true,
         invitationShowLocations: true,
-        invitationShowCountdown: true,
+        invitationShowDressCode: true,
+        invitationShowCagnotte: true,
+        invitationShowQrCode: true,
     });
     const [invitationSaving, setInvitationSaving] = useState(false);
     const [newGuest, setNewGuest] = useState({
@@ -375,14 +386,21 @@ export default function GuestsPage() {
         const media = (wedding as any)?.config?.media || {};
         const sections = (wedding as any)?.config?.sections || {};
         setInvitationDraft({
-            invitationTitle: texts.invitationTitle || "Invitation",
-            invitationSubtitle: texts.invitationSubtitle || "Vous êtes invité(e) à célébrer avec nous",
-            invitationBody: texts.invitationBody || "Retrouvez ici toutes les informations utiles pour le jour J.",
-            invitationCtaRsvp: texts.invitationCtaRsvp || "Répondre au RSVP",
-            invitationCtaCagnotte: texts.invitationCtaCagnotte || "Accéder à la cagnotte",
-            invitationImage: media.invitationImage || "",
+            invitationGreeting: texts.invitationGreeting || "vous êtes cordialement invité(e)",
+            invitationPrelude: texts.invitationPrelude || "au mariage de",
+            invitationMessage: texts.invitationMessage || "Nous nous réjouissons de partager ce moment avec vous.",
+            invitationSubmessage: texts.invitationSubmessage || "Apportez votre bonne humeur, préparez vos plus beaux pas de danse.",
+            invitationCagnotteTitle: texts.invitationCagnotteTitle || texts.cagnotteTitle || "Cadeau de Mariage",
+            invitationCagnotteDescription: texts.invitationCagnotteDescription || texts.cagnotteDescription || "Votre présence est notre plus beau cadeau. Si vous souhaitez nous gâter, nous préférons une participation à notre cagnotte.",
+            invitationCagnotteButton: texts.invitationCagnotteButton || "Participer",
+            invitationDressCode: texts.invitationDressCode || texts.dressCode || "",
+            invitationFooterNote: texts.invitationFooterNote || "Pour des raisons d'organisation, nous vous remercions de ne pas inviter de personnes supplémentaires.",
+            invitationImage: media.invitationImage || media.couplePhoto || "",
+            invitationShowProgramme: (sections.invitationShowProgramme ?? true) as boolean,
             invitationShowLocations: (sections.invitationShowLocations ?? true) as boolean,
-            invitationShowCountdown: (sections.invitationShowCountdown ?? true) as boolean,
+            invitationShowDressCode: (sections.invitationShowDressCode ?? true) as boolean,
+            invitationShowCagnotte: (sections.invitationShowCagnotte ?? true) as boolean,
+            invitationShowQrCode: (sections.invitationShowQrCode ?? true) as boolean,
         });
         setInvitationSettingsOpen(true);
     };
@@ -397,11 +415,15 @@ export default function GuestsPage() {
                     ...wedding.config,
                     texts: {
                         ...(wedding.config.texts || {}),
-                        invitationTitle: invitationDraft.invitationTitle,
-                        invitationSubtitle: invitationDraft.invitationSubtitle,
-                        invitationBody: invitationDraft.invitationBody,
-                        invitationCtaRsvp: invitationDraft.invitationCtaRsvp,
-                        invitationCtaCagnotte: invitationDraft.invitationCtaCagnotte,
+                        invitationGreeting: invitationDraft.invitationGreeting,
+                        invitationPrelude: invitationDraft.invitationPrelude,
+                        invitationMessage: invitationDraft.invitationMessage,
+                        invitationSubmessage: invitationDraft.invitationSubmessage,
+                        invitationCagnotteTitle: invitationDraft.invitationCagnotteTitle,
+                        invitationCagnotteDescription: invitationDraft.invitationCagnotteDescription,
+                        invitationCagnotteButton: invitationDraft.invitationCagnotteButton,
+                        invitationDressCode: invitationDraft.invitationDressCode,
+                        invitationFooterNote: invitationDraft.invitationFooterNote,
                     } as any,
                     media: {
                         ...(wedding.config.media || {}),
@@ -409,8 +431,11 @@ export default function GuestsPage() {
                     } as any,
                     sections: {
                         ...(wedding.config.sections || {}),
+                        invitationShowProgramme: invitationDraft.invitationShowProgramme,
                         invitationShowLocations: invitationDraft.invitationShowLocations,
-                        invitationShowCountdown: invitationDraft.invitationShowCountdown,
+                        invitationShowDressCode: invitationDraft.invitationShowDressCode,
+                        invitationShowCagnotte: invitationDraft.invitationShowCagnotte,
+                        invitationShowQrCode: invitationDraft.invitationShowQrCode,
                     } as any,
                 },
             });
@@ -612,103 +637,202 @@ export default function GuestsPage() {
             />
 
             <Dialog open={invitationSettingsOpen} onOpenChange={setInvitationSettingsOpen}>
-                <DialogContent className="max-w-5xl">
+                <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col">
                     <DialogHeader>
                         <DialogTitle>Configurer la page invitation</DialogTitle>
                         <DialogDescription>
-                            Personnalisez le contenu affiché sur la page invitation de vos invités.
+                            Personnalisez chaque texte affiché sur la page invitation de vos invités.
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label>Titre</Label>
-                                <Input
-                                    value={invitationDraft.invitationTitle}
-                                    onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationTitle: e.target.value }))}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Sous-titre</Label>
-                                <Input
-                                    value={invitationDraft.invitationSubtitle}
-                                    onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationSubtitle: e.target.value }))}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Texte</Label>
-                                <Textarea
-                                    rows={4}
-                                    value={invitationDraft.invitationBody}
-                                    onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationBody: e.target.value }))}
-                                />
-                            </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
+                        <ScrollArea className="pr-4 max-h-[65vh]">
+                            <div className="space-y-6">
+                                <div className="space-y-1">
+                                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Hero</p>
+                                    <div className="h-px bg-border" />
+                                </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label>Label bouton RSVP</Label>
+                                    <Label className="text-xs text-muted-foreground">Phrase d'accueil</Label>
                                     <Input
-                                        value={invitationDraft.invitationCtaRsvp}
-                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationCtaRsvp: e.target.value }))}
+                                        value={invitationDraft.invitationGreeting}
+                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationGreeting: e.target.value }))}
+                                        placeholder="vous êtes cordialement invité(e)"
                                     />
                                 </div>
+
                                 <div className="space-y-2">
-                                    <Label>Label bouton cagnotte</Label>
+                                    <Label className="text-xs text-muted-foreground">Prélude (avant les noms)</Label>
                                     <Input
-                                        value={invitationDraft.invitationCtaCagnotte}
-                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationCtaCagnotte: e.target.value }))}
+                                        value={invitationDraft.invitationPrelude}
+                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationPrelude: e.target.value }))}
+                                        placeholder="au mariage de"
                                     />
                                 </div>
-                            </div>
 
-                            <div className="rounded-xl border p-4 space-y-3">
-                                <div className="text-sm font-medium">Image</div>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={async (e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) await onInvitationImageSelected(file);
-                                        e.target.value = "";
-                                    }}
-                                />
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setInvitationDraft((p) => ({ ...p, invitationImage: "" }))}
-                                        disabled={!invitationDraft.invitationImage}
-                                    >
-                                        Supprimer l'image
-                                    </Button>
-                                </div>
-                                {invitationDraft.invitationImage ? (
-                                    <img src={invitationDraft.invitationImage} alt="" className="h-28 w-full object-cover rounded-lg border" />
-                                ) : (
-                                    <div className="h-28 w-full rounded-lg border bg-muted/30 flex items-center justify-center text-sm text-muted-foreground">
-                                        Aucune image
+                                <div className="rounded-xl border p-4 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-xs text-muted-foreground">Photo du couple</Label>
+                                        {invitationDraft.invitationImage && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 px-2 text-xs text-muted-foreground"
+                                                onClick={() => setInvitationDraft((p) => ({ ...p, invitationImage: "" }))}
+                                            >
+                                                <X className="h-3 w-3 mr-1" />
+                                                Supprimer
+                                            </Button>
+                                        )}
                                     </div>
-                                )}
-                            </div>
+                                    {invitationDraft.invitationImage ? (
+                                        <img src={invitationDraft.invitationImage} alt="" className="h-32 w-full object-cover rounded-lg border" />
+                                    ) : (
+                                        <label className="h-32 w-full rounded-lg border-2 border-dashed bg-muted/20 flex flex-col items-center justify-center text-sm text-muted-foreground cursor-pointer hover:bg-muted/30 transition-colors">
+                                            <ImageIcon className="h-6 w-6 mb-2 opacity-40" />
+                                            <span>Cliquez pour ajouter une photo</span>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) await onInvitationImageSelected(file);
+                                                    e.target.value = "";
+                                                }}
+                                            />
+                                        </label>
+                                    )}
+                                    {invitationDraft.invitationImage && (
+                                        <label className="inline-flex items-center gap-2 text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
+                                            <ImageIcon className="h-3 w-3" />
+                                            Changer la photo
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) await onInvitationImageSelected(file);
+                                                    e.target.value = "";
+                                                }}
+                                            />
+                                        </label>
+                                    )}
+                                </div>
 
-                            <div className="flex items-center gap-4">
-                                <label className="flex items-center gap-2 text-sm">
-                                    <Checkbox
-                                        checked={invitationDraft.invitationShowCountdown}
-                                        onCheckedChange={(v) => setInvitationDraft((p) => ({ ...p, invitationShowCountdown: !!v }))}
+                                <div className="space-y-1 pt-2">
+                                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Message central</p>
+                                    <div className="h-px bg-border" />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-xs text-muted-foreground">Message principal</Label>
+                                    <Textarea
+                                        rows={2}
+                                        value={invitationDraft.invitationMessage}
+                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationMessage: e.target.value }))}
+                                        placeholder="Nous nous réjouissons de partager ce moment avec vous."
                                     />
-                                    Afficher le compte à rebours
-                                </label>
-                                <label className="flex items-center gap-2 text-sm">
-                                    <Checkbox
-                                        checked={invitationDraft.invitationShowLocations}
-                                        onCheckedChange={(v) => setInvitationDraft((p) => ({ ...p, invitationShowLocations: !!v }))}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-xs text-muted-foreground">Sous-message</Label>
+                                    <Textarea
+                                        rows={2}
+                                        value={invitationDraft.invitationSubmessage}
+                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationSubmessage: e.target.value }))}
+                                        placeholder="Apportez votre bonne humeur, préparez vos plus beaux pas de danse."
                                     />
-                                    Afficher les lieux
-                                </label>
+                                </div>
+
+                                <div className="space-y-1 pt-2">
+                                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dress code</p>
+                                    <div className="h-px bg-border" />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-xs text-muted-foreground">Consigne vestimentaire</Label>
+                                    <Input
+                                        value={invitationDraft.invitationDressCode}
+                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationDressCode: e.target.value }))}
+                                        placeholder="Tenue de soirée élégante"
+                                    />
+                                </div>
+
+                                <div className="space-y-1 pt-2">
+                                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cagnotte</p>
+                                    <div className="h-px bg-border" />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-xs text-muted-foreground">Titre cagnotte</Label>
+                                    <Input
+                                        value={invitationDraft.invitationCagnotteTitle}
+                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationCagnotteTitle: e.target.value }))}
+                                        placeholder="Cadeau de Mariage"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-xs text-muted-foreground">Description cagnotte</Label>
+                                    <Textarea
+                                        rows={3}
+                                        value={invitationDraft.invitationCagnotteDescription}
+                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationCagnotteDescription: e.target.value }))}
+                                        placeholder="Votre présence est notre plus beau cadeau..."
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-xs text-muted-foreground">Texte du bouton cagnotte</Label>
+                                    <Input
+                                        value={invitationDraft.invitationCagnotteButton}
+                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationCagnotteButton: e.target.value }))}
+                                        placeholder="Participer"
+                                    />
+                                </div>
+
+                                <div className="space-y-1 pt-2">
+                                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pied de page</p>
+                                    <div className="h-px bg-border" />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-xs text-muted-foreground">Note de bas de page</Label>
+                                    <Textarea
+                                        rows={2}
+                                        value={invitationDraft.invitationFooterNote}
+                                        onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationFooterNote: e.target.value }))}
+                                        placeholder="Pour des raisons d'organisation, nous vous remercions de ne pas inviter de personnes supplémentaires."
+                                    />
+                                </div>
+
+                                <div className="space-y-1 pt-2">
+                                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sections visibles</p>
+                                    <div className="h-px bg-border" />
+                                </div>
+
+                                <div className="space-y-3 pb-4">
+                                    {[
+                                        { key: "invitationShowProgramme" as const, label: "Programme" },
+                                        { key: "invitationShowLocations" as const, label: "Lieux" },
+                                        { key: "invitationShowDressCode" as const, label: "Dress code" },
+                                        { key: "invitationShowCagnotte" as const, label: "Cagnotte" },
+                                        { key: "invitationShowQrCode" as const, label: "QR code" },
+                                    ].map((toggle) => (
+                                        <div key={toggle.key} className="flex items-center justify-between">
+                                            <span className="text-sm">{toggle.label}</span>
+                                            <Switch
+                                                checked={invitationDraft[toggle.key]}
+                                                onCheckedChange={(v) => setInvitationDraft((p) => ({ ...p, [toggle.key]: v }))}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        </ScrollArea>
 
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
