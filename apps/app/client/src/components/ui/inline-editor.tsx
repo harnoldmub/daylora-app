@@ -73,7 +73,7 @@ export function InlineEditor({
     const isDark = variant === "dark";
 
     const inputBase = isDark
-        ? "bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder:text-white/40 shadow-lg"
+        ? "bg-white/10 backdrop-blur-md border border-white/20 !text-white placeholder:!text-white/40 shadow-lg caret-white"
         : "bg-[#FAF8F5] border border-transparent shadow-inner text-foreground placeholder:text-muted-foreground/40";
 
     const focusRing = isDark
@@ -103,9 +103,10 @@ export function InlineEditor({
                                 "w-full min-h-[80px] resize-y px-3 py-2 rounded-xl",
                                 inputBase, focusRing,
                                 "focus:outline-none transition-all duration-200",
-                                "text-sm leading-relaxed",
+                                "text-sm leading-relaxed font-sans",
                                 inputClassName
                             )}
+                            style={isDark ? { color: '#ffffff', fontFamily: 'system-ui, sans-serif' } : undefined}
                             placeholder={placeholder}
                             disabled={isSaving}
                         />
@@ -119,9 +120,10 @@ export function InlineEditor({
                                 "w-full h-auto px-3 py-1.5 rounded-xl",
                                 inputBase, focusRing,
                                 "focus:outline-none transition-all duration-200",
-                                "text-sm",
+                                "text-sm font-sans",
                                 inputClassName
                             )}
+                            style={isDark ? { color: '#ffffff', fontFamily: 'system-ui, sans-serif' } : undefined}
                             placeholder={placeholder}
                             disabled={isSaving}
                         />
