@@ -64,11 +64,11 @@ export function GiftsSection({
         </div>
 
         {canEdit && editMode ? (
-          <div className="mt-10 rounded-3xl bg-white/80 border border-primary/10 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div className="text-sm text-muted-foreground">
-              Gérez votre liste de cadeaux (visible sur le site).
+          <div className="mt-10 rounded-2xl bg-white/70 backdrop-blur-xl border border-white/50 shadow-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 animate-in fade-in zoom-in-[0.98] duration-200">
+            <div className="text-xs text-muted-foreground/70 font-medium">
+              Gérez votre liste de cadeaux
             </div>
-            <Button type="button" size="sm" onClick={onCreateGift} className="rounded-full px-5">
+            <Button type="button" size="sm" onClick={onCreateGift} className="rounded-full px-5 transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
               <Plus className="h-4 w-4 mr-2" />
               Ajouter un cadeau
             </Button>
@@ -83,15 +83,15 @@ export function GiftsSection({
               const pct = price > 0 ? Math.min(100, Math.round((contributed / price) * 100)) : 0;
               const isReserving = reservingId === gift.id;
               return (
-                <Card key={gift.id} className={`relative overflow-hidden ${tokens.gifts.card}`}>
+                <Card key={gift.id} className={`relative overflow-hidden group ${tokens.gifts.card}`}>
                   {canEdit && editMode ? (
-                    <div className="absolute right-3 top-3 z-10 flex gap-2">
-                      <Button type="button" size="icon" variant="secondary" className="h-9 w-9 rounded-full" onClick={() => onEditGift(gift)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button type="button" size="icon" variant="secondary" className="h-9 w-9 rounded-full" onClick={() => onDeleteGift(gift)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <div className="absolute right-2.5 top-2.5 z-10 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                      <button type="button" className="h-8 w-8 rounded-full bg-white/90 backdrop-blur-sm shadow-md flex items-center justify-center text-muted-foreground hover:text-primary transition-all duration-200 hover:scale-110" onClick={() => onEditGift(gift)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button type="button" className="h-8 w-8 rounded-full bg-white/90 backdrop-blur-sm shadow-md flex items-center justify-center text-muted-foreground hover:text-destructive transition-all duration-200 hover:scale-110" onClick={() => onDeleteGift(gift)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   ) : null}
 

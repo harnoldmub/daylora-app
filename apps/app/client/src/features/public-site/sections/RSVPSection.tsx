@@ -119,8 +119,8 @@ export function RSVPSection({
 
             <Card className={`relative overflow-hidden ${tokens.rsvp.card}`}>
               {canEdit && editMode ? (
-                <div className="mb-10 p-6 rounded-3xl bg-primary/5 border border-primary/10">
-                  <div className="text-[11px] uppercase tracking-widest text-primary font-bold mb-3">Texte du bouton RSVP</div>
+                <div className="mb-10 p-5 rounded-2xl bg-white/70 backdrop-blur-xl border border-white/50 shadow-xl animate-in fade-in zoom-in-[0.98] duration-200">
+                  <div className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground/70 font-medium mb-2">Texte du bouton RSVP</div>
                   <InlineEditor
                     value={rsvpButton}
                     onSave={(val) => onSaveText("rsvpButton", val)}
@@ -137,8 +137,8 @@ export function RSVPSection({
                       name="firstName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className={labelClass}>Prénom *</FormLabel>
-                          <FormControl><Input {...field} className={inputClass} placeholder="Votre prénom" /></FormControl>
+                          <FormLabel className={`${labelClass} text-[11px] tracking-wider uppercase font-medium opacity-70`}>Prénom *</FormLabel>
+                          <FormControl><Input {...field} className={`${inputClass} transition-all duration-200`} placeholder="Marie" /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -148,8 +148,8 @@ export function RSVPSection({
                       name="lastName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className={labelClass}>Nom *</FormLabel>
-                          <FormControl><Input {...field} className={inputClass} placeholder="Votre nom" /></FormControl>
+                          <FormLabel className={`${labelClass} text-[11px] tracking-wider uppercase font-medium opacity-70`}>Nom *</FormLabel>
+                          <FormControl><Input {...field} className={`${inputClass} transition-all duration-200`} placeholder="Dupont" /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -161,8 +161,8 @@ export function RSVPSection({
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className={labelClass}>Adresse email *</FormLabel>
-                          <FormControl><Input {...field} value={field.value ?? ""} type="email" className={inputClass} placeholder="votre@email.com" /></FormControl>
+                          <FormLabel className={`${labelClass} text-[11px] tracking-wider uppercase font-medium opacity-70`}>Adresse email *</FormLabel>
+                          <FormControl><Input {...field} value={field.value ?? ""} type="email" className={`${inputClass} transition-all duration-200`} placeholder="marie@exemple.com" /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -172,16 +172,16 @@ export function RSVPSection({
                       name="availability"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className={labelClass}>Serez-vous présent ? *</FormLabel>
+                          <FormLabel className={`${labelClass} text-[11px] tracking-wider uppercase font-medium opacity-70`}>Serez-vous présent ? *</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger className={inputClass}>
-                                <SelectValue placeholder="Sélectionnez" />
+                              <SelectTrigger className={`${inputClass} transition-all duration-200`}>
+                                <SelectValue placeholder="Choisissez votre réponse" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="confirmed">Oui, avec grand plaisir !</SelectItem>
-                              <SelectItem value="declined">Non, je ne pourrai pas être présent</SelectItem>
+                              <SelectItem value="declined">Non, malheureusement</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -194,8 +194,8 @@ export function RSVPSection({
                       control={form.control}
                       name="partySize"
                       render={({ field }) => (
-                        <FormItem className={watchedAvailability === "declined" ? "opacity-60" : ""}>
-                          <FormLabel className={labelClass}>Vous venez *</FormLabel>
+                        <FormItem className={`transition-all duration-300 ${watchedAvailability === "declined" ? "opacity-40 pointer-events-none" : ""}`}>
+                          <FormLabel className={`${labelClass} text-[11px] tracking-wider uppercase font-medium opacity-70`}>Vous venez *</FormLabel>
                           <FormControl>
                             <RadioGroup
                               className="grid grid-cols-2 gap-3"
@@ -204,21 +204,21 @@ export function RSVPSection({
                               disabled={watchedAvailability === "declined"}
                             >
                               <label
-                                className={`text-left flex items-center gap-3 px-4 py-4 transition-colors cursor-pointer ${tokens.rsvp.input} hover:opacity-80`}
+                                className={`text-left flex items-center gap-3 px-4 py-4 cursor-pointer transition-all duration-200 ${tokens.rsvp.input} ${String(field.value) === "1" ? "ring-2 ring-primary/30 bg-primary/[0.04] scale-[1.01]" : "hover:bg-primary/[0.02]"}`}
                               >
                                 <RadioGroupItem value="1" />
                                 <div className="flex flex-col">
                                   <span className="text-sm font-semibold">Seul(e)</span>
-                                  <span className="text-xs opacity-60">Je viens seul(e)</span>
+                                  <span className="text-xs opacity-50">Je viens seul(e)</span>
                                 </div>
                               </label>
                               <label
-                                className={`text-left flex items-center gap-3 px-4 py-4 transition-colors cursor-pointer ${tokens.rsvp.input} hover:opacity-80`}
+                                className={`text-left flex items-center gap-3 px-4 py-4 cursor-pointer transition-all duration-200 ${tokens.rsvp.input} ${String(field.value) === "2" ? "ring-2 ring-primary/30 bg-primary/[0.04] scale-[1.01]" : "hover:bg-primary/[0.02]"}`}
                               >
                                 <RadioGroupItem value="2" />
                                 <div className="flex flex-col">
                                   <span className="text-sm font-semibold">Accompagné(e)</span>
-                                  <span className="text-xs opacity-60">Je viens avec mon/ma partenaire</span>
+                                  <span className="text-xs opacity-50">Avec mon/ma partenaire</span>
                                 </div>
                               </label>
                             </RadioGroup>
@@ -229,7 +229,7 @@ export function RSVPSection({
                     />
                     <div className="hidden md:block" />
                   </div>
-                  <Button type="submit" size="lg" className={`w-full h-16 text-lg font-bold shadow-xl ${buttonRadiusClass}`} style={{ backgroundColor: 'var(--wedding-primary)', borderColor: 'var(--wedding-primary)', color: '#fff' }} disabled={rsvpMutation.isPending}>
+                  <Button type="submit" size="lg" className={`w-full h-16 text-lg font-bold shadow-xl transition-all duration-200 hover:shadow-2xl hover:scale-[1.01] ${buttonRadiusClass}`} style={{ backgroundColor: 'var(--wedding-primary)', borderColor: 'var(--wedding-primary)', color: '#fff' }} disabled={rsvpMutation.isPending}>
                     {rsvpMutation.isPending ? "Envoi..." : rsvpButton}
                   </Button>
                 </form>

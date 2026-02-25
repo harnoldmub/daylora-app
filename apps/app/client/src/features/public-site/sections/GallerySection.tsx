@@ -49,23 +49,27 @@ export function GallerySection({
         </div>
 
         {canEdit && editMode ? (
-          <div className="mt-10 rounded-3xl bg-white/80 border border-primary/10 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div className="text-sm text-muted-foreground">
-              {galleryImages.length}/{maxImages} photos
+          <div className="mt-10 rounded-2xl bg-white/70 backdrop-blur-xl border border-white/50 shadow-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 animate-in fade-in zoom-in-[0.98] duration-200">
+            <div className="text-xs text-muted-foreground/70 font-medium">
+              <span className="text-foreground font-semibold">{galleryImages.length}</span>/{maxImages} photos
             </div>
-            <div className="flex items-center gap-3">
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={async (e) => {
-                  await onGalleryFilesSelected(e.target.files);
-                  e.target.value = "";
-                }}
-              />
-              <Button type="button" size="sm" variant="outline" onClick={onResetGallery}>
-                Remettre par defaut
-              </Button>
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 h-8 px-3 rounded-full bg-primary/90 hover:bg-primary text-white cursor-pointer transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md">
+                Ajouter des photos
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={async (e) => {
+                    await onGalleryFilesSelected(e.target.files);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+              <button type="button" className="h-8 px-3 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted transition-all duration-200" onClick={onResetGallery}>
+                Réinitialiser
+              </button>
             </div>
           </div>
         ) : null}

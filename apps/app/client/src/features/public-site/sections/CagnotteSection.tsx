@@ -49,18 +49,20 @@ export function CagnotteSection({
         </div>
 
         {canEdit && editMode ? (
-          <div className="mt-10 max-w-2xl mx-auto text-left space-y-3">
-            <div className="text-xs uppercase tracking-widest font-bold opacity-60">Lien de cagnotte</div>
-            <Input
-              value={draftCagnotteExternalUrl}
-              onChange={(e) => onSetDraftCagnotteExternalUrl(e.target.value)}
-              onBlur={(e) => onSaveCagnotteExternalUrl(e.target.value)}
-              placeholder="https://..."
-              className="h-12 rounded-2xl bg-white/70 border-primary/10 focus:ring-primary/20"
-              inputMode="url"
-            />
-            <div className="text-xs opacity-60">
-              Le bouton redirigera vers ce lien (Leetchi, PayPal, Lydia, Stripe Payment Link, etc.).
+          <div className="mt-10 max-w-md mx-auto animate-in fade-in zoom-in-[0.98] duration-200">
+            <div className="rounded-2xl bg-white/70 backdrop-blur-xl border border-white/50 shadow-xl p-5 space-y-3 text-left">
+              <div className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground/70 font-medium">Lien de cagnotte</div>
+              <Input
+                value={draftCagnotteExternalUrl}
+                onChange={(e) => onSetDraftCagnotteExternalUrl(e.target.value)}
+                onBlur={(e) => onSaveCagnotteExternalUrl(e.target.value)}
+                placeholder="https://leetchi.com/..."
+                className="h-10 rounded-xl border-transparent bg-[#FAF8F5] shadow-inner focus:ring-2 focus:ring-primary/30 transition-all duration-200"
+                inputMode="url"
+              />
+              <div className="text-[11px] text-muted-foreground/60">
+                Leetchi, PayPal, Lydia, Stripe Payment Link, etc.
+              </div>
             </div>
           </div>
         ) : null}
@@ -88,10 +90,10 @@ export function CagnotteSection({
             Paiement externe
           </div>
         ) : canEdit && editMode ? (
-          <div className="mt-10 flex justify-center">
-            <Button size="lg" variant="outline" className="rounded-full px-12" disabled>
-              Ajoutez un lien pour activer la cagnotte
-            </Button>
+          <div className="mt-10 flex justify-center animate-in fade-in duration-200">
+            <div className="text-xs text-muted-foreground/50 font-medium px-5 py-2.5 rounded-full border border-dashed border-muted-foreground/20">
+              Ajoutez un lien ci-dessus pour activer la cagnotte
+            </div>
           </div>
         ) : null}
       </div>

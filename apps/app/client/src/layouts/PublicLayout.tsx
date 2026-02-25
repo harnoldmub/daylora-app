@@ -12,6 +12,36 @@ import { InlineEditor } from "@/components/ui/inline-editor";
 import { compressImageFileToJpegDataUrl } from "@/lib/image";
 import { useToast } from "@/hooks/use-toast";
 
+function EditModeTooltip() {
+    const [visible, setVisible] = useState(() => {
+        if (typeof window === "undefined") return false;
+        return !window.localStorage.getItem("nocely_edit_tooltip_seen");
+    });
+
+    useEffect(() => {
+        if (!visible) return;
+        const handleClick = () => {
+            setVisible(false);
+            window.localStorage.setItem("nocely_edit_tooltip_seen", "1");
+        };
+        window.addEventListener("click", handleClick, { once: true });
+        const timer = setTimeout(() => {
+            setVisible(false);
+            window.localStorage.setItem("nocely_edit_tooltip_seen", "1");
+        }, 8000);
+        return () => { window.removeEventListener("click", handleClick); clearTimeout(timer); };
+    }, [visible]);
+
+    if (!visible) return null;
+
+    return (
+        <div className="bg-foreground/90 text-white text-xs px-4 py-2 rounded-full shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-300 whitespace-nowrap">
+            Cliquez sur un texte pour le modifier
+            <span className="ml-1.5 opacity-70">✏️</span>
+        </div>
+    );
+}
+
 export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewProp }: { children: ReactNode; slug?: string; isPreview?: boolean }) {
     const params = useParams();
     const [routePath] = useLocation();
@@ -666,30 +696,33 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
                         canEdit ? (
                             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
                                 {editMode ? (
-                                    <div className="bg-white/80 backdrop-blur-xl border border-white/40 shadow-2xl px-5 py-2.5 rounded-full flex items-center gap-3 animate-in slide-in-from-bottom-5 duration-300">
-                                        <span className="flex items-center gap-2">
-                                            <span className="relative flex h-2 w-2">
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                                    <div className="flex flex-col items-center gap-2">
+                                        <EditModeTooltip />
+                                        <div className="bg-white/80 backdrop-blur-xl border border-white/40 shadow-2xl px-5 py-2.5 rounded-full flex items-center gap-3 animate-in slide-in-from-bottom-5 duration-300">
+                                            <span className="flex items-center gap-2">
+                                                <span className="relative flex h-2 w-2">
+                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                                                </span>
+                                                <span className="text-sm font-medium text-foreground/80">Mode édition</span>
                                             </span>
-                                            <span className="text-sm font-medium text-foreground/80">Mode édition</span>
-                                        </span>
-                                        <div className="w-px h-5 bg-border" />
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            className="h-8 px-3 rounded-full text-xs text-muted-foreground hover:text-foreground"
-                                            onClick={() => setEditMode(false)}
-                                        >
-                                            Aperçu
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            className="h-8 px-4 rounded-full text-xs"
-                                            onClick={() => setEditMode(false)}
-                                        >
-                                            Terminer
-                                        </Button>
+                                            <div className="w-px h-5 bg-border" />
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                className="h-8 px-3 rounded-full text-xs text-muted-foreground hover:text-foreground transition-all duration-200"
+                                                onClick={() => setEditMode(false)}
+                                            >
+                                                Aperçu
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                className="h-8 px-4 rounded-full text-xs transition-all duration-200"
+                                                onClick={() => setEditMode(false)}
+                                            >
+                                                Terminer
+                                            </Button>
+                                        </div>
                                     </div>
                                 ) : (
                                     <Button

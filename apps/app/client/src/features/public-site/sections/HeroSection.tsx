@@ -150,62 +150,69 @@ export function HeroSection({
         </motion.div>
 
         {canEdit && editMode ? (
-          <div className="mt-10 text-center">
-            <div className="rounded-2xl bg-white/90 border border-black/10 px-4 py-3 shadow-sm inline-block text-left">
-              <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">Action du bouton</div>
-              <select
-                className="h-10 rounded-md border border-border bg-background px-3 text-sm w-full"
-                value={ctaPath}
-                onChange={(e) => onSaveCtaPath(e.target.value)}
-              >
-                <option value="rsvp">Aller vers RSVP</option>
-                <option value="story">Aller vers Histoire</option>
-                <option value="gallery">Aller vers Galerie</option>
-                <option value="gifts">Aller vers Cadeaux</option>
-                <option value="location">Aller vers Lieu</option>
-                <option value="program">Aller vers Programme</option>
-                <option value="cagnotte">Aller vers Cagnotte</option>
-                <option value="live">Aller vers Live</option>
-                {(wedding.config?.navigation?.customPages || [])
-                  .filter((p: any) => p.enabled && p.slug)
-                  .map((p: any) => (
-                    <option key={p.id} value={`page:${p.slug}`}>
-                      Page: {p.title}
-                    </option>
-                  ))}
-              </select>
-            </div>
-
-            <div className="mt-4 text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">Texte du bouton:</span>{" "}
-              <InlineEditor
-                value={heroCta}
-                onSave={(val) => onSaveText("heroCta", val)}
-                canEdit={canEdit && editMode}
-                placeholder="Confirmer votre présence"
-              />
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="rounded-2xl bg-white/90 border border-black/10 px-4 py-3 shadow-sm">
-                <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">Image de couverture</div>
-                <input type="file" accept="image/*" onChange={onMediaUpload("heroImage")} />
-                <div className="mt-2 flex items-center gap-2">
-                  <Button type="button" size="sm" variant="outline" onClick={() => onUpdateMedia("heroImage", "")} disabled={!heroImage || isUploading.heroImage}>
-                    Supprimer
-                  </Button>
-                  {isUploading.heroImage ? <span className="text-xs text-muted-foreground">Import...</span> : null}
+          <div className="mt-10 text-center animate-in fade-in zoom-in-[0.98] duration-200">
+            <div className="inline-block max-w-lg w-full">
+              <div className="rounded-2xl bg-white/70 backdrop-blur-xl border border-white/50 shadow-xl p-5 space-y-4 text-left">
+                <div className="space-y-2">
+                  <div className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground/70 font-medium">Action du bouton</div>
+                  <select
+                    className="h-9 rounded-xl border-transparent bg-[#FAF8F5] shadow-inner px-3 text-sm w-full focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all duration-200"
+                    value={ctaPath}
+                    onChange={(e) => onSaveCtaPath(e.target.value)}
+                  >
+                    <option value="rsvp">Aller vers RSVP</option>
+                    <option value="story">Aller vers Histoire</option>
+                    <option value="gallery">Aller vers Galerie</option>
+                    <option value="gifts">Aller vers Cadeaux</option>
+                    <option value="location">Aller vers Lieu</option>
+                    <option value="program">Aller vers Programme</option>
+                    <option value="cagnotte">Aller vers Cagnotte</option>
+                    <option value="live">Aller vers Live</option>
+                    {(wedding.config?.navigation?.customPages || [])
+                      .filter((p: any) => p.enabled && p.slug)
+                      .map((p: any) => (
+                        <option key={p.id} value={`page:${p.slug}`}>
+                          Page: {p.title}
+                        </option>
+                      ))}
+                  </select>
                 </div>
-              </div>
-              <div className="rounded-2xl bg-white/90 border border-black/10 px-4 py-3 shadow-sm">
-                <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">Countdown</div>
-                <input
-                  type="datetime-local"
-                  className="h-10 rounded-md border border-border bg-background px-3 text-sm w-full"
-                  value={toDateInputValue(countdownDate)}
-                  onChange={(e) => onSaveCountdownDate(fromDateInputValue(e.target.value))}
-                />
-                <div className="mt-2 text-xs text-muted-foreground">Change la date du compte à rebours.</div>
+
+                <div className="space-y-1.5">
+                  <div className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground/70 font-medium">Texte du bouton</div>
+                  <InlineEditor
+                    value={heroCta}
+                    onSave={(val) => onSaveText("heroCta", val)}
+                    canEdit={canEdit && editMode}
+                    placeholder="Confirmer votre présence"
+                  />
+                </div>
+
+                <div className="w-full h-px bg-border/50" />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <div className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground/70 font-medium">Image de couverture</div>
+                    <label className="flex items-center justify-center gap-2 h-9 px-3 rounded-xl bg-[#FAF8F5] border border-transparent hover:border-primary/15 cursor-pointer transition-all duration-200 text-xs text-muted-foreground">
+                      {isUploading.heroImage ? "Import en cours..." : "Choisir une image"}
+                      <input type="file" accept="image/*" className="hidden" onChange={onMediaUpload("heroImage")} />
+                    </label>
+                    {heroImage && (
+                      <button type="button" className="text-[10px] text-muted-foreground hover:text-destructive transition-colors" onClick={() => onUpdateMedia("heroImage", "")}>
+                        Supprimer l'image
+                      </button>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground/70 font-medium">Compte à rebours</div>
+                    <input
+                      type="datetime-local"
+                      className="h-9 rounded-xl border-transparent bg-[#FAF8F5] shadow-inner px-3 text-sm w-full focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all duration-200"
+                      value={toDateInputValue(countdownDate)}
+                      onChange={(e) => onSaveCountdownDate(fromDateInputValue(e.target.value))}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

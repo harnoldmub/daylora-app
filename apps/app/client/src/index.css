@@ -578,4 +578,18 @@
   .stagger-2 { animation-delay: 0.1s; opacity: 0; }
   .stagger-3 { animation-delay: 0.15s; opacity: 0; }
   .stagger-4 { animation-delay: 0.2s; opacity: 0; }
+
+  .inline-edit-zone {
+    transition: all 0.2s ease-out;
+  }
+
+  .inline-edit-active input,
+  .inline-edit-active textarea {
+    font-family: inherit;
+  }
+
+  select,
+  input[type="datetime-local"] {
+    @apply transition-all duration-200;
+  }
 }
