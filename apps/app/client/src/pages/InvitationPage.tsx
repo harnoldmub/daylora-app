@@ -3,8 +3,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, Redirect, useLocation, useSearch } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { type Gift as GiftDb } from "@shared/schema";
+import { Gift, Edit, Loader2, Link as LinkIcon, ExternalLink, ImageIcon } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { usePublicGifts, useWedding, useUpdateWedding } from "@/hooks/use-api";
 import { usePublicEdit } from "@/contexts/public-edit";
@@ -13,6 +16,7 @@ import { TemplateRenderer } from "@/features/public-site/templates/TemplateRende
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -365,18 +369,40 @@ export default function InvitationPage() {
   const [giftDeleteOpen, setGiftDeleteOpen] = useState(false);
   const [giftEditing, setGiftEditing] = useState<any | null>(null);
   const [giftDeleting, setGiftDeleting] = useState<any | null>(null);
-  const [giftForm, setGiftForm] = useState<{ name: string; description: string; price: string; imageUrl: string }>({ name: "", description: "", price: "", imageUrl: "" });
+  const [giftForm, setGiftForm] = useState<{ name: string; description: string; price: string; imageUrl: string; sourceUrl: string }>({ name: "", description: "", price: "", imageUrl: "", sourceUrl: "" });
+  const [giftScraping, setGiftScraping] = useState(false);
 
   const openCreateGift = () => {
     setGiftEditing(null);
-    setGiftForm({ name: "", description: "", price: "", imageUrl: "" });
+    setGiftForm({ name: "", description: "", price: "", imageUrl: "", sourceUrl: "" });
     setGiftDialogOpen(true);
   };
 
   const openEditGift = (gift: any) => {
     setGiftEditing(gift);
-    setGiftForm({ name: gift?.name || "", description: gift?.description || "", price: typeof gift?.price === "number" ? String(gift.price) : "", imageUrl: gift?.imageUrl || "" });
+    setGiftForm({ name: gift?.name || "", description: gift?.description || "", price: typeof gift?.price === "number" ? String(gift.price) : "", imageUrl: gift?.imageUrl || "", sourceUrl: gift?.sourceUrl || "" });
     setGiftDialogOpen(true);
+  };
+
+  const scrapeGiftUrl = async (url: string) => {
+    if (!url.trim()) return;
+    setGiftScraping(true);
+    try {
+      const response = await apiRequest("POST", "/api/gifts/scrape-url", { url: url.trim() });
+      const data = await response.json();
+      setGiftForm((prev) => ({
+        ...prev,
+        name: prev.name || data.title || "",
+        imageUrl: data.image || prev.imageUrl || "",
+        description: prev.description || data.description || "",
+        price: prev.price || (data.price ? String(data.price) : ""),
+      }));
+      toast({ title: "Informations récupérées" });
+    } catch {
+      toast({ title: "Récupération impossible", description: "Remplissez les champs manuellement.", variant: "destructive" });
+    } finally {
+      setGiftScraping(false);
+    }
   };
 
   const createGiftMutation = useMutation({
@@ -409,7 +435,7 @@ export default function InvitationPage() {
     const name = giftForm.name.trim();
     if (!name) { toast({ title: "Champ requis", description: "Le nom du cadeau est requis.", variant: "destructive" }); return; }
     const price = giftForm.price.trim() ? Number(giftForm.price.trim()) : null;
-    const payload = { name, description: giftForm.description.trim() || null, imageUrl: giftForm.imageUrl || null, price: Number.isFinite(price as any) ? price : null };
+    const payload = { name, description: giftForm.description.trim() || null, imageUrl: giftForm.imageUrl || null, sourceUrl: giftForm.sourceUrl.trim() || null, price: Number.isFinite(price as any) ? price : null };
     if (giftEditing?.id) updateGiftMutation.mutate({ id: giftEditing.id, payload });
     else createGiftMutation.mutate(payload);
   };
@@ -509,30 +535,66 @@ export default function InvitationPage() {
       />
 
       <Dialog open={giftDialogOpen} onOpenChange={setGiftDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{giftEditing ? "Modifier le cadeau" : "Ajouter un cadeau"}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div>
-              <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Nom *</label>
-              <Input value={giftForm.name} onChange={(e) => setGiftForm((f) => ({ ...f, name: e.target.value }))} placeholder="Nom du cadeau" />
+        <DialogContent className="max-w-xl rounded-2xl p-0 gap-0 overflow-hidden">
+          <div className="px-6 pt-6 pb-4 border-b bg-gradient-to-b from-amber-50/60 to-transparent">
+            <div className="flex justify-center mb-3">
+              <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                {giftEditing ? <Edit className="h-6 w-6 text-amber-600" /> : <Gift className="h-6 w-6 text-amber-600" />}
+              </div>
             </div>
-            <div>
-              <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Description</label>
-              <Input value={giftForm.description} onChange={(e) => setGiftForm((f) => ({ ...f, description: e.target.value }))} placeholder="Description (optionnel)" />
+            <DialogHeader>
+              <DialogTitle className="text-center">{giftEditing ? "Modifier le cadeau" : "Ajouter un cadeau"}</DialogTitle>
+            </DialogHeader>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5"><LinkIcon className="h-3.5 w-3.5" /> Lien du produit</Label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="https://www.amazon.fr/..."
+                  value={giftForm.sourceUrl}
+                  onChange={(e) => setGiftForm((f) => ({ ...f, sourceUrl: e.target.value }))}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  disabled={!giftForm.sourceUrl.trim() || giftScraping}
+                  onClick={() => scrapeGiftUrl(giftForm.sourceUrl)}
+                >
+                  {giftScraping ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground">Collez un lien et le nom et l'image seront importés automatiquement</p>
             </div>
-            <div>
-              <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Prix (€)</label>
-              <Input value={giftForm.price} onChange={(e) => setGiftForm((f) => ({ ...f, price: e.target.value }))} placeholder="ex: 150" type="number" />
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+              <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-muted-foreground">ou remplir manuellement</span></div>
             </div>
-            <div>
-              <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Image</label>
-              {giftForm.imageUrl && <img src={giftForm.imageUrl} alt="" className="h-24 w-full object-cover rounded-xl mb-2" />}
-              <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) onGiftImageSelected(f); e.target.value = ""; }} />
+            <div className="space-y-2">
+              <Label>Nom *</Label>
+              <Input placeholder="Ex : Voyage de noces à Bali" value={giftForm.name} onChange={(e) => setGiftForm((f) => ({ ...f, name: e.target.value }))} />
             </div>
-            <Button className="w-full" onClick={submitGift} disabled={createGiftMutation.isPending || updateGiftMutation.isPending}>
-              {(createGiftMutation.isPending || updateGiftMutation.isPending) ? "Enregistrement..." : (giftEditing ? "Modifier" : "Ajouter")}
+            <div className="space-y-2">
+              <Label>Prix (€)</Label>
+              <Input placeholder="ex: 150" value={giftForm.price} onChange={(e) => setGiftForm((f) => ({ ...f, price: e.target.value }))} type="number" />
+              <p className="text-[11px] text-muted-foreground">Laissez vide pour un montant libre</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5"><ImageIcon className="h-3.5 w-3.5" /> Image</Label>
+              {giftForm.imageUrl && <img src={giftForm.imageUrl} alt="" className="h-24 w-24 object-cover rounded-lg border mb-2" />}
+              <input type="file" accept="image/*" className="text-sm" onChange={(e) => { const f = e.target.files?.[0]; if (f) onGiftImageSelected(f); e.target.value = ""; }} />
+            </div>
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Textarea rows={3} placeholder="Décrivez ce cadeau pour vos invités..." value={giftForm.description} onChange={(e) => setGiftForm((f) => ({ ...f, description: e.target.value }))} />
+            </div>
+          </div>
+          <div className="px-6 py-4 border-t bg-muted/10 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setGiftDialogOpen(false)}>Annuler</Button>
+            <Button onClick={submitGift} disabled={createGiftMutation.isPending || updateGiftMutation.isPending}>
+              {(createGiftMutation.isPending || updateGiftMutation.isPending) ? "Enregistrement..." : (giftEditing ? "Enregistrer" : "Ajouter à ma liste")}
             </Button>
           </div>
         </DialogContent>
