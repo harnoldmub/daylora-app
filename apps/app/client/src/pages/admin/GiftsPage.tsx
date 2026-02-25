@@ -296,15 +296,22 @@ export default function GiftsPage() {
               Ajouter un cadeau
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-xl">
-            <DialogHeader>
-              <DialogTitle>Nouveau cadeau</DialogTitle>
-              <DialogDescription>Ajoutez un nouvel élément à votre liste de mariage.</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
+          <DialogContent className="max-w-xl rounded-2xl p-0 gap-0 overflow-hidden">
+            <div className="px-6 pt-6 pb-4 border-b bg-gradient-to-b from-amber-50/60 to-transparent">
+              <div className="flex justify-center mb-3">
+                <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                  <Gift className="h-6 w-6 text-amber-600" />
+                </div>
+              </div>
+              <DialogHeader>
+                <DialogTitle className="text-center">Ajouter un cadeau</DialogTitle>
+                <DialogDescription className="text-center">Créez un élément pour votre liste de mariage.</DialogDescription>
+              </DialogHeader>
+            </div>
+            <div className="p-6 space-y-4">
               <div className="space-y-2">
                 <Label>Nom</Label>
-                <Input value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
+                <Input placeholder="Ex : Voyage de noces à Bali" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
               </div>
               <div className="space-y-2">
                 <Label>Prix cible (EUR)</Label>
@@ -319,6 +326,7 @@ export default function GiftsPage() {
                     }))
                   }
                 />
+                <p className="text-[11px] text-muted-foreground">Laissez vide pour un montant libre</p>
               </div>
               <div className="space-y-2">
                 <Label>Image (URL)</Label>
@@ -328,16 +336,17 @@ export default function GiftsPage() {
                 <Label>Description</Label>
                 <Textarea
                   rows={4}
+                  placeholder="Décrivez ce cadeau pour vos invités..."
                   value={form.description}
                   onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
                 />
               </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setCreateOpen(false)}>Annuler</Button>
-                <Button onClick={submitCreate} disabled={createGiftMutation.isPending}>
-                  {createGiftMutation.isPending ? "Ajout..." : "Ajouter le cadeau"}
-                </Button>
-              </div>
+            </div>
+            <div className="px-6 py-4 border-t bg-muted/10 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setCreateOpen(false)}>Annuler</Button>
+              <Button onClick={submitCreate} disabled={createGiftMutation.isPending}>
+                {createGiftMutation.isPending ? "Ajout..." : "Ajouter à ma liste"}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -456,15 +465,22 @@ export default function GiftsPage() {
       </Card>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Modifier le cadeau</DialogTitle>
-            <DialogDescription>Mettez à jour les informations de ce cadeau.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
+        <DialogContent className="max-w-xl rounded-2xl p-0 gap-0 overflow-hidden">
+          <div className="px-6 pt-6 pb-4 border-b bg-gradient-to-b from-amber-50/60 to-transparent">
+            <div className="flex justify-center mb-3">
+              <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                <Edit className="h-6 w-6 text-amber-600" />
+              </div>
+            </div>
+            <DialogHeader>
+              <DialogTitle className="text-center">Modifier le cadeau</DialogTitle>
+              <DialogDescription className="text-center">Créez un élément pour votre liste de mariage.</DialogDescription>
+            </DialogHeader>
+          </div>
+          <div className="p-6 space-y-4">
             <div className="space-y-2">
               <Label>Nom</Label>
-              <Input value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
+              <Input placeholder="Ex : Voyage de noces à Bali" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
             </div>
             <div className="space-y-2">
               <Label>Prix cible (EUR)</Label>
@@ -479,6 +495,7 @@ export default function GiftsPage() {
                   }))
                 }
               />
+              <p className="text-[11px] text-muted-foreground">Laissez vide pour un montant libre</p>
             </div>
             <div className="space-y-2">
               <Label>Image (URL)</Label>
@@ -488,16 +505,17 @@ export default function GiftsPage() {
               <Label>Description</Label>
               <Textarea
                 rows={4}
+                placeholder="Décrivez ce cadeau pour vos invités..."
                 value={form.description}
                 onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
               />
             </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setEditOpen(false)}>Annuler</Button>
-              <Button onClick={submitEdit} disabled={updateGiftMutation.isPending}>
-                {updateGiftMutation.isPending ? "Sauvegarde..." : "Enregistrer"}
-              </Button>
-            </div>
+          </div>
+          <div className="px-6 py-4 border-t bg-muted/10 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Annuler</Button>
+            <Button onClick={submitEdit} disabled={updateGiftMutation.isPending}>
+              {updateGiftMutation.isPending ? "Sauvegarde..." : "Enregistrer"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

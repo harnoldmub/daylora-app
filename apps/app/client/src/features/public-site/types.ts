@@ -118,6 +118,7 @@ export interface GallerySectionProps extends SectionEditProps {
   onGalleryFilesSelected: (files: FileList | null) => Promise<void>;
   onRemoveGalleryImage: (index: number) => Promise<void>;
   onResetGallery: () => Promise<void>;
+  onSetMainImage?: (index: number) => void;
   maxImages: number;
   order?: number;
 }

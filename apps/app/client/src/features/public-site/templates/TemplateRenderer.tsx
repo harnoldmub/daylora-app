@@ -88,6 +88,7 @@ interface TemplateRendererProps {
   onGalleryFilesSelected: (files: FileList | null) => Promise<void>;
   onRemoveGalleryImage: (index: number) => Promise<void>;
   onResetGallery: () => Promise<void>;
+  onSetMainGalleryImage?: (index: number) => void;
   onCreateGift: () => void;
   onEditGift: (gift: GiftDb) => void;
   onDeleteGift: (gift: GiftDb) => void;
@@ -330,6 +331,7 @@ export function TemplateRenderer(props: TemplateRendererProps) {
             onGalleryFilesSelected={props.onGalleryFilesSelected}
             onRemoveGalleryImage={props.onRemoveGalleryImage}
             onResetGallery={props.onResetGallery}
+            onSetMainImage={props.onSetMainGalleryImage}
             maxImages={MAX_GALLERY_IMAGES}
             order={sectionOrder.gallery ?? 4}
           />

@@ -330,6 +330,16 @@ export default function InvitationPage() {
     await saveGalleryImages([...DEFAULT_GALLERY_IMAGES]);
   };
 
+  const setMainGalleryImage = async (index: number) => {
+    if (!wedding) return;
+    const current = (wedding.config?.sections?.galleryImages?.length ? wedding.config.sections.galleryImages : DEFAULT_GALLERY_IMAGES).slice(0, MAX_GALLERY_IMAGES);
+    if (index <= 0 || index >= current.length) return;
+    const next = [...current];
+    const [moved] = next.splice(index, 1);
+    next.unshift(moved);
+    await saveGalleryImages(next);
+  };
+
   const handleHeroCtaClick = () => {
     if (!slug) return;
     if (canEdit && editMode) return;
@@ -487,6 +497,7 @@ export default function InvitationPage() {
         onGalleryFilesSelected={onGalleryFilesSelected}
         onRemoveGalleryImage={removeGalleryImage}
         onResetGallery={resetGallery}
+        onSetMainGalleryImage={setMainGalleryImage}
         onCreateGift={openCreateGift}
         onEditGift={openEditGift}
         onDeleteGift={(gift) => { setGiftDeleting(gift); setGiftDeleteOpen(true); }}

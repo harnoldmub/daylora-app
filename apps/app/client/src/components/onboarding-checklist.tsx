@@ -1,5 +1,5 @@
 
-import { CheckCircle2, Circle, ArrowRight, Layout, Users, Gift, Info } from "lucide-react";
+import { Check, ArrowRight, Layout, Users, Gift, Info, CheckCircle2 } from "lucide-react";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ export function OnboardingChecklist({ wedding }: { wedding: Wedding }) {
             id: 'info',
             label: 'Informations clés',
             description: 'Date, lieu et histoire de votre couple',
-            href: `/preview/${wedding.slug}`, // Direct them to inline editing via preview
+            href: `/preview/${wedding.slug}`,
             isCompleted: !!wedding.weddingDate && !!wedding.config?.texts?.heroSubtitle,
             icon: Info
         },
@@ -68,61 +68,78 @@ export function OnboardingChecklist({ wedding }: { wedding: Wedding }) {
     const completedCount = steps.filter(s => s.isCompleted).length;
     const progress = Math.round((completedCount / steps.length) * 100);
 
-    if (progress === 100 && wedding.isPublished) return null; // Hide when fully done
+    if (progress === 100 && wedding.isPublished) return null;
+
+    const firstIncompleteIndex = steps.findIndex(s => !s.isCompleted);
 
     return (
-        <Card className="border-primary/20 bg-primary/5" data-tour="checklist">
+        <Card className="border-0 shadow-lg rounded-2xl bg-white overflow-hidden" data-tour="checklist">
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle className="text-xl font-serif">Votre progression</CardTitle>
-                        <CardDescription>Complétez ces étapes pour avoir un site parfait</CardDescription>
+                        <CardDescription>{completedCount} sur {steps.length} étapes complétées</CardDescription>
                     </div>
                     <span className="text-2xl font-bold text-primary">{progress}%</span>
                 </div>
-                <div className="w-full bg-primary/10 h-2 rounded-full mt-4 overflow-hidden">
+                <div className="w-full bg-primary/10 h-[3px] rounded-full mt-4 overflow-hidden">
                     <div
-                        className="bg-primary h-full transition-all duration-500 ease-out"
+                        className="bg-primary h-full rounded-full transition-all duration-500 ease-out"
                         style={{ width: `${progress}%` }}
                     />
                 </div>
             </CardHeader>
             <CardContent className="grid gap-4">
-                {steps.map((step) => (
-                    <div
-                        key={step.id}
-                        className={cn(
-                            "flex items-center justify-between p-4 rounded-xl border transition-all",
-                            step.isCompleted
-                                ? "bg-background/50 border-primary/20 opacity-50"
-                                : "bg-white dark:bg-black border-border shadow-sm hover:border-primary/50"
-                        )}
-                    >
-                        <div className="flex items-center gap-4">
-                            <div className={cn(
-                                "w-10 h-10 rounded-full flex items-center justify-center",
-                                step.isCompleted ? "bg-green-100 text-green-600" : "bg-primary/10 text-primary"
-                            )}>
-                                {step.isCompleted ? <CheckCircle2 className="h-5 w-5" /> : <step.icon className="h-5 w-5" />}
+                {steps.map((step, index) => {
+                    const isFirstIncomplete = index === firstIncompleteIndex;
+                    return (
+                        <div
+                            key={step.id}
+                            className={cn(
+                                "flex items-center justify-between p-4 rounded-2xl border transition-all duration-200 hover:-translate-y-0.5",
+                                step.isCompleted
+                                    ? "bg-background/50 border-primary/20 opacity-50"
+                                    : isFirstIncomplete
+                                        ? "border-amber-200 bg-amber-50/30 shadow-sm"
+                                        : "bg-white dark:bg-black border-border shadow-sm hover:border-primary/50"
+                            )}
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className={cn(
+                                    "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold",
+                                    step.isCompleted
+                                        ? "bg-green-100 text-green-600"
+                                        : "bg-amber-100 text-amber-700"
+                                )}>
+                                    {step.isCompleted
+                                        ? <Check className="h-5 w-5" />
+                                        : index + 1
+                                    }
+                                </div>
+                                <div>
+                                    <h4 className={cn("font-medium", step.isCompleted && "line-through text-muted-foreground")}>
+                                        {step.label}
+                                    </h4>
+                                    <p className="text-sm text-muted-foreground hidden md:block">
+                                        {step.description}
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <h4 className={cn("font-medium", step.isCompleted && "line-through text-muted-foreground")}>
-                                    {step.label}
-                                </h4>
-                                <p className="text-sm text-muted-foreground hidden md:block">
-                                    {step.description}
-                                </p>
-                            </div>
+                            {!step.isCompleted && (
+                                <Button
+                                    asChild
+                                    size="sm"
+                                    variant={isFirstIncomplete ? "default" : "outline"}
+                                    className="ml-4"
+                                >
+                                    <Link href={step.href}>
+                                        Faire <ArrowRight className="ml-2 h-3 w-3" />
+                                    </Link>
+                                </Button>
+                            )}
                         </div>
-                        {!step.isCompleted && (
-                            <Button asChild size="sm" variant="outline" className="ml-4">
-                                <Link href={step.href}>
-                                    Faire <ArrowRight className="ml-2 h-3 w-3" />
-                                </Link>
-                            </Button>
-                        )}
-                    </div>
-                ))}
+                    );
+                })}
             </CardContent>
         </Card>
     );

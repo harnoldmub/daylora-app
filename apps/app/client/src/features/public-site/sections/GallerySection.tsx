@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { Star, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InlineEditor } from "@/components/ui/inline-editor";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -14,6 +14,7 @@ export function GallerySection({
   onGalleryFilesSelected,
   onRemoveGalleryImage,
   onResetGallery,
+  onSetMainImage,
   maxImages,
   canEdit,
   editMode,
@@ -71,7 +72,7 @@ export function GallerySection({
 
         <div className="mt-10 grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
           {galleryImages.map((src, idx) => (
-            <div key={`${src}-${idx}`} className="relative group">
+            <div key={`${src}-${idx}`} className="relative group animate-in fade-in duration-500">
               <button
                 type="button"
                 className="block w-full"
@@ -87,19 +88,34 @@ export function GallerySection({
                 </div>
               </button>
               {canEdit && editMode ? (
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="secondary"
-                  className="absolute top-3 right-3 h-9 w-9 rounded-full opacity-0 group-hover:opacity-100 shadow-lg"
-                  onClick={async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    await onRemoveGalleryImage(idx);
-                  }}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 rounded-inherit pointer-events-none">
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="pointer-events-auto bg-white text-black hover:bg-white/90 rounded-lg text-xs gap-1 shadow-md"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onSetMainImage?.(idx);
+                    }}
+                  >
+                    <Star className="h-3.5 w-3.5" />
+                    Principale
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="pointer-events-auto bg-white text-black hover:bg-white/90 rounded-lg text-xs gap-1 shadow-md"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      await onRemoveGalleryImage(idx);
+                    }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Supprimer
+                  </Button>
+                </div>
               ) : null}
             </div>
           ))}
