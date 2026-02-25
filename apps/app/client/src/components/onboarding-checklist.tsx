@@ -112,7 +112,7 @@ export function OnboardingChecklist({ wedding }: { wedding: Wedding }) {
                                         : "bg-amber-100 text-amber-700"
                                 )}>
                                     {step.isCompleted
-                                        ? <Check className="h-5 w-5" />
+                                        ? <Check className="h-5 w-5 animate-check-pop" />
                                         : index + 1
                                     }
                                 </div>

@@ -120,7 +120,7 @@ export function DashboardWidgets({ responses, onFilterChange }: DashboardWidgets
           return (
             <Card
               key={idx}
-              className={`p-6 transition-all duration-300 ${(isClickable || stat.href) ? 'cursor-pointer hover:ring-2 hover:ring-primary/40 hover:shadow-lg' : ''}`}
+              className={`p-6 border-0 shadow-sm rounded-2xl transition-all duration-300 ${(isClickable || stat.href) ? 'cursor-pointer hover:shadow-md' : ''}`}
               onClick={() => {
                 if (stat.href) {
                   window.location.href = stat.href.replace(':weddingId', weddingId || '');
@@ -159,7 +159,7 @@ export function DashboardWidgets({ responses, onFilterChange }: DashboardWidgets
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="p-6 col-span-1">
+        <Card className="p-6 col-span-1 border-0 shadow-sm rounded-2xl">
           <div className="flex items-center gap-2 mb-6">
             <div className="p-2 rounded-lg bg-primary/10">
               <TrendingUp className="h-5 w-5 text-primary" />
@@ -189,7 +189,7 @@ export function DashboardWidgets({ responses, onFilterChange }: DashboardWidgets
           </div>
         </Card>
 
-        <Card className="p-6 col-span-1">
+        <Card className="p-6 col-span-1 border-0 shadow-sm rounded-2xl">
           <div className="flex items-center gap-2 mb-6">
             <div className="p-2 rounded-lg bg-chart-4/10">
               <Users className="h-5 w-5 text-chart-4" />
@@ -216,7 +216,7 @@ export function DashboardWidgets({ responses, onFilterChange }: DashboardWidgets
           </div>
         </Card>
 
-        <Card className="p-6 col-span-1">
+        <Card className="p-6 col-span-1 border-0 shadow-sm rounded-2xl">
           <div className="flex items-center gap-2 mb-6">
             <div className="p-2 rounded-lg bg-chart-2/10">
               <Table2 className="h-5 w-5 text-chart-2" />

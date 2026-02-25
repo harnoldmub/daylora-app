@@ -235,8 +235,8 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                         </Button>
                     </div>
                 </header>
-                <div className="flex-1 overflow-y-auto p-4 md:p-8">
-                    <div className="max-w-6xl mx-auto">
+                <div className="flex-1 overflow-y-auto p-5 md:p-10">
+                    <div className="max-w-5xl mx-auto">
                         {children}
                     </div>
                 </div>
