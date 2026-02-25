@@ -31,29 +31,6 @@ function hexToHSL(hex: string): { h: number; s: number; l: number } {
   return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
 }
 
-function MonogramSeal({ names, color }: { names: string[]; color: string }) {
-  const initials = names.map(n => n.trim().charAt(0).toUpperCase()).filter(Boolean).join("&");
-  return (
-    <div className="relative mx-auto w-20 h-20">
-      <svg viewBox="0 0 80 80" className="w-full h-full">
-        <circle cx="40" cy="40" r="38" fill="none" stroke={color} strokeWidth="1" opacity="0.3" />
-        <circle cx="40" cy="40" r="34" fill="none" stroke={color} strokeWidth="0.5" opacity="0.2" />
-        <text
-          x="40" y="43"
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fill={color}
-          fontSize="16"
-          fontFamily="'Playfair Display', serif"
-          fontWeight="400"
-          fontStyle="italic"
-        >
-          {initials}
-        </text>
-      </svg>
-    </div>
-  );
-}
 
 function FloralDivider({ color }: { color: string }) {
   return (
@@ -306,13 +283,11 @@ export default function GuestInvitationPage() {
         </div>
 
         <div className="w-full max-w-md mx-auto text-center space-y-8 relative z-10">
-          <div className="inv-animate">
-            {logoUrl ? (
+          {logoUrl ? (
+            <div className="inv-animate">
               <img src={logoUrl} alt="" className="mx-auto h-20 w-20 object-contain rounded-full" />
-            ) : (
-              <MonogramSeal names={coupleNames} color={primaryColor} />
-            )}
-          </div>
+            </div>
+          ) : null}
 
           <div className="inv-animate-d1 space-y-3">
             <p className="text-[10px] tracking-[0.4em] uppercase inv-serif" style={{ color: textSubtle }}>
@@ -625,9 +600,7 @@ export default function GuestInvitationPage() {
       <footer className="py-12 px-6 text-center space-y-4">
         {logoUrl ? (
           <img src={logoUrl} alt="" className="mx-auto h-16 w-16 object-contain rounded-full" />
-        ) : (
-          <MonogramSeal names={coupleNames} color={primaryColor} />
-        )}
+        ) : null}
         <p className="text-[10px] tracking-[0.15em] uppercase inv-serif" style={{ color: textSubtle, opacity: 0.5 }}>
           {heroTitle}
         </p>
