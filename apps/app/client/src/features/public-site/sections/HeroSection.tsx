@@ -80,6 +80,7 @@ export function HeroSection({
               onSave={(val) => onSaveText("heroSubtitle", val)}
               canEdit={canEdit && editMode}
               placeholder="Vous êtes cordialement invité(e)"
+              variant={heroImage ? "dark" : "light"}
             />
           </p>
 
@@ -103,6 +104,7 @@ export function HeroSection({
               canEdit={canEdit && editMode}
               placeholder={wedding.title}
               className="text-center"
+              variant={heroImage ? "dark" : "light"}
             />
           </h1>
         </motion.div>
@@ -124,6 +126,7 @@ export function HeroSection({
                 onSave={(val) => onSaveText("weddingDate", val)}
                 canEdit={canEdit && editMode}
                 placeholder="21 Mars 2026"
+                variant={heroImage ? "dark" : "light"}
               />
             </span>
           </div>
