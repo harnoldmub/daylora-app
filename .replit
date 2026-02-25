@@ -8,7 +8,7 @@ packages = ["ghostscript", "glib", "nss", "nspr", "at-spi2-atk", "cups", "libdrm
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["npm", "run", "build"]
+build = ["bash", "-c", "rm -rf dist && npm run build"]
 run = ["npm", "run", "start"]
 
 [[ports]]
