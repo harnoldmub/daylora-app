@@ -88,6 +88,17 @@ export function InlineEditor({
         ? "bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white/70 border border-white/10"
         : "bg-muted hover:bg-muted-foreground/10 text-muted-foreground";
 
+    const inputStyle: React.CSSProperties = {
+        fontSize: '14px',
+        lineHeight: '1.5',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontWeight: 400,
+        letterSpacing: 'normal',
+        textShadow: 'none',
+        textTransform: 'none' as const,
+        ...(isDark ? { color: '#ffffff' } : { color: '#1a1a1a' }),
+    };
+
     if (isEditing) {
         return (
             <div className="inline-edit-active relative min-w-[180px] animate-in fade-in zoom-in-[0.98] duration-150">
@@ -103,10 +114,9 @@ export function InlineEditor({
                                 "w-full min-h-[80px] resize-y px-3 py-2 rounded-xl",
                                 inputBase, focusRing,
                                 "focus:outline-none transition-all duration-200",
-                                "text-sm leading-relaxed font-sans",
                                 inputClassName
                             )}
-                            style={isDark ? { color: '#ffffff', fontFamily: 'system-ui, sans-serif' } : undefined}
+                            style={inputStyle}
                             placeholder={placeholder}
                             disabled={isSaving}
                         />
@@ -120,10 +130,9 @@ export function InlineEditor({
                                 "w-full h-auto px-3 py-1.5 rounded-xl",
                                 inputBase, focusRing,
                                 "focus:outline-none transition-all duration-200",
-                                "text-sm font-sans",
                                 inputClassName
                             )}
-                            style={isDark ? { color: '#ffffff', fontFamily: 'system-ui, sans-serif' } : undefined}
+                            style={inputStyle}
                             placeholder={placeholder}
                             disabled={isSaving}
                         />
