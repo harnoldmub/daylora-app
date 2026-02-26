@@ -25,9 +25,13 @@ export const authEmails = {
           </div>
         `,
       });
-      console.log(`[resend] Verification email sent, id:`, result?.data?.id, `status: ok`);
+      if (result.error) {
+        console.error("[resend] Verification email error:", result.error);
+        throw new Error(`Resend error: ${result.error.message || JSON.stringify(result.error)}`);
+      }
+      console.log("[resend] Verification email sent, id:", result.data?.id);
     } catch (error) {
-      console.error("Failed to send verification email:", error);
+      console.error("[resend] Failed to send verification email:", error);
       throw error;
     }
   },
@@ -54,7 +58,11 @@ export const authEmails = {
           </div>
         `,
       });
-      console.log(`[resend] Password reset email sent, id:`, result?.data?.id, `status: ok`);
+      if (result.error) {
+        console.error("[resend] Password reset email error:", result.error);
+        throw new Error(`Resend error: ${result.error.message || JSON.stringify(result.error)}`);
+      }
+      console.log("[resend] Password reset email sent, id:", result.data?.id);
     } catch (error) {
       console.error("[resend] Failed to send password reset email:", error);
       throw error;

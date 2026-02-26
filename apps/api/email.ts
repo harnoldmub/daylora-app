@@ -29,7 +29,13 @@ async function logEmail(
 
 async function sendEmail(to: string, subject: string, html: string) {
   const { client, fromEmail } = await getUncachableResendClient();
-  return client.emails.send({ from: fromEmail, to, subject, html });
+  const result = await client.emails.send({ from: fromEmail, to, subject, html });
+  if (result.error) {
+    console.error("[resend] Email send failed:", result.error);
+    throw new Error(`Resend error: ${result.error.message || JSON.stringify(result.error)}`);
+  }
+  console.log("[resend] Email sent, id:", result.data?.id);
+  return result;
 }
 
 export async function sendRsvpConfirmationEmail(wedding: Wedding, guestData: {
