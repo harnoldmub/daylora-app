@@ -10,6 +10,7 @@ packages = ["ghostscript", "glib", "nss", "nspr", "at-spi2-atk", "cups", "libdrm
 deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
 run = ["npm", "run", "start"]
+publicDir = "dist"
 
 [[ports]]
 localPort = 3000
