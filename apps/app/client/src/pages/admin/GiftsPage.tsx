@@ -553,7 +553,7 @@ export default function GiftsPage() {
             </div>
             <DialogHeader>
               <DialogTitle className="text-center">Modifier le cadeau</DialogTitle>
-              <DialogDescription className="text-center">Créez un élément pour votre liste de mariage.</DialogDescription>
+              <DialogDescription className="text-center">Modifiez les détails de ce cadeau.</DialogDescription>
             </DialogHeader>
           </div>
           <div className="p-6 space-y-4">

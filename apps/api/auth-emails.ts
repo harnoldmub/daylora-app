@@ -8,7 +8,7 @@ export const authEmails = {
 
     try {
       const { client, fromEmail } = await getUncachableResendClient();
-      await client.emails.send({
+      const result = await client.emails.send({
         from: fromEmail,
         to: email,
         subject: "Vérifiez votre adresse email - Nocely",
@@ -25,7 +25,7 @@ export const authEmails = {
           </div>
         `,
       });
-      console.log(`Verification email sent to ${email}`);
+      console.log(`[resend] Verification email sent, id:`, result?.data?.id, `status: ok`);
     } catch (error) {
       console.error("Failed to send verification email:", error);
       throw error;
@@ -37,7 +37,7 @@ export const authEmails = {
 
     try {
       const { client, fromEmail } = await getUncachableResendClient();
-      await client.emails.send({
+      const result = await client.emails.send({
         from: fromEmail,
         to: email,
         subject: "Réinitialisation de votre mot de passe - Nocely",
@@ -54,9 +54,9 @@ export const authEmails = {
           </div>
         `,
       });
-      console.log(`Password reset email sent to ${email}`);
+      console.log(`[resend] Password reset email sent, id:`, result?.data?.id, `status: ok`);
     } catch (error) {
-      console.error("Failed to send password reset email:", error);
+      console.error("[resend] Failed to send password reset email:", error);
       throw error;
     }
   }

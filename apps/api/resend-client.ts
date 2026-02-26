@@ -4,9 +4,11 @@ let connectionSettings: any;
 
 async function getCredentials() {
   if (process.env.RESEND_API_KEY) {
+    const from = process.env.SMTP_FROM || 'noreply@nocely.app';
+    console.log(`[resend] Using RESEND_API_KEY env var, from: ${from}`);
     return {
       apiKey: process.env.RESEND_API_KEY,
-      fromEmail: process.env.SMTP_FROM || 'noreply@nocely.app',
+      fromEmail: from,
     };
   }
 
