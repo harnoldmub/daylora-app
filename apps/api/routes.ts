@@ -11,6 +11,7 @@ import {
   updateRsvpResponseSchema,
   insertContributionSchema,
   insertGiftSchema,
+  insertFeedbackSchema,
   PLAN_LIMITS,
   type InsertRsvpResponse,
 } from "@shared/schema";
@@ -1520,6 +1521,70 @@ export async function registerRoutes(app: Express) {
       appBaseUrl: process.env.APP_BASE_URL || "http://localhost:5174",
       marketingBaseUrl: process.env.MARKETING_BASE_URL || "http://localhost:5173",
     });
+  });
+
+  app.post("/api/feedback", isAuthenticated, async (req, res) => {
+    try {
+      const user = (req as any).user;
+      const parsed = insertFeedbackSchema.parse({
+        ...req.body,
+        userId: user.id,
+        email: req.body.contactAllowed ? (req.body.email || user.email) : null,
+      });
+      const fb = await storage.createFeedback(parsed);
+
+      try {
+        const { getUncachableResendClient } = await import("./resend-client");
+        const { client, fromEmail } = await getUncachableResendClient();
+        const stars = "★".repeat(parsed.rating || 0) + "☆".repeat(5 - (parsed.rating || 0));
+        await client.emails.send({
+          from: fromEmail,
+          to: process.env.SMTP_FROM || fromEmail,
+          subject: `[Nocely Feedback] ${parsed.title || "Nouvel avis"} ${stars}`,
+          html: `
+            <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+              <h2 style="color:#b45309">Nouvel avis utilisateur</h2>
+              <p><strong>Note :</strong> ${stars}</p>
+              ${parsed.title ? `<p><strong>Titre :</strong> ${parsed.title}</p>` : ""}
+              <p><strong>Message :</strong></p>
+              <blockquote style="border-left:3px solid #f59e0b;padding:8px 16px;margin:8px 0;background:#fffbeb">${parsed.message}</blockquote>
+              <p><strong>Page :</strong> ${parsed.page || "—"}</p>
+              <p><strong>Contact autorisé :</strong> ${parsed.contactAllowed ? `Oui (${parsed.email})` : "Non"}</p>
+            </div>
+          `,
+        });
+      } catch (emailErr) {
+        console.error("[feedback] Admin notification email failed:", emailErr);
+      }
+
+      res.json(fb);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  app.get("/api/admin/feedback", isAuthenticated, async (req, res) => {
+    const user = (req as any).user;
+    if (!user.isAdmin) return res.status(403).json({ message: "Forbidden" });
+    const status = req.query.status as string | undefined;
+    const list = await storage.listFeedback(status);
+    res.json(list);
+  });
+
+  app.patch("/api/admin/feedback/:id", isAuthenticated, async (req, res) => {
+    try {
+      const user = (req as any).user;
+      if (!user.isAdmin) return res.status(403).json({ message: "Forbidden" });
+      const id = parseInt(req.params.id, 10);
+      const { status } = req.body;
+      if (!status || !["new", "in_progress", "done"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      const updated = await storage.updateFeedbackStatus(id, status);
+      res.json(updated);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
   });
 
   const httpServer = createServer(app);

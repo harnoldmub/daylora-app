@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { useState } from "react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { GuidedTour, useShouldShowTour } from "@/components/guided-tour";
 
 const TEMPLATES = [
         { id: 'classic', name: 'Classique', description: 'Élégant et intemporel', image: '/previews/template_classic_preview_v2.png', premium: false },
@@ -17,6 +18,7 @@ const TEMPLATES = [
 export default function TemplatesPage() {
         const { weddingId } = useParams();
         const { data: wedding, isLoading } = useWedding(weddingId);
+        const showTour = useShouldShowTour("templates");
         const updateWedding = useUpdateWedding();
         const { toast } = useToast();
         const [previewToken, setPreviewToken] = useState<number>(Date.now());
@@ -81,7 +83,7 @@ export default function TemplatesPage() {
                                 }
                         />
 
-                        <div className={`grid grid-cols-3 gap-4 ${isApplying ? "pointer-events-none" : ""}`}>
+                        <div className={`grid grid-cols-3 gap-4 ${isApplying ? "pointer-events-none" : ""}`} data-tour="templates-grid">
                                 {TEMPLATES.map((tmpl) => {
                                         const isCurrent = wedding?.templateId === tmpl.id;
                                         const isLocked = tmpl.premium && wedding.currentPlan !== "premium";
@@ -114,7 +116,7 @@ export default function TemplatesPage() {
                                                                         <div className="flex items-center gap-2">
                                                                                 <CardTitle className="text-base font-serif">{tmpl.name}</CardTitle>
                                                                                 {isLocked && (
-                                                                                        <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary rounded font-semibold uppercase tracking-wider">Premium</span>
+                                                                                        <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary rounded font-semibold uppercase tracking-wider" data-tour="templates-premium">Premium</span>
                                                                                 )}
                                                                         </div>
                                                                         <CardDescription className="text-xs mt-1">{tmpl.description}</CardDescription>
@@ -190,6 +192,16 @@ export default function TemplatesPage() {
                                         </Button>
                                 </Card>
                         </div>
+
+                        {showTour && (
+                                <GuidedTour
+                                        tourId="templates"
+                                        steps={[
+                                                { target: "templates-grid", title: "Choisissez un template", description: "Sélectionnez un style visuel pour votre site. Le design sera appliqué instantanément.", position: "bottom" },
+                                                { target: "templates-premium", title: "Templates Premium", description: "Certains templates sont réservés au plan Premium. Passez en Premium pour y accéder.", position: "left" },
+                                        ]}
+                                />
+                        )}
                 </div>
         );
 }

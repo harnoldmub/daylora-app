@@ -1,65 +1,23 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ArrowRight, ArrowLeft, MousePointerClick, Sparkles, Eye, Layout, Pencil, PartyPopper } from "lucide-react";
+import { X, ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface TourStep {
-    target?: string;
+export interface TourStep {
+    target: string;
     title: string;
     description: string;
-    icon: React.ElementType;
     position?: "top" | "bottom" | "left" | "right" | "center";
 }
 
-const TOUR_STEPS: TourStep[] = [
-    {
-        title: "Bienvenue sur Nocely !",
-        description: "On va vous montrer rapidement comment fonctionne votre espace d'administration. C'est très simple, promis !",
-        icon: Sparkles,
-        position: "center",
-    },
-    {
-        target: "[data-tour='sidebar-nav']",
-        title: "Votre menu",
-        description: "Utilisez ce menu pour naviguer entre les différentes sections : invités, cadeaux, design, paramètres...",
-        icon: Layout,
-        position: "right",
-    },
-    {
-        target: "[data-tour='view-site']",
-        title: "Voir votre site",
-        description: "Cliquez ici à tout moment pour voir votre site de mariage tel que vos invités le verront.",
-        icon: Eye,
-        position: "bottom",
-    },
-    {
-        target: "[data-tour='checklist']",
-        title: "Votre progression",
-        description: "Cette checklist vous guide étape par étape. Suivez-la pour avoir un site parfait !",
-        icon: MousePointerClick,
-        position: "top",
-    },
-    {
-        target: "[data-tour='sidebar-design']",
-        title: "Personnalisez le design",
-        description: "Allez dans 'Design' pour modifier les couleurs, polices et images. Vous pouvez aussi cliquer directement sur les textes de votre site pour les modifier !",
-        icon: Pencil,
-        position: "right",
-    },
-    {
-        title: "Vous êtes prêt !",
-        description: "Explorez librement votre espace. Si besoin, la checklist sur le Dashboard vous guidera. Amusez-vous bien !",
-        icon: PartyPopper,
-        position: "center",
-    },
-];
+interface GuidedTourProps {
+    steps: TourStep[];
+    tourId: string;
+    onComplete?: () => void;
+}
 
-const TOUR_STORAGE_KEY = "nocely_tour_completed";
-
-function getElementRect(selector: string): DOMRect | null {
-    const el = document.querySelector(selector);
-    if (!el) return null;
-    return el.getBoundingClientRect();
+function tourStorageKey(tourId: string) {
+    return `nocely_tour_${tourId}_done`;
 }
 
 function TooltipArrow({ position }: { position: string }) {
@@ -78,7 +36,7 @@ function TooltipArrow({ position }: { position: string }) {
     }
 }
 
-export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
+export function GuidedTour({ steps, tourId, onComplete }: GuidedTourProps) {
     const [currentStep, setCurrentStep] = useState(0);
     const [isVisible, setIsVisible] = useState(false);
     const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);
@@ -87,16 +45,17 @@ export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
     const rafRef = useRef<number>(0);
     const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const step = TOUR_STEPS[currentStep];
+    const step = steps?.[currentStep];
+    const isCentered = !step?.target || step?.position === "center";
 
     const updatePosition = useCallback(() => {
-        if (!step.target || step.position === "center") {
+        if (!step || !step.target || step.position === "center") {
             setHighlightRect(null);
             setTooltipPos(null);
             return;
         }
 
-        const el = document.querySelector(step.target);
+        const el = document.querySelector(`[data-tour='${step.target}']`);
         if (!el) {
             setHighlightRect(null);
             setTooltipPos(null);
@@ -148,6 +107,10 @@ export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
                     top = rect.bottom + pad;
                 }
                 break;
+            default:
+                top = rect.bottom + pad;
+                left = rect.left + rect.width / 2 - tooltipW / 2;
+                break;
         }
 
         top = Math.max(8, Math.min(top, window.innerHeight - tooltipH - 8));
@@ -164,39 +127,39 @@ export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
     }, [updatePosition]);
 
     useEffect(() => {
-        const alreadyDone = localStorage.getItem(TOUR_STORAGE_KEY);
+        const alreadyDone = localStorage.getItem(tourStorageKey(tourId));
         if (!alreadyDone) {
             const timer = setTimeout(() => setIsVisible(true), 800);
             return () => clearTimeout(timer);
         }
-    }, []);
+    }, [tourId]);
 
     const finish = useCallback(() => {
         setIsVisible(false);
-        localStorage.setItem(TOUR_STORAGE_KEY, "true");
+        localStorage.setItem(tourStorageKey(tourId), "true");
         onComplete?.();
-    }, [onComplete]);
+    }, [onComplete, tourId]);
 
     const isStepVisible = useCallback((idx: number) => {
-        const s = TOUR_STEPS[idx];
+        const s = steps[idx];
         if (!s.target || s.position === "center") return true;
-        const el = document.querySelector(s.target);
+        const el = document.querySelector(`[data-tour='${s.target}']`);
         if (!el) return false;
         const r = el.getBoundingClientRect();
         return r.width > 0 && r.height > 0;
-    }, []);
+    }, [steps]);
 
     const next = useCallback(() => {
         let nextIdx = currentStep + 1;
-        while (nextIdx < TOUR_STEPS.length && !isStepVisible(nextIdx)) {
+        while (nextIdx < steps.length && !isStepVisible(nextIdx)) {
             nextIdx++;
         }
-        if (nextIdx < TOUR_STEPS.length) {
+        if (nextIdx < steps.length) {
             setCurrentStep(nextIdx);
         } else {
             finish();
         }
-    }, [currentStep, finish, isStepVisible]);
+    }, [currentStep, finish, isStepVisible, steps.length]);
 
     const prev = useCallback(() => {
         let prevIdx = currentStep - 1;
@@ -213,8 +176,8 @@ export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
 
         const tryUpdate = (attempts: number) => {
             scheduleUpdate();
-            if (attempts > 0 && step.target) {
-                const el = document.querySelector(step.target);
+            if (attempts > 0 && step?.target) {
+                const el = document.querySelector(`[data-tour='${step.target}']`);
                 if (!el || (el.getBoundingClientRect().width === 0)) {
                     retryRef.current = setTimeout(() => tryUpdate(attempts - 1), 100);
                     return;
@@ -242,14 +205,13 @@ export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
         };
     }, [isVisible, currentStep, scheduleUpdate, step, finish, next, prev]);
 
-    if (!isVisible) return null;
+    if (!isVisible || !step) return null;
 
-    const isCentered = step.position === "center" || !step.target;
-    const Icon = step.icon;
+    const maskId = `tour-mask-${tourId}`;
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-[9999]" role="dialog" aria-modal="true" aria-label="Guide d'utilisation Nocely" style={{ pointerEvents: "auto" }}>
+            <div className="fixed inset-0 z-[9999]" role="dialog" aria-modal="true" aria-label="Guide d'utilisation" style={{ pointerEvents: "auto" }}>
                 {isCentered ? (
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -261,14 +223,19 @@ export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
                 ) : (
                     <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: "none" }}>
                         <defs>
-                            <mask id="tour-mask">
+                            <mask id={maskId}>
                                 <rect x="0" y="0" width="100%" height="100%" fill="white" />
                                 {highlightRect && (
-                                    <rect
-                                        x={highlightRect.left - 6}
-                                        y={highlightRect.top - 6}
-                                        width={highlightRect.width + 12}
-                                        height={highlightRect.height + 12}
+                                    <motion.rect
+                                        initial={{ opacity: 0 }}
+                                        animate={{
+                                            opacity: 1,
+                                            x: highlightRect.left - 6,
+                                            y: highlightRect.top - 6,
+                                            width: highlightRect.width + 12,
+                                            height: highlightRect.height + 12,
+                                        }}
+                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
                                         rx="8"
                                         fill="black"
                                     />
@@ -281,7 +248,7 @@ export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
                             width="100%"
                             height="100%"
                             fill="rgba(0,0,0,0.55)"
-                            mask="url(#tour-mask)"
+                            mask={`url(#${maskId})`}
                             style={{ pointerEvents: "auto" }}
                             onClick={finish}
                         />
@@ -322,7 +289,7 @@ export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
                     }
                     onClick={(e) => e.stopPropagation()}
                 >
-                    {!isCentered && <TooltipArrow position={step.position || "right"} />}
+                    {!isCentered && <TooltipArrow position={step.position || "bottom"} />}
 
                     <button
                         onClick={finish}
@@ -332,13 +299,8 @@ export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
                         <X className="h-4 w-4" />
                     </button>
 
-                    <div className="flex items-start gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                            <Icon className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                            <h3 className="font-semibold text-base text-zinc-900 dark:text-zinc-100">{step.title}</h3>
-                        </div>
+                    <div className="mb-3">
+                        <h3 className="font-semibold text-base text-zinc-900 dark:text-zinc-100 pr-6">{step.title}</h3>
                     </div>
 
                     <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-5">
@@ -347,7 +309,7 @@ export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
 
                     <div className="flex items-center justify-between">
                         <div className="flex gap-1.5">
-                            {TOUR_STEPS.map((_, i) => (
+                            {steps.map((_, i) => (
                                 <div
                                     key={i}
                                     className={`h-1.5 rounded-full transition-all duration-300 ${
@@ -373,8 +335,8 @@ export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
                                 </Button>
                             )}
                             <Button size="sm" onClick={next} className="h-8 px-4 text-xs">
-                                {currentStep === TOUR_STEPS.length - 1 ? (
-                                    "C'est parti !"
+                                {currentStep === steps.length - 1 ? (
+                                    "Terminer"
                                 ) : (
                                     <>
                                         Suivant
@@ -390,14 +352,26 @@ export function GuidedTour({ onComplete }: { onComplete?: () => void }) {
     );
 }
 
-export function useShouldShowTour(): boolean {
+export function useShouldShowTour(tourId: string): boolean {
     const [show, setShow] = useState(false);
     useEffect(() => {
-        setShow(!localStorage.getItem(TOUR_STORAGE_KEY));
-    }, []);
+        setShow(!localStorage.getItem(tourStorageKey(tourId)));
+    }, [tourId]);
     return show;
 }
 
-export function resetTour() {
-    localStorage.removeItem(TOUR_STORAGE_KEY);
+export function resetTour(tourId: string) {
+    localStorage.removeItem(tourStorageKey(tourId));
+}
+
+export function resetAllTours() {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("nocely_tour_") && key.endsWith("_done")) {
+            keysToRemove.push(key);
+        }
+    }
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+    localStorage.removeItem("nocely_tour_completed");
 }

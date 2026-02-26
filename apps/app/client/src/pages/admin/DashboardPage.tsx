@@ -164,7 +164,7 @@ function SiteLink({ wedding }: { wedding: Wedding }) {
 
 export default function DashboardPage() {
     const { weddingId } = useParams<{ weddingId: string }>();
-    const showTour = useShouldShowTour();
+    const showTour = useShouldShowTour("dashboard");
     const [simplified, setSimplified] = useState(() => {
         try { return localStorage.getItem("nocely_simplified") === "true"; } catch { return false; }
     });
@@ -207,7 +207,7 @@ export default function DashboardPage() {
     return (
         <div className="space-y-10 pb-8">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                <div className="space-y-3">
+                <div className="space-y-3" data-tour="dashboard-greeting">
                     {wedding && <EmotionalGreeting wedding={wedding} />}
                     {wedding && <SiteLink wedding={wedding} />}
                 </div>
@@ -226,7 +226,7 @@ export default function DashboardPage() {
 
             {wedding && <NextStepCard wedding={wedding} hasGuests={hasGuests} />}
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 animate-slide-up stagger-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 animate-slide-up stagger-3" data-tour="dashboard-kpis">
                 <KpiCard
                     label="Invités"
                     value={total}
@@ -258,7 +258,9 @@ export default function DashboardPage() {
                 )}
             </div>
 
-            {wedding && <OnboardingChecklist wedding={wedding} />}
+            <div data-tour="dashboard-checklist">
+                {wedding && <OnboardingChecklist wedding={wedding} />}
+            </div>
 
             {!simplified && (
                 <DashboardWidgets
@@ -269,7 +271,16 @@ export default function DashboardPage() {
                 />
             )}
 
-            {showTour && <GuidedTour />}
+            {showTour && (
+                <GuidedTour
+                    tourId="dashboard"
+                    steps={[
+                        { target: "dashboard-greeting", title: "Bienvenue sur Nocely !", description: "Ici vous retrouvez un message personnalisé et le lien vers votre site de mariage.", position: "bottom" },
+                        { target: "dashboard-kpis", title: "Vos statistiques", description: "Suivez en un coup d'œil le nombre d'invités, les confirmations et les refus.", position: "bottom" },
+                        { target: "dashboard-checklist", title: "Votre progression", description: "Cette checklist vous guide étape par étape. Suivez-la pour avoir un site parfait !", position: "top" },
+                    ]}
+                />
+            )}
         </div>
     );
 }

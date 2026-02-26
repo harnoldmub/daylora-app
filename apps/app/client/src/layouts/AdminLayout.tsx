@@ -11,6 +11,7 @@ import {
     ChevronRight,
     Home,
     Laugh,
+    MessageSquare,
     Settings,
     Paintbrush,
     ListTree,
@@ -23,6 +24,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useWeddings } from "@/hooks/use-api";
 import { Button } from "@/components/ui/button";
 import { HelpChatbot } from "@/components/admin/HelpChatbot";
+import { FeedbackModal } from "@/components/admin/FeedbackModal";
 import { useState } from "react";
 
 export function AdminLayout({ children, weddingId: weddingIdProp }: { children: ReactNode; weddingId?: string }) {
@@ -46,6 +48,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
         { name: "Pages", icon: FileText, href: "/pages" },
         { name: "Blagues Live", icon: Laugh, href: "/live" },
         { name: "Facturation", icon: CreditCard, href: "/billing" },
+        { name: "Avis", icon: MessageSquare, href: "/feedback" },
         { name: "Paramètres", icon: Settings, href: "/settings" },
     ];
 
@@ -135,6 +138,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                             <p className="text-sm font-medium truncate">{user?.firstName} {user?.lastName}</p>
                         </div>
                     </div>
+                    <FeedbackModal />
                     <Button
                         variant="ghost"
                         size="sm"
@@ -174,7 +178,8 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                                 );
                             })}
                         </nav>
-                        <div className="p-4 border-t border-sidebar-border">
+                        <div className="p-4 border-t border-sidebar-border space-y-2">
+                            <FeedbackModal />
                             <Button
                                 variant="ghost"
                                 size="sm"

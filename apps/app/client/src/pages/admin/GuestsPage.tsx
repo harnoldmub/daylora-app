@@ -58,10 +58,12 @@ import { useUpdateWedding } from "@/hooks/use-api";
 import { compressImageFileToJpegDataUrl } from "@/lib/image";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { KpiCard } from "@/components/admin/KpiCard";
+import { GuidedTour, useShouldShowTour } from "@/components/guided-tour";
 
 export default function GuestsPage() {
     const { weddingId } = useParams<{ weddingId: string }>();
     const { toast } = useToast();
+    const showTour = useShouldShowTour("guests");
     const { data: wedding } = useWedding(weddingId);
     const updateWedding = useUpdateWedding();
     const [searchQuery, setSearchQuery] = useState("");
@@ -475,7 +477,7 @@ export default function GuestsPage() {
                 description="Gérez vos invités, invitations et relances."
                 actions={
                     <div className="flex gap-2">
-                    <Button variant="outline" onClick={handleExportCSV}>
+                    <Button variant="outline" onClick={handleExportCSV} data-tour="guests-import">
                         <Download className="h-4 w-4 mr-2" />
                         Exporter CSV
                     </Button>
@@ -485,7 +487,7 @@ export default function GuestsPage() {
                     </Button>
                     <Dialog open={addGuestOpen} onOpenChange={setAddGuestOpen}>
                         <DialogTrigger asChild>
-                            <Button>
+                            <Button data-tour="guests-add">
                                 <Plus className="h-4 w-4 mr-2" />
                                 Ajouter un invité
                             </Button>
@@ -1128,7 +1130,7 @@ export default function GuestsPage() {
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                 ) : (
-                    <Table>
+                    <Table data-tour="guests-table">
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="w-[40px]">
@@ -1273,6 +1275,17 @@ export default function GuestsPage() {
                     </Table>
                 )}
             </Card>
+
+            {showTour && (
+                <GuidedTour
+                    tourId="guests"
+                    steps={[
+                        { target: "guests-add", title: "Ajouter un invité", description: "Cliquez ici pour ajouter manuellement un invité à votre liste.", position: "bottom" },
+                        { target: "guests-import", title: "Exporter la liste", description: "Exportez votre liste d'invités au format CSV pour la partager ou l'imprimer.", position: "bottom" },
+                        { target: "guests-table", title: "Votre liste d'invités", description: "Retrouvez ici tous vos invités, leur statut RSVP et leurs coordonnées.", position: "top" },
+                    ]}
+                />
+            )}
         </div>
     );
 }

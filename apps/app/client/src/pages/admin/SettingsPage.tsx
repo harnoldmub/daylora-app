@@ -13,7 +13,7 @@ import { useMemo } from "react";
 import { Copy, ExternalLink, HelpCircle } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { apiRequest } from "@/lib/queryClient";
-import { resetTour } from "@/components/guided-tour";
+import { resetAllTours } from "@/components/guided-tour";
 
 type SiteConfig = {
   appBaseUrl: string;
@@ -488,8 +488,8 @@ export default function SettingsPage() {
         <Button
           variant="outline"
           onClick={() => {
-            resetTour();
-            toast({ title: "Guide réinitialisé", description: "Retournez au Dashboard pour revoir le guide." });
+            resetAllTours();
+            toast({ title: "Guide réinitialisé", description: "Retournez sur chaque page pour revoir les guides." });
           }}
         >
           Relancer le guide

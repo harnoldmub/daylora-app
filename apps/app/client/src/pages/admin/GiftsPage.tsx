@@ -53,6 +53,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Gift as GiftType } from "@shared/schema";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { KpiCard } from "@/components/admin/KpiCard";
+import { GuidedTour, useShouldShowTour } from "@/components/guided-tour";
 
 type GiftForm = {
   name: string;
@@ -87,6 +88,7 @@ export default function GiftsPage() {
   const { weddingId } = useParams<{ weddingId: string }>();
   const { toast } = useToast();
   const { data: wedding } = useWedding(weddingId);
+  const showTour = useShouldShowTour("gifts");
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -315,6 +317,7 @@ export default function GiftsPage() {
             variant="outline"
             onClick={() => addSuggestionsMutation.mutate()}
             disabled={addSuggestionsMutation.isPending}
+            data-tour="gifts-suggestions"
           >
             {addSuggestionsMutation.isPending ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -325,7 +328,7 @@ export default function GiftsPage() {
           </Button>
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button data-tour="gifts-add">
               <Plus className="h-4 w-4 mr-2" />
               Ajouter un cadeau
             </Button>
@@ -651,6 +654,16 @@ export default function GiftsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {showTour && (
+        <GuidedTour
+          tourId="gifts"
+          steps={[
+            { target: "gifts-add", title: "Ajouter un cadeau", description: "Créez un élément pour votre liste de mariage. Vous pouvez coller un lien produit pour importer automatiquement les détails.", position: "bottom" },
+            { target: "gifts-suggestions", title: "Suggestions rapides", description: "Ajoutez en un clic des idées de cadeaux populaires pour compléter votre liste.", position: "bottom" },
+          ]}
+        />
+      )}
     </div>
   );
 }

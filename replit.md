@@ -22,7 +22,7 @@ The backend is developed with Node.js and Express.js in TypeScript, providing a 
 
 ### Database
 
-PostgreSQL, hosted on Neon serverless, serves as the database. Core tables include `sessions`, `users`, `weddings`, `rsvp_responses`, `contributions`, `gifts`, and `custom_pages`. The `weddings.config` JSON column stores all user-specific customizations, including texts, media, theme, navigation, sections, and feature configurations.
+PostgreSQL, hosted on Neon serverless, serves as the database. Core tables include `sessions`, `users`, `weddings`, `rsvp_responses`, `contributions`, `gifts`, `custom_pages`, and `feedback`. The `weddings.config` JSON column stores all user-specific customizations, including texts, media, theme, navigation, sections, and feature configurations.
 
 ### Key Patterns
 
@@ -31,6 +31,8 @@ PostgreSQL, hosted on Neon serverless, serves as the database. Core tables inclu
 -   **Template System**: The platform offers multiple design templates (classic, modern, minimal) that dictate the visual presentation and component arrangement, with template tokens defining styles.
 -   **Section Ordering**: Configurable navigation menus (`wedding.config.navigation.menuItems`) control the order and visibility of website sections.
 -   **Server-Sent Events (SSE)**: Used for real-time updates, such as live contribution notifications.
+-   **Feedback System**: Users can submit feedback via a modal in the admin sidebar (`FeedbackModal`). Admin users can view/manage feedback on `/feedback` page. API: `POST /api/feedback`, `GET /api/admin/feedback`, `PATCH /api/admin/feedback/:id` (admin only).
+-   **Guided Tour**: Per-page contextual tours using `GuidedTour` component with `steps` and `tourId` props. Each page defines its own tour steps. Completion stored per-tour in localStorage (`nocely_tour_${tourId}_done`). Reset via `resetAllTours()` from Settings page.
 
 ## External Dependencies
 

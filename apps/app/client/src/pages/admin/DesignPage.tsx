@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BUTTON_RADIUS_OPTIONS, BUTTON_STYLE_OPTIONS, COLOR_TONES } from "@/lib/design-presets";
+import { GuidedTour, useShouldShowTour } from "@/components/guided-tour";
 
 const MAX_LOGO_DATA_URL_LENGTH = 220_000;
 const MAX_IMAGE_DATA_URL_LENGTH = 3_000_000;
@@ -61,6 +62,7 @@ export default function DesignPage() {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [isApplyingTemplate, setIsApplyingTemplate] = useState(false);
+  const showTour = useShouldShowTour("design");
   const [previewToken, setPreviewToken] = useState<number>(Date.now());
 
   const [templateId, setTemplateId] = useState<string>("classic");
@@ -477,14 +479,14 @@ export default function DesignPage() {
           <Button variant="outline" asChild>
             <Link href="/dashboard">Retour au backoffice</Link>
           </Button>
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild data-tour="design-preview">
             <a href={previewUrl} target="_blank" rel="noopener noreferrer">Ouvrir l'aperçu</a>
           </Button>
         </div>
       </div>
 
       <div className="flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-[460px_1fr]">
-        <aside className="min-h-0 overflow-y-auto border-r bg-white">
+        <aside className="min-h-0 overflow-y-auto border-r bg-white" data-tour="design-edit-panel">
           <div className="p-6 space-y-4">
             <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Sections</div>
             <Accordion type="multiple" defaultValue={["template", "branding", "colors", "hero"]} className="w-full">
@@ -512,7 +514,7 @@ export default function DesignPage() {
                         })}
                       </SelectContent>
                     </Select>
-                    <Button onClick={applyTemplate} disabled={isApplyingTemplate} size="sm" className="w-full">
+                    <Button onClick={applyTemplate} disabled={isApplyingTemplate} size="sm" className="w-full" data-tour="design-publish">
                       {isApplyingTemplate ? "Application..." : "Appliquer ce template"}
                     </Button>
                   </div>
@@ -1251,6 +1253,17 @@ export default function DesignPage() {
           </div>
         </main>
       </div>
+
+      {showTour && (
+        <GuidedTour
+          tourId="design"
+          steps={[
+            { target: "design-edit-panel", title: "Panneau d'édition", description: "Modifiez ici les couleurs, polices, images et textes de votre site. Chaque section est modifiable.", position: "right" },
+            { target: "design-preview", title: "Aperçu en direct", description: "Cliquez ici pour voir votre site tel que vos invités le verront. Les changements sont visibles en temps réel.", position: "bottom" },
+            { target: "design-publish", title: "Publier vos changements", description: "N'oubliez pas d'appliquer vos modifications pour les rendre visibles sur votre site public.", position: "bottom" },
+          ]}
+        />
+      )}
     </div>
   );
 }

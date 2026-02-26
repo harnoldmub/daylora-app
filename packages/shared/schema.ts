@@ -685,6 +685,39 @@ export const referralCodesRelations = relations(referralCodes, ({ one }) => ({
   }),
 }));
 
+export const feedback = pgTable("feedback", {
+  id: serial("id").primaryKey(),
+  weddingId: uuid("wedding_id").references(() => weddings.id),
+  userId: varchar("user_id").references(() => users.id),
+  rating: integer("rating"),
+  title: varchar("title", { length: 255 }),
+  message: text("message").notNull(),
+  contactAllowed: boolean("contact_allowed").default(false),
+  email: varchar("email", { length: 255 }),
+  page: varchar("page", { length: 255 }),
+  status: varchar("status", { length: 20 }).notNull().default("new"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type Feedback = typeof feedback.$inferSelect;
+export type InsertFeedback = typeof feedback.$inferInsert;
+
+export const insertFeedbackSchema = createInsertSchema(feedback).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const feedbackRelations = relations(feedback, ({ one }) => ({
+  wedding: one(weddings, {
+    fields: [feedback.weddingId],
+    references: [weddings.id],
+  }),
+  user: one(users, {
+    fields: [feedback.userId],
+    references: [users.id],
+  }),
+}));
+
 export const PLAN_LIMITS = {
   free: {
     maxRsvp: 30,

@@ -33,6 +33,9 @@ import {
   type InsertPasswordResetToken,
   type EmailLog,
   type InsertEmailLog,
+  feedback,
+  type Feedback,
+  type InsertFeedback,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, ne, sql, desc } from "drizzle-orm";
@@ -118,6 +121,11 @@ export interface IStorage {
   // Email Log operations
   createEmailLog(log: InsertEmailLog): Promise<EmailLog>;
   getEmailLogs(weddingId: string): Promise<EmailLog[]>;
+
+  // Feedback operations
+  createFeedback(data: InsertFeedback): Promise<Feedback>;
+  listFeedback(status?: string): Promise<Feedback[]>;
+  updateFeedbackStatus(id: number, status: string): Promise<Feedback>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -555,6 +563,23 @@ export class DatabaseStorage implements IStorage {
       .from(referralCodes)
       .where(and(eq(referralCodes.ownerUserId, userId), sql`${referralCodes.usedAt} IS NOT NULL`));
     return result?.count ?? 0;
+  }
+
+  async createFeedback(data: InsertFeedback): Promise<Feedback> {
+    const [row] = await db.insert(feedback).values(data).returning();
+    return row;
+  }
+
+  async listFeedback(status?: string): Promise<Feedback[]> {
+    if (status) {
+      return db.select().from(feedback).where(eq(feedback.status, status)).orderBy(desc(feedback.createdAt));
+    }
+    return db.select().from(feedback).orderBy(desc(feedback.createdAt));
+  }
+
+  async updateFeedbackStatus(id: number, status: string): Promise<Feedback> {
+    const [row] = await db.update(feedback).set({ status }).where(eq(feedback.id, id)).returning();
+    return row;
   }
 }
 

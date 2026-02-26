@@ -19,6 +19,7 @@ import SettingsPage from "@/pages/admin/SettingsPage";
 import DesignPage from "@/pages/admin/DesignPage";
 import SiteConfigPage from "@/pages/admin/SiteConfigPage";
 import PagesManagerPage from "@/pages/admin/PagesManagerPage";
+import FeedbackPage from "@/pages/admin/FeedbackPage";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
 import VerifyEmail from "@/pages/verify-email";
@@ -73,6 +74,7 @@ function AdminRoutes({ weddingId }: { weddingId: string }) {
         <Route path="/pages" component={PagesManagerPage} />
         <Route path="/site" component={SiteConfigPage} />
         <Route path="/settings" component={SettingsPage} />
+        <Route path="/feedback" component={FeedbackPage} />
         <Route><Redirect to="/dashboard" /></Route>
       </Switch>
     </AdminLayout>
