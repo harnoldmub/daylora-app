@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useLayoutEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,17 +20,24 @@ function tourStorageKey(tourId: string) {
     return `nocely_tour_${tourId}_done`;
 }
 
-function TooltipArrow({ position }: { position: string }) {
-    const base = "absolute w-3 h-3 bg-white dark:bg-zinc-900 rotate-45 border-zinc-200 dark:border-zinc-700";
+function getTargetEl(target: string): Element | null {
+    return document.querySelector(`[data-tour='${target}']`);
+}
+
+
+function TooltipArrow({ position, primaryColor }: { position: string; primaryColor?: string }) {
+    const color = primaryColor || "white";
+    const base = `absolute w-3 h-3 rotate-45`;
+    const style = { backgroundColor: color };
     switch (position) {
         case "right":
-            return <div className={`${base} -left-1.5 top-8 border-l border-b`} />;
+            return <div className={`${base} -left-1.5 top-8 border-l border-b border-zinc-200 dark:border-zinc-700`} style={style} />;
         case "left":
-            return <div className={`${base} -right-1.5 top-8 border-r border-t`} />;
+            return <div className={`${base} -right-1.5 top-8 border-r border-t border-zinc-200 dark:border-zinc-700`} style={style} />;
         case "bottom":
-            return <div className={`${base} left-8 -top-1.5 border-l border-t`} />;
+            return <div className={`${base} left-8 -top-1.5 border-l border-t border-zinc-200 dark:border-zinc-700`} style={style} />;
         case "top":
-            return <div className={`${base} left-8 -bottom-1.5 border-r border-b`} />;
+            return <div className={`${base} left-8 -bottom-1.5 border-r border-b border-zinc-200 dark:border-zinc-700`} style={style} />;
         default:
             return null;
     }
@@ -39,97 +46,112 @@ function TooltipArrow({ position }: { position: string }) {
 export function GuidedTour({ steps, tourId, onComplete }: GuidedTourProps) {
     const [currentStep, setCurrentStep] = useState(0);
     const [isVisible, setIsVisible] = useState(false);
-    const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);
-    const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
+    const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
+    const [highlightStyle, setHighlightStyle] = useState<React.CSSProperties | null>(null);
+    const [maskRects, setMaskRects] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
     const tooltipRef = useRef<HTMLDivElement>(null);
     const rafRef = useRef<number>(0);
-    const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const step = steps?.[currentStep];
     const isCentered = !step?.target || step?.position === "center";
 
-    const updatePosition = useCallback(() => {
-        if (!step || !step.target || step.position === "center") {
-            setHighlightRect(null);
-            setTooltipPos(null);
+    const computeLayout = useCallback(() => {
+        if (!step || isCentered) {
+            setHighlightStyle(null);
+            setMaskRects(null);
+            setTooltipStyle({});
             return;
         }
 
-        const el = document.querySelector(`[data-tour='${step.target}']`);
+        const el = getTargetEl(step.target);
         if (!el) {
-            setHighlightRect(null);
-            setTooltipPos(null);
+            setHighlightStyle(null);
+            setMaskRects(null);
+            setTooltipStyle({});
             return;
         }
 
         const rect = el.getBoundingClientRect();
         if (rect.width === 0 && rect.height === 0) {
-            setHighlightRect(null);
-            setTooltipPos(null);
+            setHighlightStyle(null);
+            setMaskRects(null);
+            setTooltipStyle({});
             return;
         }
 
-        setHighlightRect(rect);
+        const pad = 8;
+        const hx = rect.left - pad;
+        const hy = rect.top - pad;
+        const hw = rect.width + pad * 2;
+        const hh = rect.height + pad * 2;
 
-        const pad = 16;
-        const tooltipW = 340;
+        setHighlightStyle({
+            position: "fixed",
+            top: hy,
+            left: hx,
+            width: hw,
+            height: hh,
+            pointerEvents: "none",
+        });
+
+        setMaskRects({ x: hx, y: hy, w: hw, h: hh });
+
+        const tooltipW = 320;
         const tooltipEl = tooltipRef.current;
-        const tooltipH = tooltipEl ? tooltipEl.offsetHeight : 200;
+        const tooltipH = tooltipEl ? tooltipEl.offsetHeight : 180;
+        const gap = 14;
         let top = 0;
         let left = 0;
 
-        switch (step.position) {
+        const pos = step.position || "bottom";
+
+        switch (pos) {
             case "right":
                 top = rect.top + rect.height / 2 - tooltipH / 2;
-                left = rect.right + pad;
-                if (left + tooltipW > window.innerWidth - 8) {
-                    left = rect.left - tooltipW - pad;
+                left = rect.right + gap;
+                if (left + tooltipW > window.innerWidth - 12) {
+                    left = rect.left - tooltipW - gap;
                 }
                 break;
             case "left":
                 top = rect.top + rect.height / 2 - tooltipH / 2;
-                left = rect.left - tooltipW - pad;
-                if (left < 8) {
-                    left = rect.right + pad;
-                }
-                break;
-            case "bottom":
-                top = rect.bottom + pad;
-                left = rect.left + rect.width / 2 - tooltipW / 2;
-                if (top + tooltipH > window.innerHeight - 8) {
-                    top = rect.top - tooltipH - pad;
+                left = rect.left - tooltipW - gap;
+                if (left < 12) {
+                    left = rect.right + gap;
                 }
                 break;
             case "top":
-                top = rect.top - tooltipH - pad;
+                top = rect.top - tooltipH - gap;
                 left = rect.left + rect.width / 2 - tooltipW / 2;
-                if (top < 8) {
-                    top = rect.bottom + pad;
+                if (top < 12) {
+                    top = rect.bottom + gap;
                 }
                 break;
+            case "bottom":
             default:
-                top = rect.bottom + pad;
+                top = rect.bottom + gap;
                 left = rect.left + rect.width / 2 - tooltipW / 2;
+                if (top + tooltipH > window.innerHeight - 12) {
+                    top = rect.top - tooltipH - gap;
+                }
                 break;
         }
 
-        top = Math.max(8, Math.min(top, window.innerHeight - tooltipH - 8));
-        left = Math.max(8, Math.min(left, window.innerWidth - tooltipW - 8));
+        top = Math.max(12, Math.min(top, window.innerHeight - tooltipH - 12));
+        left = Math.max(12, Math.min(left, window.innerWidth - tooltipW - 12));
 
-        setTooltipPos({ top, left });
-    }, [step]);
+        setTooltipStyle({ position: "fixed", top, left, width: tooltipW });
+    }, [step, isCentered]);
 
     const scheduleUpdate = useCallback(() => {
         cancelAnimationFrame(rafRef.current);
-        rafRef.current = requestAnimationFrame(() => {
-            updatePosition();
-        });
-    }, [updatePosition]);
+        rafRef.current = requestAnimationFrame(computeLayout);
+    }, [computeLayout]);
 
     useEffect(() => {
         const alreadyDone = localStorage.getItem(tourStorageKey(tourId));
         if (!alreadyDone) {
-            const timer = setTimeout(() => setIsVisible(true), 800);
+            const timer = setTimeout(() => setIsVisible(true), 600);
             return () => clearTimeout(timer);
         }
     }, [tourId]);
@@ -140,74 +162,107 @@ export function GuidedTour({ steps, tourId, onComplete }: GuidedTourProps) {
         onComplete?.();
     }, [onComplete, tourId]);
 
-    const isStepVisible = useCallback((idx: number) => {
+    const isStepReachable = useCallback((idx: number) => {
         const s = steps[idx];
         if (!s.target || s.position === "center") return true;
-        const el = document.querySelector(`[data-tour='${s.target}']`);
+        const el = getTargetEl(s.target);
         if (!el) return false;
         const r = el.getBoundingClientRect();
         return r.width > 0 && r.height > 0;
     }, [steps]);
 
+    const scrollToTarget = useCallback((target: string) => {
+        const el = getTargetEl(target);
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const inViewport = rect.top >= 0 && rect.bottom <= window.innerHeight;
+        if (!inViewport) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+    }, []);
+
+    const goTo = useCallback((idx: number) => {
+        setCurrentStep(idx);
+        const s = steps[idx];
+        if (s?.target && s.position !== "center") {
+            scrollToTarget(s.target);
+        }
+    }, [steps, scrollToTarget]);
+
     const next = useCallback(() => {
         let nextIdx = currentStep + 1;
-        while (nextIdx < steps.length && !isStepVisible(nextIdx)) {
+        while (nextIdx < steps.length && !isStepReachable(nextIdx)) {
             nextIdx++;
         }
         if (nextIdx < steps.length) {
-            setCurrentStep(nextIdx);
+            goTo(nextIdx);
         } else {
             finish();
         }
-    }, [currentStep, finish, isStepVisible, steps.length]);
+    }, [currentStep, finish, goTo, isStepReachable, steps.length]);
 
     const prev = useCallback(() => {
         let prevIdx = currentStep - 1;
-        while (prevIdx > 0 && !isStepVisible(prevIdx)) {
+        while (prevIdx > 0 && !isStepReachable(prevIdx)) {
             prevIdx--;
         }
-        if (prevIdx >= 0) setCurrentStep(prevIdx);
-    }, [currentStep, isStepVisible]);
+        if (prevIdx >= 0) goTo(prevIdx);
+    }, [currentStep, goTo, isStepReachable]);
 
     useEffect(() => {
         if (!isVisible) return;
 
-        if (retryRef.current) clearTimeout(retryRef.current);
+        let retries = 0;
+        const maxRetries = 15;
 
-        const tryUpdate = (attempts: number) => {
-            scheduleUpdate();
-            if (attempts > 0 && step?.target) {
-                const el = document.querySelector(`[data-tour='${step.target}']`);
-                if (!el || (el.getBoundingClientRect().width === 0)) {
-                    retryRef.current = setTimeout(() => tryUpdate(attempts - 1), 100);
+        const tryLayout = () => {
+            computeLayout();
+            if (step?.target && step.position !== "center") {
+                const el = getTargetEl(step.target);
+                if ((!el || el.getBoundingClientRect().width === 0) && retries < maxRetries) {
+                    retries++;
+                    setTimeout(tryLayout, 100);
                     return;
                 }
             }
-            retryRef.current = setTimeout(() => scheduleUpdate(), 300);
         };
-        tryUpdate(10);
+
+        setTimeout(tryLayout, 50);
 
         const handleResize = () => scheduleUpdate();
+        const handleScroll = () => scheduleUpdate();
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") finish();
             if (e.key === "ArrowRight") next();
             if (e.key === "ArrowLeft") prev();
         };
+
         window.addEventListener("resize", handleResize);
-        window.addEventListener("scroll", handleResize, true);
+        window.addEventListener("scroll", handleScroll, true);
         window.addEventListener("keydown", handleKeyDown);
+
+        const interval = setInterval(scheduleUpdate, 500);
+
         return () => {
             window.removeEventListener("resize", handleResize);
-            window.removeEventListener("scroll", handleResize, true);
+            window.removeEventListener("scroll", handleScroll, true);
             window.removeEventListener("keydown", handleKeyDown);
             cancelAnimationFrame(rafRef.current);
-            if (retryRef.current) clearTimeout(retryRef.current);
+            clearInterval(interval);
         };
-    }, [isVisible, currentStep, scheduleUpdate, step, finish, next, prev]);
+    }, [isVisible, currentStep, computeLayout, scheduleUpdate, step, finish, next, prev]);
+
+    useLayoutEffect(() => {
+        if (isVisible) computeLayout();
+    }, [isVisible, currentStep, computeLayout]);
 
     if (!isVisible || !step) return null;
 
     const maskId = `tour-mask-${tourId}`;
+    const visibleIndices = steps.map((_, i) => i).filter(i => isStepReachable(i));
+    const visibleSteps = visibleIndices.map(i => steps[i]);
+    const currentVisibleIdx = visibleIndices.indexOf(currentStep);
+    const totalVisible = visibleSteps.length;
 
     return (
         <AnimatePresence>
@@ -221,19 +276,19 @@ export function GuidedTour({ steps, tourId, onComplete }: GuidedTourProps) {
                         onClick={finish}
                     />
                 ) : (
-                    <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: "none" }}>
+                    <svg className="fixed inset-0 w-full h-full" style={{ pointerEvents: "none" }}>
                         <defs>
                             <mask id={maskId}>
                                 <rect x="0" y="0" width="100%" height="100%" fill="white" />
-                                {highlightRect && (
+                                {maskRects && (
                                     <motion.rect
                                         initial={{ opacity: 0 }}
                                         animate={{
                                             opacity: 1,
-                                            x: highlightRect.left - 6,
-                                            y: highlightRect.top - 6,
-                                            width: highlightRect.width + 12,
-                                            height: highlightRect.height + 12,
+                                            x: maskRects.x,
+                                            y: maskRects.y,
+                                            width: maskRects.w,
+                                            height: maskRects.h,
                                         }}
                                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
                                         rx="8"
@@ -255,17 +310,13 @@ export function GuidedTour({ steps, tourId, onComplete }: GuidedTourProps) {
                     </svg>
                 )}
 
-                {highlightRect && !isCentered && (
+                {highlightStyle && !isCentered && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="absolute rounded-lg ring-2 ring-primary ring-offset-2 ring-offset-transparent"
+                        className="rounded-lg ring-2 ring-primary ring-offset-2 ring-offset-transparent"
                         style={{
-                            top: highlightRect.top - 6,
-                            left: highlightRect.left - 6,
-                            width: highlightRect.width + 12,
-                            height: highlightRect.height + 12,
-                            pointerEvents: "none",
+                            ...highlightStyle,
                         }}
                     >
                         <div className="absolute inset-0 rounded-lg animate-pulse bg-primary/10" />
@@ -279,14 +330,10 @@ export function GuidedTour({ steps, tourId, onComplete }: GuidedTourProps) {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 10 }}
                     transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                    className={`absolute bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-2xl p-5 w-[340px] ${
-                        isCentered ? "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" : ""
+                    className={`bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-2xl p-5 ${
+                        isCentered ? "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px]" : ""
                     }`}
-                    style={
-                        !isCentered && tooltipPos
-                            ? { top: tooltipPos.top, left: tooltipPos.left }
-                            : undefined
-                    }
+                    style={!isCentered ? tooltipStyle : undefined}
                     onClick={(e) => e.stopPropagation()}
                 >
                     {!isCentered && <TooltipArrow position={step.position || "bottom"} />}
@@ -309,13 +356,13 @@ export function GuidedTour({ steps, tourId, onComplete }: GuidedTourProps) {
 
                     <div className="flex items-center justify-between">
                         <div className="flex gap-1.5">
-                            {steps.map((_, i) => (
+                            {visibleSteps.map((_, i) => (
                                 <div
                                     key={i}
                                     className={`h-1.5 rounded-full transition-all duration-300 ${
-                                        i === currentStep
+                                        i === currentVisibleIdx
                                             ? "w-6 bg-primary"
-                                            : i < currentStep
+                                            : i < currentVisibleIdx
                                             ? "w-1.5 bg-primary/40"
                                             : "w-1.5 bg-zinc-200 dark:bg-zinc-700"
                                     }`}
@@ -346,6 +393,10 @@ export function GuidedTour({ steps, tourId, onComplete }: GuidedTourProps) {
                             </Button>
                         </div>
                     </div>
+
+                    <p className="text-[10px] text-zinc-400 mt-3 text-center">
+                        {currentVisibleIdx + 1} / {totalVisible}
+                    </p>
                 </motion.div>
             </div>
         </AnimatePresence>

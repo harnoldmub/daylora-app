@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { InlineEditor } from "@/components/ui/inline-editor";
 import { compressImageFileToJpegDataUrl } from "@/lib/image";
 import { useToast } from "@/hooks/use-toast";
+import { GuidedTour, useShouldShowTour } from "@/components/guided-tour";
 
 function EditModeTooltip() {
     const [visible, setVisible] = useState(() => {
@@ -728,6 +729,7 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
                                     <Button
                                         className="rounded-full shadow-xl h-11 px-6 bg-primary/90 hover:bg-primary backdrop-blur-sm transition-all duration-200 hover:shadow-2xl hover:scale-[1.02]"
                                         onClick={() => setEditMode(true)}
+                                        data-tour="preview-edit-button"
                                     >
                                         <Pencil className="h-3.5 w-3.5 mr-2" />
                                         Modifier le site
@@ -736,8 +738,43 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
                             </div>
                         ) : null
                     }
+                    {canEdit && !editMode && (
+                        <PreviewTour />
+                    )}
                 </div >
             </PublicEditProvider >
         </ThemeProvider >
+    );
+}
+
+function PreviewTour() {
+    const showTour = useShouldShowTour("preview-edit");
+
+    if (!showTour) return null;
+
+    return (
+        <GuidedTour
+            tourId="preview-edit"
+            steps={[
+                {
+                    target: "preview-edit-button",
+                    title: "Modifier votre site",
+                    description: "Cliquez sur ce bouton pour passer en mode édition. Vous pourrez modifier les textes et images directement sur la page.",
+                    position: "top",
+                },
+                {
+                    target: "",
+                    title: "Mode édition",
+                    description: "En mode édition, cliquez sur n'importe quel texte pour le modifier. Cliquez sur les images pour les changer. Les modifications sont enregistrées automatiquement.",
+                    position: "center",
+                },
+                {
+                    target: "",
+                    title: "Aperçu et Terminer",
+                    description: "Utilisez « Aperçu » pour voir le résultat final, et « Terminer » pour quitter le mode édition. Vos modifications sont sauvegardées en temps réel.",
+                    position: "center",
+                },
+            ]}
+        />
     );
 }

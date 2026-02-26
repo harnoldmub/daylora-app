@@ -48,7 +48,7 @@ export default function SettingsPage() {
     jokesEnabled: true,
   });
   const [payments, setPayments] = useState<PaymentSettings>({
-    mode: "stripe",
+    mode: "external",
     externalProvider: "other",
     externalUrl: "",
     stripeStatus: "not_connected",
@@ -74,7 +74,7 @@ export default function SettingsPage() {
       jokesEnabled: !!wedding.config?.features?.jokesEnabled,
     });
     setPayments({
-      mode: wedding.config?.payments?.mode === "external" ? "external" : "stripe",
+      mode: "external",
       externalProvider: wedding.config?.payments?.externalProvider || "other",
       externalUrl: wedding.config?.payments?.externalUrl || wedding.config?.sections?.cagnotteExternalUrl || "",
       stripeStatus: wedding.config?.payments?.stripeStatus === "connected" ? "connected" : "not_connected",
@@ -321,112 +321,34 @@ export default function SettingsPage() {
       </Card>
 
             <Card className="p-6 space-y-4">
-                <h2 className="text-lg font-medium">Paiements & cagnotte</h2>
+                <h2 className="text-lg font-medium">Cagnotte</h2>
         <p className="text-sm text-muted-foreground">
-          Choisissez le mode de collecte: Stripe intégré ou lien externe (Leetchi, PayPal, Lydia, Stripe Payment Link...).
+          Ajoutez le lien vers votre cagnotte en ligne (Leetchi, PayPal, Lydia, etc.). Vos invités seront redirigés vers ce lien.
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button
-            type="button"
-            className={`rounded-xl border p-4 text-left transition ${
-              payments.mode === "stripe" ? "border-primary bg-primary/5" : "border-border"
-            }`}
-            onClick={() => setPayments((prev) => ({ ...prev, mode: "stripe" }))}
-          >
-            <p className="font-medium">Stripe intégré</p>
-            <p className="text-sm text-muted-foreground mt-1">Checkout intégré avec suivi live automatique.</p>
-          </button>
-          <button
-            type="button"
-            className={`rounded-xl border p-4 text-left transition ${
-              payments.mode === "external" ? "border-primary bg-primary/5" : "border-border"
-            }`}
-            onClick={() => setPayments((prev) => ({ ...prev, mode: "external" }))}
-          >
-            <p className="font-medium">Lien externe</p>
-            <p className="text-sm text-muted-foreground mt-1">Redirige vers votre cagnotte externe.</p>
-          </button>
-        </div>
 
-        {payments.mode === "stripe" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Statut Stripe</label>
-              <div className="h-10 rounded-md border border-border bg-background px-3 text-sm w-full flex items-center justify-between">
-                <span>{payments.stripeStatus === "connected" && payments.stripeAccountId ? "Connecté" : "Non connecté"}</span>
-                <span className={`text-xs font-semibold ${payments.stripeStatus === "connected" && payments.stripeAccountId ? "text-emerald-600" : "text-muted-foreground"}`}>
-                  {payments.stripeStatus === "connected" && payments.stripeAccountId ? "OK" : "À connecter"}
-                </span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Stripe account ID (optionnel)</label>
-              <Input
-                placeholder="acct_..."
-                value={payments.stripeAccountId}
-                onChange={(e) => setPayments((prev) => ({ ...prev, stripeAccountId: e.target.value }))}
-              />
-            </div>
-            <div className="md:col-span-2">
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    window.location.href = `/api/stripe/connect/start?weddingId=${encodeURIComponent(wedding.id)}`;
-                  }}
-                >
-                  Connecter Stripe (OAuth)
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={async () => {
-                    try {
-                      await apiRequest("POST", "/api/stripe/connect/disconnect");
-                      setPayments((prev) => ({ ...prev, stripeStatus: "not_connected", stripeAccountId: "" }));
-                      setPreviewToken(Date.now());
-                      toast({ title: "Stripe déconnecté", description: "Le projet repasse en mode non connecté." });
-                    } catch (e: any) {
-                      toast({ title: "Action impossible", description: e?.message || "Impossible de déconnecter Stripe.", variant: "destructive" });
-                    }
-                  }}
-                  disabled={payments.stripeStatus !== "connected" || !payments.stripeAccountId}
-                >
-                  Déconnecter Stripe
-                </Button>
-                <Button variant="outline" asChild>
-                  <a href="https://dashboard.stripe.com/register" target="_blank" rel="noopener noreferrer">
-                    Créer un compte Stripe
-                  </a>
-                </Button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Fournisseur externe</label>
+              <label className="text-sm font-medium">Fournisseur</label>
               <select
                 className="h-10 rounded-md border border-border bg-background px-3 text-sm w-full"
                 value={payments.externalProvider}
-                onChange={(e) => setPayments((prev) => ({ ...prev, externalProvider: e.target.value }))}
+                onChange={(e) => setPayments((prev) => ({ ...prev, externalProvider: e.target.value, mode: "external" }))}
               >
                 <option value="leetchi">Leetchi</option>
                 <option value="paypal">PayPal</option>
                 <option value="lydia">Lydia</option>
-                <option value="stripe_payment_link">Stripe Payment Link</option>
                 <option value="other">Autre</option>
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">URL de la cagnotte externe</label>
+              <label className="text-sm font-medium">URL de la cagnotte</label>
               <Input
                 placeholder="https://..."
                 value={payments.externalUrl}
-                onChange={(e) => setPayments((prev) => ({ ...prev, externalUrl: e.target.value }))}
+                onChange={(e) => setPayments((prev) => ({ ...prev, externalUrl: e.target.value, mode: "external" }))}
               />
             </div>
           </div>
-        )}
 
         <div className="flex items-center justify-between">
           <div>

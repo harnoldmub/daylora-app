@@ -184,7 +184,7 @@ export default function GuestInvitationPage() {
   const cagnotteMode = payments.mode || (cagnotteExternalUrl ? "external" : "stripe");
   const weddingSlug = (wedding as any)?.slug || "";
   const basePath = weddingSlug ? `/${weddingSlug}` : "/";
-  const cagnotteHref = cagnotteMode === "external" ? cagnotteExternalUrl : `${basePath}#cagnotte`;
+  const cagnotteHref = cagnotteMode === "external" && cagnotteExternalUrl ? cagnotteExternalUrl : `${basePath}#cagnotte`;
 
   const invGreeting = texts.invitationGreeting || "Nous avons l'honneur de vous convier";
   const invPrelude = texts.invitationPrelude || "à célébrer l'union de";
@@ -664,8 +664,8 @@ export default function GuestInvitationPage() {
             </p>
             <a
               href={cagnotteHref}
-              target={cagnotteMode === "external" ? "_blank" : undefined}
-              rel={cagnotteMode === "external" ? "noopener noreferrer" : undefined}
+              target={cagnotteMode === "external" && cagnotteExternalUrl ? "_blank" : undefined}
+              rel={cagnotteMode === "external" && cagnotteExternalUrl ? "noopener noreferrer" : undefined}
               className="inline-flex items-center gap-2.5 px-10 py-3.5 text-[10px] tracking-[0.3em] uppercase font-bold text-white transition-all hover:opacity-90 hover:shadow-lg rounded-full"
               style={{ backgroundColor: primaryColor }}
             >

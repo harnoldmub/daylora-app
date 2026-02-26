@@ -15,7 +15,6 @@ import {
     Settings,
     Paintbrush,
     ListTree,
-    FileText,
     ExternalLink,
     Menu,
     X
@@ -45,7 +44,6 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
         { name: "Site & Menus", icon: ListTree, href: "/site" },
         { name: "Cadeaux", icon: Gift, href: "/gifts" },
         { name: "Emails", icon: Mail, href: "/emails" },
-        { name: "Pages", icon: FileText, href: "/pages" },
         { name: "Blagues Live", icon: Laugh, href: "/live" },
         { name: "Facturation", icon: CreditCard, href: "/billing" },
         ...(user?.isAdmin ? [{ name: "Avis", icon: MessageSquare, href: "/feedback" }] : []),
