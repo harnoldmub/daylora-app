@@ -7,14 +7,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Star, Eye } from "lucide-react";
+import { Star, Eye, Bug, Lightbulb, Rocket, HelpCircle, ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { Feedback } from "@shared/schema";
+import type { ProductFeedback } from "@shared/schema";
 
-const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+const TYPE_CONFIG: Record<string, { icon: typeof Bug; label: string; color: string }> = {
+  bug: { icon: Bug, label: "Bug", color: "text-red-500" },
+  suggestion: { icon: Lightbulb, label: "Suggestion", color: "text-amber-500" },
+  improvement: { icon: Rocket, label: "Amélioration", color: "text-blue-500" },
+  other: { icon: HelpCircle, label: "Autre", color: "text-gray-500" },
+};
+
+const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
   new: { label: "Nouveau", variant: "default" },
-  in_progress: { label: "En cours", variant: "secondary" },
-  done: { label: "Terminé", variant: "outline" },
+  reviewed: { label: "Consulté", variant: "secondary" },
+  resolved: { label: "Résolu", variant: "outline" },
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -39,11 +46,11 @@ export default function FeedbackPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState("all");
-  const [selected, setSelected] = useState<Feedback | null>(null);
+  const [selected, setSelected] = useState<ProductFeedback | null>(null);
 
   const statusFilter = tab === "all" ? undefined : tab;
 
-  const { data: feedbackList = [], isLoading } = useQuery<Feedback[]>({
+  const { data: feedbackList = [], isLoading } = useQuery<ProductFeedback[]>({
     queryKey: ["/api/admin/feedback", statusFilter],
     queryFn: async () => {
       const url = statusFilter
@@ -81,14 +88,14 @@ export default function FeedbackPage() {
 
   return (
     <div className="space-y-6">
-      <AdminPageHeader title="Avis utilisateurs" description="Consultez et gérez les retours de vos utilisateurs." />
+      <AdminPageHeader title="Feedbacks produit" description="Retours, bugs et suggestions des utilisateurs." />
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="all">Tous</TabsTrigger>
           <TabsTrigger value="new">Nouveau</TabsTrigger>
-          <TabsTrigger value="in_progress">En cours</TabsTrigger>
-          <TabsTrigger value="done">Terminé</TabsTrigger>
+          <TabsTrigger value="reviewed">Consulté</TabsTrigger>
+          <TabsTrigger value="resolved">Résolu</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -97,11 +104,11 @@ export default function FeedbackPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Date</TableHead>
+              <TableHead>Type</TableHead>
               <TableHead>Note</TableHead>
-              <TableHead>Titre</TableHead>
-              <TableHead className="max-w-[200px]">Message</TableHead>
+              <TableHead className="max-w-[250px]">Message</TableHead>
+              <TableHead>URL</TableHead>
               <TableHead>Statut</TableHead>
-              <TableHead>Email</TableHead>
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
@@ -115,33 +122,44 @@ export default function FeedbackPage() {
             ) : feedbackList.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  Aucun avis pour le moment.
+                  Aucun feedback pour le moment.
                 </TableCell>
               </TableRow>
             ) : (
-              feedbackList.map((fb) => (
-                <TableRow key={fb.id}>
-                  <TableCell className="whitespace-nowrap text-sm">
-                    {fb.createdAt ? new Date(fb.createdAt).toLocaleDateString("fr-FR") : "—"}
-                  </TableCell>
-                  <TableCell>
-                    <Stars count={fb.rating ?? 0} />
-                  </TableCell>
-                  <TableCell className="font-medium">{fb.title || "—"}</TableCell>
-                  <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
-                    {fb.message}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={fb.status ?? "new"} />
-                  </TableCell>
-                  <TableCell className="text-sm">{fb.email || "—"}</TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => setSelected(fb)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+              feedbackList.map((fb) => {
+                const typeInfo = TYPE_CONFIG[fb.type] || TYPE_CONFIG.other;
+                const Icon = typeInfo.icon;
+                return (
+                  <TableRow key={fb.id}>
+                    <TableCell className="whitespace-nowrap text-sm">
+                      {fb.createdAt ? new Date(fb.createdAt).toLocaleDateString("fr-FR") : "—"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        <Icon className={`h-4 w-4 ${typeInfo.color}`} />
+                        <span className="text-sm">{typeInfo.label}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {fb.rating ? <Stars count={fb.rating} /> : <span className="text-muted-foreground text-sm">—</span>}
+                    </TableCell>
+                    <TableCell className="max-w-[250px] truncate text-sm text-muted-foreground">
+                      {fb.message}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground max-w-[120px] truncate">
+                      {fb.currentUrl || "—"}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={fb.status ?? "new"} />
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" onClick={() => setSelected(fb)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -150,30 +168,47 @@ export default function FeedbackPage() {
       <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Détail de l'avis</DialogTitle>
+            <DialogTitle>Détail du feedback</DialogTitle>
           </DialogHeader>
           {selected && (
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Stars count={selected.rating ?? 0} />
-                <span className="text-sm text-muted-foreground">
-                  {selected.createdAt ? new Date(selected.createdAt).toLocaleDateString("fr-FR") : ""}
+              <div className="flex items-center gap-3 flex-wrap">
+                {(() => {
+                  const typeInfo = TYPE_CONFIG[selected.type] || TYPE_CONFIG.other;
+                  const Icon = typeInfo.icon;
+                  return (
+                    <div className="flex items-center gap-1.5">
+                      <Icon className={`h-4 w-4 ${typeInfo.color}`} />
+                      <span className="text-sm font-medium">{typeInfo.label}</span>
+                    </div>
+                  );
+                })()}
+                {selected.rating && <Stars count={selected.rating} />}
+                <span className="text-sm text-muted-foreground ml-auto">
+                  {selected.createdAt ? new Date(selected.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }) : ""}
                 </span>
               </div>
-              {selected.title && (
-                <h3 className="font-semibold text-lg">{selected.title}</h3>
+
+              <div className="bg-muted/50 rounded-lg p-3">
+                <p className="text-sm whitespace-pre-wrap">{selected.message}</p>
+              </div>
+
+              {selected.screenshotUrl && (
+                <div className="rounded-lg border overflow-hidden">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/50 text-xs text-muted-foreground">
+                    <ImageIcon className="h-3 w-3" />
+                    Capture d'écran
+                  </div>
+                  <img src={selected.screenshotUrl} alt="Screenshot" className="w-full max-h-48 object-contain bg-white" />
+                </div>
               )}
-              <p className="text-sm whitespace-pre-wrap">{selected.message}</p>
-              {selected.email && (
-                <p className="text-sm text-muted-foreground">
-                  Contact : {selected.email}
-                </p>
-              )}
-              {selected.page && (
+
+              {selected.currentUrl && (
                 <p className="text-xs text-muted-foreground">
-                  Page : {selected.page}
+                  Page : {selected.currentUrl}
                 </p>
               )}
+
               <div className="flex items-center gap-3 pt-2 border-t">
                 <span className="text-sm font-medium">Statut :</span>
                 <Select
@@ -185,8 +220,8 @@ export default function FeedbackPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="new">Nouveau</SelectItem>
-                    <SelectItem value="in_progress">En cours</SelectItem>
-                    <SelectItem value="done">Terminé</SelectItem>
+                    <SelectItem value="reviewed">Consulté</SelectItem>
+                    <SelectItem value="resolved">Résolu</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

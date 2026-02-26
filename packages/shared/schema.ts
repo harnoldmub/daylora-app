@@ -685,35 +685,34 @@ export const referralCodesRelations = relations(referralCodes, ({ one }) => ({
   }),
 }));
 
-export const feedback = pgTable("feedback", {
+export const productFeedback = pgTable("product_feedback", {
   id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
   weddingId: uuid("wedding_id").references(() => weddings.id),
-  userId: varchar("user_id").references(() => users.id),
-  rating: integer("rating"),
-  title: varchar("title", { length: 255 }),
+  type: varchar("type", { length: 30 }).notNull(),
   message: text("message").notNull(),
-  contactAllowed: boolean("contact_allowed").default(false),
-  email: varchar("email", { length: 255 }),
-  page: varchar("page", { length: 255 }),
+  rating: integer("rating"),
+  currentUrl: varchar("current_url", { length: 500 }),
+  screenshotUrl: varchar("screenshot_url", { length: 1000 }),
   status: varchar("status", { length: 20 }).notNull().default("new"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export type Feedback = typeof feedback.$inferSelect;
-export type InsertFeedback = typeof feedback.$inferInsert;
+export type ProductFeedback = typeof productFeedback.$inferSelect;
+export type InsertProductFeedback = typeof productFeedback.$inferInsert;
 
-export const insertFeedbackSchema = createInsertSchema(feedback).omit({
+export const insertProductFeedbackSchema = createInsertSchema(productFeedback).omit({
   id: true,
   createdAt: true,
 });
 
-export const feedbackRelations = relations(feedback, ({ one }) => ({
+export const productFeedbackRelations = relations(productFeedback, ({ one }) => ({
   wedding: one(weddings, {
-    fields: [feedback.weddingId],
+    fields: [productFeedback.weddingId],
     references: [weddings.id],
   }),
   user: one(users, {
-    fields: [feedback.userId],
+    fields: [productFeedback.userId],
     references: [users.id],
   }),
 }));

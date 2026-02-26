@@ -1,7 +1,7 @@
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState, useRef } from "react";
-import { Loader2, MapPin, Gift, ExternalLink, Bed, ChevronDown, Heart, Sparkles } from "lucide-react";
+import { Loader2, MapPin, Gift, ExternalLink, Bed, ChevronDown, Heart, Sparkles, Calendar, Clock, CheckCircle2, Users, ArrowRight } from "lucide-react";
 import QRCodeLib from "qrcode";
 
 type GuestData = {
@@ -12,6 +12,8 @@ type GuestData = {
   availability: string;
   partySize: number;
   tableNumber?: number | null;
+  confirmedAt?: string | null;
+  status?: string;
 };
 
 function hexToHSL(hex: string): { h: number; s: number; l: number } {
@@ -30,7 +32,6 @@ function hexToHSL(hex: string): { h: number; s: number; l: number } {
   }
   return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
 }
-
 
 function FloralDivider({ color }: { color: string }) {
   return (
@@ -144,6 +145,7 @@ export default function GuestInvitationPage() {
   const cardBg = `color-mix(in srgb, ${primaryColor} 4%, #F8F6F2)`;
   const borderLight = `color-mix(in srgb, ${primaryColor} 12%, transparent)`;
   const borderMedium = `color-mix(in srgb, ${primaryColor} 20%, transparent)`;
+  const accentBg = `color-mix(in srgb, ${primaryColor} 6%, #FDFCFA)`;
 
   useEffect(() => {
     if (!wedding) return;
@@ -208,6 +210,9 @@ export default function GuestInvitationPage() {
 
   const coupleNames = heroTitle.includes(" et ") ? heroTitle.split(" et ") : heroTitle.includes(" & ") ? heroTitle.split(" & ") : [heroTitle, ""];
 
+  const isConfirmed = guest?.availability === "confirmed" || guest?.status === "confirmed";
+  const isDeclined = guest?.availability === "declined" || guest?.status === "declined";
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: bgBase }}>
@@ -257,6 +262,7 @@ export default function GuestInvitationPage() {
         .inv-animate-d3 { animation: inv-fade-up 1s ease 0.6s forwards; opacity: 0; }
         .inv-animate-d4 { animation: inv-fade-up 1s ease 0.8s forwards; opacity: 0; }
         .inv-animate-d5 { animation: inv-fade-up 1s ease 1s forwards; opacity: 0; }
+        .inv-animate-d6 { animation: inv-fade-up 1s ease 1.2s forwards; opacity: 0; }
         @keyframes inv-pulse-ring {
           0%, 100% { transform: scale(1); opacity: 0.15; }
           50% { transform: scale(1.05); opacity: 0.25; }
@@ -267,6 +273,10 @@ export default function GuestInvitationPage() {
           50% { transform: translateY(-6px); }
         }
         .inv-float { animation: inv-float 3s ease-in-out infinite; }
+        @keyframes inv-shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
       `}</style>
 
       <section className="min-h-[100dvh] flex flex-col items-center justify-center px-6 py-16 relative overflow-hidden">
@@ -296,6 +306,12 @@ export default function GuestInvitationPage() {
             <h2 className="text-2xl md:text-3xl inv-display italic font-light" style={{ color: textDark }}>
               {guestDisplayName}
             </h2>
+            {isCouple && guest.partySize > 1 && (
+              <p className="text-xs inv-serif tracking-wide" style={{ color: textSubtle }}>
+                <Users className="inline h-3 w-3 mr-1" style={{ color: primaryColor }} />
+                {guest.partySize} {guest.partySize > 1 ? "personnes" : "personne"}
+              </p>
+            )}
           </div>
 
           <div className="inv-animate-d2">
@@ -376,6 +392,104 @@ export default function GuestInvitationPage() {
         </AnimatedSection>
       )}
 
+      <AnimatedSection className="py-20 px-6 text-center">
+        <FloralDivider color={primaryColor} />
+        <div className="max-w-sm mx-auto space-y-4 py-4">
+          <p className="text-lg md:text-xl inv-serif italic leading-relaxed" style={{ color: textDark }}>
+            {invMessage}
+          </p>
+          <p className="text-sm inv-serif" style={{ color: textSubtle }}>
+            {invSubmessage}
+          </p>
+        </div>
+        <FloralDivider color={primaryColor} />
+      </AnimatedSection>
+
+      {weddingSlug && (
+        <AnimatedSection className="pb-16 px-6">
+          <div className="max-w-sm mx-auto">
+            <div
+              className="rounded-2xl p-8 text-center space-y-5 relative overflow-hidden"
+              style={{ backgroundColor: accentBg, border: `1px solid ${borderLight}` }}
+            >
+              {isConfirmed ? (
+                <>
+                  <div className="w-14 h-14 mx-auto rounded-full flex items-center justify-center" style={{ backgroundColor: cardBg, border: `1px solid ${borderMedium}` }}>
+                    <CheckCircle2 className="h-6 w-6" style={{ color: primaryColor }} />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] tracking-[0.4em] uppercase inv-serif font-semibold" style={{ color: primaryColor }}>
+                      Présence confirmée
+                    </p>
+                    <p className="text-sm inv-serif" style={{ color: textSubtle }}>
+                      Merci d'avoir confirmé votre présence. Nous avons hâte de vous retrouver !
+                    </p>
+                  </div>
+                  {guest.tableNumber && (
+                    <div
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full"
+                      style={{ backgroundColor: cardBg, border: `1px solid ${borderMedium}` }}
+                    >
+                      <span className="text-[10px] tracking-[0.2em] uppercase inv-serif" style={{ color: textSubtle }}>Table</span>
+                      <span className="text-xl inv-display font-medium" style={{ color: primaryColor }}>{guest.tableNumber}</span>
+                    </div>
+                  )}
+                </>
+              ) : isDeclined ? (
+                <>
+                  <div className="w-14 h-14 mx-auto rounded-full flex items-center justify-center" style={{ backgroundColor: cardBg, border: `1px solid ${borderLight}` }}>
+                    <Heart className="h-6 w-6" style={{ color: textSubtle }} />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] tracking-[0.4em] uppercase inv-serif font-semibold" style={{ color: textSubtle }}>
+                      Absence notée
+                    </p>
+                    <p className="text-sm inv-serif" style={{ color: textSubtle }}>
+                      Nous comprenons et vous souhaitons le meilleur. Vous nous manquerez !
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-14 h-14 mx-auto rounded-full flex items-center justify-center" style={{ backgroundColor: cardBg, border: `1px solid ${borderMedium}` }}>
+                    <Calendar className="h-6 w-6" style={{ color: primaryColor }} />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] tracking-[0.4em] uppercase inv-serif font-semibold" style={{ color: primaryColor }}>
+                      Confirmez votre présence
+                    </p>
+                    <p className="text-sm inv-serif" style={{ color: textSubtle }}>
+                      Rendez-vous sur notre site pour confirmer votre venue et découvrir tous les détails.
+                    </p>
+                  </div>
+                  <a
+                    href={`${basePath}#rsvp`}
+                    className="inline-flex items-center gap-2.5 px-8 py-3 text-[10px] tracking-[0.3em] uppercase font-bold text-white transition-all hover:opacity-90 hover:shadow-lg rounded-full"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    Répondre
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </a>
+                </>
+              )}
+
+              {weddingSlug && !isDeclined && (
+                <div className="pt-2">
+                  <a
+                    href={basePath}
+                    className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase font-semibold hover:opacity-70 transition-opacity inv-serif"
+                    style={{ color: primaryColor }}
+                  >
+                    Voir notre site
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </AnimatedSection>
+      )}
+
       {showProgramme && programItems.length > 0 && (
         <section className="py-20 px-6">
           <AnimatedSection className="max-w-lg mx-auto">
@@ -408,9 +522,12 @@ export default function GuestInvitationPage() {
 
                         <div className={`flex-1 pl-10 md:pl-0 ${isRight ? "md:pr-10 md:text-right" : "md:pl-10"}`}>
                           <div className="space-y-1.5">
-                            <p className="text-lg md:text-xl inv-display font-light" style={{ color: primaryColor }}>
-                              {(item.time || "").replace(":", "h")}
-                            </p>
+                            <div className="flex items-center gap-2" style={isRight ? { justifyContent: "flex-end" } : {}}>
+                              <Clock className="h-3.5 w-3.5 shrink-0 md:hidden" style={{ color: primaryColor, opacity: 0.6 }} />
+                              <p className="text-lg md:text-xl inv-display font-light" style={{ color: primaryColor }}>
+                                {(item.time || "").replace(":", "h")}
+                              </p>
+                            </div>
                             <h3 className="text-xs tracking-[0.2em] uppercase font-bold" style={{ color: textDark }}>
                               {item.title}
                             </h3>
@@ -420,7 +537,8 @@ export default function GuestInvitationPage() {
                               </p>
                             )}
                             {item.location && (
-                              <p className="text-xs inv-serif italic" style={{ color: textSubtle }}>
+                              <p className="text-xs inv-serif italic flex items-center gap-1" style={{ color: textSubtle }}>
+                                <MapPin className="h-2.5 w-2.5 shrink-0" />
                                 {item.location}
                               </p>
                             )}
@@ -508,21 +626,8 @@ export default function GuestInvitationPage() {
         </section>
       )}
 
-      <AnimatedSection className="py-20 px-6 text-center">
-        <FloralDivider color={primaryColor} />
-        <div className="max-w-sm mx-auto space-y-4 py-4">
-          <p className="text-lg md:text-xl inv-serif italic leading-relaxed" style={{ color: textDark }}>
-            {invMessage}
-          </p>
-          <p className="text-sm inv-serif" style={{ color: textSubtle }}>
-            {invSubmessage}
-          </p>
-        </div>
-        <FloralDivider color={primaryColor} />
-      </AnimatedSection>
-
       {showDressCode && invDressCode && (
-        <AnimatedSection className="py-6 px-6">
+        <AnimatedSection className="py-16 px-6">
           <div className="max-w-sm mx-auto">
             <div
               className="rounded-xl p-8 text-center space-y-4 relative"

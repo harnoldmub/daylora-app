@@ -48,7 +48,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
         { name: "Pages", icon: FileText, href: "/pages" },
         { name: "Blagues Live", icon: Laugh, href: "/live" },
         { name: "Facturation", icon: CreditCard, href: "/billing" },
-        { name: "Avis", icon: MessageSquare, href: "/feedback" },
+        ...(user?.isAdmin ? [{ name: "Avis", icon: MessageSquare, href: "/feedback" }] : []),
         { name: "Paramètres", icon: Settings, href: "/settings" },
     ];
 

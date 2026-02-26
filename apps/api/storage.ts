@@ -33,9 +33,9 @@ import {
   type InsertPasswordResetToken,
   type EmailLog,
   type InsertEmailLog,
-  feedback,
-  type Feedback,
-  type InsertFeedback,
+  productFeedback,
+  type ProductFeedback,
+  type InsertProductFeedback,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, ne, sql, desc } from "drizzle-orm";
@@ -122,10 +122,11 @@ export interface IStorage {
   createEmailLog(log: InsertEmailLog): Promise<EmailLog>;
   getEmailLogs(weddingId: string): Promise<EmailLog[]>;
 
-  // Feedback operations
-  createFeedback(data: InsertFeedback): Promise<Feedback>;
-  listFeedback(status?: string): Promise<Feedback[]>;
-  updateFeedbackStatus(id: number, status: string): Promise<Feedback>;
+  // Product Feedback operations
+  createProductFeedback(data: InsertProductFeedback): Promise<ProductFeedback>;
+  listProductFeedback(status?: string): Promise<ProductFeedback[]>;
+  getProductFeedbackByUser(userId: string): Promise<ProductFeedback[]>;
+  updateProductFeedbackStatus(id: number, status: string): Promise<ProductFeedback>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -565,20 +566,24 @@ export class DatabaseStorage implements IStorage {
     return result?.count ?? 0;
   }
 
-  async createFeedback(data: InsertFeedback): Promise<Feedback> {
-    const [row] = await db.insert(feedback).values(data).returning();
+  async createProductFeedback(data: InsertProductFeedback): Promise<ProductFeedback> {
+    const [row] = await db.insert(productFeedback).values(data).returning();
     return row;
   }
 
-  async listFeedback(status?: string): Promise<Feedback[]> {
+  async listProductFeedback(status?: string): Promise<ProductFeedback[]> {
     if (status) {
-      return db.select().from(feedback).where(eq(feedback.status, status)).orderBy(desc(feedback.createdAt));
+      return db.select().from(productFeedback).where(eq(productFeedback.status, status)).orderBy(desc(productFeedback.createdAt));
     }
-    return db.select().from(feedback).orderBy(desc(feedback.createdAt));
+    return db.select().from(productFeedback).orderBy(desc(productFeedback.createdAt));
   }
 
-  async updateFeedbackStatus(id: number, status: string): Promise<Feedback> {
-    const [row] = await db.update(feedback).set({ status }).where(eq(feedback.id, id)).returning();
+  async getProductFeedbackByUser(userId: string): Promise<ProductFeedback[]> {
+    return db.select().from(productFeedback).where(eq(productFeedback.userId, userId)).orderBy(desc(productFeedback.createdAt));
+  }
+
+  async updateProductFeedbackStatus(id: number, status: string): Promise<ProductFeedback> {
+    const [row] = await db.update(productFeedback).set({ status }).where(eq(productFeedback.id, id)).returning();
     return row;
   }
 }
