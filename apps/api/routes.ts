@@ -1386,8 +1386,12 @@ export async function registerRoutes(app: Express) {
 
       const session = await stripe.checkout.sessions.create(sessionConfig);
       res.json({ url: session.url });
-    } catch (error) {
-      res.status(500).json({ message: "Erreur Stripe" });
+    } catch (error: any) {
+      console.error("Stripe checkout error:", error?.message || error);
+      const msg = error?.type === "StripeInvalidRequestError"
+        ? `Configuration Stripe invalide: ${error.message}`
+        : "Erreur Stripe";
+      res.status(500).json({ message: msg });
     }
   });
 

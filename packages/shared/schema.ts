@@ -205,7 +205,7 @@ export const weddings = pgTable("weddings", {
     texts: {
       siteTitle: "",
       heroTitle: "", // Default: dynamic from title
-      heroSubtitle: "Le Mariage de",
+      heroSubtitle: "Vous êtes cordialement invité(e) au mariage de",
       weddingDate: "", // Default: dynamic from date
       heroCta: "Confirmer votre présence",
       rsvpTitle: "CONFIRMEZ VOTRE PRÉSENCE",

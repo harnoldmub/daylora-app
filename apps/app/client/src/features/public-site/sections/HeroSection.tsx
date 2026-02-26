@@ -79,13 +79,9 @@ export function HeroSection({
               value={heroSubtitle}
               onSave={(val) => onSaveText("heroSubtitle", val)}
               canEdit={canEdit && editMode}
-              placeholder="Vous êtes cordialement invité(e)"
+              placeholder="Vous êtes cordialement invité(e) au mariage de"
               variant={heroImage ? "dark" : "light"}
             />
-          </p>
-
-          <p className="text-xs md:text-sm tracking-[0.2em] uppercase font-light" style={{ color: heroImage ? 'rgba(255,255,255,0.6)' : 'var(--wedding-text-subtle)' }}>
-            au mariage de
           </p>
         </motion.div>
 

@@ -148,7 +148,7 @@ export function TemplateRenderer(props: TemplateRendererProps) {
   } as React.CSSProperties;
 
   const heroTitle = wedding.config?.texts?.heroTitle || wedding.title;
-  const heroSubtitle = wedding.config?.texts?.heroSubtitle || "Le Mariage de";
+  const heroSubtitle = wedding.config?.texts?.heroSubtitle || "Vous êtes cordialement invité(e) au mariage de";
   const heroCta = wedding.config?.texts?.heroCta || "Confirmer votre présence";
   const heroDate = wedding.config?.texts?.weddingDate || (wedding.weddingDate ? new Date(wedding.weddingDate).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "Prochainement");
   const rsvpTitle = wedding.config?.texts?.rsvpTitle || "CONFIRMEZ VOTRE PRÉSENCE";
