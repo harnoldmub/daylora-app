@@ -182,7 +182,7 @@ router.post("/forgot-password", resendLimiter, async (req, res) => {
 
     try {
         const user = await storage.getUserByEmail(email);
-        // Anti-enumeration: always return success
+        console.log(`[auth] forgot-password lookup: user ${user ? "found" : "NOT found"}`);
         let emailDelivery: "sent" | "failed" = "sent";
         let debugResetUrl: string | undefined;
         if (user) {
