@@ -596,8 +596,8 @@ export default function Admin() {
   const handleSendInvitation = () => {
     if (!inviteEmail || !inviteFirstName || !inviteLastName) {
       toast({
-        title: "Champs manquants",
-        description: "Veuillez remplir tous les champs requis",
+        title: "Informations incomplètes",
+        description: "Veuillez renseigner le prénom, le nom et l'email de l'invité.",
         variant: "destructive",
       });
       return;

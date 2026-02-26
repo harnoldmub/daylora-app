@@ -18,7 +18,7 @@ export default function VerifyEmail() {
     useEffect(() => {
         if (!token) {
             setStatus("error");
-            setMessage("Le lien de vérification est incomplet. Vérifiez votre email ou demandez un nouveau lien.");
+            setMessage("Le lien de vérification est incomplet ou invalide. Vérifiez votre email ou demandez un nouveau lien ci-dessous.");
             setShowResend(true);
             return;
         }
@@ -33,12 +33,12 @@ export default function VerifyEmail() {
                     setMessage(data.message);
                 } else {
                     setStatus("error");
-                    setMessage(data.message || "Ce lien n'est plus valide.");
+                    setMessage(data.message || "Ce lien de vérification n'est plus valide ou a expiré. Demandez un nouveau lien ci-dessous.");
                     setShowResend(true);
                 }
             } catch (err) {
                 setStatus("error");
-                setMessage("Impossible de vérifier votre compte pour le moment. Réessayez plus tard.");
+                setMessage("Impossible de vérifier votre compte pour le moment. Vérifiez votre connexion internet et réessayez dans quelques instants.");
                 setShowResend(true);
             }
         }
@@ -58,14 +58,14 @@ export default function VerifyEmail() {
             const data = await res.json();
             if (res.ok) {
                 setResendStatus("sent");
-                setResendMessage("Si un compte existe avec cet email, un nouveau lien vous a été envoyé.");
+                setResendMessage("Si un compte existe avec cette adresse, un nouveau lien de vérification vous a été envoyé. Pensez à vérifier vos spams.");
             } else {
                 setResendStatus("error");
-                setResendMessage(data.message || "Impossible d'envoyer l'email. Réessayez.");
+                setResendMessage(data.message || "Impossible d'envoyer l'email de vérification. Veuillez réessayer dans quelques instants.");
             }
         } catch {
             setResendStatus("error");
-            setResendMessage("Une erreur est survenue. Réessayez plus tard.");
+            setResendMessage("Une erreur est survenue. Vérifiez votre connexion internet et réessayez.");
         }
     };
 
@@ -80,7 +80,7 @@ export default function VerifyEmail() {
                     {status === "loading" && (
                         <div className="flex flex-col items-center space-y-4 py-8">
                             <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                            <p className="text-muted-foreground">Vérification en cours...</p>
+                            <p className="text-muted-foreground">Vérification de votre adresse email en cours…</p>
                         </div>
                     )}
 
@@ -101,7 +101,7 @@ export default function VerifyEmail() {
 
                             {showResend && resendStatus !== "sent" && (
                                 <div className="w-full space-y-3 pt-4 border-t">
-                                    <p className="text-sm text-muted-foreground">Recevoir un nouveau lien de vérification :</p>
+                                    <p className="text-sm text-muted-foreground">Saisissez votre adresse email pour recevoir un nouveau lien :</p>
                                     <div className="flex gap-2">
                                         <Input
                                             type="email"

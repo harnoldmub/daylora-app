@@ -31,11 +31,18 @@ export default function Login() {
     },
   });
 
-  const isUnverified = loginMutation.error?.message.includes("Veuillez confirmer votre adresse email");
+  const isUnverified = loginMutation.error?.message?.includes("Veuillez confirmer votre adresse email") || loginMutation.error?.message?.includes("non vérifié");
 
   const searchParams = new URLSearchParams(window.location.search);
   const justCreated = searchParams.get("created") === "1";
   const oauthError = searchParams.get("error");
+  const oauthErrorMessage = oauthError === "oauth_failed"
+    ? "La connexion via ce service a échoué. Veuillez réessayer ou utiliser votre email."
+    : oauthError === "access_denied"
+    ? "L'accès a été refusé. Veuillez réessayer."
+    : oauthError
+    ? "Une erreur est survenue lors de la connexion. Veuillez réessayer."
+    : null;
 
   useEffect(() => {
     document.title = "Nocely – Connexion";
@@ -62,12 +69,19 @@ export default function Login() {
         </CardHeader>
 
         <CardContent className="space-y-6 p-10 pt-4">
+          {oauthErrorMessage && (
+            <Alert variant="destructive" className="bg-destructive/5 text-destructive border-destructive/20 rounded-2xl">
+              <AlertTitle className="font-bold">Connexion échouée</AlertTitle>
+              <AlertDescription className="text-xs">{oauthErrorMessage}</AlertDescription>
+            </Alert>
+          )}
+
           {justCreated && (
             <Alert className="bg-green-50 text-green-800 border-green-200 rounded-2xl">
               <Heart className="h-4 w-4" />
               <AlertTitle className="font-bold">Compte créé avec succès !</AlertTitle>
               <AlertDescription className="text-xs">
-                Vérifiez vos emails pour activer votre compte, puis connectez-vous.
+                Un email de confirmation vous a été envoyé. Vérifiez votre boîte de réception (et vos spams), puis connectez-vous.
               </AlertDescription>
             </Alert>
           )}
@@ -77,7 +91,7 @@ export default function Login() {
               <Mail className="h-4 w-4" />
               <AlertTitle className="font-bold">Email non vérifié</AlertTitle>
               <AlertDescription className="space-y-2">
-                <p className="text-xs">Merci de confirmer votre inscription via le lien envoyé par email.</p>
+                <p className="text-xs">Votre adresse email n'a pas encore été confirmée. Cliquez sur le lien reçu par email pour activer votre compte. Pensez à vérifier vos spams.</p>
                 <Button
                   type="button"
                   variant="link"

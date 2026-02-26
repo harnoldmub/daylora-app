@@ -256,8 +256,8 @@ export default function GuestsPage() {
     const handleAddGuest = () => {
         if (!newGuest.firstName || !newGuest.lastName) {
             toast({
-                title: "Champs manquants",
-                description: "Merci de renseigner le prénom et le nom.",
+                title: "Informations incomplètes",
+                description: "Veuillez renseigner le prénom et le nom de l'invité.",
                 variant: "destructive",
             });
             return;
@@ -283,8 +283,8 @@ export default function GuestsPage() {
         if (!editGuestId) return;
         if (!editGuest.firstName || !editGuest.lastName) {
             toast({
-                title: "Champs manquants",
-                description: "Merci de renseigner le prénom et le nom.",
+                title: "Informations incomplètes",
+                description: "Veuillez renseigner le prénom et le nom de l'invité.",
                 variant: "destructive",
             });
             return;

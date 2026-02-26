@@ -61,11 +61,11 @@ export function FeedbackModal() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.type) {
-      toast({ title: "Veuillez choisir un type", variant: "destructive" });
+      toast({ title: "Type de feedback requis", description: "Veuillez sélectionner un type (bug, suggestion, amélioration ou autre).", variant: "destructive" });
       return;
     }
     if (!form.message.trim()) {
-      toast({ title: "Le message est requis", variant: "destructive" });
+      toast({ title: "Message requis", description: "Veuillez décrire votre retour avant d'envoyer.", variant: "destructive" });
       return;
     }
 
@@ -100,7 +100,7 @@ export function FeedbackModal() {
           screenshotUrl,
         }),
       });
-      if (!res.ok) throw new Error("Erreur lors de l'envoi");
+      if (!res.ok) throw new Error("Impossible d'envoyer votre feedback.");
 
       toast({ title: "Merci pour votre retour ❤️" });
       setOpen(false);
@@ -108,7 +108,7 @@ export function FeedbackModal() {
       setHoveredStar(0);
       setScreenshotPreview(null);
     } catch {
-      toast({ title: "Erreur lors de l'envoi", variant: "destructive" });
+      toast({ title: "Envoi impossible", description: "Impossible d'envoyer votre feedback pour le moment. Veuillez réessayer.", variant: "destructive" });
     } finally {
       setSubmitting(false);
     }

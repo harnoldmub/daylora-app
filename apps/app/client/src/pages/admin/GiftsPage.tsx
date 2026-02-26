@@ -284,8 +284,8 @@ export default function GiftsPage() {
   const submitCreate = () => {
     if (!form.name.trim()) {
       toast({
-        title: "Nom requis",
-        description: "Le nom du cadeau est requis.",
+        title: "Information manquante",
+        description: "Veuillez saisir un nom pour le cadeau avant de l'ajouter.",
         variant: "destructive",
       });
       return;
@@ -297,8 +297,8 @@ export default function GiftsPage() {
     if (!editingGift) return;
     if (!form.name.trim()) {
       toast({
-        title: "Nom requis",
-        description: "Le nom du cadeau est requis.",
+        title: "Information manquante",
+        description: "Veuillez saisir un nom pour le cadeau avant d'enregistrer.",
         variant: "destructive",
       });
       return;

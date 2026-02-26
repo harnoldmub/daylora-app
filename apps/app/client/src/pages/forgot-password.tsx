@@ -19,7 +19,7 @@ import { useState } from "react";
 import { Loader2, MailCheck } from "lucide-react";
 
 const forgotSchema = z.object({
-    email: z.string().email("Email invalide"),
+    email: z.string().email("Veuillez saisir une adresse email valide."),
 });
 
 export default function ForgotPassword() {
@@ -40,9 +40,9 @@ export default function ForgotPassword() {
         try {
             await apiRequest("POST", "/api/auth/forgot-password", data);
             setIsSent(true);
-            toast({ title: "Email envoyé", description: "Consultez votre boîte mail pour réinitialiser votre mot de passe." });
+            toast({ title: "Email envoyé", description: "Si un compte existe avec cette adresse, vous recevrez un lien de réinitialisation." });
         } catch (err: any) {
-            toast({ title: "Erreur", description: err.message, variant: "destructive" });
+            toast({ title: "Envoi impossible", description: err.message || "Une erreur est survenue. Veuillez réessayer dans quelques instants.", variant: "destructive" });
         } finally {
             setIsLoading(false);
         }
@@ -61,7 +61,7 @@ export default function ForgotPassword() {
                         <div className="text-center py-6 space-y-4">
                             <MailCheck className="h-16 w-16 text-primary mx-auto animate-pulse" />
                             <p className="text-muted-foreground">
-                                Si un compte est associé à l'adresse <strong>{form.getValues("email")}</strong>, vous recevrez un email sous peu.
+                                Si un compte est associé à l'adresse <strong>{form.getValues("email")}</strong>, vous recevrez un email de réinitialisation sous quelques minutes. Pensez à vérifier vos spams.
                             </p>
                             <Link href="/login" title="Retour à la connexion">
                                 <Button variant="outline" className="w-full rounded-full mt-4">Retour à la connexion</Button>

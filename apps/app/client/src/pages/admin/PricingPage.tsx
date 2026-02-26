@@ -44,7 +44,7 @@ export default function PricingPage() {
                         window.location.href = data.url;
                 },
                 onError: (err: any) => {
-                        toast({ title: "Erreur", description: err.message, variant: "destructive" });
+                        toast({ title: "Paiement impossible", description: err.message || "Le service de paiement est temporairement indisponible. Réessayez dans quelques instants.", variant: "destructive" });
                 },
         });
 
@@ -64,7 +64,7 @@ export default function PricingPage() {
                         });
                 },
                 onError: (err: any) => {
-                        toast({ title: "Erreur", description: err.message || "Sync Stripe impossible", variant: "destructive" });
+                        toast({ title: "Synchronisation impossible", description: err.message || "Impossible de synchroniser avec Stripe. Veuillez réessayer.", variant: "destructive" });
                 },
         });
 

@@ -18,7 +18,7 @@ export function useAuth() {
           // Don't block login/signup screens when API returns transient errors in dev.
           if (res.status >= 500) return null;
           const text = await res.text();
-          throw new Error(text || "Impossible de recuperer la session");
+          throw new Error(text || "Impossible de récupérer la session");
         }
         return await res.json();
       } catch {
@@ -42,10 +42,29 @@ export function useAuth() {
       setLocation("/");
     },
     onError: (error: Error) => {
-      // Specialized error handling for unverified emails or invalid credentials
+      const msg = error.message || "";
+      let title = "Connexion impossible";
+      let description = "Identifiants incorrects. Vérifiez votre email et votre mot de passe.";
+
+      if (msg.includes("Veuillez confirmer votre adresse email") || msg.includes("non vérifié")) {
+        title = "Email non vérifié";
+        description = msg;
+      } else if (msg.includes("introuvable") || msg.includes("Aucun compte")) {
+        title = "Compte introuvable";
+        description = "Aucun compte n'est associé à cette adresse email. Vérifiez l'adresse ou créez un compte.";
+      } else if (msg.includes("mot de passe") || msg.includes("incorrect")) {
+        title = "Mot de passe incorrect";
+        description = "Le mot de passe saisi est incorrect. Réessayez ou cliquez sur « Oublié ? » pour le réinitialiser.";
+      } else if (msg.includes("session") || msg.includes("expiré")) {
+        title = "Session expirée";
+        description = "Votre session a expiré. Merci de vous reconnecter.";
+      } else if (msg) {
+        description = msg;
+      }
+
       toast({
-        title: "Échec de connexion",
-        description: error.message,
+        title,
+        description,
         variant: "destructive"
       });
     },
@@ -63,9 +82,26 @@ export function useAuth() {
       });
     },
     onError: (error: Error) => {
+      const msg = error.message || "";
+      let title = "Inscription impossible";
+      let description = "Impossible de créer votre compte. Vérifiez les informations saisies et réessayez.";
+
+      if (msg.includes("existe déjà") || msg.includes("déjà utilisé")) {
+        title = "Adresse email déjà utilisée";
+        description = "Un compte existe déjà avec cette adresse email. Connectez-vous ou utilisez une autre adresse.";
+      } else if (msg.includes("mot de passe")) {
+        title = "Mot de passe invalide";
+        description = "Le mot de passe doit contenir au moins 8 caractères.";
+      } else if (msg.includes("email") && msg.includes("invalide")) {
+        title = "Email invalide";
+        description = "Veuillez saisir une adresse email valide.";
+      } else if (msg) {
+        description = msg;
+      }
+
       toast({
-        title: "Erreur d'inscription",
-        description: error.message,
+        title,
+        description,
         variant: "destructive"
       });
     },
@@ -86,7 +122,14 @@ export function useAuth() {
       await apiRequest("POST", "/api/auth/resend-verification", { email });
     },
     onSuccess: () => {
-      toast({ title: "Email envoyé", description: "Un nouveau lien de vérification vous a été adressé." });
+      toast({ title: "Email envoyé", description: "Un nouveau lien de vérification vous a été envoyé. Pensez à vérifier vos spams." });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Envoi impossible",
+        description: error.message || "Impossible d'envoyer l'email de vérification. Veuillez réessayer dans quelques instants.",
+        variant: "destructive"
+      });
     },
   });
 

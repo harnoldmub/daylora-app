@@ -53,17 +53,17 @@ const TEMPLATES = [
 const MAX_ONBOARDING_GALLERY_IMAGES = 6;
 
 const onboardingSchema = z.object({
-  title: z.string().min(3, "Le titre doit faire au moins 3 caractères"),
+  title: z.string().min(3, "Le titre de votre mariage doit contenir au moins 3 caractères (ex : Marie & Pierre)."),
   slug: z
     .string()
-    .min(3, "Le slug doit faire au moins 3 caractères")
-    .regex(/^[a-z0-9-]+$/, "Uniquement des minuscules, chiffres et tirets"),
-  weddingDate: z.string().min(1, "La date est requise"),
+    .min(3, "L'adresse de votre site doit contenir au moins 3 caractères.")
+    .regex(/^[a-z0-9-]+$/, "L'adresse ne peut contenir que des lettres minuscules, des chiffres et des tirets."),
+  weddingDate: z.string().min(1, "Veuillez indiquer la date de votre mariage."),
   templateId: z.string().default("classic"),
   storyBody: z.string().optional(),
-  email: z.string().email("Email invalide"),
-  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
-  firstName: z.string().min(1, "Le prénom est requis"),
+  email: z.string().email("Veuillez saisir une adresse email valide."),
+  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères."),
+  firstName: z.string().min(1, "Veuillez renseigner votre prénom."),
 });
 
 type OnboardingForm = z.infer<typeof onboardingSchema>;
@@ -128,7 +128,7 @@ export default function Onboarding() {
       if (target === 'hero') setHeroImage(compressed);
       else setCouplePhoto(compressed);
     } catch (err) {
-      toast({ title: "Erreur", description: "L'image est trop lourde.", variant: "destructive" });
+      toast({ title: "Image trop volumineuse", description: "L'image sélectionnée est trop lourde. Essayez une photo de moins de 5 Mo.", variant: "destructive" });
     } finally {
       setIsUploading(false);
     }
@@ -153,7 +153,7 @@ export default function Onboarding() {
       }
       setGalleryImages(next);
     } catch (err) {
-      toast({ title: "Erreur", description: "Une ou plusieurs images sont trop lourdes.", variant: "destructive" });
+      toast({ title: "Images trop volumineuses", description: "Une ou plusieurs images sont trop lourdes. Essayez des photos de moins de 5 Mo chacune.", variant: "destructive" });
     } finally {
       setIsUploading(false);
     }
@@ -181,7 +181,7 @@ export default function Onboarding() {
       if (!valid) return;
     }
     if (step === 5 && paymentMode === "external" && modules.cagnotteEnabled && !externalCagnotteUrl.trim()) {
-      toast({ title: "URL requise", description: "Ajoutez un lien de cagnotte externe ou choisissez Stripe.", variant: "destructive" });
+      toast({ title: "Lien de cagnotte manquant", description: "Veuillez ajouter l'URL de votre cagnotte externe ou choisir le mode Stripe intégré.", variant: "destructive" });
       return;
     }
     if (step === 7) {
@@ -232,8 +232,8 @@ export default function Onboarding() {
       });
 
       if (!response.ok) {
-        const body = await response.json().catch(() => ({ message: "Erreur inconnue" }));
-        throw new Error(body.message || "Création impossible");
+        const body = await response.json().catch(() => ({ message: "Une erreur inattendue est survenue." }));
+        throw new Error(body.message || "Impossible de créer votre site. Veuillez réessayer.");
       }
 
       const result = await response.json();
@@ -247,9 +247,18 @@ export default function Onboarding() {
       setLocation(`/login?email=${encodeURIComponent(data.email)}&created=1`);
     } catch (error: any) {
       setIsLoading(false);
+      const msg = error?.message || "";
+      let description = "Impossible de créer votre site pour le moment. Veuillez réessayer.";
+      if (msg.includes("existe déjà") || msg.includes("already") || msg.includes("déjà utilisé")) {
+        description = "Un compte existe déjà avec cette adresse email. Connectez-vous ou utilisez une autre adresse.";
+      } else if (msg.includes("slug") || msg.includes("URL")) {
+        description = "Cette adresse de site est déjà prise. Choisissez une autre URL.";
+      } else if (msg) {
+        description = msg;
+      }
       toast({
-        title: "Erreur",
-        description: error?.message || "Impossible de créer votre projet. Réessayez.",
+        title: "Création impossible",
+        description,
         variant: "destructive",
       });
     }

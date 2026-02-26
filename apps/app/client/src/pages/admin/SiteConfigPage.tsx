@@ -292,8 +292,8 @@ export default function SiteConfigPage() {
       });
     } catch (_error) {
       toast({
-        title: "Erreur",
-        description: "Impossible d'enregistrer la configuration.",
+        title: "Enregistrement impossible",
+        description: "Impossible d'enregistrer la configuration. Veuillez réessayer.",
         variant: "destructive",
       });
     } finally {

@@ -105,7 +105,7 @@ export const validateRequest = (schema: ZodSchema) => {
             next();
         } catch (error: any) {
             res.status(400).json({
-                message: "Validation échouée",
+                message: "Certaines informations sont incorrectes. Merci de vérifier les champs en rouge.",
                 errors: error.issues
             });
         }

@@ -19,10 +19,10 @@ import { useState } from "react";
 import { Loader2, CheckCircle2 } from "lucide-react";
 
 const resetSchema = z.object({
-    password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
-    confirmPassword: z.string()
+    password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères."),
+    confirmPassword: z.string().min(1, "Veuillez confirmer votre mot de passe.")
 }).refine((data) => data.password === data.confirmPassword, {
-    message: "Les mots de passe ne correspondent pas",
+    message: "Les deux mots de passe ne correspondent pas. Veuillez les saisir à nouveau.",
     path: ["confirmPassword"],
 });
 
@@ -44,7 +44,7 @@ export default function ResetPassword() {
 
     const onSubmit = async (data: any) => {
         if (!token) {
-            toast({ title: "Erreur", description: "Token de réinitialisation manquant.", variant: "destructive" });
+            toast({ title: "Lien invalide", description: "Le lien de réinitialisation est incomplet ou a expiré. Veuillez demander un nouveau lien.", variant: "destructive" });
             return;
         }
 
@@ -52,9 +52,16 @@ export default function ResetPassword() {
         try {
             await apiRequest("POST", "/api/auth/reset-password", { token, password: data.password });
             setIsSuccess(true);
-            toast({ title: "Succès", description: "Votre mot de passe a été réinitialisé." });
+            toast({ title: "Mot de passe modifié", description: "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter." });
         } catch (err: any) {
-            toast({ title: "Erreur", description: err.message, variant: "destructive" });
+            const msg = err.message || "";
+            let description = "Impossible de réinitialiser le mot de passe. Veuillez réessayer.";
+            if (msg.includes("expiré") || msg.includes("expired") || msg.includes("invalide") || msg.includes("invalid")) {
+                description = "Ce lien de réinitialisation a expiré ou n'est plus valide. Veuillez demander un nouveau lien.";
+            } else if (msg) {
+                description = msg;
+            }
+            toast({ title: "Réinitialisation impossible", description, variant: "destructive" });
         } finally {
             setIsLoading(false);
         }
@@ -72,9 +79,9 @@ export default function ResetPassword() {
                     {isSuccess ? (
                         <div className="text-center py-6 space-y-4">
                             <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
-                            <p className="font-medium text-lg">Mot de passe réinitialisé !</p>
+                            <p className="font-medium text-lg">Mot de passe modifié avec succès !</p>
                             <p className="text-muted-foreground text-sm">
-                                Vous pouvez maintenant vous connecter avec vos nouveaux identifiants.
+                                Votre nouveau mot de passe est actif. Connectez-vous dès maintenant.
                             </p>
                             <Link href="/login" title="Se connecter">
                                 <Button className="w-full rounded-full mt-4">Se connecter</Button>

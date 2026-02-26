@@ -4,14 +4,14 @@ const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-/;
 
 const FRIENDLY_ERRORS: Record<number, string> = {
   400: "Requête invalide. Vérifiez les informations saisies.",
-  401: "Veuillez vous connecter pour continuer.",
+  401: "Votre session a expiré. Merci de vous reconnecter.",
   402: "Cette fonctionnalité nécessite un abonnement actif.",
-  403: "Vous n'avez pas les droits pour effectuer cette action.",
+  403: "Vous n'avez pas accès à cette ressource.",
   404: "La ressource demandée est introuvable.",
   409: "Un conflit est survenu. Rechargez la page et réessayez.",
   413: "Le fichier envoyé est trop volumineux.",
-  429: "Trop de requêtes. Patientez quelques instants et réessayez.",
-  500: "Une erreur inattendue s'est produite. Réessayez plus tard.",
+  429: "Trop de requêtes. Veuillez patienter quelques instants.",
+  500: "Une erreur est survenue. Veuillez réessayer.",
   502: "Le serveur est temporairement indisponible. Réessayez dans quelques instants.",
   503: "Service momentanément indisponible. Réessayez plus tard.",
 };
@@ -58,16 +58,21 @@ export async function apiRequest(
   const isAuthEndpoint = url.startsWith("/api/auth");
   const { slug, isUuid, weddingId } = resolveWeddingContext();
 
-  const res = await fetch(url, {
-    method,
-    headers: {
-      ...(data ? { "Content-Type": "application/json" } : {}),
-      ...(!isAuthEndpoint && !isUuid && slug ? { "x-wedding-slug": slug } : {}),
-      ...(!isAuthEndpoint && weddingId ? { "x-wedding-id": weddingId } : {}),
-    },
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method,
+      headers: {
+        ...(data ? { "Content-Type": "application/json" } : {}),
+        ...(!isAuthEndpoint && !isUuid && slug ? { "x-wedding-slug": slug } : {}),
+        ...(!isAuthEndpoint && weddingId ? { "x-wedding-id": weddingId } : {}),
+      },
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+    });
+  } catch {
+    throw new Error("Connexion perdue. Vérifiez votre connexion internet.");
+  }
 
   await throwIfResNotOk(res);
   return res;
@@ -83,13 +88,18 @@ export const getQueryFn: <T>(options: {
       const isAuthEndpoint = url.startsWith("/api/auth");
       const { slug, isUuid, weddingId } = resolveWeddingContext();
 
-      const res = await fetch(url, {
-        headers: {
-          ...(!isAuthEndpoint && !isUuid && slug ? { "x-wedding-slug": slug } : {}),
-          ...(!isAuthEndpoint && weddingId ? { "x-wedding-id": weddingId } : {}),
-        },
-        credentials: "include",
-      });
+      let res: Response;
+      try {
+        res = await fetch(url, {
+          headers: {
+            ...(!isAuthEndpoint && !isUuid && slug ? { "x-wedding-slug": slug } : {}),
+            ...(!isAuthEndpoint && weddingId ? { "x-wedding-id": weddingId } : {}),
+          },
+          credentials: "include",
+        });
+      } catch {
+        throw new Error("Connexion perdue. Vérifiez votre connexion internet.");
+      }
 
       if (unauthorizedBehavior === "returnNull" && res.status === 401) {
         return null;

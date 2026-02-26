@@ -48,8 +48,8 @@ export default function WelcomePage() {
             });
         } catch (error) {
             toast({
-                title: "Erreur",
-                description: "Impossible de modifier le statut de publication",
+                title: "Publication impossible",
+                description: "Impossible de modifier le statut de publication. Veuillez réessayer.",
                 variant: "destructive",
             });
         }

@@ -89,5 +89,5 @@ export function isAuthenticated(req: Request, res: Response, next: NextFunction)
     if (req.isAuthenticated()) {
         return next();
     }
-    res.status(401).json({ message: "Non autorisé" });
+    res.status(401).json({ message: "Votre session a expiré. Merci de vous reconnecter." });
 }

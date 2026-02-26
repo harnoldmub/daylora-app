@@ -381,7 +381,7 @@ export async function registerRoutes(app: Express) {
       const key = await getStripePublishableKey();
       res.json({ key });
     } catch (error) {
-      res.status(500).json({ message: "Stripe key not available" });
+      res.status(500).json({ message: "Le service de paiement est temporairement indisponible. Réessayez dans quelques instants." });
     }
   });
 
@@ -640,7 +640,7 @@ export async function registerRoutes(app: Express) {
       });
       res.status(201).json(wedding);
     } catch (error) {
-      res.status(500).json({ message: "Erreur création mariage" });
+      res.status(500).json({ message: "Une erreur est survenue. Veuillez réessayer ou contacter le support." });
     }
   });
 
@@ -767,7 +767,7 @@ export async function registerRoutes(app: Express) {
       const updated = await storage.updateWedding(id, updates);
       res.json(updated);
     } catch (error) {
-      res.status(500).json({ message: "Erreur mise à jour" });
+      res.status(500).json({ message: "Une erreur est survenue. Veuillez réessayer ou contacter le support." });
     }
   });
 
@@ -801,7 +801,7 @@ export async function registerRoutes(app: Express) {
 
       res.json(response);
     } catch (error) {
-      res.status(400).json({ message: "Invalid request data" });
+      res.status(400).json({ message: "Certaines informations sont incorrectes. Merci de vérifier les champs en rouge." });
     }
   });
 
@@ -811,7 +811,7 @@ export async function registerRoutes(app: Express) {
       const responses = await storage.getAllRsvpResponses(wedding.id);
       res.json(responses);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch RSVPs" });
+      res.status(500).json({ message: "Impossible de charger les réponses. Veuillez réessayer." });
     }
   });
 
@@ -828,7 +828,7 @@ export async function registerRoutes(app: Express) {
       const response = await storage.updateRsvpResponse(wedding.id, id, req.body);
       res.json(response);
     } catch (error) {
-      res.status(400).json({ message: "Invalid request data" });
+      res.status(400).json({ message: "Certaines informations sont incorrectes. Merci de vérifier les champs en rouge." });
     }
   });
 
@@ -839,7 +839,7 @@ export async function registerRoutes(app: Express) {
       const response = await storage.updateRsvpResponse(wedding.id, id, req.body);
       res.json(response);
     } catch (error) {
-      res.status(500).json({ message: "Failed to update RSVP" });
+      res.status(500).json({ message: "Impossible de mettre à jour la réponse. Veuillez réessayer." });
     }
   });
 
@@ -850,7 +850,7 @@ export async function registerRoutes(app: Express) {
       await storage.deleteRsvpResponse(wedding.id, id);
       res.json({ success: true });
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete RSVP" });
+      res.status(500).json({ message: "Impossible de supprimer cette réponse. Veuillez réessayer." });
     }
   });
 
@@ -858,7 +858,7 @@ export async function registerRoutes(app: Express) {
     try {
       const wedding = (req as any).wedding;
       const guests = req.body;
-      if (!Array.isArray(guests)) return res.status(400).json({ message: "Input must be an array" });
+      if (!Array.isArray(guests)) return res.status(400).json({ message: "Le format du fichier est invalide. Utilisez un fichier CSV ou Excel." });
       const results = { success: 0, failed: 0, errors: [] as string[] };
 
       for (const guest of guests) {
@@ -872,7 +872,7 @@ export async function registerRoutes(app: Express) {
       }
       res.json(results);
     } catch (error) {
-      res.status(500).json({ message: "Failed to process bulk import" });
+      res.status(500).json({ message: "L'import des invités a échoué. Vérifiez le format du fichier et réessayez." });
     }
   });
 
@@ -900,7 +900,7 @@ export async function registerRoutes(app: Express) {
       if (!wedding) return res.status(404).json({ message: "Mariage non trouvé" });
       res.json(wedding);
     } catch {
-      res.status(500).json({ message: "Erreur serveur" });
+      res.status(500).json({ message: "Une erreur est survenue. Veuillez réessayer ou contacter le support." });
     }
   });
 
@@ -925,7 +925,7 @@ export async function registerRoutes(app: Express) {
       );
       res.send(pdfBuffer);
     } catch (_error) {
-      res.status(500).json({ message: "Impossible de générer le PDF" });
+      res.status(500).json({ message: "La génération du PDF a échoué. Veuillez réessayer." });
     }
   });
 
@@ -934,7 +934,7 @@ export async function registerRoutes(app: Express) {
       const wedding = (req as any).wedding;
       const id = parseInt(req.params.id);
       const response = await storage.getRsvpResponse(wedding.id, id);
-      if (!response) return res.status(404).json({ message: "Guest not found" });
+      if (!response) return res.status(404).json({ message: "Invité introuvable." });
       const pdfBuffer = await generateInvitationPDF({
         id: response.id,
         firstName: response.firstName,
@@ -945,7 +945,7 @@ export async function registerRoutes(app: Express) {
       res.setHeader("Content-Disposition", `inline; filename=\"invitation-${response.firstName}-${response.lastName}.pdf\"`);
       res.send(pdfBuffer);
     } catch (error) {
-      res.status(500).json({ message: "Failed to generate invitation" });
+      res.status(500).json({ message: "Impossible de générer l'invitation. Veuillez réessayer." });
     }
   });
 
@@ -959,7 +959,7 @@ export async function registerRoutes(app: Express) {
       await sendPersonalizedInvitation(wedding, { email, firstName, lastName, message, publicToken });
       res.json({ success: true });
     } catch (error) {
-      res.status(500).json({ message: "Échec de l'envoi de l'invitation" });
+      res.status(500).json({ message: "L'envoi de l'invitation a échoué. Vérifiez l'adresse email et réessayez." });
     }
   });
 
@@ -968,7 +968,7 @@ export async function registerRoutes(app: Express) {
     const token = req.query.token as string;
     if (!token) return res.status(400).json({ message: "Token manquant" });
     const guest = await storage.getRsvpResponseByPublicToken(token);
-    if (!guest) return res.status(404).json({ message: "Guest not found" });
+    if (!guest) return res.status(404).json({ message: "Invité introuvable." });
     res.json({
       ...guest,
       groupType: guest.partySize > 1 ? "couple" : "solo",
@@ -978,7 +978,7 @@ export async function registerRoutes(app: Express) {
   app.post("/api/checkin/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const guest = await storage.getRsvpResponseById(id);
-    if (!guest) return res.status(404).json({ message: "Guest not found" });
+    if (!guest) return res.status(404).json({ message: "Invité introuvable." });
     const updated = await storage.updateRsvpResponse(guest.weddingId, id, { checkedInAt: new Date() });
     res.json(updated);
   });
@@ -1297,7 +1297,7 @@ export async function registerRoutes(app: Express) {
 
       res.json({ url: session.url });
     } catch (error) {
-      res.status(500).json({ message: "Paiement Stripe indisponible" });
+      res.status(500).json({ message: "Le service de paiement est temporairement indisponible. Réessayez dans quelques instants." });
     }
   });
 
@@ -1389,8 +1389,8 @@ export async function registerRoutes(app: Express) {
     } catch (error: any) {
       console.error("Stripe checkout error:", error?.message || error);
       const msg = error?.type === "StripeInvalidRequestError"
-        ? `Configuration Stripe invalide: ${error.message}`
-        : "Erreur Stripe";
+        ? `Configuration Stripe invalide : ${error.message}`
+        : "Une erreur est survenue avec le paiement. Veuillez réessayer ou contacter le support.";
       res.status(500).json({ message: msg });
     }
   });
@@ -1447,16 +1447,16 @@ export async function registerRoutes(app: Express) {
   app.get("/api/contribution/verify", async (req, res) => {
     try {
       const sessionId = req.query.session_id as string;
-      if (!sessionId) return res.status(400).json({ message: "Missing session_id" });
+      if (!sessionId) return res.status(400).json({ message: "Session de paiement introuvable. Veuillez relancer le processus." });
 
       const stripe = await getUncachableStripeClient();
       const session = await stripe.checkout.sessions.retrieve(sessionId);
       if (session.payment_status !== "paid") {
-        return res.status(400).json({ message: "Payment not completed" });
+        return res.status(400).json({ message: "Le paiement n'a pas abouti. Aucun montant n'a été débité." });
       }
 
       const weddingId = session.metadata?.weddingId;
-      if (!weddingId) return res.status(400).json({ message: "Missing wedding context" });
+      if (!weddingId) return res.status(400).json({ message: "Impossible d'identifier votre site. Veuillez vous reconnecter." });
       const wedding = await storage.getWedding(weddingId);
       if (!wedding) return res.status(404).json({ message: "Mariage introuvable" });
 
@@ -1500,7 +1500,7 @@ export async function registerRoutes(app: Express) {
         contribution,
       });
     } catch (error) {
-      res.status(500).json({ message: "Verification error" });
+      res.status(500).json({ message: "Erreur de vérification. Veuillez réessayer." });
     }
   });
 
@@ -1575,7 +1575,7 @@ export async function registerRoutes(app: Express) {
 
   app.get("/api/admin/feedback", isAuthenticated, async (req, res) => {
     const user = (req as any).user;
-    if (!user.isAdmin) return res.status(403).json({ message: "Forbidden" });
+    if (!user.isAdmin) return res.status(403).json({ message: "Vous n'avez pas accès à cette ressource." });
     const status = req.query.status as string | undefined;
     const list = await storage.listProductFeedback(status);
     res.json(list);
@@ -1584,11 +1584,11 @@ export async function registerRoutes(app: Express) {
   app.patch("/api/admin/feedback/:id", isAuthenticated, async (req, res) => {
     try {
       const user = (req as any).user;
-      if (!user.isAdmin) return res.status(403).json({ message: "Forbidden" });
+      if (!user.isAdmin) return res.status(403).json({ message: "Vous n'avez pas accès à cette ressource." });
       const id = parseInt(req.params.id, 10);
       const { status } = req.body;
       if (!status || !["new", "reviewed", "resolved"].includes(status)) {
-        return res.status(400).json({ message: "Invalid status" });
+        return res.status(400).json({ message: "Statut invalide." });
       }
       const updated = await storage.updateProductFeedbackStatus(id, status);
       res.json(updated);

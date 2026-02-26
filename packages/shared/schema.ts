@@ -499,27 +499,27 @@ export const insertUserSchema = createInsertSchema(users).omit({
 export const insertWeddingSchema = createInsertSchema(weddings).omit({ id: true, createdAt: true, updatedAt: true });
 
 export const signupSchema = z.object({
-  email: z.string().email("Email invalide"),
-  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
-  firstName: z.string().min(1, "Le prénom est requis"),
+  email: z.string().min(1, "Ce champ est obligatoire.").email("Veuillez saisir une adresse email valide."),
+  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères."),
+  firstName: z.string().min(1, "Ce champ est obligatoire."),
 });
 
 export const loginSchema = z.object({
-  email: z.string().email("Email invalide"),
-  password: z.string().min(1, "Mot de passe requis"),
+  email: z.string().min(1, "Ce champ est obligatoire.").email("Veuillez saisir une adresse email valide."),
+  password: z.string().min(1, "Ce champ est obligatoire."),
 });
 
 export const insertRsvpResponseSchema = z.object({
-  firstName: z.string().min(1, "Le prénom est requis"),
-  lastName: z.string().min(1, "Le nom est requis"),
+  firstName: z.string().min(1, "Ce champ est obligatoire."),
+  lastName: z.string().min(1, "Ce champ est obligatoire."),
   email: z.string().optional().nullable()
     .transform(val => !val || val === '' ? null : val)
     .refine(val => !val || z.string().email().safeParse(val).success, {
-      message: "Veuillez entrer une adresse email valide"
+      message: "Veuillez saisir une adresse email valide."
     }),
-  partySize: z.number().int().min(1).max(2, "Sélectionnez Solo (1) ou Couple (2)"),
+  partySize: z.number().int().min(1, "Nombre de personnes invalide.").max(2, "Nombre de personnes invalide."),
   availability: z.enum(['confirmed', 'declined', 'pending'], {
-    errorMap: () => ({ message: "Veuillez sélectionner une option" })
+    errorMap: () => ({ message: "Veuillez indiquer votre disponibilité." })
   }),
   phone: z.string().optional().nullable().transform(val => !val || val === '' ? null : val),
   notes: z.string().optional().nullable().transform(val => !val || val === '' ? null : val),
@@ -528,16 +528,16 @@ export const insertRsvpResponseSchema = z.object({
 export type InsertRsvpResponse = z.infer<typeof insertRsvpResponseSchema>;
 
 export const updateRsvpResponseSchema = z.object({
-  firstName: z.string().min(1, "Le prénom est requis"),
-  lastName: z.string().min(1, "Le nom est requis"),
+  firstName: z.string().min(1, "Ce champ est obligatoire."),
+  lastName: z.string().min(1, "Ce champ est obligatoire."),
   email: z.string().optional().nullable()
     .transform(val => !val || val === '' ? null : val)
     .refine(val => !val || z.string().email().safeParse(val).success, {
-      message: "Veuillez entrer une adresse email valide"
+      message: "Veuillez saisir une adresse email valide."
     }),
-  partySize: z.number().int().min(1).max(5, "Maximum 5 personnes"),
+  partySize: z.number().int().min(1, "Nombre de personnes invalide.").max(5, "Nombre de personnes invalide."),
   availability: z.enum(['confirmed', 'declined', 'pending'], {
-    errorMap: () => ({ message: "Veuillez sélectionner une option" })
+    errorMap: () => ({ message: "Veuillez indiquer votre disponibilité." })
   }),
   tableNumber: z.union([z.number().int().positive(), z.null(), z.undefined()]).optional(),
   notes: z.string().nullable().optional(),
@@ -553,10 +553,10 @@ export const updateRsvpResponseSchema = z.object({
 export type UpdateRsvpResponse = z.infer<typeof updateRsvpResponseSchema>;
 
 export const insertContributionSchema = z.object({
-  donorName: z.string().min(1, "Le nom est requis"),
-  donorEmail: z.string().email("Email invalide").optional().nullable()
+  donorName: z.string().min(1, "Ce champ est obligatoire."),
+  donorEmail: z.string().email("Veuillez saisir une adresse email valide.").optional().nullable()
     .transform(val => !val || val === '' ? null : val),
-  amount: z.number().int().min(100, "Le montant minimum est de 1 euro"),
+  amount: z.number().int().min(100, "Le montant minimum est de 1 euro."),
   message: z.string().optional().nullable().transform(val => !val || val === '' ? null : val),
 });
 

@@ -148,9 +148,9 @@ export default function InvitationPage() {
     if (!wedding) return;
     try {
       await updateWedding.mutateAsync({ id: wedding.id, config: { texts: { [key]: value } } });
-      toast({ title: "Modifications enregistrées" });
+      toast({ title: "Modifications enregistrées ✓" });
     } catch {
-      toast({ title: "Erreur lors de la sauvegarde", variant: "destructive" });
+      toast({ title: "Sauvegarde impossible", description: "Vos modifications n'ont pas pu être enregistrées. Veuillez réessayer.", variant: "destructive" });
     }
   };
 
@@ -175,7 +175,7 @@ export default function InvitationPage() {
     try {
       await updateWedding.mutateAsync({ id: wedding.id, config: { sections: { countdownDate: value } } });
     } catch {
-      toast({ title: "Erreur", description: "Impossible d'enregistrer le countdown.", variant: "destructive" });
+      toast({ title: "Sauvegarde impossible", description: "La date du compte à rebours n'a pas pu être enregistrée. Veuillez réessayer.", variant: "destructive" });
     }
   };
 
@@ -185,7 +185,7 @@ export default function InvitationPage() {
     try {
       await updateWedding.mutateAsync({ id: wedding.id, config: { media: { [key]: value } } });
     } catch {
-      toast({ title: "Erreur", description: "Impossible d'enregistrer l'image.", variant: "destructive" });
+      toast({ title: "Sauvegarde impossible", description: "L'image n'a pas pu être enregistrée. Veuillez réessayer.", variant: "destructive" });
     }
   };
 
@@ -201,8 +201,8 @@ export default function InvitationPage() {
       });
       await updateMedia(key, compressed);
     } catch (err: any) {
-      const msg = String(err?.message) === "too_large" ? "Image trop lourde. Importez une image plus légère." : "Impossible d'importer l'image.";
-      toast({ title: "Erreur", description: msg, variant: "destructive" });
+      const msg = String(err?.message) === "too_large" ? "Cette image est trop volumineuse. Essayez avec une image plus légère (max 2 Mo recommandé)." : "L'image n'a pas pu être importée. Vérifiez le format (JPG, PNG) et réessayez.";
+      toast({ title: "Import impossible", description: msg, variant: "destructive" });
     } finally {
       setIsUploading((prev) => ({ ...prev, [key]: false }));
       event.target.value = "";
@@ -216,7 +216,7 @@ export default function InvitationPage() {
     try {
       await updateWedding.mutateAsync({ id: wedding.id, config: { sections: { locationItems: nextItems } } });
     } catch {
-      toast({ title: "Erreur", description: "Impossible d'enregistrer le lieu.", variant: "destructive" });
+      toast({ title: "Sauvegarde impossible", description: "Le lieu n'a pas pu être enregistré. Veuillez réessayer.", variant: "destructive" });
     }
   };
 
@@ -226,7 +226,7 @@ export default function InvitationPage() {
     try {
       await updateWedding.mutateAsync({ id: wedding.id, config: { sections: { locationItems: currentItems.filter((_, idx) => idx !== index) } } });
     } catch {
-      toast({ title: "Erreur", description: "Impossible de supprimer le lieu.", variant: "destructive" });
+      toast({ title: "Suppression impossible", description: "Le lieu n'a pas pu être supprimé. Veuillez réessayer.", variant: "destructive" });
     }
   };
 
@@ -236,7 +236,7 @@ export default function InvitationPage() {
     try {
       await updateWedding.mutateAsync({ id: wedding.id, config: { sections: { locationItems: [...currentItems, { title: "Nouveau lieu", address: "", description: "" }] } } });
     } catch {
-      toast({ title: "Erreur", description: "Impossible d'ajouter le lieu.", variant: "destructive" });
+      toast({ title: "Ajout impossible", description: "Le lieu n'a pas pu être ajouté. Veuillez réessayer.", variant: "destructive" });
     }
   };
 
@@ -247,7 +247,7 @@ export default function InvitationPage() {
     try {
       await updateWedding.mutateAsync({ id: wedding.id, config: { sections: { programItems: nextItems } } });
     } catch {
-      toast({ title: "Erreur", description: "Impossible d'enregistrer le déroulé.", variant: "destructive" });
+      toast({ title: "Sauvegarde impossible", description: "Le programme n'a pas pu être enregistré. Veuillez réessayer.", variant: "destructive" });
     }
   };
 
@@ -257,7 +257,7 @@ export default function InvitationPage() {
     try {
       await updateWedding.mutateAsync({ id: wedding.id, config: { sections: { programItems: currentItems.filter((_, idx) => idx !== index) } } });
     } catch {
-      toast({ title: "Erreur", description: "Impossible de supprimer l'étape.", variant: "destructive" });
+      toast({ title: "Suppression impossible", description: "L'étape n'a pas pu être supprimée. Veuillez réessayer.", variant: "destructive" });
     }
   };
 
@@ -267,7 +267,7 @@ export default function InvitationPage() {
     try {
       await updateWedding.mutateAsync({ id: wedding.id, config: { sections: { programItems: [...currentItems, { time: "12:00", title: "Nouvelle étape", description: "" }] } } });
     } catch {
-      toast({ title: "Erreur", description: "Impossible d'ajouter l'étape.", variant: "destructive" });
+      toast({ title: "Ajout impossible", description: "L'étape n'a pas pu être ajoutée. Veuillez réessayer.", variant: "destructive" });
     }
   };
 
@@ -278,7 +278,7 @@ export default function InvitationPage() {
     try {
       await updateWedding.mutateAsync({ id: wedding.id, config: { navigation: { heroCtaPath: normalized } as any } });
     } catch {
-      toast({ title: "Erreur", description: "Impossible d'enregistrer l'action du bouton.", variant: "destructive" });
+      toast({ title: "Sauvegarde impossible", description: "L'action du bouton n'a pas pu être enregistrée. Veuillez réessayer.", variant: "destructive" });
     }
   };
 
@@ -289,7 +289,7 @@ export default function InvitationPage() {
     try {
       await updateWedding.mutateAsync({ id: wedding.id, config: { sections: { cagnotteExternalUrl: next } as any } });
     } catch {
-      toast({ title: "Erreur", description: "Impossible d'enregistrer le lien de cagnotte.", variant: "destructive" });
+      toast({ title: "Sauvegarde impossible", description: "Le lien de cagnotte n'a pas pu être enregistré. Veuillez réessayer.", variant: "destructive" });
     }
   };
 
@@ -298,7 +298,7 @@ export default function InvitationPage() {
     try {
       await updateWedding.mutateAsync({ id: wedding.id, config: { sections: { galleryImages: nextImages.slice(0, MAX_GALLERY_IMAGES) } } });
     } catch {
-      toast({ title: "Erreur", description: "Impossible d'enregistrer la galerie.", variant: "destructive" });
+      toast({ title: "Sauvegarde impossible", description: "La galerie n'a pas pu être enregistrée. Veuillez réessayer.", variant: "destructive" });
     }
   };
 
@@ -308,7 +308,7 @@ export default function InvitationPage() {
     const remaining = Math.max(0, MAX_GALLERY_IMAGES - current.length);
     const batch = Array.from(files).slice(0, remaining);
     if (batch.length === 0) {
-      toast({ title: "Galerie pleine", description: "Maximum 10 photos.", variant: "destructive" });
+      toast({ title: "Galerie complète", description: "Vous avez atteint la limite de 10 photos. Supprimez une photo existante pour en ajouter une nouvelle.", variant: "destructive" });
       return;
     }
     const next: string[] = [...current];
@@ -317,8 +317,8 @@ export default function InvitationPage() {
         const compressed = await compressImageFileToJpegDataUrl(file, { maxSize: 1200, quality: 0.82, maxDataUrlLength: MAX_GALLERY_IMAGE_DATA_URL_LENGTH });
         next.push(compressed);
       } catch (err: any) {
-        const msg = String(err?.message) === "too_large" ? "Une photo est trop lourde." : "Impossible d'importer une photo.";
-        toast({ title: "Erreur", description: msg, variant: "destructive" });
+        const msg = String(err?.message) === "too_large" ? "Cette photo est trop volumineuse. Essayez avec une image plus légère." : "Cette photo n'a pas pu être importée. Vérifiez le format et réessayez.";
+        toast({ title: "Import impossible", description: msg, variant: "destructive" });
       }
     }
     await saveGalleryImages(next);
@@ -399,7 +399,7 @@ export default function InvitationPage() {
       }));
       toast({ title: "Informations récupérées" });
     } catch {
-      toast({ title: "Récupération impossible", description: "Remplissez les champs manuellement.", variant: "destructive" });
+      toast({ title: "Récupération impossible", description: "Les informations du lien n'ont pas pu être récupérées. Vous pouvez remplir les champs manuellement.", variant: "destructive" });
     } finally {
       setGiftScraping(false);
     }
@@ -407,33 +407,33 @@ export default function InvitationPage() {
 
   const createGiftMutation = useMutation({
     mutationFn: async (payload: any) => { const res = await apiRequest("POST", "/api/gifts", payload); return res.json(); },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/gifts/public"] }); queryClient.invalidateQueries({ queryKey: ["/api/gifts"] }); toast({ title: "Cadeau enregistré" }); setGiftDialogOpen(false); },
-    onError: (error: Error) => { toast({ title: "Erreur", description: error.message || "Impossible d'enregistrer le cadeau.", variant: "destructive" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/gifts/public"] }); queryClient.invalidateQueries({ queryKey: ["/api/gifts"] }); toast({ title: "Cadeau ajouté avec succès ✓" }); setGiftDialogOpen(false); },
+    onError: (error: Error) => { toast({ title: "Enregistrement impossible", description: error.message || "Le cadeau n'a pas pu être enregistré. Veuillez réessayer.", variant: "destructive" }); },
   });
 
   const updateGiftMutation = useMutation({
     mutationFn: async ({ id, payload }: { id: number; payload: any }) => { const res = await apiRequest("PATCH", `/api/gifts/${id}`, payload); return res.json(); },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/gifts/public"] }); queryClient.invalidateQueries({ queryKey: ["/api/gifts"] }); toast({ title: "Cadeau mis à jour" }); setGiftDialogOpen(false); },
-    onError: (error: Error) => { toast({ title: "Erreur", description: error.message || "Impossible de modifier le cadeau.", variant: "destructive" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/gifts/public"] }); queryClient.invalidateQueries({ queryKey: ["/api/gifts"] }); toast({ title: "Cadeau mis à jour ✓" }); setGiftDialogOpen(false); },
+    onError: (error: Error) => { toast({ title: "Modification impossible", description: error.message || "Le cadeau n'a pas pu être modifié. Veuillez réessayer.", variant: "destructive" }); },
   });
 
   const deleteGiftMutation = useMutation({
     mutationFn: async (id: number) => { const res = await apiRequest("DELETE", `/api/gifts/${id}`); return res.json(); },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/gifts/public"] }); queryClient.invalidateQueries({ queryKey: ["/api/gifts"] }); toast({ title: "Cadeau supprimé" }); setGiftDeleteOpen(false); setGiftDeleting(null); },
-    onError: (error: Error) => { toast({ title: "Erreur", description: error.message || "Impossible de supprimer le cadeau.", variant: "destructive" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/gifts/public"] }); queryClient.invalidateQueries({ queryKey: ["/api/gifts"] }); toast({ title: "Cadeau supprimé ✓" }); setGiftDeleteOpen(false); setGiftDeleting(null); },
+    onError: (error: Error) => { toast({ title: "Suppression impossible", description: error.message || "Le cadeau n'a pas pu être supprimé. Veuillez réessayer.", variant: "destructive" }); },
   });
 
   const handleReserveGift = async (giftId: number, guestName: string) => {
     const res = await apiRequest("POST", `/api/gifts/${giftId}/reserve`, { guestName });
-    if (!res.ok) { const data = await res.json().catch(() => ({})); throw new Error(data.message || "Erreur"); }
+    if (!res.ok) { const data = await res.json().catch(() => ({})); throw new Error(data.message || "La réservation n'a pas pu être effectuée. Veuillez réessayer."); }
     queryClient.invalidateQueries({ queryKey: ["/api/gifts/public"] });
     queryClient.invalidateQueries({ queryKey: ["/api/gifts"] });
-    toast({ title: "Cadeau réservé", description: `${guestName} prend en charge ce cadeau.` });
+    toast({ title: "Cadeau réservé ✓", description: `Merci ${guestName} ! Votre réservation a bien été enregistrée.` });
   };
 
   const submitGift = () => {
     const name = giftForm.name.trim();
-    if (!name) { toast({ title: "Champ requis", description: "Le nom du cadeau est requis.", variant: "destructive" }); return; }
+    if (!name) { toast({ title: "Information manquante", description: "Veuillez saisir le nom du cadeau pour continuer.", variant: "destructive" }); return; }
     const price = giftForm.price.trim() ? Number(giftForm.price.trim()) : null;
     const payload = { name, description: giftForm.description.trim() || null, imageUrl: giftForm.imageUrl || null, sourceUrl: giftForm.sourceUrl.trim() || null, price: Number.isFinite(price as any) ? price : null };
     if (giftEditing?.id) updateGiftMutation.mutate({ id: giftEditing.id, payload });
@@ -445,8 +445,8 @@ export default function InvitationPage() {
       const compressed = await compressImageFileToJpegDataUrl(file, { maxSize: 1200, quality: 0.82, maxDataUrlLength: MAX_GIFT_IMAGE_DATA_URL_LENGTH });
       setGiftForm((prev) => ({ ...prev, imageUrl: compressed }));
     } catch (err: any) {
-      const msg = String(err?.message) === "too_large" ? "Image trop lourde." : "Impossible d'importer l'image.";
-      toast({ title: "Erreur", description: msg, variant: "destructive" });
+      const msg = String(err?.message) === "too_large" ? "Cette image est trop volumineuse. Essayez avec une image plus légère." : "L'image n'a pas pu être importée. Vérifiez le format et réessayez.";
+      toast({ title: "Import impossible", description: msg, variant: "destructive" });
     }
   };
 

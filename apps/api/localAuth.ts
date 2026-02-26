@@ -73,5 +73,5 @@ export const isLocallyAuthenticated: RequestHandler = (req, res, next) => {
   if (req.isAuthenticated() && (req.user as any)?.isAdmin) {
     return next();
   }
-  return res.status(401).json({ message: "Non autorisé" });
+  return res.status(401).json({ message: "Votre session a expiré. Merci de vous reconnecter." });
 };

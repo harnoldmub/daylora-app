@@ -81,8 +81,8 @@ export function RSVPSection({
     },
     onError: (error: Error) => {
       toast({
-        title: "Erreur",
-        description: error.message || "Une erreur s'est produite.",
+        title: "Envoi impossible",
+        description: error.message || "Nous n'avons pas pu enregistrer votre réponse. Veuillez vérifier vos informations et réessayer.",
         variant: "destructive",
       });
     },
@@ -239,8 +239,8 @@ export function RSVPSection({
         ) : (
           <div className={`text-center py-20 rounded-3xl border ${tokens.rsvp.card}`}>
             <Check className="h-24 w-24 text-primary mx-auto mb-8 drop-shadow-xl" />
-            <h3 className="text-4xl font-serif font-black mb-4">Merci !</h3>
-            <p className="opacity-60 mb-10 text-lg">Nous avons bien reçu votre réponse.</p>
+            <h3 className="text-4xl font-serif font-black mb-4">Merci beaucoup !</h3>
+            <p className="opacity-60 mb-10 text-lg">Votre réponse a bien été enregistrée. Les mariés ont été notifiés.</p>
             <Button variant="outline" size="lg" className="rounded-full px-10" onClick={() => setIsSubmitted(false)}>Ajouter une autre réponse</Button>
           </div>
         )}

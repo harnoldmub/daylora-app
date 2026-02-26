@@ -20,14 +20,14 @@ import { apiRequest } from "@/lib/queryClient";
 import { z } from "zod";
 
 const contributionFormSchema = z.object({
-  donorName: z.string().min(1, "Veuillez entrer votre nom"),
-  donorEmail: z.string().email("Email invalide").optional().or(z.literal("")),
-  amount: z.string().min(1, "Veuillez entrer un montant").refine(
+  donorName: z.string().min(1, "Veuillez saisir votre nom pour que les mariés sachent qui contribue."),
+  donorEmail: z.string().email("Veuillez saisir une adresse email valide.").optional().or(z.literal("")),
+  amount: z.string().min(1, "Veuillez indiquer le montant de votre contribution.").refine(
     (val) => {
       const num = parseFloat(val);
       return !isNaN(num) && num >= 1;
     },
-    { message: "Le montant minimum est de 1 euro" }
+    { message: "Le montant minimum est de 1 €." }
   ),
 });
 
@@ -60,8 +60,8 @@ export function ContributionForm() {
     },
     onError: (error: any) => {
       toast({
-        title: "Erreur",
-        description: error.message || "Impossible de créer la session de paiement",
+        title: "Paiement indisponible",
+        description: error.message || "Le service de paiement est temporairement indisponible. Veuillez réessayer dans quelques instants.",
         variant: "destructive",
       });
     },

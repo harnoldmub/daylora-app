@@ -31,7 +31,7 @@ export default function TemplatesPage() {
                 if (wedding.templateId === templateId) return;
                 const tmpl = TEMPLATES.find(t => t.id === templateId);
                 if (tmpl?.premium && wedding.currentPlan !== "premium") {
-                        toast({ title: "Template Premium", description: "Passez au plan Premium pour accéder à ce template.", variant: "destructive" });
+                        toast({ title: "Template réservé au plan Premium", description: "Ce template est disponible avec le plan Premium. Rendez-vous dans Facturation pour l'activer.", variant: "destructive" });
                         return;
                 }
                 setIsApplying(true);
@@ -48,8 +48,8 @@ export default function TemplatesPage() {
                         setPreviewToken(Date.now());
                 } catch (error) {
                         toast({
-                                title: "Erreur",
-                                description: "Impossible de mettre à jour le design.",
+                                title: "Mise à jour impossible",
+                                description: "Impossible d'appliquer ce template pour le moment. Veuillez réessayer.",
                                 variant: "destructive",
                         });
                 } finally {
