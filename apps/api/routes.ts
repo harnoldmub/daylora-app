@@ -1368,13 +1368,19 @@ export async function registerRoutes(app: Express) {
         }
       }
 
+      const existingSub = await storage.getSubscriptionByWedding(wedding.id);
+
       const sessionConfig: any = {
         mode: type === "subscription" ? "subscription" : "payment",
         line_items: [{ price: priceId, quantity: 1 }],
         metadata: { weddingId: wedding.id, purpose: "billing", billingType: type, referralCode: validatedReferralCode || undefined, userId },
-        success_url: `${process.env.APP_BASE_URL || "http://localhost:5174"}/${wedding.id}/billing?success=1&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.APP_BASE_URL || "http://localhost:5174"}/${wedding.id}/billing?canceled=1`,
+        success_url: `${process.env.APP_BASE_URL || "https://app.nocely.app"}/${wedding.id}/billing?success=1&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.APP_BASE_URL || "https://app.nocely.app"}/${wedding.id}/billing?canceled=1`,
       };
+
+      if (existingSub?.stripeCustomerId) {
+        sessionConfig.customer = existingSub.stripeCustomerId;
+      }
 
       if (type === "subscription") {
         sessionConfig.subscription_data = { metadata: { weddingId: wedding.id, purpose: "billing" } };
@@ -1434,6 +1440,8 @@ export async function registerRoutes(app: Express) {
         priceId: preferred?.items?.data?.[0]?.price?.id || null,
         status: String(preferred.status || "incomplete"),
         currentPeriodEnd: preferred?.current_period_end ? new Date(preferred.current_period_end * 1000) : null,
+        cancelAtPeriodEnd: !!preferred?.cancel_at_period_end,
+        subscriptionStartDate: preferred?.created ? new Date(preferred.created * 1000) : null,
       });
       const isPremium = ["active", "trialing"].includes(String(preferred.status || ""));
       await storage.updateWedding(wedding.id, { currentPlan: isPremium ? "premium" : "free" });
@@ -1441,6 +1449,150 @@ export async function registerRoutes(app: Express) {
       res.json({ ok: true, found: true, status: preferred.status, currentPlan: isPremium ? "premium" : "free" });
     } catch (error: any) {
       res.status(500).json({ message: "Sync Stripe impossible : " + (error?.message || "erreur inconnue") });
+    }
+  });
+
+  app.get("/api/billing/info", isAuthenticated, withWedding, async (req, res) => {
+    try {
+      const wedding = (req as any).wedding;
+      const sub = await storage.getSubscriptionByWedding(wedding.id);
+
+      if (!sub || !sub.stripeSubscriptionId) {
+        return res.json({
+          plan: wedding.currentPlan || "free",
+          status: null,
+          cancelAtPeriodEnd: false,
+          currentPeriodEnd: null,
+          amount: null,
+          interval: null,
+          invoices: [],
+          canCancel: true,
+          engagementEndDate: null,
+          subscriptionStart: null,
+        });
+      }
+
+      let stripe;
+      try {
+        stripe = await getUncachableStripeClient();
+      } catch {
+        return res.json({
+          plan: wedding.currentPlan || "free",
+          status: sub.status,
+          cancelAtPeriodEnd: sub.cancelAtPeriodEnd || false,
+          currentPeriodEnd: sub.currentPeriodEnd,
+          amount: null,
+          interval: null,
+          invoices: [],
+          canCancel: true,
+          engagementEndDate: null,
+          subscriptionStart: sub.subscriptionStartDate,
+        });
+      }
+
+      let stripeSub: any = null;
+      try {
+        stripeSub = await stripe.subscriptions.retrieve(sub.stripeSubscriptionId);
+      } catch {}
+
+      let invoices: any[] = [];
+      try {
+        const invoiceList = await stripe.invoices.list({
+          customer: sub.stripeCustomerId,
+          limit: 12,
+        });
+        invoices = (invoiceList.data || []).map((inv: any) => ({
+          id: inv.id,
+          date: inv.created ? new Date(inv.created * 1000).toISOString() : null,
+          amount: inv.amount_paid != null ? inv.amount_paid / 100 : 0,
+          status: inv.status,
+          pdfUrl: inv.invoice_pdf || null,
+        }));
+      } catch {}
+
+      const amount = stripeSub?.items?.data?.[0]?.price?.unit_amount
+        ? stripeSub.items.data[0].price.unit_amount / 100
+        : null;
+      const interval = stripeSub?.items?.data?.[0]?.price?.recurring?.interval || null;
+      const subscriptionStart = stripeSub?.created
+        ? new Date(stripeSub.created * 1000)
+        : sub.subscriptionStartDate;
+
+      let canCancel = true;
+      let engagementEndDate: Date | null = null;
+      if (interval === "month" && subscriptionStart) {
+        const start = new Date(subscriptionStart);
+        engagementEndDate = new Date(start);
+        engagementEndDate.setMonth(engagementEndDate.getMonth() + 2);
+        if (new Date() < engagementEndDate) {
+          canCancel = false;
+        }
+      }
+
+      res.json({
+        plan: wedding.currentPlan || "free",
+        status: stripeSub?.status || sub.status,
+        cancelAtPeriodEnd: stripeSub?.cancel_at_period_end || sub.cancelAtPeriodEnd || false,
+        currentPeriodEnd: stripeSub?.current_period_end
+          ? new Date(stripeSub.current_period_end * 1000).toISOString()
+          : sub.currentPeriodEnd,
+        amount,
+        interval,
+        invoices,
+        canCancel,
+        engagementEndDate: engagementEndDate ? engagementEndDate.toISOString() : null,
+        subscriptionStart: subscriptionStart ? new Date(subscriptionStart).toISOString() : null,
+      });
+    } catch (error: any) {
+      console.error("Billing info error:", error?.message);
+      res.status(500).json({ message: "Impossible de charger les informations de facturation." });
+    }
+  });
+
+  app.post("/api/billing/portal", isAuthenticated, withWedding, async (req, res) => {
+    try {
+      const wedding = (req as any).wedding;
+      const user = (req as any).user;
+
+      let stripe;
+      try {
+        stripe = await getUncachableStripeClient();
+      } catch {
+        return res.status(503).json({ message: "Le service de paiement est temporairement indisponible." });
+      }
+
+      let customerId: string | null = null;
+      const sub = await storage.getSubscriptionByWedding(wedding.id);
+      if (sub?.stripeCustomerId) {
+        customerId = sub.stripeCustomerId;
+      }
+
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { weddingId: wedding.id, userId: user.id },
+        });
+        customerId = customer.id;
+        await storage.upsertStripeSubscription({
+          weddingId: wedding.id,
+          stripeCustomerId: customerId,
+          stripeSubscriptionId: `pending_${wedding.id}`,
+          status: "incomplete",
+        });
+      }
+
+      const returnUrl = `${process.env.APP_BASE_URL || "https://app.nocely.app"}/${wedding.id}/billing`;
+
+      const portalSession = await stripe.billingPortal.sessions.create({
+        customer: customerId,
+        return_url: returnUrl,
+        locale: "fr",
+      });
+
+      res.json({ url: portalSession.url });
+    } catch (error: any) {
+      console.error("Billing portal error:", error?.message);
+      res.status(500).json({ message: "Impossible d'ouvrir le portail de facturation. Veuillez réessayer." });
     }
   });
 

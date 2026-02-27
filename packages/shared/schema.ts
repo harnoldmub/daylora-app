@@ -448,8 +448,10 @@ export const stripeSubscriptions = pgTable("stripe_subscriptions", {
   stripeCustomerId: varchar("stripe_customer_id", { length: 255 }).notNull(),
   stripeSubscriptionId: varchar("stripe_subscription_id", { length: 255 }).unique(),
   priceId: varchar("price_id", { length: 255 }),
-  status: varchar("status", { length: 20 }).notNull(), // 'active', 'canceled', 'incomplete'
+  status: varchar("status", { length: 20 }).notNull(),
   currentPeriodEnd: timestamp("current_period_end"),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
+  subscriptionStartDate: timestamp("subscription_start_date"),
   featureFlags: jsonb("feature_flags").default({}),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

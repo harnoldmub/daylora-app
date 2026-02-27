@@ -29,6 +29,10 @@ export async function handleStripeWebhook(req: Request, res: Response) {
         currentPeriodEnd: subscription?.current_period_end
           ? new Date(subscription.current_period_end * 1000)
           : null,
+        cancelAtPeriodEnd: !!subscription?.cancel_at_period_end,
+        subscriptionStartDate: subscription?.created
+          ? new Date(subscription.created * 1000)
+          : null,
       });
       const isPremium = ["active", "trialing"].includes(String(subscription?.status || ""));
       await storage.updateWedding(wId, { currentPlan: isPremium ? "premium" : "free" });

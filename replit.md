@@ -35,9 +35,11 @@ PostgreSQL, hosted on Neon serverless, serves as the database. Core tables inclu
 -   **Guest Invitation Page**: Personalized invitation at `/:slug/guest/:guestId` (dot-invitation.tsx). Features RSVP status display (confirmed/pending/declined), table number, party size, dynamic theme colors, vertical timeline, QR code, cagnotte section, and "Voir notre site" link.
 -   **Guided Tour**: Per-page contextual tours using `GuidedTour` component with `steps` and `tourId` props. Each page defines its own tour steps. Completion stored per-tour in localStorage (`nocely_tour_${tourId}_done`). Reset via `resetAllTours()` from Settings page.
 
+-   **Billing & Customer Portal**: Stripe Customer Portal integrated for subscription management. Premium users see a billing dashboard with plan status, next payment date, invoice history (with PDF links), and a "Gérer mon abonnement" button that opens the Stripe-hosted portal. Monthly plan has 2-month minimum engagement (soft enforcement via UI messaging). API: `GET /api/billing/info` (subscription details + invoices), `POST /api/billing/portal` (create portal session), `POST /api/billing/checkout` (create checkout session), `POST /api/billing/sync` (sync with Stripe). The `stripe_subscriptions` table tracks `cancelAtPeriodEnd`, `subscriptionStartDate` for engagement calculation. Webhook handles `cancel_at_period_end` from portal-initiated cancellations.
+
 ## External Dependencies
 
 -   **Database**: Neon PostgreSQL
--   **Payments**: Stripe Connect
+-   **Payments**: Stripe Connect + Stripe Customer Portal
 -   **Email**: Resend
 -   **Authentication**: Passport.js (local strategy)
