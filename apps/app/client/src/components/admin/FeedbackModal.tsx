@@ -130,6 +130,7 @@ export function FeedbackModal() {
               variant="ghost"
               size="sm"
               className="flex-1 justify-start text-sidebar-foreground/70 hover:text-amber-600"
+              data-feedback-trigger
             >
               <MessageSquarePlus className="mr-2 h-4 w-4" />
               Feedback

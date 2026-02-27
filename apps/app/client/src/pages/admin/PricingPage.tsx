@@ -15,6 +15,9 @@ import {
   CreditCard,
   Clock,
   Ban,
+  HelpCircle,
+  MessageSquare,
+  Mail,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -446,6 +449,8 @@ export default function PricingPage() {
           </div>
         </Card>
       </div>
+
+      <HelpCard />
     </div>
   );
 }
@@ -715,6 +720,8 @@ function PremiumBillingView({
               </div>
             </Card>
           )}
+
+          <HelpCard />
         </>
       )}
     </div>
@@ -754,6 +761,43 @@ function ReferralCard({
           {referralData.usageCount > 1 ? "s" : ""}
         </p>
       )}
+    </Card>
+  );
+}
+
+function HelpCard() {
+  return (
+    <Card className="p-6 border-muted bg-muted/30">
+      <div className="flex items-start gap-4">
+        <div className="rounded-full bg-primary/10 p-2.5 shrink-0">
+          <HelpCircle className="h-5 w-5 text-primary" />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-base mb-1">Besoin d'aide ?</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Une question sur votre abonnement, un paiement ou une facture ? Notre équipe est disponible pour vous accompagner.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <a href="mailto:support@nocely.app" className="inline-flex">
+              <Button variant="outline" size="sm">
+                <Mail className="mr-2 h-4 w-4" />
+                support@nocely.app
+              </Button>
+            </a>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const btn = document.querySelector<HTMLButtonElement>("[data-feedback-trigger]");
+                if (btn) btn.click();
+              }}
+            >
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Envoyer un message
+            </Button>
+          </div>
+        </div>
+      </div>
     </Card>
   );
 }
