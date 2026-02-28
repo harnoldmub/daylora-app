@@ -1374,8 +1374,8 @@ export async function registerRoutes(app: Express) {
         mode: type === "subscription" ? "subscription" : "payment",
         line_items: [{ price: priceId, quantity: 1 }],
         metadata: { weddingId: wedding.id, purpose: "billing", billingType: type, referralCode: validatedReferralCode || undefined, userId },
-        success_url: `${process.env.APP_BASE_URL || "https://app.daylora.app"}/${wedding.id}/billing?success=1&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.APP_BASE_URL || "https://app.daylora.app"}/${wedding.id}/billing?canceled=1`,
+        success_url: `${process.env.APP_BASE_URL || "https://daylora.app"}/${wedding.id}/billing?success=1&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.APP_BASE_URL || "https://daylora.app"}/${wedding.id}/billing?canceled=1`,
       };
 
       if (existingSub?.stripeCustomerId) {
@@ -1581,7 +1581,7 @@ export async function registerRoutes(app: Express) {
         });
       }
 
-      const returnUrl = `${process.env.APP_BASE_URL || "https://app.daylora.app"}/${wedding.id}/billing`;
+      const returnUrl = `${process.env.APP_BASE_URL || "https://daylora.app"}/${wedding.id}/billing`;
 
       const portalSession = await stripe.billingPortal.sessions.create({
         customer: customerId,

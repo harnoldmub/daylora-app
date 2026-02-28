@@ -104,7 +104,7 @@ export default function SettingsPage() {
       .catch(() => null);
   }, []);
 
-  const appOrigin = typeof window !== "undefined" ? window.location.origin : (siteConfig?.appBaseUrl || "https://app.daylora.app");
+  const appOrigin = typeof window !== "undefined" ? window.location.origin : (siteConfig?.appBaseUrl || "https://daylora.app");
   const publicUrl = `${appOrigin}/${slug || wedding?.id}`;
   const previewUrl = useMemo(() => `${appOrigin}/preview/${slug || wedding?.id}?t=${previewToken}`, [appOrigin, slug, wedding?.id, previewToken]);
 

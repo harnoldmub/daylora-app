@@ -1,6 +1,6 @@
 import { getUncachableResendClient } from "./resend-client";
 
-const siteUrl = process.env.APP_BASE_URL || "https://app.daylora.app";
+const siteUrl = process.env.APP_BASE_URL || "https://daylora.app";
 
 export const authEmails = {
   async sendVerificationEmail(email: string, firstName: string, token: string) {

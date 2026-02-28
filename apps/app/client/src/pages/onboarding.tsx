@@ -329,7 +329,7 @@ export default function Onboarding() {
                             <FormLabel>URL publique</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">app.daylora.app/</span>
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">daylora.app/</span>
                                 <Input {...field} className="h-12 pl-[8.5rem]" placeholder="marie-et-pierre" />
                               </div>
                             </FormControl>
@@ -706,7 +706,7 @@ export default function Onboarding() {
                             <Check className="h-4 w-4" />
                             Votre site est prêt à être publié
                           </div>
-                          <p className="text-xs text-muted-foreground">URL : <span className="font-semibold">app.daylora.app/{form.watch("slug")}</span></p>
+                          <p className="text-xs text-muted-foreground">URL : <span className="font-semibold">daylora.app/{form.watch("slug")}</span></p>
                           <Button
                             type="button"
                             variant="outline"
@@ -812,7 +812,7 @@ export default function Onboarding() {
                             <div className="font-semibold text-sm">Récapitulatif</div>
                             <div className="text-xs text-[#7A6B5E] mt-1 space-y-1">
                               <div>Site : <span className="font-semibold">{form.watch("title")}</span></div>
-                              <div>URL : <span className="font-semibold">app.daylora.app/{form.watch("slug")}</span></div>
+                              <div>URL : <span className="font-semibold">daylora.app/{form.watch("slug")}</span></div>
                               <div>Template : <span className="font-semibold">{selectedTemplate.name}</span></div>
                               <div>Date : <span className="font-semibold">{formatDate(form.watch("weddingDate"))}</span></div>
                               <div>Plan : <span className="font-semibold">{plan === "free" ? "Découverte (gratuit)" : "Premium (19€/mois)"}</span></div>

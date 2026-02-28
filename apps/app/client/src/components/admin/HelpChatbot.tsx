@@ -98,7 +98,7 @@ const faqItems: FAQItem[] = [
     category: "Partage",
     question: "Comment partager mon site ?",
     answer:
-      "Votre site est accessible via un lien unique (app.daylora.app/votre-slug). Publiez-le depuis les Paramètres quand vous êtes prêt. Tant qu'il n'est pas publié, seul vous pouvez le voir en mode aperçu. Partagez le lien par email, WhatsApp ou réseaux sociaux.",
+      "Votre site est accessible via un lien unique (daylora.app/votre-slug). Publiez-le depuis les Paramètres quand vous êtes prêt. Tant qu'il n'est pas publié, seul vous pouvez le voir en mode aperçu. Partagez le lien par email, WhatsApp ou réseaux sociaux.",
   },
   {
     category: "Partage",

@@ -30,7 +30,7 @@ export default function WelcomePage() {
 
     if (isLoading || !wedding) return <div className="animate-pulse h-screen bg-muted" />;
 
-    const appOrigin = typeof window !== "undefined" ? window.location.origin : (siteConfig?.appBaseUrl || "https://app.daylora.app");
+    const appOrigin = typeof window !== "undefined" ? window.location.origin : (siteConfig?.appBaseUrl || "https://daylora.app");
     const publicUrl = `${appOrigin}/${wedding.slug || wedding.id}`;
     const previewUrl = `${appOrigin}/preview/${wedding.slug || wedding.id}`;
 

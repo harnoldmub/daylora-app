@@ -243,7 +243,7 @@ export default function DesignPage() {
   };
 
   const previewUrl = useMemo(() => {
-    const appBase = typeof window !== "undefined" ? window.location.origin : "https://app.daylora.app";
+    const appBase = typeof window !== "undefined" ? window.location.origin : "https://daylora.app";
     if (!wedding) return `${appBase}/preview/preview?t=${previewToken}`;
     const slug = wedding.slug || wedding.id;
     return `${appBase}/preview/${slug}?t=${previewToken}`;

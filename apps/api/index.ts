@@ -59,7 +59,6 @@ const allowedOrigins = new Set([
 
 if (isProduction) {
   [
-    "https://app.daylora.app",
     "https://daylora.app",
     "https://www.daylora.app",
   ].forEach((origin) => allowedOrigins.add(origin));
@@ -234,7 +233,7 @@ app.use((req, res, next) => {
           }
         }
 
-        const appUrl = process.env.APP_BASE_URL || "https://app.daylora.app";
+        const appUrl = process.env.APP_BASE_URL || "https://daylora.app";
         const heroTitle = wedding.config?.texts?.heroTitle || wedding.title || "Notre Mariage";
         const seoTitle = wedding.config?.seo?.title || `Mariage de ${heroTitle}`;
         const seoDesc = wedding.config?.seo?.description || `Vous êtes invité(e) au mariage de ${heroTitle}. Découvrez tous les détails et confirmez votre présence.`;

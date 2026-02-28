@@ -4,7 +4,7 @@
 
 Daylora is a multi-tenant SaaS platform enabling couples to create personalized wedding websites. Users can select from various templates, customize content and media, and share a public URL. The platform integrates features like RSVP management, gift lists, and a money pot (cagnotte) powered by Stripe Connect, all managed through a comprehensive admin dashboard. The business vision is to provide an elegant, user-friendly, and feature-rich solution for couples to manage their wedding communications online, tapping into the significant market for wedding planning tools.
 
-**Domain**: https://daylora.app (app: https://app.daylora.app)
+**Domain**: https://daylora.app
 
 ## User Preferences
 
