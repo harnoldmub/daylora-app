@@ -136,10 +136,10 @@ export default function OnboardingPreview() {
             size="sm"
             variant="secondary"
             className="gap-2 shadow-lg"
-            onClick={() => setLocation("/onboarding")}
+            onClick={() => { window.close(); setTimeout(() => setLocation("/onboarding"), 100); }}
           >
             <ArrowLeft className="h-4 w-4" />
-            Retour à l'inscription
+            Fermer l'aperçu
           </Button>
         </div>
 

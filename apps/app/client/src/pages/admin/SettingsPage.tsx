@@ -119,14 +119,6 @@ export default function SettingsPage() {
   }
 
   const handleSave = async () => {
-    if (payments.mode === "external" && !payments.externalUrl.trim()) {
-      toast({
-        title: "Lien manquant",
-        description: "Ajoutez l'URL de la cagnotte externe pour continuer.",
-        variant: "destructive",
-      });
-      return;
-    }
     try {
       await updateWedding.mutateAsync({
         id: wedding.id,
@@ -359,6 +351,43 @@ export default function SettingsPage() {
             checked={payments.allowManualLiveContributions}
             onCheckedChange={(v) => setPayments((prev) => ({ ...prev, allowManualLiveContributions: v }))}
           />
+        </div>
+      </Card>
+
+            <Card className="p-6 space-y-4">
+                <h2 className="text-lg font-medium">Liens Live</h2>
+        <p className="text-sm text-muted-foreground">
+          Partagez ces liens sur un écran pendant votre événement.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Blagues Live</label>
+            <div className="flex items-center gap-2">
+              <Input readOnly value={`${appOrigin}/${slug || wedding?.id}/live`} className="text-xs" />
+              <Button variant="outline" size="sm" onClick={() => copyToClipboard(`${appOrigin}/${slug || wedding?.id}/live`, "Lien Blagues Live")}>
+                <Copy className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href={`/${slug || wedding?.id}/live`} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </Button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Contributions Live</label>
+            <div className="flex items-center gap-2">
+              <Input readOnly value={`${appOrigin}/${slug || wedding?.id}/live-contributions`} className="text-xs" />
+              <Button variant="outline" size="sm" onClick={() => copyToClipboard(`${appOrigin}/${slug || wedding?.id}/live-contributions`, "Lien Contributions Live")}>
+                <Copy className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href={`/${slug || wedding?.id}/live-contributions`} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </Button>
+            </div>
+          </div>
         </div>
       </Card>
 

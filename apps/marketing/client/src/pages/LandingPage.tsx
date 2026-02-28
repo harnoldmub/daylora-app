@@ -516,7 +516,7 @@ export default function LandingPage() {
               <div className="space-y-6">
                 <div className="text-white/80 font-bold tracking-widest uppercase text-xs">Premium</div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-5xl font-bold text-white">19€</span>
+                  <span className="text-5xl font-bold text-white">23,99€</span>
                   <span className="text-white/80 text-sm">/mois</span>
                 </div>
                 <p className="text-white/90 text-sm">Best seller. Minimum 2 mois, puis flexible.</p>

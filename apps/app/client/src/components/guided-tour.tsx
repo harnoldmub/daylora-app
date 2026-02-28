@@ -20,6 +20,17 @@ function tourStorageKey(tourId: string) {
     return `daylora_tour_${tourId}_done`;
 }
 
+function isTourDone(tourId: string): boolean {
+    const key = tourStorageKey(tourId);
+    return !!localStorage.getItem(key) || !!sessionStorage.getItem(key);
+}
+
+function markTourDone(tourId: string) {
+    const key = tourStorageKey(tourId);
+    localStorage.setItem(key, "true");
+    sessionStorage.setItem(key, "true");
+}
+
 function getTargetEl(target: string): Element | null {
     return document.querySelector(`[data-tour='${target}']`);
 }
@@ -149,8 +160,7 @@ export function GuidedTour({ steps, tourId, onComplete }: GuidedTourProps) {
     }, [computeLayout]);
 
     useEffect(() => {
-        const alreadyDone = localStorage.getItem(tourStorageKey(tourId));
-        if (!alreadyDone) {
+        if (!isTourDone(tourId)) {
             const timer = setTimeout(() => setIsVisible(true), 600);
             return () => clearTimeout(timer);
         }
@@ -158,7 +168,7 @@ export function GuidedTour({ steps, tourId, onComplete }: GuidedTourProps) {
 
     const finish = useCallback(() => {
         setIsVisible(false);
-        localStorage.setItem(tourStorageKey(tourId), "true");
+        markTourDone(tourId);
         onComplete?.();
     }, [onComplete, tourId]);
 
@@ -406,13 +416,14 @@ export function GuidedTour({ steps, tourId, onComplete }: GuidedTourProps) {
 export function useShouldShowTour(tourId: string): boolean {
     const [show, setShow] = useState(false);
     useEffect(() => {
-        setShow(!localStorage.getItem(tourStorageKey(tourId)));
+        setShow(!isTourDone(tourId));
     }, [tourId]);
     return show;
 }
 
 export function resetTour(tourId: string) {
     localStorage.removeItem(tourStorageKey(tourId));
+    sessionStorage.removeItem(tourStorageKey(tourId));
 }
 
 export function resetAllTours() {
@@ -423,6 +434,15 @@ export function resetAllTours() {
             keysToRemove.push(key);
         }
     }
-    keysToRemove.forEach((key) => localStorage.removeItem(key));
+    keysToRemove.forEach((key) => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+    });
     localStorage.removeItem("daylora_tour_completed");
+    for (let i = sessionStorage.length - 1; i >= 0; i--) {
+        const key = sessionStorage.key(i);
+        if (key && key.startsWith("daylora_tour_") && key.endsWith("_done")) {
+            sessionStorage.removeItem(key);
+        }
+    }
 }

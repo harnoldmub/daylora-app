@@ -24,6 +24,7 @@ export default function Signup() {
 
     useEffect(() => {
         document.title = "Daylora – Inscription";
+        return () => { document.title = "Daylora — Créez votre site de mariage"; };
     }, []);
 
     const form = useForm({

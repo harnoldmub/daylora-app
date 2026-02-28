@@ -50,6 +50,7 @@ export default function Login() {
     if (emailFromQuery && !form.getValues("email")) {
       form.setValue("email", emailFromQuery);
     }
+    return () => { document.title = "Daylora — Créez votre site de mariage"; };
   }, [form]);
 
   return (

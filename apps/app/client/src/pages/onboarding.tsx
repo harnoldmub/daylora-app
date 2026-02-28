@@ -180,10 +180,6 @@ export default function Onboarding() {
       const valid = await form.trigger(["title", "slug", "weddingDate", "firstName"]);
       if (!valid) return;
     }
-    if (step === 5 && modules.cagnotteEnabled && !externalCagnotteUrl.trim()) {
-      toast({ title: "Lien de cagnotte manquant", description: "Veuillez ajouter l'URL de votre cagnotte externe.", variant: "destructive" });
-      return;
-    }
     if (step === 7) {
       const valid = await form.trigger(["email", "password"]);
       if (!valid) return;
@@ -551,7 +547,7 @@ export default function Onboarding() {
                           Premium
                         </div>
                         <div className="flex items-baseline gap-1 mt-1">
-                          <span className="text-3xl font-serif font-bold">19€</span>
+                          <span className="text-3xl font-serif font-bold">23,99€</span>
                           <span className="text-sm text-[#7A6B5E]">/mois</span>
                         </div>
                         <div className="text-xs text-[#7A6B5E] mt-1">Invités illimités, tous les modules</div>
@@ -796,7 +792,7 @@ export default function Onboarding() {
                               <div>URL : <span className="font-semibold">daylora.app/{form.watch("slug")}</span></div>
                               <div>Template : <span className="font-semibold">{selectedTemplate.name}</span></div>
                               <div>Date : <span className="font-semibold">{formatDate(form.watch("weddingDate"))}</span></div>
-                              <div>Plan : <span className="font-semibold">{plan === "free" ? "Découverte (gratuit)" : "Premium (19€/mois)"}</span></div>
+                              <div>Plan : <span className="font-semibold">{plan === "free" ? "Découverte (gratuit)" : "Premium (23,99€/mois)"}</span></div>
                             </div>
                           </div>
                         </div>

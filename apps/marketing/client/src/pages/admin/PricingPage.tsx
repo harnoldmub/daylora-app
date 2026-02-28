@@ -98,7 +98,7 @@ export default function PricingPage() {
                             <p className="text-muted-foreground">Best seller</p>
                         </div>
                         <div className="flex items-baseline gap-2">
-                            <span className="text-4xl font-bold font-serif">19€</span>
+                            <span className="text-4xl font-bold font-serif">23,99€</span>
                             <span className="text-muted-foreground">/ mois</span>
                         </div>
                         <ul className="space-y-3">
