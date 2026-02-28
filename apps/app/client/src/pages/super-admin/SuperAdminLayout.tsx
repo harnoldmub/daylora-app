@@ -36,17 +36,22 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
   useEffect(() => {
     fetch("/api/super-admin/me", { credentials: "include" })
       .then(async (res) => {
-        if (!res.ok) throw new Error();
+        if (!res.ok) {
+          navigate("/admin/login");
+          setLoading(false);
+          return;
+        }
         const data = await res.json();
         setAdmin(data);
         if (data.mustChangePassword && !location.startsWith("/admin/settings")) {
           navigate("/admin/settings");
         }
+        setLoading(false);
       })
       .catch(() => {
         navigate("/admin/login");
-      })
-      .finally(() => setLoading(false));
+        setLoading(false);
+      });
   }, []);
 
   const handleLogout = async () => {
