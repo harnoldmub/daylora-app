@@ -143,7 +143,7 @@ export default function LandingPage() {
               <Heart className="h-7 w-7 text-white fill-white" />
             </div>
             <div className="flex flex-col -space-y-1">
-              <span className="text-2xl font-serif font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-[#2b2320] via-primary to-[#7A6B5E]">Nocely</span>
+              <span className="text-2xl font-serif font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-[#2b2320] via-primary to-[#7A6B5E]">Daylora</span>
               <span className="text-[8px] font-black uppercase tracking-[0.4em] text-primary/60 ml-0.5">Wedding platform</span>
             </div>
           </div>
@@ -202,7 +202,7 @@ export default function LandingPage() {
               variants={fadeUp}
               className="text-7xl md:text-[10rem] font-serif font-extrabold leading-[0.85] tracking-tighter text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
             >
-              Nocely
+              Daylora
             </motion.h1>
 
             <motion.p
@@ -270,7 +270,7 @@ export default function LandingPage() {
               <motion.img
                 key={activeImage}
                 src={activeImage}
-                alt="Aperçu Nocely"
+                alt="Aperçu Daylora"
                 className="w-full h-[520px] object-cover transition-all duration-700 group-hover:scale-105"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -493,7 +493,7 @@ export default function LandingPage() {
                     "1 template",
                     "Jusqu'à 50 invités",
                     "Cagnotte activée",
-                    "Branding Nocely visible",
+                    "Branding Daylora visible",
                     "Sans liste cadeaux",
                     "Sans live contributions avancé",
                   ].map((item, i) => (
@@ -527,7 +527,7 @@ export default function LandingPage() {
                     "Liste cadeaux",
                     "Live contributions + animations",
                     "Blagues live",
-                    "Suppression branding Nocely",
+                    "Suppression branding Daylora",
                     "Export complet",
                     "Emails illimités",
                   ].map((item, i) => (
@@ -593,10 +593,10 @@ export default function LandingPage() {
             <div className="w-6 h-6 bg-primary rounded-md flex items-center justify-center">
               <Heart className="h-4 w-4 text-white fill-white" />
             </div>
-            <span className="text-xl font-serif font-bold tracking-tight">Nocely</span>
+            <span className="text-xl font-serif font-bold tracking-tight">Daylora</span>
           </div>
           <div className="text-[#B6A796] text-xs font-sans">
-            © 2026 Nocely. La nouvelle génération de sites de mariage.
+            © 2026 Daylora. La nouvelle génération de sites de mariage.
           </div>
           <div className="flex gap-8 text-[#8C7A6B] text-xs uppercase tracking-widest font-semibold font-sans">
             <a href="#" className="hover:text-primary transition-colors">Contact</a>

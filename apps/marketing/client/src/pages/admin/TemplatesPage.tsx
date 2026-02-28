@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
 const TEMPLATES = [
-    { id: 'heritage', name: 'Héritage', description: 'Le classique intemporel de Nocely', image: 'https://images.unsplash.com/photo-1544078751-58fee2d8a03b?auto=format&fit=crop&q=80' },
+    { id: 'heritage', name: 'Héritage', description: 'Le classique intemporel de Daylora', image: 'https://images.unsplash.com/photo-1544078751-58fee2d8a03b?auto=format&fit=crop&q=80' },
     { id: 'classic', name: 'Classique', description: 'Élégant et intemporel', image: '/template_classic_preview_1770241373403.png' },
     { id: 'modern', name: 'Moderne', description: 'Épuré et minimaliste', image: '/template_modern_preview_1770241388271.png' },
     { id: 'minimal', name: 'Minimal', description: 'Audacieux et chic', image: '/template_minimal_preview_1770241404102.png' },

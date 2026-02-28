@@ -139,7 +139,7 @@ export function FeedbackModal() {
           <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-2xl" aria-describedby="feedback-desc">
             <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-4">
               <DialogTitle className="text-lg font-semibold text-white">Donnez votre feedback</DialogTitle>
-              <DialogDescription id="feedback-desc" className="text-sm text-white/80 mt-0.5">Aidez-nous à améliorer Nocely</DialogDescription>
+              <DialogDescription id="feedback-desc" className="text-sm text-white/80 mt-0.5">Aidez-nous à améliorer Daylora</DialogDescription>
             </div>
             <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
               <div>

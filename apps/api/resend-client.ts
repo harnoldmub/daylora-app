@@ -4,7 +4,7 @@ let connectionSettings: any;
 
 async function getCredentials() {
   if (process.env.RESEND_API_KEY) {
-    const from = process.env.SMTP_FROM || 'noreply@nocely.app';
+    const from = process.env.SMTP_FROM || 'noreply@daylora.app';
     console.log(`[resend] Using RESEND_API_KEY env var, from: ${from}`);
     return {
       apiKey: process.env.RESEND_API_KEY,
@@ -43,6 +43,6 @@ export async function getUncachableResendClient() {
   const { apiKey, fromEmail } = await getCredentials();
   return {
     client: new Resend(apiKey),
-    fromEmail: fromEmail || process.env.SMTP_FROM || 'noreply@nocely.app'
+    fromEmail: fromEmail || process.env.SMTP_FROM || 'noreply@daylora.app'
   };
 }

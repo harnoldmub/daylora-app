@@ -255,7 +255,7 @@ export async function sendPersonalizedInvitation(wedding: Wedding, recipientData
 
   try {
     const customMessage = recipientData.message || `Nous serions honorés de votre présence à notre mariage.`;
-    const domain = process.env.APP_BASE_URL || "https://app.nocely.app";
+    const domain = process.env.APP_BASE_URL || "https://app.daylora.app";
     const invitationPageLink = recipientData.publicToken
       ? `${domain}/invitation/${recipientData.publicToken}`
       : (recipientData.id ? `${domain}/invitation/${recipientData.id}` : null);

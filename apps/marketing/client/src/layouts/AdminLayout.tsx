@@ -38,7 +38,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                 <div className="p-6 border-b">
                     <Link href="/app">
                         <a className="flex items-center space-x-2">
-                            <span className="text-xl font-bold tracking-tight text-primary">Nocely Admin</span>
+                            <span className="text-xl font-bold tracking-tight text-primary">Daylora Admin</span>
                         </a>
                     </Link>
                 </div>

@@ -109,7 +109,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
             <aside className="w-64 hidden md:flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
                 <div className="p-6 border-b border-sidebar-border">
                     <Link href="/" className="flex items-center space-x-2">
-                        <span className="text-xl font-semibold tracking-tight text-sidebar-foreground">Nocely Admin</span>
+                        <span className="text-xl font-semibold tracking-tight text-sidebar-foreground">Daylora Admin</span>
                     </Link>
                 </div>
                 <nav className="flex-1 p-4 space-y-1" data-tour="sidebar-nav">
@@ -154,7 +154,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                     <div className="fixed inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
                     <aside className="fixed inset-y-0 left-0 w-72 bg-sidebar text-sidebar-foreground flex flex-col z-50 shadow-xl">
                         <div className="p-4 flex items-center justify-between border-b border-sidebar-border">
-                            <span className="text-lg font-semibold">Nocely Admin</span>
+                            <span className="text-lg font-semibold">Daylora Admin</span>
                             <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
                                 <X className="h-5 w-5" />
                             </Button>
@@ -198,7 +198,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                         <Menu className="h-5 w-5" />
                     </Button>
                     <div className="flex items-center text-sm text-muted-foreground">
-                        <Link href="/" className="hover:text-foreground">Nocely</Link>
+                        <Link href="/" className="hover:text-foreground">Daylora</Link>
                         <ChevronRight className="h-4 w-4 mx-2" />
                         <span className="text-foreground font-medium">Gestion du mariage</span>
                     </div>

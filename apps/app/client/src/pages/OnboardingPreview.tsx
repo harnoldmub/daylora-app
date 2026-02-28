@@ -18,7 +18,7 @@ export default function OnboardingPreview() {
 
   const data = useMemo(() => {
     try {
-      const raw = localStorage.getItem("nocely_onboarding_preview");
+      const raw = localStorage.getItem("daylora_onboarding_preview");
       if (!raw) return null;
       return JSON.parse(raw);
     } catch { return null; }

@@ -1008,7 +1008,7 @@ export async function registerRoutes(app: Express) {
       const response = await fetch(url, {
         signal: controller.signal,
         headers: {
-          "User-Agent": "Mozilla/5.0 (compatible; NocelyBot/1.0)",
+          "User-Agent": "Mozilla/5.0 (compatible; DayloraBot/1.0)",
           "Accept": "text/html",
         },
       });
@@ -1374,8 +1374,8 @@ export async function registerRoutes(app: Express) {
         mode: type === "subscription" ? "subscription" : "payment",
         line_items: [{ price: priceId, quantity: 1 }],
         metadata: { weddingId: wedding.id, purpose: "billing", billingType: type, referralCode: validatedReferralCode || undefined, userId },
-        success_url: `${process.env.APP_BASE_URL || "https://app.nocely.app"}/${wedding.id}/billing?success=1&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.APP_BASE_URL || "https://app.nocely.app"}/${wedding.id}/billing?canceled=1`,
+        success_url: `${process.env.APP_BASE_URL || "https://app.daylora.app"}/${wedding.id}/billing?success=1&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.APP_BASE_URL || "https://app.daylora.app"}/${wedding.id}/billing?canceled=1`,
       };
 
       if (existingSub?.stripeCustomerId) {
@@ -1581,7 +1581,7 @@ export async function registerRoutes(app: Express) {
         });
       }
 
-      const returnUrl = `${process.env.APP_BASE_URL || "https://app.nocely.app"}/${wedding.id}/billing`;
+      const returnUrl = `${process.env.APP_BASE_URL || "https://app.daylora.app"}/${wedding.id}/billing`;
 
       const portalSession = await stripe.billingPortal.sessions.create({
         customer: customerId,
@@ -1696,7 +1696,7 @@ export async function registerRoutes(app: Express) {
         await client.emails.send({
           from: fromEmail,
           to: process.env.SMTP_FROM || fromEmail,
-          subject: `[Nocely] ${typeLabels[parsed.type] || parsed.type} — ${parsed.message.slice(0, 50)}`,
+          subject: `[Daylora] ${typeLabels[parsed.type] || parsed.type} — ${parsed.message.slice(0, 50)}`,
           html: `
             <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
               <h2 style="color:#b45309">Nouveau feedback produit</h2>

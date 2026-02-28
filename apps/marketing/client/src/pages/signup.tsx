@@ -54,7 +54,7 @@ export default function Signup() {
                             <Heart className="h-6 w-6 text-white fill-white" />
                         </div>
                     </div>
-                    <CardTitle className="text-4xl font-serif font-bold text-white">Nocely</CardTitle>
+                    <CardTitle className="text-4xl font-serif font-bold text-white">Daylora</CardTitle>
                     <CardDescription className="text-white/40 italic mt-2">Créez votre espace en quelques minutes</CardDescription>
                 </CardHeader>
 
@@ -112,7 +112,7 @@ export default function Signup() {
 
                     <div className="text-center text-sm pt-4">
                         <span className="text-white/40 font-medium">Déjà parmi nous ?</span>{" "}
-                        <Link href="/login" title="Se connecter à Nocely" className="text-primary font-bold hover:text-primary/80 transition-colors ml-1">
+                        <Link href="/login" title="Se connecter à Daylora" className="text-primary font-bold hover:text-primary/80 transition-colors ml-1">
                             Connectez-vous
                         </Link>
                     </div>
@@ -122,7 +122,7 @@ export default function Signup() {
                             onClick={() => setLocation("/")}
                             className="text-[10px] uppercase tracking-widest text-white/20 hover:text-primary transition-all font-bold"
                         >
-                            ← Découvrir Nocely
+                            ← Découvrir Daylora
                         </button>
                     </div>
                 </CardContent>

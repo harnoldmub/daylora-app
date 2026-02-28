@@ -45,7 +45,7 @@ export default function Login() {
     : null;
 
   useEffect(() => {
-    document.title = "Nocely – Connexion";
+    document.title = "Daylora – Connexion";
     const emailFromQuery = searchParams.get("email");
     if (emailFromQuery && !form.getValues("email")) {
       form.setValue("email", emailFromQuery);
@@ -64,8 +64,8 @@ export default function Login() {
               <Heart className="h-6 w-6 text-white fill-white" />
             </div>
           </div>
-          <CardTitle className="text-4xl font-serif font-bold text-[#2b2320]">Nocely</CardTitle>
-          <CardDescription className="text-[#7A6B5E] italic mt-2">Connectez-vous à votre espace Nocely</CardDescription>
+          <CardTitle className="text-4xl font-serif font-bold text-[#2b2320]">Daylora</CardTitle>
+          <CardDescription className="text-[#7A6B5E] italic mt-2">Connectez-vous à votre espace Daylora</CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6 p-10 pt-4">
@@ -172,17 +172,17 @@ export default function Login() {
 
           <div className="text-center text-sm pt-4">
             <span className="text-[#7A6B5E] font-medium">Pas encore de compte ?</span>{" "}
-            <Link href="/onboarding" title="Créer un compte Nocely" className="text-primary font-bold hover:text-primary/80 transition-colors ml-1">
+            <Link href="/onboarding" title="Créer un compte Daylora" className="text-primary font-bold hover:text-primary/80 transition-colors ml-1">
               Inscrivez-vous
             </Link>
           </div>
 
           <div className="pt-8 border-t border-[#EFE7DD] text-center">
             <button
-              onClick={() => window.location.href = "https://nocely.app/"}
+              onClick={() => window.location.href = "https://daylora.app/"}
               className="text-[10px] uppercase tracking-widest text-[#B6A796] hover:text-primary transition-all font-bold"
             >
-              ← Découvrir Nocely
+              ← Découvrir Daylora
             </button>
           </div>
         </CardContent>

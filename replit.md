@@ -1,8 +1,10 @@
-# Nocely — Wedding SaaS Platform
+# Daylora — Wedding SaaS Platform
 
 ## Overview
 
-Nocely is a multi-tenant SaaS platform enabling couples to create personalized wedding websites. Users can select from various templates, customize content and media, and share a public URL. The platform integrates features like RSVP management, gift lists, and a money pot (cagnotte) powered by Stripe Connect, all managed through a comprehensive admin dashboard. The business vision is to provide an elegant, user-friendly, and feature-rich solution for couples to manage their wedding communications online, tapping into the significant market for wedding planning tools.
+Daylora is a multi-tenant SaaS platform enabling couples to create personalized wedding websites. Users can select from various templates, customize content and media, and share a public URL. The platform integrates features like RSVP management, gift lists, and a money pot (cagnotte) powered by Stripe Connect, all managed through a comprehensive admin dashboard. The business vision is to provide an elegant, user-friendly, and feature-rich solution for couples to manage their wedding communications online, tapping into the significant market for wedding planning tools.
+
+**Domain**: https://daylora.app (app: https://app.daylora.app)
 
 ## User Preferences
 
@@ -33,9 +35,14 @@ PostgreSQL, hosted on Neon serverless, serves as the database. Core tables inclu
 -   **Server-Sent Events (SSE)**: Used for real-time updates, such as live contribution notifications.
 -   **Feedback System**: Users can submit feedback via a modal in the admin sidebar (`FeedbackModal`). Admin users can view/manage feedback on `/feedback` page (admin-only nav item). API: `POST /api/feedback`, `GET /api/feedback/mine`, `GET /api/admin/feedback`, `PATCH /api/admin/feedback/:id` (admin only). Table: `product_feedback`.
 -   **Guest Invitation Page**: Personalized invitation at `/:slug/guest/:guestId` (dot-invitation.tsx). Features RSVP status display (confirmed/pending/declined), table number, party size, dynamic theme colors, vertical timeline, QR code, cagnotte section, and "Voir notre site" link.
--   **Guided Tour**: Per-page contextual tours using `GuidedTour` component with `steps` and `tourId` props. Each page defines its own tour steps. Completion stored per-tour in localStorage (`nocely_tour_${tourId}_done`). Reset via `resetAllTours()` from Settings page.
+-   **Guided Tour**: Per-page contextual tours using `GuidedTour` component with `steps` and `tourId` props. Each page defines its own tour steps. Completion stored per-tour in localStorage (`daylora_tour_${tourId}_done`). Reset via `resetAllTours()` from Settings page.
 
 -   **Billing & Customer Portal**: Stripe Customer Portal integrated for subscription management. Premium users see a billing dashboard with plan status, next payment date, invoice history (with PDF links), and a "Gérer mon abonnement" button that opens the Stripe-hosted portal. Monthly plan has 2-month minimum engagement (soft enforcement via UI messaging). API: `GET /api/billing/info` (subscription details + invoices), `POST /api/billing/portal` (create portal session), `POST /api/billing/checkout` (create checkout session), `POST /api/billing/sync` (sync with Stripe). The `stripe_subscriptions` table tracks `cancelAtPeriodEnd`, `subscriptionStartDate` for engagement calculation. Webhook handles `cancel_at_period_end` from portal-initiated cancellations.
+
+### Environment Variables
+
+- `STRIPE_PRICE_SUBSCRIPTION` and `STRIPE_PRICE_LIFETIME` are environment-scoped (dev uses Stripe test price IDs, prod uses live price IDs).
+- `APP_NAME=Daylora`, `APP_DOMAIN=daylora.app` (shared).
 
 ## External Dependencies
 

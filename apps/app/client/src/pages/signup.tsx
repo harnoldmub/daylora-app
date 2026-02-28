@@ -23,7 +23,7 @@ export default function Signup() {
     const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
-        document.title = "Nocely – Inscription";
+        document.title = "Daylora – Inscription";
     }, []);
 
     const form = useForm({
@@ -62,7 +62,7 @@ export default function Signup() {
                             <Heart className="h-6 w-6 text-white fill-white" />
                         </div>
                     </div>
-                    <CardTitle className="text-4xl font-serif font-bold text-[#2b2320]">Nocely</CardTitle>
+                    <CardTitle className="text-4xl font-serif font-bold text-[#2b2320]">Daylora</CardTitle>
                     <CardDescription className="text-[#7A6B5E] italic mt-2">Créez votre espace en quelques minutes</CardDescription>
                 </CardHeader>
 
@@ -135,17 +135,17 @@ export default function Signup() {
 
                     <div className="text-center text-sm pt-4">
                         <span className="text-[#7A6B5E] font-medium">Déjà parmi nous ?</span>{" "}
-                        <Link href="/login" title="Se connecter à Nocely" className="text-primary font-bold hover:text-primary/80 transition-colors ml-1">
+                        <Link href="/login" title="Se connecter à Daylora" className="text-primary font-bold hover:text-primary/80 transition-colors ml-1">
                             Connectez-vous
                         </Link>
                     </div>
 
                     <div className="pt-8 border-t border-[#EFE7DD] text-center">
                         <button
-                            onClick={() => window.location.href = "https://nocely.app/"}
+                            onClick={() => window.location.href = "https://daylora.app/"}
                             className="text-[10px] uppercase tracking-widest text-[#B6A796] hover:text-primary transition-all font-bold"
                         >
-                            ← Découvrir Nocely
+                            ← Découvrir Daylora
                         </button>
                     </div>
                 </CardContent>

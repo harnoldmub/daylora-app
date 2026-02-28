@@ -17,7 +17,7 @@ interface GuidedTourProps {
 }
 
 function tourStorageKey(tourId: string) {
-    return `nocely_tour_${tourId}_done`;
+    return `daylora_tour_${tourId}_done`;
 }
 
 function getTargetEl(target: string): Element | null {
@@ -419,10 +419,10 @@ export function resetAllTours() {
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith("nocely_tour_") && key.endsWith("_done")) {
+        if (key && key.startsWith("daylora_tour_") && key.endsWith("_done")) {
             keysToRemove.push(key);
         }
     }
     keysToRemove.forEach((key) => localStorage.removeItem(key));
-    localStorage.removeItem("nocely_tour_completed");
+    localStorage.removeItem("daylora_tour_completed");
 }

@@ -309,7 +309,7 @@ export default function PricingPage() {
               <Feature text="1 template" checked />
               <Feature text="Jusqu'à 30 invités" checked />
               <Feature text="Cagnotte activée" checked />
-              <Feature text="Branding Nocely visible" checked />
+              <Feature text="Branding Daylora visible" checked />
               <Feature text="6 photos galerie max" checked />
               <Feature text="Liste cadeaux" checked={false} />
               <Feature text="Live contributions & blagues" checked={false} />
@@ -344,7 +344,7 @@ export default function PricingPage() {
               <Feature text="Invités illimités" checked />
               <Feature text="Liste cadeaux" checked />
               <Feature text="Live contributions & blagues" checked />
-              <Feature text="Suppression branding Nocely" checked />
+              <Feature text="Suppression branding Daylora" checked />
               <Feature text="50 photos galerie" checked />
               <Feature text="Pages personnalisées" checked />
               <Feature text="Exports complets" checked />
@@ -778,10 +778,10 @@ function HelpCard() {
             Une question sur votre abonnement, un paiement ou une facture ? Notre équipe est disponible pour vous accompagner.
           </p>
           <div className="flex flex-wrap gap-3">
-            <a href="mailto:support@nocely.app" className="inline-flex">
+            <a href="mailto:support@daylora.app" className="inline-flex">
               <Button variant="outline" size="sm">
                 <Mail className="mr-2 h-4 w-4" />
-                support@nocely.app
+                support@daylora.app
               </Button>
             </a>
             <Button

@@ -16,19 +16,19 @@ import { GuidedTour, useShouldShowTour } from "@/components/guided-tour";
 function EditModeTooltip() {
     const [visible, setVisible] = useState(() => {
         if (typeof window === "undefined") return false;
-        return !window.localStorage.getItem("nocely_edit_tooltip_seen");
+        return !window.localStorage.getItem("daylora_edit_tooltip_seen");
     });
 
     useEffect(() => {
         if (!visible) return;
         const handleClick = () => {
             setVisible(false);
-            window.localStorage.setItem("nocely_edit_tooltip_seen", "1");
+            window.localStorage.setItem("daylora_edit_tooltip_seen", "1");
         };
         window.addEventListener("click", handleClick, { once: true });
         const timer = setTimeout(() => {
             setVisible(false);
-            window.localStorage.setItem("nocely_edit_tooltip_seen", "1");
+            window.localStorage.setItem("daylora_edit_tooltip_seen", "1");
         }, 8000);
         return () => { window.removeEventListener("click", handleClick); clearTimeout(timer); };
     }, [visible]);
@@ -90,7 +90,7 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
     useEffect(() => {
         if (typeof window === "undefined") return;
         const storedRaw =
-            window.localStorage.getItem("nocely_edit_mode") ??
+            window.localStorage.getItem("daylora_edit_mode") ??
             window.localStorage.getItem("libala_edit_mode");
         const stored = storedRaw === "1";
         setEditModeState(stored);
@@ -118,14 +118,14 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
             logoText: wedding.config?.branding?.logoText || wedding.title,
         });
         const weddingTitle = wedding.config?.texts?.heroTitle || wedding.title;
-        document.title = weddingTitle ? `${weddingTitle} — Nocely` : "Nocely";
-        return () => { document.title = "Nocely — Créez votre site de mariage"; };
+        document.title = weddingTitle ? `${weddingTitle} — Daylora` : "Daylora";
+        return () => { document.title = "Daylora — Créez votre site de mariage"; };
     }, [wedding?.id, (wedding as any)?.updatedAt]);
 
     const setEditMode = useCallback((value: boolean) => {
         setEditModeState(value);
         if (typeof window !== "undefined") {
-            window.localStorage.setItem("nocely_edit_mode", value ? "1" : "0");
+            window.localStorage.setItem("daylora_edit_mode", value ? "1" : "0");
             window.localStorage.removeItem("libala_edit_mode");
         }
     }, []);
@@ -223,8 +223,8 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
             <div className="flex flex-col items-center justify-center min-h-screen bg-[#F5F2ED]">
                 <h1 className="text-2xl font-bold mb-2 text-[#2b2320]">Mariage introuvable</h1>
                 <p className="text-sm text-[#7A6B5E] mb-6">Ce site n'existe pas ou n'est pas encore publié.</p>
-                <a href="https://nocely.app" className="text-primary hover:underline text-sm">
-                    Découvrir Nocely
+                <a href="https://daylora.app" className="text-primary hover:underline text-sm">
+                    Découvrir Daylora
                 </a>
             </div>
         );
@@ -422,7 +422,7 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
         { id: "cgu", label: "CGU", href: `${basePath}/legal/cgu` },
         { id: "cookies", label: "Cookies", href: `${basePath}/legal/cookies` },
     ];
-    const nocelyHref = marketingBaseUrl || "https://nocely.app";
+    const dayloraHref = marketingBaseUrl || "https://daylora.app";
 
     return (
         <ThemeProvider wedding={wedding}>
@@ -680,12 +680,12 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
                                 <div className="text-xs text-muted-foreground">
                                     Fait avec amour sur{" "}
                                     <a
-                                        href={nocelyHref}
+                                        href={dayloraHref}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="font-semibold text-foreground hover:underline"
                                     >
-                                        Nocely
+                                        Daylora
                                     </a>
                                 </div>
                             </div>

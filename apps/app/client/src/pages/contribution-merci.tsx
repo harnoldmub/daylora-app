@@ -53,7 +53,7 @@ export default function ContributionMerci() {
               <Heart className="h-6 w-6 text-primary fill-primary" />
             </div>
             <div className="text-left">
-              <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Nocely</div>
+              <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Daylora</div>
               <div className="text-2xl font-serif font-bold">Merci</div>
             </div>
           </div>

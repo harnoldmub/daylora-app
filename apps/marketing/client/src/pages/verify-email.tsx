@@ -43,7 +43,7 @@ export default function VerifyEmail() {
             <Card className="w-full max-w-md shadow-lg border-t-4 border-primary text-center">
                 <CardHeader>
                     <CardTitle className="text-2xl font-serif">Vérification de compte</CardTitle>
-                    <CardDescription>Activation de votre espace Nocely</CardDescription>
+                    <CardDescription>Activation de votre espace Daylora</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6 pt-4">
                     {status === "loading" && (

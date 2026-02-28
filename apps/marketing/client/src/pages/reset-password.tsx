@@ -65,7 +65,7 @@ export default function ResetPassword() {
             <Card className="w-full max-w-md shadow-lg border-t-4 border-primary">
                 <CardHeader className="text-center">
                     <CardTitle className="text-2xl font-serif">Nouveau mot de passe</CardTitle>
-                    <CardDescription>Sécurisez votre accès Nocely</CardDescription>
+                    <CardDescription>Sécurisez votre accès Daylora</CardDescription>
                 </CardHeader>
 
                 <CardContent className="space-y-6 pt-4">

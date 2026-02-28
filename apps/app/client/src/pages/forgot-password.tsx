@@ -53,7 +53,7 @@ export default function ForgotPassword() {
             <Card className="w-full max-w-md shadow-lg border-t-4 border-primary">
                 <CardHeader className="text-center">
                     <CardTitle className="text-2xl font-serif">Mot de passe oublié</CardTitle>
-                    <CardDescription>Récupérez l'accès à votre espace Nocely</CardDescription>
+                    <CardDescription>Récupérez l'accès à votre espace Daylora</CardDescription>
                 </CardHeader>
 
                 <CardContent className="space-y-6 pt-4">

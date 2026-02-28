@@ -70,7 +70,7 @@ export default function PricingPage() {
                             <Feature text="1 template" checked />
                             <Feature text="Jusqu'à 50 invités" checked />
                             <Feature text="Cagnotte activée" checked />
-                            <Feature text="Branding Nocely visible" checked />
+                            <Feature text="Branding Daylora visible" checked />
                             <Feature text="Liste cadeaux" checked={false} />
                             <Feature text="Live contributions avancé" checked={false} />
                         </ul>
@@ -106,7 +106,7 @@ export default function PricingPage() {
                             <Feature text="Invités illimités" checked />
                             <Feature text="Liste cadeaux" checked />
                             <Feature text="Live Contributions & Jokes" checked />
-                            <Feature text="Suppression branding Nocely" checked />
+                            <Feature text="Suppression branding Daylora" checked />
                             <Feature text="Exports complets" checked />
                             <Feature text="Emails illimités" checked />
                         </ul>

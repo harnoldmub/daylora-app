@@ -22,7 +22,7 @@ import { Check, Heart, Sparkles, ArrowRight, Calendar, Globe, Layout } from "luc
 
 // Template images
 const TEMPLATES = [
-    { id: 'heritage', name: 'Héritage', description: 'Le classique intemporel de Nocely', image: 'https://images.unsplash.com/photo-1544078751-58fee2d8a03b?auto=format&fit=crop&q=80' },
+    { id: 'heritage', name: 'Héritage', description: 'Le classique intemporel de Daylora', image: 'https://images.unsplash.com/photo-1544078751-58fee2d8a03b?auto=format&fit=crop&q=80' },
     { id: 'classic', name: 'Classique', description: 'Élégant et intemporel', image: '/template_classic_preview_1770241373403.png' },
     { id: 'modern', name: 'Moderne', description: 'Épuré et minimaliste', image: '/template_modern_preview_1770241388271.png' },
     { id: 'minimal', name: 'Minimal', description: 'Audacieux et chic', image: '/template_minimal_preview_1770241404102.png' },
@@ -122,7 +122,7 @@ export default function Onboarding() {
                         Lancez votre aventure
                     </div>
                     <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">
-                        Créez votre site <span className="text-gradient italic">Nocely</span>
+                        Créez votre site <span className="text-gradient italic">Daylora</span>
                     </h1>
                     <p className="text-white/40 max-w-lg mx-auto text-sm">
                         Une plateforme moderne pour créer, personnaliser et publier une expérience digitale élégante.
@@ -183,7 +183,7 @@ export default function Onboarding() {
                                                     <FormItem>
                                                         <FormLabel className="text-white/70 uppercase tracking-widest text-[10px] font-bold">Votre URL unique</FormLabel>
                                                         <div className="flex items-center">
-                                                            <div className="glass-morphism border-white/10 border-r-0 px-4 h-14 flex items-center text-xs text-white/40 font-mono rounded-l-xl">nocely.com/</div>
+                                                            <div className="glass-morphism border-white/10 border-r-0 px-4 h-14 flex items-center text-xs text-white/40 font-mono rounded-l-xl">daylora.app/</div>
                                                             <FormControl>
                                                                 <Input {...field} className="glass-morphism border-white/10 rounded-l-none h-14 focus:border-primary/50 transition-colors font-mono text-white placeholder:text-white/30" />
                                                             </FormControl>
@@ -317,7 +317,7 @@ export default function Onboarding() {
                                 className="space-y-4"
                             >
                                 <h2 className="text-3xl font-serif font-bold text-white">
-                                    Préparation de votre espace Nocely
+                                    Préparation de votre espace Daylora
                                 </h2>
                                 <div className="space-y-2">
                                     <motion.p

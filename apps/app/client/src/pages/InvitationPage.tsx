@@ -464,7 +464,7 @@ export default function InvitationPage() {
     slug: "demo",
     templateId: "classic",
     config: {
-      theme: { primaryColor: "#8C7A6B", secondaryColor: "#FBF8F3", fontFamily: "serif", toneId: "nocely-signature", buttonStyle: "solid", buttonRadius: "pill" },
+      theme: { primaryColor: "#8C7A6B", secondaryColor: "#FBF8F3", fontFamily: "serif", toneId: "daylora-signature", buttonStyle: "solid", buttonRadius: "pill" },
     },
   } as any;
 

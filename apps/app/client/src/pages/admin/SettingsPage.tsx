@@ -104,7 +104,7 @@ export default function SettingsPage() {
       .catch(() => null);
   }, []);
 
-  const appOrigin = typeof window !== "undefined" ? window.location.origin : (siteConfig?.appBaseUrl || "https://app.nocely.app");
+  const appOrigin = typeof window !== "undefined" ? window.location.origin : (siteConfig?.appBaseUrl || "https://app.daylora.app");
   const publicUrl = `${appOrigin}/${slug || wedding?.id}`;
   const previewUrl = useMemo(() => `${appOrigin}/preview/${slug || wedding?.id}?t=${previewToken}`, [appOrigin, slug, wedding?.id, previewToken]);
 
@@ -112,7 +112,7 @@ export default function SettingsPage() {
     return (
       <div className="p-6">
         <Card className="p-6">
-          <p className="text-sm text-muted-foreground">Chargement de la configuration Nocely…</p>
+          <p className="text-sm text-muted-foreground">Chargement de la configuration Daylora…</p>
         </Card>
       </div>
     );

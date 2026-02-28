@@ -166,13 +166,13 @@ export default function DashboardPage() {
     const { weddingId } = useParams<{ weddingId: string }>();
     const showTour = useShouldShowTour("dashboard");
     const [simplified, setSimplified] = useState(() => {
-        try { return localStorage.getItem("nocely_simplified") === "true"; } catch { return false; }
+        try { return localStorage.getItem("daylora_simplified") === "true"; } catch { return false; }
     });
 
     const toggleSimplified = () => {
         const next = !simplified;
         setSimplified(next);
-        try { localStorage.setItem("nocely_simplified", String(next)); } catch {}
+        try { localStorage.setItem("daylora_simplified", String(next)); } catch {}
     };
 
     const { data: responses, isLoading: responsesLoading } = useQuery<RsvpResponse[]>({
@@ -275,7 +275,7 @@ export default function DashboardPage() {
                 <GuidedTour
                     tourId="dashboard"
                     steps={[
-                        { target: "dashboard-greeting", title: "Bienvenue sur Nocely !", description: "Ici vous retrouvez un message personnalisé et le lien vers votre site de mariage.", position: "bottom" },
+                        { target: "dashboard-greeting", title: "Bienvenue sur Daylora !", description: "Ici vous retrouvez un message personnalisé et le lien vers votre site de mariage.", position: "bottom" },
                         { target: "dashboard-kpis", title: "Vos statistiques", description: "Suivez en un coup d'œil le nombre d'invités, les confirmations et les refus.", position: "bottom" },
                         { target: "dashboard-checklist", title: "Votre progression", description: "Cette checklist vous guide étape par étape. Suivez-la pour avoir un site parfait !", position: "top" },
                     ]}

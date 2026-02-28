@@ -98,7 +98,7 @@ const faqItems: FAQItem[] = [
     category: "Partage",
     question: "Comment partager mon site ?",
     answer:
-      "Votre site est accessible via un lien unique (app.nocely.app/votre-slug). Publiez-le depuis les Paramètres quand vous êtes prêt. Tant qu'il n'est pas publié, seul vous pouvez le voir en mode aperçu. Partagez le lien par email, WhatsApp ou réseaux sociaux.",
+      "Votre site est accessible via un lien unique (app.daylora.app/votre-slug). Publiez-le depuis les Paramètres quand vous êtes prêt. Tant qu'il n'est pas publié, seul vous pouvez le voir en mode aperçu. Partagez le lien par email, WhatsApp ou réseaux sociaux.",
   },
   {
     category: "Partage",
@@ -118,14 +118,14 @@ const faqItems: FAQItem[] = [
     category: "Abonnement",
     question: "Comment passer au plan Premium ?",
     answer:
-      "Rendez-vous dans « Facturation » pour souscrire au plan Premium à 23,99 €/mois ou 149 €/an. Le Premium débloque les 3 templates, les RSVP illimités, la liste de cadeaux, les blagues live, les pages personnalisées, 50 photos en galerie et retire le branding Nocely.",
+      "Rendez-vous dans « Facturation » pour souscrire au plan Premium à 23,99 €/mois ou 149 €/an. Le Premium débloque les 3 templates, les RSVP illimités, la liste de cadeaux, les blagues live, les pages personnalisées, 50 photos en galerie et retire le branding Daylora.",
     link: { label: "Voir les tarifs", href: "/billing" },
   },
   {
     category: "Abonnement",
     question: "Quelles sont les différences entre les plans ?",
     answer:
-      "Gratuit : template Classique, 30 RSVP max, cagnotte, 6 photos en galerie, branding Nocely. Premium : 3 templates, RSVP illimités, liste de cadeaux avec réservation, page live et blagues, pages personnalisées, 50 photos, sans branding.",
+      "Gratuit : template Classique, 30 RSVP max, cagnotte, 6 photos en galerie, branding Daylora. Premium : 3 templates, RSVP illimités, liste de cadeaux avec réservation, page live et blagues, pages personnalisées, 50 photos, sans branding.",
     link: { label: "Comparer les plans", href: "/billing" },
   },
   {
@@ -311,10 +311,10 @@ export function HelpChatbot() {
               <p className="text-xs text-muted-foreground text-center">
                 Besoin de plus d'aide ? Contactez-nous à{" "}
                 <a
-                  href="mailto:support@nocely.com"
+                  href="mailto:support@daylora.com"
                   className="text-primary hover:underline"
                 >
-                  support@nocely.com
+                  support@daylora.com
                 </a>
               </p>
             </div>

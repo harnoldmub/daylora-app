@@ -151,7 +151,7 @@ export default function GuestInvitationPage() {
     if (!wedding) return;
     const wTitle = wedding.config?.texts?.heroTitle || wedding.title;
     document.title = wTitle ? `${wTitle} — Invitation` : "Invitation";
-    return () => { document.title = "Nocely — Créez votre site de mariage"; };
+    return () => { document.title = "Daylora — Créez votre site de mariage"; };
   }, [wedding?.id]);
 
   useEffect(() => {

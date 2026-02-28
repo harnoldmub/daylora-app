@@ -1,7 +1,7 @@
 export const COLOR_TONES = [
   {
-    id: "nocely-signature",
-    name: "Nocely Signature",
+    id: "daylora-signature",
+    name: "Daylora Signature",
     description: "Premium, intemporel et chaleureux.",
     primaryColor: "#8C7A6B",
     secondaryColor: "#FBF8F3",
