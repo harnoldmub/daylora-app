@@ -75,15 +75,14 @@ type ModulesState = {
   liveEnabled: boolean;
 };
 
-const TOTAL_STEPS = 7;
-const stepLabels = ["Mariage", "Style", "Photos", "Galerie", "Formule", "Aperçu", "Compte"];
+const TOTAL_STEPS = 6;
+const stepLabels = ["Mariage", "Style", "Photos", "Galerie", "Aperçu", "Compte"];
 
 export default function Onboarding() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [plan, setPlan] = useState<"free" | "premium" | "lifetime">("free");
   const [toneId, setToneId] = useState<string>(COLOR_TONES[0].id);
   const [modules, setModules] = useState<ModulesState>({
     cagnotteEnabled: true,
@@ -180,7 +179,7 @@ export default function Onboarding() {
       const valid = await form.trigger(["title", "slug", "weddingDate", "firstName"]);
       if (!valid) return;
     }
-    if (step === 7) {
+    if (step === 6) {
       const valid = await form.trigger(["email", "password"]);
       if (!valid) return;
     }
@@ -190,7 +189,6 @@ export default function Onboarding() {
   const goBack = () => setStep((s) => Math.max(1, s - 1));
 
   const selectedTemplate = TEMPLATES.find(t => t.id === form.watch("templateId")) || TEMPLATES[0];
-  const requiresPremiumTemplate = selectedTemplate.premium;
   const selectedTone = COLOR_TONES.find(t => t.id === toneId) || COLOR_TONES[0];
 
   const onSubmit = async (data: OnboardingForm) => {
@@ -222,7 +220,7 @@ export default function Onboarding() {
           heroImage,
           couplePhoto,
           galleryImages,
-          plan,
+          plan: "free",
           referralCode: referralCode.trim() || undefined,
         }),
       });
@@ -240,18 +238,6 @@ export default function Onboarding() {
         });
       }
 
-      if (plan === "premium" && result?.wedding?.id) {
-        const loginRes = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ email: data.email, password: data.password }),
-        });
-        if (loginRes.ok) {
-          setLocation(`/${result.wedding.id}/billing?upgrade=1`);
-          return;
-        }
-      }
 
       setLocation(`/login?email=${encodeURIComponent(data.email)}&created=1`);
     } catch (error: any) {
@@ -399,30 +385,36 @@ export default function Onboarding() {
                       <p className="text-[#7A6B5E] text-sm mt-1">Template et palette de couleurs de votre site</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                      {TEMPLATES.map((tmpl) => (
+                      {TEMPLATES.filter(t => !t.premium).map((tmpl) => (
                         <button
                           type="button"
                           key={tmpl.id}
                           className={`text-left border rounded-3xl overflow-hidden transition-all relative ${form.watch("templateId") === tmpl.id ? "border-primary ring-2 ring-primary/20" : "border-[#E6DCCF]"}`}
-                          onClick={() => {
-                            form.setValue("templateId", tmpl.id);
-                            if (tmpl.premium && plan === "free") {
-                              setPlan("premium");
-                            }
-                          }}
+                          onClick={() => form.setValue("templateId", tmpl.id)}
                         >
-                          {tmpl.premium && (
-                            <span className="absolute top-3 right-3 z-10 text-[10px] font-bold bg-white/90 backdrop-blur-sm text-primary px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm border border-primary/10 flex items-center gap-1">
-                              <Star className="h-3 w-3" />
-                              Premium
-                            </span>
-                          )}
                           <img src={tmpl.image} alt={tmpl.name} className="w-full h-56 object-cover" />
                           <div className="p-4 space-y-1 bg-white">
                             <div className="font-serif text-2xl font-bold">{tmpl.name}</div>
                             <div className="text-xs uppercase tracking-wider text-muted-foreground">{tmpl.description}</div>
                           </div>
                         </button>
+                      ))}
+                      {TEMPLATES.filter(t => t.premium).map((tmpl) => (
+                        <div
+                          key={tmpl.id}
+                          className="text-left border rounded-3xl overflow-hidden relative border-[#E6DCCF] opacity-50 cursor-not-allowed"
+                        >
+                          <span className="absolute top-3 right-3 z-10 text-[10px] font-bold bg-white/90 backdrop-blur-sm text-primary px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm border border-primary/10 flex items-center gap-1">
+                            <Star className="h-3 w-3" />
+                            Premium
+                          </span>
+                          <img src={tmpl.image} alt={tmpl.name} className="w-full h-56 object-cover grayscale" />
+                          <div className="p-4 space-y-1 bg-white">
+                            <div className="font-serif text-2xl font-bold text-muted-foreground">{tmpl.name}</div>
+                            <div className="text-xs uppercase tracking-wider text-muted-foreground">{tmpl.description}</div>
+                            <div className="text-[10px] text-primary font-medium">Disponible après création du compte</div>
+                          </div>
+                        </div>
                       ))}
                     </div>
                     <div className="rounded-3xl border border-[#E6DCCF] p-5 bg-[#FBF8F3]">
@@ -526,100 +518,6 @@ export default function Onboarding() {
                 )}
 
                 {step === 5 && (
-                  <motion.div key="s5" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="space-y-4">
-                    <div className="text-center mb-2">
-                      <h2 className="text-2xl font-serif font-bold">Votre formule</h2>
-                      <p className="text-[#7A6B5E] text-sm mt-1">Choisissez votre plan et activez vos modules</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                      <button
-                        type="button"
-                        className={`rounded-2xl border-2 p-4 text-left transition-all ${plan === "free" ? "border-primary bg-primary/5" : "border-[#E6DCCF] hover:border-primary/30"} ${requiresPremiumTemplate ? "opacity-50 cursor-not-allowed" : ""}`}
-                        onClick={() => {
-                          if (!requiresPremiumTemplate) setPlan("free");
-                        }}
-                      >
-                        <div className="font-bold text-lg">Découverte</div>
-                        <div className="text-3xl font-serif font-bold mt-1">0€</div>
-                        <div className="text-xs text-[#7A6B5E] mt-1">10 invités max, 2 cadeaux, cagnotte incluse</div>
-                        {requiresPremiumTemplate && (
-                          <div className="text-[10px] text-primary font-medium mt-2">Le template choisi nécessite le plan Premium</div>
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        className={`rounded-2xl border-2 p-4 text-left transition-all relative overflow-hidden ${plan !== "free" ? "border-primary bg-primary/5" : "border-[#E6DCCF] hover:border-primary/30"}`}
-                        onClick={() => setPlan("premium")}
-                      >
-                        <div className="absolute top-2 right-2">
-                          <span className="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full">POPULAIRE</span>
-                        </div>
-                        <div className="font-bold text-lg flex items-center gap-2">
-                          <Star className="h-4 w-4 text-primary" />
-                          Premium
-                        </div>
-                        <div className="flex items-baseline gap-1 mt-1">
-                          <span className="text-3xl font-serif font-bold">149€</span>
-                          <span className="text-sm text-[#7A6B5E]">/ 12 mois</span>
-                        </div>
-                        <div className="text-xs text-[#7A6B5E] mt-1">Paiement unique — invités illimités</div>
-                      </button>
-                    </div>
-
-                    {[
-                      { key: "cagnotteEnabled", label: "Cagnotte", icon: <Wallet className="h-4 w-4" />, premium: false },
-                      { key: "giftsEnabled", label: "Liste cadeaux", icon: <Gift className="h-4 w-4" />, premium: false },
-                      { key: "jokesEnabled", label: "Blagues live", icon: <MessageCircle className="h-4 w-4" />, premium: true },
-                      { key: "liveEnabled", label: "Contributions live", icon: <Zap className="h-4 w-4" />, premium: true },
-                    ].map((item) => {
-                      const isLocked = item.premium && plan === "free";
-                      return (
-                        <div key={item.key} className={`flex items-center justify-between border rounded-2xl px-5 py-4 ${isLocked ? "border-[#E6DCCF] opacity-60" : "border-[#E6DCCF]"}`}>
-                          <div className="flex items-center gap-3 font-medium">
-                            <span className="text-primary">{item.icon}</span>
-                            {item.label}
-                            {item.premium && (
-                              <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase">Premium</span>
-                            )}
-                          </div>
-                          <Switch
-                            checked={isLocked ? false : modules[item.key as keyof ModulesState]}
-                            onCheckedChange={(checked) => setModules((prev) => ({ ...prev, [item.key]: checked }))}
-                            disabled={isLocked}
-                          />
-                        </div>
-                      );
-                    })}
-                    <p className="text-xs text-muted-foreground">Vous pourrez changer de plan à tout moment depuis votre espace admin.</p>
-
-                    <div className="rounded-2xl border border-[#E6DCCF] p-4 space-y-4">
-                      <div className="text-sm font-semibold">Cagnotte</div>
-                      <p className="text-xs text-muted-foreground">Redirigez vos invités vers votre cagnotte (Leetchi, PayPal, Lydia, etc.)</p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <Input
-                          value={externalCagnotteUrl}
-                          onChange={(e) => setExternalCagnotteUrl(e.target.value)}
-                          placeholder="https://..."
-                          className="h-11"
-                        />
-                        <select
-                          value={externalProvider}
-                          onChange={(e) => setExternalProvider(e.target.value)}
-                          className="h-11 rounded-md border border-border bg-background px-3 text-sm"
-                        >
-                          <option value="leetchi">Leetchi</option>
-                          <option value="paypal">PayPal</option>
-                          <option value="lydia">Lydia</option>
-                          <option value="stripe_payment_link">Stripe Payment Link</option>
-                          <option value="other">Autre</option>
-                        </select>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {step === 6 && (
                   <motion.div key="s6" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="space-y-6">
                     <div className="text-center mb-2">
                       <h2 className="text-2xl font-serif font-bold">Aperçu de votre site</h2>
@@ -727,7 +625,7 @@ export default function Onboarding() {
                   </motion.div>
                 )}
 
-                {step === 7 && (
+                {step === 6 && (
                   <motion.div key="s7" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="space-y-6">
                     <div className="text-center mb-2">
                       <h2 className="text-2xl font-serif font-bold">Créez votre compte</h2>
@@ -805,7 +703,7 @@ export default function Onboarding() {
                               <div>URL : <span className="font-semibold">daylora.app/{form.watch("slug")}</span></div>
                               <div>Template : <span className="font-semibold">{selectedTemplate.name}</span></div>
                               <div>Date : <span className="font-semibold">{formatDate(form.watch("weddingDate"))}</span></div>
-                              <div>Plan : <span className="font-semibold">{plan === "free" ? "Découverte (gratuit)" : "Premium (149€ / 12 mois)"}</span></div>
+                              <div>Plan : <span className="font-semibold">Découverte (gratuit)</span></div>
                             </div>
                           </div>
                         </div>
@@ -825,7 +723,7 @@ export default function Onboarding() {
                 </Button>
 
                 <div className="flex items-center gap-2">
-                  {step < TOTAL_STEPS && step !== 6 && (
+                  {step < TOTAL_STEPS && step !== 5 && (
                     <Button type="button" variant="outline" onClick={goNext} disabled={isLoading || isUploading}>
                       Passer
                     </Button>
@@ -833,7 +731,7 @@ export default function Onboarding() {
 
                   {step < TOTAL_STEPS ? (
                     <Button type="button" onClick={goNext} disabled={isLoading || isUploading}>
-                      {isUploading ? "Import..." : step === 6 ? "Tout est bon, je continue" : "Continuer"}
+                      {isUploading ? "Import..." : step === 5 ? "Tout est bon, je continue" : "Continuer"}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   ) : (
