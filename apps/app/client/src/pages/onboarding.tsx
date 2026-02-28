@@ -240,7 +240,7 @@ export default function Onboarding() {
         });
       }
 
-      if (plan === "premium" && result?.wedding?.slug) {
+      if (plan === "premium" && result?.wedding?.id) {
         const loginRes = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -248,7 +248,7 @@ export default function Onboarding() {
           body: JSON.stringify({ email: data.email, password: data.password }),
         });
         if (loginRes.ok) {
-          setLocation(`/${result.wedding.slug}/billing?upgrade=1`);
+          setLocation(`/${result.wedding.id}/billing?upgrade=1`);
           return;
         }
       }
