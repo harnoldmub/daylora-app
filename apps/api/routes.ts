@@ -294,7 +294,8 @@ export async function registerRoutes(app: Express) {
         console.error("Verification email sending failed:", mailError);
       }
 
-      const config = applyTemplateConfig(templateId || "classic", DEFAULT_WEDDING_CONFIG);
+      const safeTemplateId = "classic";
+      const config = applyTemplateConfig(safeTemplateId, DEFAULT_WEDDING_CONFIG);
       const tone = resolveTone(toneId);
       const mergedConfig = {
         ...config,
@@ -345,7 +346,7 @@ export async function registerRoutes(app: Express) {
           ownerId: user.id,
           title,
           slug,
-          templateId: templateId || "classic",
+          templateId: safeTemplateId,
           weddingDate: weddingDate ? new Date(weddingDate) : null,
           currentPlan: "free",
           config: mergedConfig,
@@ -573,7 +574,9 @@ export async function registerRoutes(app: Express) {
         }
       }
 
-      const config = applyTemplateConfig(templateId || "classic", DEFAULT_WEDDING_CONFIG);
+      const premiumTemplates = ["modern", "minimal"];
+      const resolvedTemplateId = (premiumTemplates.includes(templateId) && currentPlan !== "premium") ? "classic" : (templateId || "classic");
+      const config = applyTemplateConfig(resolvedTemplateId, DEFAULT_WEDDING_CONFIG);
       const tone = resolveTone(toneId);
       const mergedConfig = {
         ...config,
@@ -635,7 +638,7 @@ export async function registerRoutes(app: Express) {
         ownerId: user.id,
         title,
         slug,
-        templateId: templateId || "classic",
+        templateId: resolvedTemplateId,
         weddingDate: weddingDate ? new Date(weddingDate) : null,
         currentPlan: currentPlan === "premium" ? "premium" : "free",
         config: mergedConfig,
@@ -763,6 +766,10 @@ export async function registerRoutes(app: Express) {
       }
 
       if (updates.templateId) {
+        const premiumTemplates = ["modern", "minimal"];
+        if (premiumTemplates.includes(updates.templateId) && wedding.currentPlan !== "premium") {
+          return res.status(403).json({ message: "Ce template est réservé au plan Premium." });
+        }
         const baseConfig = updates.config || wedding.config;
         updates.config = applyTemplateConfig(updates.templateId, baseConfig);
       }
