@@ -514,22 +514,22 @@ export default function LandingPage() {
             <div className="p-10 rounded-[2.5rem] bg-primary relative overflow-hidden space-y-8 flex flex-col justify-between shadow-[0_20px_60px_-15px_rgba(200,169,106,0.2)] hover:-translate-y-1 transition-transform">
               <div className="absolute top-4 right-6 px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold uppercase tracking-tighter text-white">Best seller</div>
               <div className="space-y-6">
-                <div className="text-white/80 font-bold tracking-widest uppercase text-xs">Premium</div>
+                <div className="text-white/80 font-bold tracking-widest uppercase text-xs">Premium Annuel</div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-5xl font-bold text-white">23,99€</span>
-                  <span className="text-white/80 text-sm">/mois</span>
+                  <span className="text-5xl font-bold text-white">149€</span>
+                  <span className="text-white/80 text-sm">/ 12 mois</span>
                 </div>
-                <p className="text-white/90 text-sm">Best seller. Minimum 2 mois, puis flexible.</p>
+                <p className="text-white/90 text-sm">Paiement unique — aucun renouvellement automatique.</p>
                 <ul className="space-y-4">
                   {[
-                    "2 templates premium",
+                    "Tous les templates",
                     "Invités illimités",
-                    "Liste cadeaux",
+                    "Cadeaux illimités",
                     "Live contributions + animations",
                     "Blagues live",
                     "Suppression branding Daylora",
                     "Export complet",
-                    "Emails illimités",
+                    "Pages personnalisées",
                   ].map((item, i) => (
                     <li key={i} className="flex items-center gap-3 text-sm text-white">
                       <CheckCircle2 className="h-4 w-4 text-white" />

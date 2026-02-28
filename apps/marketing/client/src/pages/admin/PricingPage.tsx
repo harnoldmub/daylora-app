@@ -94,32 +94,32 @@ export default function PricingPage() {
                     )}
                     <div className="space-y-6">
                         <div>
-                            <h3 className="text-2xl font-bold">Premium</h3>
-                            <p className="text-muted-foreground">Best seller</p>
+                            <h3 className="text-2xl font-bold">Premium Annuel</h3>
+                            <p className="text-muted-foreground">Paiement unique</p>
                         </div>
                         <div className="flex items-baseline gap-2">
-                            <span className="text-4xl font-bold font-serif">23,99€</span>
-                            <span className="text-muted-foreground">/ mois</span>
+                            <span className="text-4xl font-bold font-serif">149€</span>
+                            <span className="text-muted-foreground">/ 12 mois</span>
                         </div>
                         <ul className="space-y-3">
-                            <Feature text="2 templates premium" checked />
+                            <Feature text="Tous les templates" checked />
                             <Feature text="Invités illimités" checked />
-                            <Feature text="Liste cadeaux" checked />
-                            <Feature text="Live Contributions & Jokes" checked />
+                            <Feature text="Cadeaux illimités" checked />
+                            <Feature text="Live contributions & blagues" checked />
                             <Feature text="Suppression branding Daylora" checked />
+                            <Feature text="Pages personnalisées" checked />
                             <Feature text="Exports complets" checked />
-                            <Feature text="Emails illimités" checked />
                         </ul>
                         <Button
                             className="w-full"
                             disabled={isPremium || checkoutMutation.isPending}
-                            onClick={() => checkoutMutation.mutate('subscription')}
+                            onClick={() => checkoutMutation.mutate('one_time')}
                         >
                             {checkoutMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {isPremium ? "Déjà Premium" : "Passer au Premium"}
+                            {isPremium ? "Déjà Premium" : "Débloquer Premium — 149€"}
                         </Button>
                         <p className="text-center text-xs text-muted-foreground">
-                            Minimum 2 mois, puis sans engagement.
+                            Paiement unique — aucun renouvellement automatique.
                         </p>
                     </div>
                 </Card>

@@ -327,3 +327,57 @@ export async function sendDateChangeApologyEmail(wedding: Wedding, guestData: {
     throw error;
   }
 }
+
+export async function sendPremiumConfirmationEmail(wedding: Wedding, ownerEmail: string, billingType: "subscription" | "one_time") {
+  const type = 'premium_confirmation';
+  const planLabel = billingType === "one_time" ? "Premium Annuel (149\u20AC)" : "Premium Mensuel (23,99\u20AC/mois)";
+  const subject = "Bienvenue dans Daylora Premium !";
+
+  try {
+    const emailHtml = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8">
+<style>
+body{font-family:'Georgia',serif;line-height:1.7;color:#333;max-width:600px;margin:0 auto;padding:40px 20px;background:#faf9f7}
+.card{background:#fff;border-radius:12px;padding:40px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.badge{display:inline-block;background:#8B7355;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:1px}
+h1{font-size:24px;margin:20px 0 8px}
+.plan{background:#f5f0eb;border-radius:8px;padding:16px;margin:20px 0;text-align:center}
+.plan strong{font-size:18px}
+ul{padding-left:20px}
+ul li{margin:8px 0}
+.cta{display:inline-block;background:#8B7355;color:#fff;text-decoration:none;padding:12px 32px;border-radius:8px;font-weight:700;margin:20px 0}
+.footer{text-align:center;font-size:12px;color:#999;margin-top:30px}
+</style></head>
+<body>
+<div class="card">
+<div style="text-align:center">
+<span class="badge">Premium</span>
+<h1>Bienvenue dans Daylora Premium</h1>
+<p style="color:#7A6B5E">Votre site de mariage vient de passer au niveau sup\u00E9rieur.</p>
+</div>
+<div class="plan"><strong>${planLabel}</strong></div>
+<p>Voici ce qui est maintenant d\u00E9bloqu\u00E9 :</p>
+<ul>
+<li>Tous les templates (Modern, Minimal\u2026)</li>
+<li>Invit\u00E9s illimit\u00E9s</li>
+<li>Cadeaux illimit\u00E9s</li>
+<li>Galerie 50 photos</li>
+<li>Pages personnalis\u00E9es</li>
+<li>Contributions & blagues live</li>
+<li>Suppression du branding Daylora</li>
+</ul>
+<div style="text-align:center">
+<a href="https://daylora.app/${wedding.id}" class="cta">Acc\u00E9der \u00E0 mon site</a>
+</div>
+<p style="font-size:14px;color:#7A6B5E">Si vous avez la moindre question, r\u00E9pondez simplement \u00E0 cet email.</p>
+</div>
+<div class="footer"><p>Daylora \u2014 Votre site de mariage, simplement.</p></div>
+</body></html>`;
+
+    await sendEmail(ownerEmail, subject, emailHtml);
+    await logEmail(wedding.id, ownerEmail, subject, type, 'sent');
+  } catch (error) {
+    await logEmail(wedding.id, ownerEmail, subject, type, 'failed', (error as Error).message);
+  }
+}

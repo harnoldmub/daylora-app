@@ -416,16 +416,16 @@ export default function PricingPage() {
           icon={<Crown className="h-5 w-5" />}
         />
         <KpiCard
-          label="Abonnement"
+          label="Premium Annuel"
+          value="149€"
+          hint="Paiement unique — 12 mois"
+          icon={<CalendarDays className="h-5 w-5" />}
+        />
+        <KpiCard
+          label="Mensuel"
           value="23,99€"
           hint="Par mois (min. 2 mois)"
           icon={<Check className="h-5 w-5" />}
-        />
-        <KpiCard
-          label="Annuel"
-          value="149€"
-          hint="Pour 1 an complet"
-          icon={<CalendarDays className="h-5 w-5" />}
         />
       </div>
 
@@ -437,9 +437,9 @@ export default function PricingPage() {
       )}
 
       <div className="grid md:grid-cols-3 gap-8">
-        <Card className="p-8 relative border-primary shadow-lg ring-1 ring-primary">
+        <Card className="p-8 relative border-muted">
           <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2">
-            <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+            <span className="bg-muted text-muted-foreground text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
               Actuel
             </span>
           </div>
@@ -476,17 +476,17 @@ export default function PricingPage() {
           </div>
           <div className="space-y-6">
             <div>
-              <h3 className="text-2xl font-bold">Premium</h3>
-              <p className="text-muted-foreground">Best seller</p>
+              <h3 className="text-2xl font-bold">Premium Annuel</h3>
+              <p className="text-muted-foreground">Paiement unique — pas d'abonnement</p>
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold font-serif">23,99€</span>
-              <span className="text-muted-foreground">/ mois</span>
+              <span className="text-4xl font-bold font-serif">149€</span>
+              <span className="text-muted-foreground">/ 12 mois</span>
             </div>
             <ul className="space-y-3">
               <Feature text="Tous les templates" checked />
               <Feature text="Invités illimités" checked />
-              <Feature text="Liste cadeaux" checked />
+              <Feature text="Cadeaux illimités" checked />
               <Feature text="Live contributions & blagues" checked />
               <Feature text="Suppression branding Daylora" checked />
               <Feature text="50 photos galerie" checked />
@@ -543,37 +543,34 @@ export default function PricingPage() {
             <Button
               className="w-full h-12 text-base font-bold shadow-md"
               disabled={checkoutMutation.isPending}
-              onClick={() => checkoutMutation.mutate("subscription")}
+              onClick={() => checkoutMutation.mutate("one_time")}
             >
               {checkoutMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              S'abonner — 23,99€/mois
+              Débloquer Daylora Premium — 149€
             </Button>
             <p className="text-center text-xs text-muted-foreground">
-              Minimum 2 mois, puis sans engagement.
+              Paiement unique — aucun renouvellement automatique.
             </p>
           </div>
         </Card>
 
         <Card className="p-8 relative overflow-hidden border-dashed">
-          <div className="absolute top-4 right-4 text-primary/10">
-            <CalendarDays className="h-20 w-20" />
-          </div>
           <div className="space-y-6">
             <div>
-              <h3 className="text-2xl font-bold">Annuel</h3>
-              <p className="text-muted-foreground">1 an complet</p>
+              <h3 className="text-2xl font-bold text-muted-foreground">Mensuel</h3>
+              <p className="text-muted-foreground">Option flexible</p>
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold font-serif">149€</span>
-              <span className="text-muted-foreground">/ an</span>
+              <span className="text-4xl font-bold font-serif text-muted-foreground">23,99€</span>
+              <span className="text-muted-foreground">/ mois</span>
             </div>
             <ul className="space-y-3">
               <Feature text="Tout le Premium inclus" checked />
-              <Feature text="12 mois d'accès" checked />
-              <Feature text="Économisez 35%" checked />
-              <Feature text="Mises à jour incluses" checked />
+              <Feature text="Engagement minimum 2 mois" checked />
+              <Feature text="Sans engagement après" checked />
+              <Feature text="Résiliable à tout moment" checked />
             </ul>
             <div className="space-y-2">
               <div className="flex gap-2">
@@ -626,19 +623,52 @@ export default function PricingPage() {
               variant="outline"
               className="w-full"
               disabled={checkoutMutation.isPending}
-              onClick={() => checkoutMutation.mutate("one_time")}
+              onClick={() => checkoutMutation.mutate("subscription")}
             >
               {checkoutMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Acheter — 149€/an
+              S'abonner — 23,99€/mois
             </Button>
             <p className="text-center text-xs text-muted-foreground">
-              Renouvelable chaque année.
+              Minimum 2 mois, puis sans engagement.
             </p>
           </div>
         </Card>
       </div>
+
+      <Card className="p-6 bg-primary/5 border-primary/10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div className="space-y-2">
+            <div className="mx-auto w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Check className="h-5 w-5 text-primary" />
+            </div>
+            <p className="text-sm font-semibold">Accès immédiat</p>
+            <p className="text-xs text-muted-foreground">Dès le paiement confirmé</p>
+          </div>
+          <div className="space-y-2">
+            <div className="mx-auto w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <CalendarDays className="h-5 w-5 text-primary" />
+            </div>
+            <p className="text-sm font-semibold">12 mois complets</p>
+            <p className="text-xs text-muted-foreground">Accès garanti 1 an</p>
+          </div>
+          <div className="space-y-2">
+            <div className="mx-auto w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Ban className="h-5 w-5 text-primary" />
+            </div>
+            <p className="text-sm font-semibold">Aucune reconduction</p>
+            <p className="text-xs text-muted-foreground">Pas de prélèvement automatique</p>
+          </div>
+          <div className="space-y-2">
+            <div className="mx-auto w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <RefreshCw className="h-5 w-5 text-primary" />
+            </div>
+            <p className="text-sm font-semibold">Renouvellement libre</p>
+            <p className="text-xs text-muted-foreground">Renouvelez manuellement si besoin</p>
+          </div>
+        </div>
+      </Card>
 
       <HelpCard />
     </div>

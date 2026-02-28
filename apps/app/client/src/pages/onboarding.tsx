@@ -560,10 +560,10 @@ export default function Onboarding() {
                           Premium
                         </div>
                         <div className="flex items-baseline gap-1 mt-1">
-                          <span className="text-3xl font-serif font-bold">23,99€</span>
-                          <span className="text-sm text-[#7A6B5E]">/mois</span>
+                          <span className="text-3xl font-serif font-bold">149€</span>
+                          <span className="text-sm text-[#7A6B5E]">/ 12 mois</span>
                         </div>
-                        <div className="text-xs text-[#7A6B5E] mt-1">Invités illimités, tous les modules</div>
+                        <div className="text-xs text-[#7A6B5E] mt-1">Paiement unique — invités illimités</div>
                       </button>
                     </div>
 
@@ -805,7 +805,7 @@ export default function Onboarding() {
                               <div>URL : <span className="font-semibold">daylora.app/{form.watch("slug")}</span></div>
                               <div>Template : <span className="font-semibold">{selectedTemplate.name}</span></div>
                               <div>Date : <span className="font-semibold">{formatDate(form.watch("weddingDate"))}</span></div>
-                              <div>Plan : <span className="font-semibold">{plan === "free" ? "Découverte (gratuit)" : "Premium (23,99€/mois)"}</span></div>
+                              <div>Plan : <span className="font-semibold">{plan === "free" ? "Découverte (gratuit)" : "Premium (149€ / 12 mois)"}</span></div>
                             </div>
                           </div>
                         </div>

@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { db } from "./db";
 import { promoCodes } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
+import { sendPremiumConfirmationEmail } from "./email";
 
 export async function handleStripeWebhook(req: Request, res: Response) {
   const signature = req.headers["stripe-signature"] as string | undefined;
@@ -50,11 +51,25 @@ export async function handleStripeWebhook(req: Request, res: Response) {
         // Contributions also use Checkout Sessions in `mode=payment`. We only promote to Premium for billing flows.
         if (purpose !== "billing" || !weddingId) break;
 
+        const billingType = session.metadata?.billingType as "subscription" | "one_time" | undefined;
+
         if (session.subscription) {
           const sub = await stripe.subscriptions.retrieve(String(session.subscription));
           await upsertSubscription(sub, weddingId);
         } else {
           await storage.updateWedding(weddingId, { currentPlan: "premium" });
+        }
+
+        try {
+          const wedding = await storage.getWedding(weddingId);
+          if (wedding) {
+            const owner = await storage.getUser(wedding.ownerId);
+            if (owner?.email) {
+              await sendPremiumConfirmationEmail(wedding, owner.email, billingType || "one_time");
+            }
+          }
+        } catch (emailErr) {
+          console.error("Failed to send premium confirmation email:", emailErr);
         }
 
         const referralCode = session.metadata?.referralCode;

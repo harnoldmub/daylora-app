@@ -1427,7 +1427,7 @@ export async function registerRoutes(app: Express) {
       const sessionConfig: any = {
         mode: type === "subscription" ? "subscription" : "payment",
         line_items: [{ price: priceId, quantity: 1 }],
-        metadata: { weddingId: wedding.id, purpose: "billing", billingType: type, referralCode: validatedReferralCode || undefined, promoCode: validatedPromoCode || undefined, userId },
+        metadata: { weddingId: wedding.id, purpose: "billing", billingType: type, referralCode: validatedReferralCode || undefined, promoCode: validatedPromoCode || undefined, userId: String(userId) },
         success_url: `${process.env.APP_BASE_URL || "https://daylora.app"}/${wedding.id}/billing?success=1&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.APP_BASE_URL || "https://daylora.app"}/${wedding.id}/billing?canceled=1`,
       };
@@ -1440,8 +1440,14 @@ export async function registerRoutes(app: Express) {
         sessionConfig.subscription_data = { metadata: { weddingId: wedding.id, purpose: "billing" } };
         if (discounts.length > 0) sessionConfig.discounts = discounts;
       } else {
-        sessionConfig.payment_intent_data = { metadata: { weddingId: wedding.id, purpose: "billing" } };
+        sessionConfig.payment_intent_data = {
+          metadata: { weddingId: wedding.id, purpose: "billing" },
+          description: "Daylora Premium — Paiement unique 149€ pour 12 mois",
+        };
         if (discounts.length > 0) sessionConfig.discounts = discounts;
+        sessionConfig.custom_text = {
+          submit: { message: "Paiement unique de 149€ — Aucun abonnement ni renouvellement automatique." },
+        };
       }
 
       const session = await stripe.checkout.sessions.create(sessionConfig);
