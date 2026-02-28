@@ -719,6 +719,58 @@ export const productFeedbackRelations = relations(productFeedback, ({ one }) => 
   }),
 }));
 
+export const superAdmins = pgTable("super_admins", {
+  id: serial("id").primaryKey(),
+  email: varchar("email", { length: 255 }).unique().notNull(),
+  passwordHash: text("password_hash").notNull(),
+  mustChangePassword: boolean("must_change_password").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type SuperAdmin = typeof superAdmins.$inferSelect;
+export type InsertSuperAdmin = typeof superAdmins.$inferInsert;
+
+export const adminAuditLogs = pgTable("admin_audit_logs", {
+  id: serial("id").primaryKey(),
+  adminId: integer("admin_id").references(() => superAdmins.id).notNull(),
+  action: varchar("action", { length: 100 }).notNull(),
+  targetType: varchar("target_type", { length: 50 }),
+  targetId: varchar("target_id", { length: 255 }),
+  details: jsonb("details"),
+  ipAddress: varchar("ip_address", { length: 100 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type AdminAuditLog = typeof adminAuditLogs.$inferSelect;
+export type InsertAdminAuditLog = typeof adminAuditLogs.$inferInsert;
+
+export const adminAuditLogsRelations = relations(adminAuditLogs, ({ one }) => ({
+  admin: one(superAdmins, {
+    fields: [adminAuditLogs.adminId],
+    references: [superAdmins.id],
+  }),
+}));
+
+export const promoCodes = pgTable("promo_codes", {
+  id: serial("id").primaryKey(),
+  code: varchar("code", { length: 50 }).unique().notNull(),
+  type: varchar("type", { length: 20 }).notNull(),
+  value: integer("value").notNull(),
+  durationMonths: integer("duration_months"),
+  startDate: timestamp("start_date").defaultNow(),
+  endDate: timestamp("end_date"),
+  maxUses: integer("max_uses"),
+  maxUsesPerUser: integer("max_uses_per_user").default(1),
+  currentUses: integer("current_uses").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  stripePromoId: varchar("stripe_promo_id", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type PromoCode = typeof promoCodes.$inferSelect;
+export type InsertPromoCode = typeof promoCodes.$inferInsert;
+
 export const PLAN_LIMITS = {
   free: {
     maxRsvp: 30,

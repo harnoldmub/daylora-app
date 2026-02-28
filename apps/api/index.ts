@@ -195,7 +195,7 @@ app.use((req, res, next) => {
     const knownPrefixes = new Set([
       "login", "signup", "dashboard", "onboarding", "onboarding-preview",
       "verify-email", "forgot-password", "reset-password", "contribution",
-      "invitation", "checkin", "preview", "api", "assets", "src",
+      "invitation", "checkin", "preview", "admin", "api", "assets", "src",
     ]);
 
     app.get("*", async (req, res) => {

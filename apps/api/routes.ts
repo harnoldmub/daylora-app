@@ -238,6 +238,9 @@ export async function registerRoutes(app: Express) {
   app.use("/api/auth", authRoutes);
   app.use("/api/auth", oauthRoutes);
 
+  const { registerSuperAdminRoutes } = await import("./super-admin-routes");
+  registerSuperAdminRoutes(app);
+
   const isDevEnv = process.env.NODE_ENV !== "production";
   const signupWithWeddingLimiter = (await import("express-rate-limit")).default({ windowMs: 60 * 1000, max: isDevEnv ? 100 : 5, message: "Trop de tentatives. Réessayez dans une minute." });
   const { authService } = await import("./auth-service");

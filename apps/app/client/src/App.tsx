@@ -38,6 +38,15 @@ import GuestInvitation from "@/pages/dot-invitation";
 import CustomPage from "@/pages/custom-page";
 import LegalPage from "@/pages/legal-page";
 
+import SuperAdminLogin from "@/pages/super-admin/SuperAdminLogin";
+import SuperAdminLayout from "@/pages/super-admin/SuperAdminLayout";
+import SuperAdminDashboard from "@/pages/super-admin/SuperAdminDashboard";
+import SuperAdminTenants from "@/pages/super-admin/SuperAdminTenants";
+import SuperAdminTenantDetail from "@/pages/super-admin/SuperAdminTenantDetail";
+import SuperAdminPromos from "@/pages/super-admin/SuperAdminPromos";
+import SuperAdminAuditLogs from "@/pages/super-admin/SuperAdminAuditLogs";
+import SuperAdminSettings from "@/pages/super-admin/SuperAdminSettings";
+
 import { useWedding } from "@/hooks/use-api";
 
 const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-/;
@@ -129,6 +138,23 @@ function AppRouter() {
       <Route path="/checkin" component={CheckIn} />
 
       <Route path="/:slug/guest/:guestId" component={GuestInvitation} />
+
+      <Route path="/admin/login" component={SuperAdminLogin} />
+      <Route path="/admin" nest>
+        {() => (
+          <SuperAdminLayout>
+            <Switch>
+              <Route path="/dashboard" component={SuperAdminDashboard} />
+              <Route path="/tenants/:id" component={SuperAdminTenantDetail} />
+              <Route path="/tenants" component={SuperAdminTenants} />
+              <Route path="/promos" component={SuperAdminPromos} />
+              <Route path="/audit" component={SuperAdminAuditLogs} />
+              <Route path="/settings" component={SuperAdminSettings} />
+              <Route><Redirect to="/admin/dashboard" /></Route>
+            </Switch>
+          </SuperAdminLayout>
+        )}
+      </Route>
 
       <Route path="/preview/:slug" nest>
         {(params) => <PublicRoutes slug={params.slug} isPreview />}
