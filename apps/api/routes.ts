@@ -256,9 +256,6 @@ export async function registerRoutes(app: Express) {
       if (!email || !password || !firstName) return res.status(400).json({ message: "Email, mot de passe et prénom requis." });
       if (!title || !slug) return res.status(400).json({ message: "Titre et URL du site requis." });
       if (password.length < 8) return res.status(400).json({ message: "Le mot de passe doit contenir au moins 8 caractères." });
-      if (paymentMode === "external" && features?.cagnotteEnabled && !externalCagnotteUrl?.trim()) {
-        return res.status(400).json({ message: "Ajoutez un lien de cagnotte externe." });
-      }
 
       const existing = await storage.getUserByEmail(email);
       if (existing) return res.status(400).json({ message: "Cet email est déjà utilisé." });
@@ -350,7 +347,7 @@ export async function registerRoutes(app: Express) {
           slug,
           templateId: templateId || "classic",
           weddingDate: weddingDate ? new Date(weddingDate) : null,
-          currentPlan: plan === "premium" || plan === "lifetime" ? "premium" : "free",
+          currentPlan: "free",
           config: mergedConfig,
           status: "draft",
         });
@@ -1070,6 +1067,12 @@ export async function registerRoutes(app: Express) {
     const imageUrl = req.body?.imageUrl;
     if (typeof imageUrl === "string" && imageUrl.startsWith("data:image/") && imageUrl.length > 900_000) {
       return res.status(413).json({ message: "Image trop volumineuse. Importez une image plus légère." });
+    }
+    const plan = (wedding.currentPlan === "premium" ? "premium" : "free") as keyof typeof PLAN_LIMITS;
+    const limits = PLAN_LIMITS[plan];
+    const existingGifts = await storage.getGifts(wedding.id);
+    if (existingGifts.length >= limits.maxGifts) {
+      return res.status(402).json({ message: `La limite de ${limits.maxGifts} cadeaux est atteinte. Passez au Premium pour ajouter des cadeaux illimités.` });
     }
     const gift = await storage.createGift(wedding.id, req.body);
     res.json(gift);

@@ -491,10 +491,10 @@ export default function LandingPage() {
                 <ul className="space-y-4">
                   {[
                     "1 template",
-                    "Jusqu'à 50 invités",
+                    "Jusqu'à 10 invités",
+                    "Jusqu'à 2 cadeaux",
                     "Cagnotte activée",
                     "Branding Daylora visible",
-                    "Sans liste cadeaux",
                     "Sans live contributions avancé",
                   ].map((item, i) => (
                     <li key={i} className="flex items-center gap-3 text-sm text-[#6B5B4F]">

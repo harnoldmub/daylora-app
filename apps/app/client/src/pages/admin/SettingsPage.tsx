@@ -284,16 +284,15 @@ export default function SettingsPage() {
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-medium flex items-center gap-2">
-              Liste cadeaux
-              {!isPremium && <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary rounded font-semibold uppercase">Premium</span>}
+            <p className="font-medium">Liste cadeaux</p>
+            <p className="text-sm text-muted-foreground">
+              Affiche la liste de cadeaux sur la page d'accueil.
+              {!isPremium && " (max. 2 en Découverte)"}
             </p>
-            <p className="text-sm text-muted-foreground">Affiche la liste de cadeaux sur la page d'accueil.</p>
           </div>
           <Switch
             checked={features.giftsEnabled}
             onCheckedChange={(v) => setFeatures({ ...features, giftsEnabled: v })}
-            disabled={!isPremium}
           />
         </div>
         <div className="flex items-center justify-between">

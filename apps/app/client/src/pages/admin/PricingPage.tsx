@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Check,
@@ -208,6 +208,22 @@ export default function PricingPage() {
     },
   });
 
+  const upgradeTriggered = useRef(false);
+  useEffect(() => {
+    if (upgradeTriggered.current) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("upgrade") === "1" && wedding?.currentPlan !== "premium") {
+      upgradeTriggered.current = true;
+      params.delete("upgrade");
+      const next = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
+      window.history.replaceState({}, "", next);
+      toast({
+        title: "Finalisez votre abonnement",
+        description: "Votre compte a été créé. Souscrivez à Premium pour accéder à toutes les fonctionnalités.",
+      });
+    }
+  }, [wedding, toast]);
+
   const validateReferral = async (code: string) => {
     if (!code.trim()) {
       setReferralValid(null);
@@ -305,7 +321,7 @@ export default function PricingPage() {
         <KpiCard
           label="Plan actuel"
           value="Découverte"
-          hint="30 invités max"
+          hint="10 invités max"
           icon={<Crown className="h-5 w-5" />}
         />
         <KpiCard
@@ -344,11 +360,11 @@ export default function PricingPage() {
             <div className="text-4xl font-bold font-serif">0€</div>
             <ul className="space-y-3">
               <Feature text="1 template" checked />
-              <Feature text="Jusqu'à 30 invités" checked />
+              <Feature text="Jusqu'à 10 invités" checked />
+              <Feature text="Jusqu'à 2 cadeaux" checked />
               <Feature text="Cagnotte activée" checked />
               <Feature text="Branding Daylora visible" checked />
               <Feature text="6 photos galerie max" checked />
-              <Feature text="Liste cadeaux" checked={false} />
               <Feature text="Live contributions & blagues" checked={false} />
               <Feature text="Pages personnalisées" checked={false} />
             </ul>

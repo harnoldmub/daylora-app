@@ -773,8 +773,9 @@ export type InsertPromoCode = typeof promoCodes.$inferInsert;
 
 export const PLAN_LIMITS = {
   free: {
-    maxRsvp: 30,
-    giftsEnabled: false,
+    maxRsvp: 10,
+    maxGifts: 2,
+    giftsEnabled: true,
     liveEnabled: false,
     jokesEnabled: false,
     cagnotteEnabled: true,
@@ -784,6 +785,7 @@ export const PLAN_LIMITS = {
   },
   premium: {
     maxRsvp: Infinity,
+    maxGifts: Infinity,
     giftsEnabled: true,
     liveEnabled: true,
     jokesEnabled: true,

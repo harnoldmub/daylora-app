@@ -281,11 +281,23 @@ export default function GiftsPage() {
     setDeleteOpen(true);
   };
 
+  const isPremium = wedding?.currentPlan === "premium";
+  const maxGifts = isPremium ? Infinity : 2;
+  const giftLimitReached = !isPremium && gifts.length >= maxGifts;
+
   const submitCreate = () => {
     if (!form.name.trim()) {
       toast({
         title: "Information manquante",
         description: "Veuillez saisir un nom pour le cadeau avant de l'ajouter.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (giftLimitReached) {
+      toast({
+        title: "Limite atteinte",
+        description: "Passez à Premium pour ajouter des cadeaux illimités.",
         variant: "destructive",
       });
       return;
@@ -316,7 +328,7 @@ export default function GiftsPage() {
           <Button
             variant="outline"
             onClick={() => addSuggestionsMutation.mutate()}
-            disabled={addSuggestionsMutation.isPending}
+            disabled={addSuggestionsMutation.isPending || giftLimitReached}
             data-tour="gifts-suggestions"
           >
             {addSuggestionsMutation.isPending ? (
@@ -328,7 +340,7 @@ export default function GiftsPage() {
           </Button>
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button data-tour="gifts-add">
+            <Button data-tour="gifts-add" disabled={giftLimitReached}>
               <Plus className="h-4 w-4 mr-2" />
               Ajouter un cadeau
             </Button>
@@ -420,6 +432,19 @@ export default function GiftsPage() {
           </div>
         }
       />
+
+      {giftLimitReached && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Gift className="h-5 w-5 text-amber-600" />
+            <div>
+              <div className="font-semibold text-sm text-amber-900">{gifts.length}/{maxGifts} cadeaux utilisés</div>
+              <div className="text-xs text-amber-700">Passez à Premium pour des cadeaux illimités.</div>
+            </div>
+          </div>
+          <a href={`/${weddingId}/billing`} className="text-sm font-semibold text-amber-700 hover:text-amber-900 underline">Passer à Premium</a>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-3 gap-6">
         <KpiCard

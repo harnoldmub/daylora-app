@@ -68,10 +68,10 @@ export default function PricingPage() {
                         <div className="text-4xl font-bold font-serif">0€</div>
                         <ul className="space-y-3">
                             <Feature text="1 template" checked />
-                            <Feature text="Jusqu'à 50 invités" checked />
+                            <Feature text="Jusqu'à 10 invités" checked />
+                            <Feature text="Jusqu'à 2 cadeaux" checked />
                             <Feature text="Cagnotte activée" checked />
                             <Feature text="Branding Daylora visible" checked />
-                            <Feature text="Liste cadeaux" checked={false} />
                             <Feature text="Live contributions avancé" checked={false} />
                         </ul>
                         <Button variant="outline" className="w-full" disabled={!isPremium}>

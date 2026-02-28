@@ -240,6 +240,19 @@ export default function Onboarding() {
         });
       }
 
+      if (plan === "premium" && result?.wedding?.slug) {
+        const loginRes = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email: data.email, password: data.password }),
+        });
+        if (loginRes.ok) {
+          setLocation(`/${result.wedding.slug}/billing?upgrade=1`);
+          return;
+        }
+      }
+
       setLocation(`/login?email=${encodeURIComponent(data.email)}&created=1`);
     } catch (error: any) {
       setIsLoading(false);
@@ -529,7 +542,7 @@ export default function Onboarding() {
                       >
                         <div className="font-bold text-lg">Découverte</div>
                         <div className="text-3xl font-serif font-bold mt-1">0€</div>
-                        <div className="text-xs text-[#7A6B5E] mt-1">30 invités max, cagnotte incluse</div>
+                        <div className="text-xs text-[#7A6B5E] mt-1">10 invités max, 2 cadeaux, cagnotte incluse</div>
                         {requiresPremiumTemplate && (
                           <div className="text-[10px] text-primary font-medium mt-2">Le template choisi nécessite le plan Premium</div>
                         )}
