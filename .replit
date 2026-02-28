@@ -75,3 +75,4 @@ STRIPE_PRICE_LIFETIME = "price_1T2F8zCsy2ZICqoPdsEp5pAD"
 [userenv.shared]
 APP_NAME = "Daylora"
 APP_DOMAIN = "daylora.app"
+SUPER_ADMIN_EMAIL = "admin@daylora.app"

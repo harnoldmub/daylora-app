@@ -1,0 +1,65 @@
+Je veux un espace Super Admin interne pour Daylora accessible sur :
+https://daylora.app/admin
+
+Objectif :
+Un backoffice “plateforme” (pour moi uniquement) pour gérer tous les mariages/tenants et la facturation (plans, codes promos), sans impacter les comptes clients.
+
+Contraintes :
+- Ne pas casser l’auth existante côté utilisateurs (login app)
+- Super Admin = compte séparé (rôle plateforme)
+- Accès strictement sécurisé (pas visible dans l’app client)
+- Pas de refactor hors scope
+
+Fonctionnalités attendues (V1) :
+
+1) Auth Super Admin
+- Page login dédiée /admin/login
+- Identifiant + mot de passe (email/password)
+- Session sécurisée (cookie httpOnly)
+- Protection brute-force/rate limit
+- Après connexion : obligation de pouvoir changer le mot de passe
+  (écran “Changer mon mot de passe” accessible depuis /admin/settings)
+
+2) Gestion des “mariages” (tenants)
+- Liste paginée + recherche (slug, nom, email owner, date création, plan)
+- Accès “Voir” une fiche mariage :
+   - infos principales
+   - statut plan (free/premium)
+   - dernier paiement / statut Stripe si dispo
+   - liens rapides : ouvrir le site public / ouvrir le backoffice du tenant (en lecture seule si possible)
+- Actions :
+   - Désactiver / réactiver un tenant
+   - Forcer un plan (ex: passer premium) + date d’expiration
+   - Reset slug (si besoin) avec confirmation
+
+3) Plans / Forfaits (configuration plateforme)
+- CRUD Plans : Free / Premium Mensuel / Premium Annuel
+- Définir pour chaque plan :
+   - prix affiché
+   - limites (ex: invités max, photos max, templates)
+   - features activées/désactivées
+- IMPORTANT : ne pas casser l’intégration Stripe actuelle
+  -> si les plans Stripe existent déjà, on mappe les plans internes à ces price IDs (on ne recrée rien)
+
+4) Codes promos / coupons
+- CRUD codes promos internes (ex: DAYLORA10)
+- Champs : code, type (pourcentage/montant), valeur, durée, date début/fin, usage max, usage par client, actif/inactif
+- Possibilité d’associer un code à un checkout Stripe (si faisable) ou au moins appliquer une réduction côté app au moment du checkout
+
+5) Audit & sécurité
+- Logs admin : connexion, changement mdp, actions sur tenants (qui/quand/quoi)
+- Confirmation modale pour actions sensibles
+- Bannière “Mode Super Admin” visible
+
+Identifiants initiale :
+- Générer un compte Super Admin initial automatiquement au démarrage via variables d’environnement :
+  SUPER_ADMIN_EMAIL
+  SUPER_ADMIN_PASSWORD
+- Afficher une note dans le README pour changer le mot de passe après première connexion.
+- Forcer le changement de mot de passe à la première connexion.
+
+Livrables :
+- Routes /admin fonctionnelles
+- UI simple et propre (même design system que l’app)
+- Liste des fichiers modifiés
+- Tests basiques (login admin + change password + page tenants)
