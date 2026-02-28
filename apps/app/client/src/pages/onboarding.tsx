@@ -91,7 +91,7 @@ export default function Onboarding() {
     jokesEnabled: true,
     liveEnabled: true,
   });
-  const [paymentMode, setPaymentMode] = useState<"stripe" | "external">("stripe");
+  const [paymentMode, setPaymentMode] = useState<"external">("external");
   const [externalCagnotteUrl, setExternalCagnotteUrl] = useState("");
   const [externalProvider, setExternalProvider] = useState("other");
   const [heroImage, setHeroImage] = useState<string>("");
@@ -180,8 +180,8 @@ export default function Onboarding() {
       const valid = await form.trigger(["title", "slug", "weddingDate", "firstName"]);
       if (!valid) return;
     }
-    if (step === 5 && paymentMode === "external" && modules.cagnotteEnabled && !externalCagnotteUrl.trim()) {
-      toast({ title: "Lien de cagnotte manquant", description: "Veuillez ajouter l'URL de votre cagnotte externe ou choisir le mode Stripe intégré.", variant: "destructive" });
+    if (step === 5 && modules.cagnotteEnabled && !externalCagnotteUrl.trim()) {
+      toast({ title: "Lien de cagnotte manquant", description: "Veuillez ajouter l'URL de votre cagnotte externe.", variant: "destructive" });
       return;
     }
     if (step === 7) {
@@ -585,46 +585,27 @@ export default function Onboarding() {
                     <p className="text-xs text-muted-foreground">Vous pourrez changer de plan à tout moment depuis votre espace admin.</p>
 
                     <div className="rounded-2xl border border-[#E6DCCF] p-4 space-y-4">
-                      <div className="text-sm font-semibold">Mode de cagnotte</div>
+                      <div className="text-sm font-semibold">Cagnotte</div>
+                      <p className="text-xs text-muted-foreground">Redirigez vos invités vers votre cagnotte (Leetchi, PayPal, Lydia, etc.)</p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <button
-                          type="button"
-                          className={`rounded-xl border p-3 text-left ${paymentMode === "stripe" ? "border-primary bg-primary/5" : "border-[#E6DCCF]"}`}
-                          onClick={() => setPaymentMode("stripe")}
+                        <Input
+                          value={externalCagnotteUrl}
+                          onChange={(e) => setExternalCagnotteUrl(e.target.value)}
+                          placeholder="https://..."
+                          className="h-11"
+                        />
+                        <select
+                          value={externalProvider}
+                          onChange={(e) => setExternalProvider(e.target.value)}
+                          className="h-11 rounded-md border border-border bg-background px-3 text-sm"
                         >
-                          <div className="font-medium">Stripe intégré</div>
-                          <div className="text-xs text-muted-foreground mt-1">Paiement direct et live automatique</div>
-                        </button>
-                        <button
-                          type="button"
-                          className={`rounded-xl border p-3 text-left ${paymentMode === "external" ? "border-primary bg-primary/5" : "border-[#E6DCCF]"}`}
-                          onClick={() => setPaymentMode("external")}
-                        >
-                          <div className="font-medium">Lien externe</div>
-                          <div className="text-xs text-muted-foreground mt-1">Leetchi, PayPal, Lydia, etc.</div>
-                        </button>
+                          <option value="leetchi">Leetchi</option>
+                          <option value="paypal">PayPal</option>
+                          <option value="lydia">Lydia</option>
+                          <option value="stripe_payment_link">Stripe Payment Link</option>
+                          <option value="other">Autre</option>
+                        </select>
                       </div>
-                      {paymentMode === "external" ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <Input
-                            value={externalCagnotteUrl}
-                            onChange={(e) => setExternalCagnotteUrl(e.target.value)}
-                            placeholder="https://..."
-                            className="h-11"
-                          />
-                          <select
-                            value={externalProvider}
-                            onChange={(e) => setExternalProvider(e.target.value)}
-                            className="h-11 rounded-md border border-border bg-background px-3 text-sm"
-                          >
-                            <option value="leetchi">Leetchi</option>
-                            <option value="paypal">PayPal</option>
-                            <option value="lydia">Lydia</option>
-                            <option value="stripe_payment_link">Stripe Payment Link</option>
-                            <option value="other">Autre</option>
-                          </select>
-                        </div>
-                      ) : null}
                     </div>
                   </motion.div>
                 )}

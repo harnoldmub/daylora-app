@@ -131,7 +131,6 @@ export default function SiteConfigPage() {
   const updateWedding = useUpdateWedding();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
-  const [paymentModeDraft, setPaymentModeDraft] = useState<"stripe" | "external">("stripe");
   const [externalProviderDraft, setExternalProviderDraft] = useState("other");
   const [externalUrlDraft, setExternalUrlDraft] = useState("");
 
@@ -147,8 +146,6 @@ export default function SiteConfigPage() {
       menuItems: ensureHomeFirst(mergeMenuItems(wedding.config?.navigation?.menuItems)),
       customPages: wedding.config?.navigation?.customPages || [],
     });
-    const mode = wedding.config?.payments?.mode === "external" ? "external" : "stripe";
-    setPaymentModeDraft(mode);
     setExternalProviderDraft(wedding.config?.payments?.externalProvider || "other");
     setExternalUrlDraft(wedding.config?.payments?.externalUrl || ((wedding.config?.sections as any)?.cagnotteExternalUrl || ""));
   }, [wedding]);
@@ -271,7 +268,7 @@ export default function SiteConfigPage() {
           },
           payments: {
             ...(wedding.config.payments || {}),
-            mode: paymentModeDraft,
+            mode: "external",
             externalProvider: externalProviderDraft,
             externalUrl: externalUrlDraft.trim(),
           },
@@ -350,64 +347,39 @@ export default function SiteConfigPage() {
       </Card>
 
       <Card className="p-6 space-y-4">
-        <h2 className="text-lg font-medium">Cagnotte (lien)</h2>
+        <h2 className="text-lg font-medium">Cagnotte</h2>
         <p className="text-sm text-muted-foreground">
-          Choisissez Stripe intégré ou lien externe. Le mode externe redirige vos invités vers votre cagnotte (Leetchi, PayPal, Lydia, Stripe Payment Link...).
+          Redirigez vos invités vers votre cagnotte externe (Leetchi, PayPal, Lydia, etc.).
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <div className="text-xs uppercase tracking-widest font-bold opacity-60">Mode de paiement</div>
+            <div className="text-xs uppercase tracking-widest font-bold opacity-60">Fournisseur</div>
             <select
               className="h-12 rounded-xl border border-border bg-background px-3 text-sm w-full"
-              value={paymentModeDraft}
+              value={externalProviderDraft}
               onChange={(e) => {
-                const mode = e.target.value as "stripe" | "external";
-                setPaymentModeDraft(mode);
+                const provider = e.target.value;
+                setExternalProviderDraft(provider);
                 updateWedding.mutate({
                   id: wedding.id,
                   config: {
                     ...wedding.config,
                     payments: {
                       ...(wedding.config.payments || {}),
-                      mode,
+                      mode: "external",
+                      externalProvider: provider,
                     },
                   },
                 });
               }}
             >
-              <option value="stripe">Stripe intégré</option>
-              <option value="external">Lien externe</option>
+              <option value="leetchi">Leetchi</option>
+              <option value="paypal">PayPal</option>
+              <option value="lydia">Lydia</option>
+              <option value="stripe_payment_link">Stripe Payment Link</option>
+              <option value="other">Autre</option>
             </select>
           </div>
-          {paymentModeDraft === "external" ? (
-            <div className="space-y-2">
-              <div className="text-xs uppercase tracking-widest font-bold opacity-60">Fournisseur</div>
-              <select
-                className="h-12 rounded-xl border border-border bg-background px-3 text-sm w-full"
-                value={externalProviderDraft}
-                onChange={(e) => {
-                  const provider = e.target.value;
-                  setExternalProviderDraft(provider);
-                  updateWedding.mutate({
-                    id: wedding.id,
-                    config: {
-                      ...wedding.config,
-                      payments: {
-                        ...(wedding.config.payments || {}),
-                        externalProvider: provider,
-                      },
-                    },
-                  });
-                }}
-              >
-                <option value="leetchi">Leetchi</option>
-                <option value="paypal">PayPal</option>
-                <option value="lydia">Lydia</option>
-                <option value="stripe_payment_link">Stripe Payment Link</option>
-                <option value="other">Autre</option>
-              </select>
-            </div>
-          ) : null}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
