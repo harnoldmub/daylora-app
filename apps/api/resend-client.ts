@@ -41,8 +41,9 @@ async function getCredentials() {
 
 export async function getUncachableResendClient() {
   const { apiKey, fromEmail } = await getCredentials();
+  const resolvedFrom = process.env.SMTP_FROM || 'Daylora <noreply@daylora.app>';
   return {
     client: new Resend(apiKey),
-    fromEmail: fromEmail || process.env.SMTP_FROM || 'noreply@daylora.app'
+    fromEmail: resolvedFrom
   };
 }
