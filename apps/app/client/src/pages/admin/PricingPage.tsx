@@ -208,10 +208,29 @@ export default function PricingPage() {
     },
   });
 
+  const [paymentPending, setPaymentPending] = useState(false);
+  const [paymentCanceled, setPaymentCanceled] = useState(false);
+
   const upgradeTriggered = useRef(false);
   useEffect(() => {
-    if (upgradeTriggered.current) return;
     const params = new URLSearchParams(window.location.search);
+
+    if (params.get("success") === "1" && wedding?.currentPlan !== "premium") {
+      setPaymentPending(true);
+      params.delete("success");
+      params.delete("session_id");
+      const next = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
+      window.history.replaceState({}, "", next);
+    }
+
+    if (params.get("canceled") === "1") {
+      setPaymentCanceled(true);
+      params.delete("canceled");
+      const next = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
+      window.history.replaceState({}, "", next);
+    }
+
+    if (upgradeTriggered.current) return;
     if (params.get("upgrade") === "1" && wedding?.currentPlan !== "premium") {
       upgradeTriggered.current = true;
       params.delete("upgrade");
@@ -223,6 +242,20 @@ export default function PricingPage() {
       });
     }
   }, [wedding, toast]);
+
+  useEffect(() => {
+    if (!paymentPending || wedding?.currentPlan === "premium") return;
+    const interval = setInterval(() => {
+      syncMutation.mutate();
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [paymentPending, wedding?.currentPlan]);
+
+  useEffect(() => {
+    if (paymentPending && wedding?.currentPlan === "premium") {
+      setPaymentPending(false);
+    }
+  }, [wedding?.currentPlan, paymentPending]);
 
   const validateReferral = async (code: string) => {
     if (!code.trim()) {
@@ -298,6 +331,50 @@ export default function PricingPage() {
     );
   }
 
+  if (paymentPending) {
+    return (
+      <div className="space-y-8">
+        <AdminPageHeader
+          title="Paiement en attente"
+          description="Votre paiement est en cours de traitement. Le statut sera mis à jour automatiquement."
+        />
+        <Card className="max-w-lg mx-auto p-10 text-center space-y-6">
+          <div className="mx-auto w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center">
+            <Clock className="h-8 w-8 text-amber-600" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold">Traitement en cours</h2>
+            <p className="text-muted-foreground">
+              Votre paiement a bien été reçu par Stripe. La confirmation peut prendre quelques instants.
+              Le statut se met à jour automatiquement.
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Vérification automatique en cours…</span>
+          </div>
+          <Button
+            size="lg"
+            className="h-12 px-8 font-bold"
+            onClick={() => syncMutation.mutate()}
+            disabled={syncMutation.isPending}
+          >
+            {syncMutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" />
+            )}
+            J'ai payé — Actualiser
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Si le paiement n'est pas détecté après quelques minutes, contactez-nous à{" "}
+            <a href="mailto:support@daylora.app" className="text-primary hover:underline">support@daylora.app</a>.
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <AdminPageHeader
@@ -316,6 +393,20 @@ export default function PricingPage() {
           </Button>
         }
       />
+
+      {paymentCanceled && (
+        <Card className="p-5 border-amber-200 bg-amber-50">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-medium text-amber-900">Paiement non finalisé</p>
+              <p className="text-sm text-amber-700 mt-1">
+                Le paiement a été annulé ou abandonné. Vous pouvez réessayer à tout moment en choisissant une formule ci-dessous.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <KpiCard
