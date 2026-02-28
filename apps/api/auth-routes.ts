@@ -1,11 +1,14 @@
 import { Router } from "express";
 import { authService } from "./auth-service";
 import { authEmails } from "./auth-emails";
-import { signupSchema, loginSchema } from "@shared/schema";
+import { signupSchema, loginSchema, users } from "@shared/schema";
 import { validateRequest } from "./middleware/guards";
 import passport from "passport";
 import rateLimit from "express-rate-limit";
 import { storage } from "./storage";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import { isAuthenticated } from "./auth";
 
 const router = Router();
 
@@ -256,6 +259,18 @@ router.get("/me", (req, res) => {
         res.json(req.user);
     } catch (_err) {
         res.json(null);
+    }
+});
+
+router.post("/premium-offer-seen", isAuthenticated, async (req, res) => {
+    try {
+        const userId = (req.user as any)?.id;
+        if (!userId) return res.status(401).json({ message: "Non authentifié." });
+        await db.update(users).set({ hasSeenPremiumOffer: true }).where(eq(users.id, userId));
+        res.json({ ok: true });
+    } catch (err) {
+        console.error("Failed to mark premium offer as seen:", err);
+        res.status(500).json({ message: "Erreur serveur." });
     }
 });
 

@@ -24,6 +24,7 @@ import { useWeddings } from "@/hooks/use-api";
 import { Button } from "@/components/ui/button";
 import { HelpChatbot } from "@/components/admin/HelpChatbot";
 import { FeedbackModal } from "@/components/admin/FeedbackModal";
+import { PremiumUpsellModal } from "@/components/admin/PremiumUpsellModal";
 import { useState } from "react";
 
 export function AdminLayout({ children, weddingId: weddingIdProp }: { children: ReactNode; weddingId?: string }) {
@@ -32,6 +33,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
     const [location, setLocation] = useLocation();
     const { logoutMutation, user } = useAuth();
     const { data: weddings = [] } = useWeddings();
+    const currentWeddingForModal = weddings.find((w: any) => w.id === (weddingIdProp || params.weddingId));
     const isDesignRoute = location.includes("/design");
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -245,6 +247,9 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                 </div>
             </main>
             <HelpChatbot />
+            {user && currentWeddingForModal && (
+                <PremiumUpsellModal user={user} wedding={currentWeddingForModal} />
+            )}
         </div>
     );
 }

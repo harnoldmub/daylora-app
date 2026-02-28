@@ -39,6 +39,7 @@ export const users = pgTable("users", {
   appleId: varchar("apple_id").unique(),
   emailVerifiedAt: timestamp("email_verified_at"),
   lastLoginAt: timestamp("last_login_at"),
+  hasSeenPremiumOffer: boolean("has_seen_premium_offer").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

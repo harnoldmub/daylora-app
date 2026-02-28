@@ -1,13 +1,14 @@
 import { useWedding, useUpdateWedding } from "@/hooks/use-api";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2, Lock, Sparkles } from "lucide-react";
+import { Check, Loader2, Lock, Sparkles, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { useState } from "react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { GuidedTour, useShouldShowTour } from "@/components/guided-tour";
+import { PremiumTemplateUpsell } from "@/components/admin/PremiumUpsellModal";
 
 const TEMPLATES = [
         { id: 'classic', name: 'Classique', description: 'Élégant et intemporel', image: '/previews/template_classic_preview_v2.png', premium: false },
@@ -25,13 +26,15 @@ export default function TemplatesPage() {
         const [isApplying, setIsApplying] = useState(false);
         const [pendingTemplateId, setPendingTemplateId] = useState<string | null>(null);
 
+        const [upsellTemplate, setUpsellTemplate] = useState<string | null>(null);
+
         const handleSelect = async (templateId: string) => {
                 if (!wedding) return;
                 if (isApplying) return;
                 if (wedding.templateId === templateId) return;
                 const tmpl = TEMPLATES.find(t => t.id === templateId);
                 if (tmpl?.premium && wedding.currentPlan !== "premium") {
-                        toast({ title: "Template réservé au plan Premium", description: "Ce template est disponible avec le plan Premium. Rendez-vous dans Facturation pour l'activer.", variant: "destructive" });
+                        setUpsellTemplate(tmpl.name);
                         return;
                 }
                 setIsApplying(true);
@@ -202,6 +205,12 @@ export default function TemplatesPage() {
                                         ]}
                                 />
                         )}
+
+                        <PremiumTemplateUpsell
+                                open={!!upsellTemplate}
+                                onClose={() => setUpsellTemplate(null)}
+                                templateName={upsellTemplate || ""}
+                        />
                 </div>
         );
 }
