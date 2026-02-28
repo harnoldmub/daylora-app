@@ -1,6 +1,9 @@
 import type { Request, Response } from "express";
 import { getUncachableStripeClient } from "./stripeClient";
 import { storage } from "./storage";
+import { db } from "./db";
+import { promoCodes } from "@shared/schema";
+import { eq, sql } from "drizzle-orm";
 
 export async function handleStripeWebhook(req: Request, res: Response) {
   const signature = req.headers["stripe-signature"] as string | undefined;
@@ -61,6 +64,17 @@ export async function handleStripeWebhook(req: Request, res: Response) {
             await storage.useReferralCode(referralCode, userId);
           } catch (e) {
             console.error("Failed to mark referral code as used:", e);
+          }
+        }
+
+        const promoCode = session.metadata?.promoCode;
+        if (promoCode) {
+          try {
+            await db.update(promoCodes)
+              .set({ currentUses: sql`${promoCodes.currentUses} + 1` })
+              .where(eq(promoCodes.code, promoCode));
+          } catch (e) {
+            console.error("Failed to increment promo code usage:", e);
           }
         }
         break;

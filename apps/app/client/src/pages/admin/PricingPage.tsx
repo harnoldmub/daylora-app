@@ -112,6 +112,9 @@ export default function PricingPage() {
   const { toast } = useToast();
   const [referralInput, setReferralInput] = useState("");
   const [referralValid, setReferralValid] = useState<boolean | null>(null);
+  const [promoInput, setPromoInput] = useState("");
+  const [promoValid, setPromoValid] = useState<boolean | null>(null);
+  const [promoInfo, setPromoInfo] = useState<{ type: string; value: number } | null>(null);
 
   const { data: wedding, isLoading } = useQuery<Wedding>({
     queryKey: [`/api/weddings/${weddingId}`],
@@ -135,6 +138,9 @@ export default function PricingPage() {
       const body: any = { type };
       if (referralInput.trim() && referralValid) {
         body.referralCode = referralInput.trim();
+      }
+      if (promoInput.trim() && promoValid) {
+        body.promoCode = promoInput.trim().toUpperCase();
       }
       const res = await apiRequest("POST", "/api/billing/checkout", body);
       return res.json();
@@ -216,6 +222,37 @@ export default function PricingPage() {
     } catch {
       setReferralValid(false);
     }
+  };
+
+  const validatePromo = async (code: string) => {
+    if (!code.trim()) {
+      setPromoValid(null);
+      setPromoInfo(null);
+      return;
+    }
+    try {
+      const res = await fetch("/api/promo/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: code.trim() }),
+      });
+      const data = await res.json();
+      setPromoValid(data.valid);
+      if (data.valid) {
+        setPromoInfo({ type: data.type, value: data.value });
+      } else {
+        setPromoInfo(null);
+      }
+    } catch {
+      setPromoValid(false);
+      setPromoInfo(null);
+    }
+  };
+
+  const formatPromoDiscount = () => {
+    if (!promoInfo) return "";
+    if (promoInfo.type === "percentage") return `-${promoInfo.value}%`;
+    return `-${(promoInfo.value / 100).toFixed(0)}€`;
   };
 
   const copyReferralCode = () => {
@@ -372,6 +409,29 @@ export default function PricingPage() {
                   </span>
                 )}
               </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Code promo"
+                  value={promoInput}
+                  onChange={(e) => {
+                    setPromoInput(e.target.value);
+                    setPromoValid(null);
+                    setPromoInfo(null);
+                  }}
+                  onBlur={() => validatePromo(promoInput)}
+                  className="h-10 font-mono uppercase"
+                />
+                {promoValid === true && (
+                  <span className="text-green-600 text-xs self-center font-semibold">
+                    {formatPromoDiscount()}
+                  </span>
+                )}
+                {promoValid === false && (
+                  <span className="text-red-500 text-xs self-center">
+                    Invalide
+                  </span>
+                )}
+              </div>
             </div>
             <Button
               className="w-full h-12 text-base font-bold shadow-md"
@@ -426,6 +486,29 @@ export default function PricingPage() {
                   </span>
                 )}
                 {referralValid === false && (
+                  <span className="text-red-500 text-xs self-center">
+                    Invalide
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Code promo"
+                  value={promoInput}
+                  onChange={(e) => {
+                    setPromoInput(e.target.value);
+                    setPromoValid(null);
+                    setPromoInfo(null);
+                  }}
+                  onBlur={() => validatePromo(promoInput)}
+                  className="h-10 font-mono uppercase"
+                />
+                {promoValid === true && (
+                  <span className="text-green-600 text-xs self-center font-semibold">
+                    {formatPromoDiscount()}
+                  </span>
+                )}
+                {promoValid === false && (
                   <span className="text-red-500 text-xs self-center">
                     Invalide
                   </span>

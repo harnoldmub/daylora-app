@@ -14,7 +14,10 @@ import {
   insertProductFeedbackSchema,
   PLAN_LIMITS,
   type InsertRsvpResponse,
+  promoCodes,
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { sendRsvpConfirmationEmail, sendGuestConfirmationEmail, sendContributionNotification, sendPersonalizedInvitation } from "./email";
 import { generateInvitationPDF } from "./invitation-service";
@@ -1336,7 +1339,7 @@ export async function registerRoutes(app: Express) {
     try {
       const wedding = (req as any).wedding;
       const userId = (req as any).user.id;
-      const { type, referralCode } = req.body as { type: "subscription" | "one_time"; referralCode?: string };
+      const { type, referralCode, promoCode } = req.body as { type: "subscription" | "one_time"; referralCode?: string; promoCode?: string };
 
       let stripe;
       try {
@@ -1352,6 +1355,7 @@ export async function registerRoutes(app: Express) {
 
       let discounts: any[] = [];
       let validatedReferralCode = "";
+      let validatedPromoCode = "";
       if (referralCode) {
         const ref = await storage.getReferralCodeByCode(referralCode);
         if (ref && !ref.usedByUserId && ref.ownerUserId !== userId) {
@@ -1371,12 +1375,49 @@ export async function registerRoutes(app: Express) {
         }
       }
 
+      if (promoCode) {
+        const [promo] = await db.select().from(promoCodes).where(eq(promoCodes.code, promoCode.toUpperCase()));
+        if (!promo || !promo.isActive) {
+          return res.status(400).json({ message: "Code promo invalide ou expiré." });
+        }
+        const now = new Date();
+        if (promo.startDate && now < new Date(promo.startDate)) {
+          return res.status(400).json({ message: "Ce code promo n'est pas encore actif." });
+        }
+        if (promo.endDate && now > new Date(promo.endDate)) {
+          return res.status(400).json({ message: "Ce code promo a expiré." });
+        }
+        if (promo.maxUses && promo.currentUses >= promo.maxUses) {
+          return res.status(400).json({ message: "Ce code promo a atteint sa limite d'utilisation." });
+        }
+        try {
+          const couponParams: any = {
+            duration: promo.durationMonths ? "repeating" : "once",
+            name: `Promo ${promo.code}`,
+            metadata: { promoCodeId: String(promo.id) },
+          };
+          if (promo.durationMonths) couponParams.duration_in_months = promo.durationMonths;
+          if (promo.type === "percentage") {
+            couponParams.percent_off = promo.value;
+          } else {
+            couponParams.amount_off = promo.value;
+            couponParams.currency = "eur";
+          }
+          const coupon = await stripe.coupons.create(couponParams);
+          discounts.push({ coupon: coupon.id });
+          validatedPromoCode = promo.code;
+        } catch (couponError) {
+          console.error("Promo coupon creation failed:", couponError);
+          return res.status(500).json({ message: "Erreur lors de l'application du code promo." });
+        }
+      }
+
       const existingSub = await storage.getSubscriptionByWedding(wedding.id);
 
       const sessionConfig: any = {
         mode: type === "subscription" ? "subscription" : "payment",
         line_items: [{ price: priceId, quantity: 1 }],
-        metadata: { weddingId: wedding.id, purpose: "billing", billingType: type, referralCode: validatedReferralCode || undefined, userId },
+        metadata: { weddingId: wedding.id, purpose: "billing", billingType: type, referralCode: validatedReferralCode || undefined, promoCode: validatedPromoCode || undefined, userId },
         success_url: `${process.env.APP_BASE_URL || "https://daylora.app"}/${wedding.id}/billing?success=1&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.APP_BASE_URL || "https://daylora.app"}/${wedding.id}/billing?canceled=1`,
       };
