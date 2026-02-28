@@ -1583,11 +1583,70 @@ export async function registerRoutes(app: Express) {
 
       const returnUrl = `${process.env.APP_BASE_URL || "https://daylora.app"}/${wedding.id}/billing`;
 
-      const portalSession = await stripe.billingPortal.sessions.create({
+      let canCancel = true;
+      if (sub?.stripeSubscriptionId && !sub.stripeSubscriptionId.startsWith("pending_")) {
+        try {
+          const stripeSub = await stripe.subscriptions.retrieve(sub.stripeSubscriptionId);
+          const interval = stripeSub?.items?.data?.[0]?.price?.recurring?.interval;
+          const subscriptionStart = stripeSub?.created
+            ? new Date(stripeSub.created * 1000)
+            : sub.subscriptionStartDate;
+          if (interval === "month" && subscriptionStart) {
+            const engagementEnd = new Date(subscriptionStart);
+            engagementEnd.setMonth(engagementEnd.getMonth() + 2);
+            if (new Date() < engagementEnd) {
+              canCancel = false;
+            }
+          }
+        } catch {
+          if (sub.subscriptionStartDate) {
+            const start = new Date(sub.subscriptionStartDate);
+            const engagementEnd = new Date(start);
+            engagementEnd.setMonth(engagementEnd.getMonth() + 2);
+            if (new Date() < engagementEnd) {
+              canCancel = false;
+            }
+          }
+        }
+      } else if (sub?.subscriptionStartDate) {
+        const start = new Date(sub.subscriptionStartDate);
+        const engagementEnd = new Date(start);
+        engagementEnd.setMonth(engagementEnd.getMonth() + 2);
+        if (new Date() < engagementEnd) {
+          canCancel = false;
+        }
+      }
+
+      const portalConfig: any = {
         customer: customerId,
         return_url: returnUrl,
         locale: "fr",
-      });
+      };
+
+      if (!canCancel) {
+        const configs = await stripe.billingPortal.configurations.list({ limit: 100 });
+        let restrictedConfigId = configs.data.find(
+          (c: any) => c.features?.subscription_cancel?.enabled === false && c.is_default === false
+        )?.id;
+
+        if (!restrictedConfigId) {
+          const config = await stripe.billingPortal.configurations.create({
+            business_profile: {
+              headline: "Gérez votre abonnement Daylora",
+            },
+            features: {
+              subscription_cancel: { enabled: false },
+              subscription_update: { enabled: false },
+              payment_method_update: { enabled: true },
+              invoice_history: { enabled: true },
+            },
+          });
+          restrictedConfigId = config.id;
+        }
+        portalConfig.configuration = restrictedConfigId;
+      }
+
+      const portalSession = await stripe.billingPortal.sessions.create(portalConfig);
 
       res.json({ url: portalSession.url });
     } catch (error: any) {
