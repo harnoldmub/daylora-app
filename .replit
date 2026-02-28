@@ -69,3 +69,5 @@ STRIPE_PRICE_LIFETIME = "price_1T5BdcCdXaBy714IKzwNf5da"
 
 [userenv.development]
 APP_BASE_URL = "https://app.nocely.app"
+STRIPE_PRICE_SUBSCRIPTION = "price_1T4SrfCsy2ZICqoPYBxhtxNG"
+STRIPE_PRICE_LIFETIME = "price_1T2F8zCsy2ZICqoPdsEp5pAD"
