@@ -1,15 +1,12 @@
 import { Resend } from 'resend';
 
+const FROM_EMAIL = 'Daylora <noreply@daylora.app>';
+
 let connectionSettings: any;
 
-async function getCredentials() {
+async function getApiKey(): Promise<string> {
   if (process.env.RESEND_API_KEY) {
-    const from = process.env.SMTP_FROM || 'noreply@daylora.app';
-    console.log(`[resend] Using RESEND_API_KEY env var, from: ${from}`);
-    return {
-      apiKey: process.env.RESEND_API_KEY,
-      fromEmail: from,
-    };
+    return process.env.RESEND_API_KEY;
   }
 
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
@@ -36,14 +33,14 @@ async function getCredentials() {
   if (!connectionSettings || (!connectionSettings.settings.api_key)) {
     throw new Error('Resend not connected');
   }
-  return { apiKey: connectionSettings.settings.api_key, fromEmail: connectionSettings.settings.from_email };
+  return connectionSettings.settings.api_key;
 }
 
 export async function getUncachableResendClient() {
-  const { apiKey, fromEmail } = await getCredentials();
-  const resolvedFrom = process.env.SMTP_FROM || 'Daylora <noreply@daylora.app>';
+  const apiKey = await getApiKey();
+  console.log(`[resend] Sending from: ${FROM_EMAIL}`);
   return {
     client: new Resend(apiKey),
-    fromEmail: resolvedFrom
+    fromEmail: FROM_EMAIL
   };
 }
