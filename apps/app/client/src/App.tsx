@@ -150,7 +150,7 @@ function AppRouter() {
               <Route path="/promos" component={SuperAdminPromos} />
               <Route path="/audit" component={SuperAdminAuditLogs} />
               <Route path="/settings" component={SuperAdminSettings} />
-              <Route><Redirect to="/admin/dashboard" /></Route>
+              <Route><Redirect to="/dashboard" /></Route>
             </Switch>
           </SuperAdminLayout>
         )}

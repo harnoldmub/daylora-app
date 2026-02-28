@@ -109,7 +109,7 @@ export default function SuperAdminTenants() {
                   <tr
                     key={t.id}
                     className="border-b hover:bg-slate-50 cursor-pointer transition-colors"
-                    onClick={() => navigate(`/admin/tenants/${t.id}`)}
+                    onClick={() => navigate(`/tenants/${t.id}`)}
                   >
                     <td className="p-3 font-mono text-xs">{t.slug}</td>
                     <td className="p-3 font-medium">{t.title}</td>

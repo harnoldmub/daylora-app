@@ -33,11 +33,7 @@ export default function SuperAdminLogin() {
         return;
       }
 
-      if (data.mustChangePassword) {
-        navigate("/admin/settings");
-      } else {
-        navigate("/admin/dashboard");
-      }
+      navigate("/admin/dashboard");
     } catch {
       setError("Erreur réseau. Réessayez.");
     } finally {

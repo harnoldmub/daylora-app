@@ -20,11 +20,11 @@ interface AdminInfo {
 }
 
 const navItems = [
-  { path: "/admin/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { path: "/admin/tenants", label: "Mariages", icon: Users },
-  { path: "/admin/promos", label: "Codes promos", icon: Tag },
-  { path: "/admin/audit", label: "Logs d'audit", icon: ScrollText },
-  { path: "/admin/settings", label: "Paramètres", icon: Settings },
+  { path: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
+  { path: "/tenants", label: "Mariages", icon: Users },
+  { path: "/promos", label: "Codes promos", icon: Tag },
+  { path: "/audit", label: "Logs d'audit", icon: ScrollText },
+  { path: "/settings", label: "Paramètres", icon: Settings },
 ];
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
@@ -37,26 +37,23 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
     fetch("/api/super-admin/me", { credentials: "include" })
       .then(async (res) => {
         if (!res.ok) {
-          navigate("/admin/login");
+          navigate("~/admin/login");
           setLoading(false);
           return;
         }
         const data = await res.json();
         setAdmin(data);
-        if (data.mustChangePassword && !location.startsWith("/admin/settings")) {
-          navigate("/admin/settings");
-        }
         setLoading(false);
       })
       .catch(() => {
-        navigate("/admin/login");
+        navigate("~/admin/login");
         setLoading(false);
       });
   }, []);
 
   const handleLogout = async () => {
     await fetch("/api/super-admin/logout", { method: "POST", credentials: "include" });
-    navigate("/admin/login");
+    navigate("~/admin/login");
   };
 
   if (loading) {
@@ -134,11 +131,6 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
         )}
 
         <main className="flex-1 p-6 lg:p-8 min-h-[calc(100vh-40px)]">
-          {admin.mustChangePassword && (
-            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm font-medium">
-              Vous devez changer votre mot de passe avant de continuer.
-            </div>
-          )}
           {children}
         </main>
       </div>

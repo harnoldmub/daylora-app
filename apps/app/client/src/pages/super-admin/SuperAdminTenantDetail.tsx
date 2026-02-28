@@ -100,7 +100,7 @@ export default function SuperAdminTenantDetail() {
 
   return (
     <div>
-      <Button variant="ghost" className="mb-4" onClick={() => navigate("/admin/tenants")}>
+      <Button variant="ghost" className="mb-4" onClick={() => navigate("/tenants")}>
         <ArrowLeft className="mr-2 h-4 w-4" /> Retour
       </Button>
 
