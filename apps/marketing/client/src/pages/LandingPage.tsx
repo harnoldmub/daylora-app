@@ -599,9 +599,11 @@ export default function LandingPage() {
             © 2026 Daylora. La nouvelle génération de sites de mariage.
           </div>
           <div className="flex gap-8 text-[#8C7A6B] text-xs uppercase tracking-widest font-semibold font-sans">
-            <a href="#" className="hover:text-primary transition-colors">Contact</a>
-            <a href="#" className="hover:text-primary transition-colors">Confidentialité</a>
-            <a href="#" className="hover:text-primary transition-colors">CGV</a>
+            <a href="mailto:support@daylora.app" className="hover:text-primary transition-colors">Contact</a>
+            <a href="/confidentialite" className="hover:text-primary transition-colors">Confidentialité</a>
+            <a href="/cgu" className="hover:text-primary transition-colors">CGU</a>
+            <a href="/cookies" className="hover:text-primary transition-colors">Cookies</a>
+            <a href="/mentions-legales" className="hover:text-primary transition-colors">Mentions légales</a>
           </div>
         </div>
       </footer>

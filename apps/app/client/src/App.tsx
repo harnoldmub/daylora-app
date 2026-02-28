@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { AdminLayout } from "@/layouts/AdminLayout";
 import { PublicLayout } from "@/layouts/PublicLayout";
+import { CookieBanner } from "@/components/cookie-banner";
 
 import DashboardPage from "@/pages/admin/DashboardPage";
 import GuestsPage from "@/pages/admin/GuestsPage";
@@ -167,6 +168,7 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <AppRouter />
+        <CookieBanner />
       </TooltipProvider>
     </QueryClientProvider>
   );
