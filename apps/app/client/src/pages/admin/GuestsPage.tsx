@@ -476,20 +476,20 @@ export default function GuestsPage() {
                 title="Invités"
                 description="Gérez vos invités, invitations et relances."
                 actions={
-                    <div className="flex gap-2">
-                    <Button variant="outline" onClick={handleExportCSV} data-tour="guests-import">
-                        <Download className="h-4 w-4 mr-2" />
-                        Exporter CSV
+                    <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" onClick={handleExportCSV} data-tour="guests-import">
+                        <Download className="h-4 w-4 mr-1.5" />
+                        <span className="hidden sm:inline">Exporter</span> CSV
                     </Button>
-                    <Button variant="outline" onClick={openInvitationSettings} disabled={!wedding}>
-                        <FileEdit className="h-4 w-4 mr-2" />
-                        Modifier l'invitation
+                    <Button variant="outline" size="sm" onClick={openInvitationSettings} disabled={!wedding}>
+                        <FileEdit className="h-4 w-4 mr-1.5" />
+                        <span className="hidden sm:inline">Modifier l'</span>invitation
                     </Button>
                     <Dialog open={addGuestOpen} onOpenChange={setAddGuestOpen}>
                         <DialogTrigger asChild>
-                            <Button data-tour="guests-add">
-                                <Plus className="h-4 w-4 mr-2" />
-                                Ajouter un invité
+                            <Button size="sm" data-tour="guests-add">
+                                <Plus className="h-4 w-4 mr-1.5" />
+                                <span className="hidden sm:inline">Ajouter</span>
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-md">

@@ -470,17 +470,17 @@ export default function DesignPage() {
 
   return (
     <div className="h-[calc(100vh-64px)] w-full flex flex-col">
-      <div className="px-8 pt-6 pb-4 border-b bg-background/80 backdrop-blur flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-serif font-bold text-foreground">Design du site</h1>
-          <p className="text-muted-foreground text-sm">Personnalisez l'apparence et le contenu de votre site de mariage.</p>
+      <div className="px-4 md:px-8 pt-4 md:pt-6 pb-3 md:pb-4 border-b bg-background/80 backdrop-blur flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl md:text-2xl font-serif font-bold text-foreground">Design du site</h1>
+          <p className="text-muted-foreground text-xs md:text-sm">Personnalisez l'apparence et le contenu de votre site.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" asChild>
-            <Link href="/dashboard">Retour au backoffice</Link>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboard">Retour</Link>
           </Button>
-          <Button variant="outline" asChild data-tour="design-preview">
-            <a href={previewUrl} target="_blank" rel="noopener noreferrer">Ouvrir l'aperçu</a>
+          <Button variant="outline" size="sm" asChild data-tour="design-preview">
+            <a href={previewUrl} target="_blank" rel="noopener noreferrer">Aperçu</a>
           </Button>
         </div>
       </div>

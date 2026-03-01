@@ -324,25 +324,26 @@ export default function GiftsPage() {
         title="Cadeaux"
         description="Gérez votre liste de cadeaux et suivez sa progression."
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
+            size="sm"
             onClick={() => addSuggestionsMutation.mutate()}
             disabled={addSuggestionsMutation.isPending || giftLimitReached}
             data-tour="gifts-suggestions"
           >
             {addSuggestionsMutation.isPending ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
             ) : (
-              <Sparkles className="h-4 w-4 mr-2" />
+              <Sparkles className="h-4 w-4 mr-1.5" />
             )}
-            Ajouter des suggestions
+            <span className="hidden sm:inline">Ajouter des </span>Suggestions
           </Button>
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button data-tour="gifts-add" disabled={giftLimitReached}>
-              <Plus className="h-4 w-4 mr-2" />
-              Ajouter un cadeau
+            <Button size="sm" data-tour="gifts-add" disabled={giftLimitReached}>
+              <Plus className="h-4 w-4 mr-1.5" />
+              <span className="hidden sm:inline">Ajouter un </span>Cadeau
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-xl rounded-2xl p-0 gap-0 overflow-hidden">
