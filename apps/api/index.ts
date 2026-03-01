@@ -158,11 +158,16 @@ app.use((req, res, next) => {
       log("Stripe schema ready");
 
       const stripeSync = await getStripeSync();
-      const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN;
-      if (domain) {
+      let webhookBase = process.env.APP_BASE_URL;
+      if (!webhookBase) {
+        const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN;
+        if (domain) webhookBase = `https://${domain}`;
+      }
+      if (webhookBase) {
+        const targetUrl = `${webhookBase}/api/webhooks/stripe`;
         try {
-          const result = await stripeSync.findOrCreateManagedWebhook(`https://${domain}/api/webhooks/stripe`);
-          const webhookUrl = result?.webhook?.url || result?.url || `https://${domain}/api/webhooks/stripe`;
+          const result = await stripeSync.findOrCreateManagedWebhook(targetUrl);
+          const webhookUrl = result?.webhook?.url || result?.url || targetUrl;
           log(`Stripe webhook configured: ${webhookUrl}`);
         } catch (webhookErr: any) {
           console.error("Stripe webhook setup error (non-fatal):", webhookErr.message);
