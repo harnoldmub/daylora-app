@@ -76,7 +76,7 @@ function NextStepCard({ wedding, hasGuests }: { wedding: Wedding; hasGuests: boo
         step = {
             label: "Choisir un design",
             description: "Sélectionnez un template pour donner vie à votre site.",
-            href: `/${wedding.id}/admin/templates`,
+            href: `/${wedding.id}/templates`,
             icon: Palette,
         };
     } else if (!wedding.weddingDate || !heroSubtitle) {
@@ -90,14 +90,14 @@ function NextStepCard({ wedding, hasGuests }: { wedding: Wedding; hasGuests: boo
         step = {
             label: "Ajouter vos invités",
             description: "Commencez à constituer votre liste d'invités.",
-            href: `/${wedding.id}/admin/guests`,
+            href: `/${wedding.id}/guests`,
             icon: UserPlus,
         };
     } else if (!wedding.isPublished) {
         step = {
             label: "Publier votre site",
             description: "Votre site est prêt — partagez-le avec vos proches.",
-            href: `/${wedding.id}/admin/welcome`,
+            href: `/${wedding.id}/welcome`,
             icon: Rocket,
         };
     }
