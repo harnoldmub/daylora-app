@@ -62,13 +62,12 @@ expertMode = true
 [userenv]
 
 [userenv.production]
-SITE_URL = "https://ar2k26.com"
-APP_BASE_URL = "https://app.nocely.app"
+APP_BASE_URL = "https://daylora.app"
 STRIPE_PRICE_SUBSCRIPTION = "price_1T5Bd4CdXaBy714IWQmjYwiL"
 STRIPE_PRICE_LIFETIME = "price_1T5BdcCdXaBy714IKzwNf5da"
 
 [userenv.development]
-APP_BASE_URL = "https://app.nocely.app"
+APP_BASE_URL = "https://daylora.app"
 STRIPE_PRICE_SUBSCRIPTION = "price_1T4SrfCsy2ZICqoPYBxhtxNG"
 STRIPE_PRICE_LIFETIME = "price_1T2F8zCsy2ZICqoPdsEp5pAD"
 
