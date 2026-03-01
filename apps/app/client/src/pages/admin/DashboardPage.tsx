@@ -232,7 +232,7 @@ export default function DashboardPage() {
                     value={total}
                     icon={<Users className="h-4.5 w-4.5" />}
                     hint="RSVP reçus"
-                    max={wedding?.currentPlan !== "premium" ? 30 : undefined}
+                    max={wedding?.currentPlan !== "premium" ? 10 : undefined}
                 />
                 <KpiCard
                     label="Confirmés"

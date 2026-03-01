@@ -71,7 +71,7 @@ const faqItems: FAQItem[] = [
     category: "Invités",
     question: "Comment suivre les RSVP ?",
     answer:
-      "Les réponses RSVP apparaissent automatiquement dans la page Invités avec un statut (confirmé, en attente, refusé). Utilisez les filtres pour trier par statut. Le tableau de bord affiche un récapitulatif en temps réel. En formule gratuite, la limite est de 30 RSVP.",
+      "Les réponses RSVP apparaissent automatiquement dans la page Invités avec un statut (confirmé, en attente, refusé). Utilisez les filtres pour trier par statut. Le tableau de bord affiche un récapitulatif en temps réel. En formule gratuite, la limite est de 10 RSVP.",
     link: { label: "Voir les invités", href: "/guests" },
   },
   {
@@ -125,7 +125,7 @@ const faqItems: FAQItem[] = [
     category: "Abonnement",
     question: "Quelles sont les différences entre les plans ?",
     answer:
-      "Gratuit : template Classique, 30 RSVP max, cagnotte, 6 photos en galerie, branding Daylora. Premium : 3 templates, RSVP illimités, liste de cadeaux avec réservation, page live et blagues, pages personnalisées, 50 photos, sans branding.",
+      "Gratuit : template Classique, 10 RSVP max, 2 cadeaux, cagnotte, 6 photos en galerie, branding Daylora. Premium : 3 templates, RSVP illimités, cadeaux illimités, page live et blagues, pages personnalisées, 50 photos, sans branding.",
     link: { label: "Comparer les plans", href: "/billing" },
   },
   {

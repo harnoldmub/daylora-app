@@ -474,6 +474,85 @@ export default function GiftsPage() {
           </div>
         ) : (
           <div className="rounded-xl border border-border overflow-hidden bg-white">
+            <div className="md:hidden divide-y">
+              {gifts.length === 0 ? (
+                <div className="p-4 text-center py-12 text-muted-foreground">
+                  Aucun cadeau pour le moment.
+                </div>
+              ) : (
+                gifts.map((gift) => (
+                  <div key={gift.id} className="p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                      {gift.imageUrl ? (
+                        <div className="h-12 w-12 rounded-lg overflow-hidden border shrink-0">
+                          <img src={gift.imageUrl} alt={gift.name} className="h-full w-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="h-12 w-12 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+                          <Gift className="h-5 w-5 text-amber-600" />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-medium truncate">{gift.name}</span>
+                          {(gift as any).sourceUrl && (
+                            <a href={(gift as any).sourceUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 text-muted-foreground hover:text-primary transition-colors">
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
+                          )}
+                        </div>
+                        {gift.description && (
+                          <div className="text-xs text-muted-foreground line-clamp-1">{gift.description}</div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium">{gift.price ? `${gift.price.toLocaleString("fr-FR")} €` : "Libre"}</span>
+                      {gift.isReserved ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">
+                            Réservé
+                          </span>
+                          {(gift as any).reservedBy && (
+                            <span className="text-xs text-muted-foreground">par {(gift as any).reservedBy}</span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-medium">
+                          Disponible
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {gift.isReserved && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="min-h-[44px] min-w-[44px]"
+                          title="Annuler la réservation"
+                          onClick={() => unreserveGiftMutation.mutate(gift.id)}
+                          disabled={unreserveGiftMutation.isPending}
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px]" onClick={() => openEdit(gift)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive min-h-[44px] min-w-[44px]"
+                        onClick={() => openDelete(gift)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="hidden md:block">
             <Table>
               <TableHeader className="bg-muted/40">
                 <TableRow>
@@ -567,6 +646,7 @@ export default function GiftsPage() {
                 )}
               </TableBody>
             </Table>
+            </div>
           </div>
         )}
       </Card>

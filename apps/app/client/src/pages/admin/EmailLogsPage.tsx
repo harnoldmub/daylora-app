@@ -72,6 +72,37 @@ export default function EmailLogsPage() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
+                    <div className="md:hidden divide-y">
+                        {logs?.map((log) => (
+                            <div key={log.id} className="p-4 space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-muted-foreground">
+                                        {log.createdAt ? format(new Date(log.createdAt), "PPp", { locale: fr }) : "-"}
+                                    </span>
+                                    {log.status === "sent" ? (
+                                        <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-100">
+                                            Envoyé
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="destructive">
+                                            Échec
+                                        </Badge>
+                                    )}
+                                </div>
+                                <div className="font-semibold text-sm">{log.to}</div>
+                                <div className="text-sm text-muted-foreground truncate">{log.subject}</div>
+                                <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-100 font-medium capitalize">
+                                    {log.type.replace(/_/g, " ")}
+                                </Badge>
+                            </div>
+                        ))}
+                        {!logs?.length && (
+                            <div className="text-center py-20 text-muted-foreground italic">
+                                Aucun email envoyé pour le moment.
+                            </div>
+                        )}
+                    </div>
+                    <div className="hidden md:block">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -121,6 +152,7 @@ export default function EmailLogsPage() {
                             )}
                         </TableBody>
                     </Table>
+                    </div>
                 </CardContent>
             </Card>
         </div>

@@ -1113,7 +1113,7 @@ export default function GuestsPage() {
                             <div className="text-sm text-muted-foreground">
                                 {selectedIds.length} invité(s) sélectionné(s)
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <Button size="sm" variant="outline" onClick={handleBulkCopyInvitations}>
                                     Invitations
                                 </Button>
@@ -1130,6 +1130,104 @@ export default function GuestsPage() {
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                 ) : (
+                    <>
+                    <div className="md:hidden space-y-3">
+                        {filteredResponses.map((guest) => (
+                            <div key={guest.id} className="rounded-xl border bg-white p-4 space-y-3">
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedIds.includes(guest.id)}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setSelectedIds([...selectedIds, guest.id]);
+                                            } else {
+                                                setSelectedIds(selectedIds.filter((id) => id !== guest.id));
+                                            }
+                                        }}
+                                    />
+                                    <span className="font-bold flex-1">{guest.firstName} {guest.lastName}</span>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${guest.availability === 'confirmed' ? 'bg-green-100 text-green-700' :
+                                            guest.availability === 'declined' ? 'bg-red-100 text-red-700' :
+                                                'bg-amber-100 text-amber-700'
+                                        }`}>
+                                        {guest.availability}
+                                    </span>
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                    {guest.email && <div>{guest.email}</div>}
+                                    {guest.phone && <div>{guest.phone}</div>}
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-muted-foreground">Groupe : {guest.partySize} personne{(guest.partySize || 1) > 1 ? "s" : ""}</span>
+                                    <div className="flex justify-end gap-2">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="min-h-[44px] min-w-[44px]"
+                                            onClick={async () => {
+                                                const token = (guest as any)?.publicToken as string | undefined;
+                                                if (!token) {
+                                                    toast({ title: "Lien indisponible", description: "Aucun lien d'invitation n'est disponible pour cet invité.", variant: "destructive" });
+                                                    return;
+                                                }
+                                                window.open(`${publicBasePath}/guest/${token}`, "_blank", "noopener,noreferrer");
+                                            }}
+                                        >
+                                            <ExternalLink className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="min-h-[44px] min-w-[44px]"
+                                            onClick={() => {
+                                                if (!guest.email) {
+                                                    toast({ title: "Email manquant", description: "Ajoutez un email pour contacter cet invité.", variant: "destructive" });
+                                                    return;
+                                                }
+                                                window.location.href = `mailto:${guest.email}`;
+                                            }}
+                                        >
+                                            <Mail className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="min-h-[44px] min-w-[44px]"
+                                            onClick={() => {
+                                                if (!guest.phone) {
+                                                    toast({ title: "Téléphone manquant", description: "Ajoutez un numéro pour contacter cet invité.", variant: "destructive" });
+                                                    return;
+                                                }
+                                                const phone = guest.phone.replace(/\\s+/g, "");
+                                                window.open(`https://wa.me/${phone}`, "_blank");
+                                            }}
+                                        >
+                                            <MessageCircle className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="min-h-[44px] min-w-[44px]"
+                                            onClick={() => openEditGuest(guest)}
+                                        >
+                                            <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="min-h-[44px] min-w-[44px] text-destructive"
+                                            onClick={() => handleDeleteGuest(guest)}
+                                            disabled={deleteGuestMutation.isPending}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="hidden md:block">
                     <Table data-tour="guests-table">
                         <TableHeader>
                             <TableRow>
@@ -1273,6 +1371,8 @@ export default function GuestsPage() {
                             ))}
                         </TableBody>
                     </Table>
+                    </div>
+                    </>
                 )}
             </Card>
 
