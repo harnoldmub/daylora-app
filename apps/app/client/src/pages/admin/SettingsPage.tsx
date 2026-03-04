@@ -356,7 +356,7 @@ export default function SettingsPage() {
             <Card className="p-6 space-y-4">
                 <h2 className="text-lg font-medium">Liens Live</h2>
         <p className="text-sm text-muted-foreground">
-          Partagez ces liens sur un écran pendant votre événement.
+          Partagez ces liens sur un écran pendant votre mariage.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">

@@ -314,7 +314,7 @@ export async function sendDateChangeApologyEmail(wedding: Wedding, guestData: {
         </head>
         <body>
           <h1>${wedding.title}</h1>
-          <p>Cher(e) ${guestData.firstName}, nous vous contactons pour vous informer d'un changement dans l'organisation de notre événement.</p>
+          <p>Cher(e) ${guestData.firstName}, nous vous contactons pour vous informer d'un changement dans l'organisation de notre mariage.</p>
           <p>Veuillez consulter votre invitation mise à jour sur notre site.</p>
         </body>
       </html>

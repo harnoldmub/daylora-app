@@ -18,7 +18,7 @@ export default function MinimalAdminDashboard() {
         <div className="p-8 space-y-6">
             <header>
                 <h1 className="text-3xl font-bold">Tableau de bord : {wedding?.title}</h1>
-                <p className="text-muted-foreground italic">Statistiques en temps réel de votre événement.</p>
+                <p className="text-muted-foreground italic">Statistiques en temps réel de votre mariage.</p>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -61,7 +61,7 @@ export default function MinimalAdminDashboard() {
                 </CardHeader>
                 <CardContent>
                     {/* Feed of recent SSE events would go here */}
-                    <p className="text-sm text-muted-foreground italic">Le flux d'événements en direct sera affiché ici.</p>
+                    <p className="text-sm text-muted-foreground italic">Le flux en direct sera affiché ici.</p>
                 </CardContent>
             </Card>
         </div>
