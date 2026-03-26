@@ -96,29 +96,38 @@ export default function CheckIn() {
   const slug = getSlugFromPath(window.location.pathname);
 
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [status, setStatus] = useState("all");
   const [selectedGuestId, setSelectedGuestId] = useState<number | null>(null);
 
-  const { data, isLoading, refetch } = useQuery<PublicCheckInResponse>({
-    queryKey: ["/api/checkin/public", slug, query, status, token],
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 180);
+    return () => window.clearTimeout(timeout);
+  }, [query]);
+
+  const { data, isLoading, isFetching, refetch } = useQuery<PublicCheckInResponse>({
+    queryKey: ["/api/checkin/public", slug, debouncedQuery, status, token],
     queryFn: async () => {
       if (!slug) throw new Error("Slug manquant");
       const params = new URLSearchParams({
-        q: query,
+        q: debouncedQuery,
         status,
       });
-      if (token) params.set("token", token);
       const res = await fetch(`/api/checkin/public/${slug}?${params.toString()}`);
       if (!res.ok) throw new Error("Impossible de charger le check-in");
       return res.json();
     },
     enabled: !!slug,
+    placeholderData: (previousData) => previousData,
   });
 
   useEffect(() => {
     if (!data?.items?.length) return;
     if (token) {
-      setSelectedGuestId(data.items[0].id);
+      const tokenGuest = data.items.find((item) => item.publicToken === token);
+      setSelectedGuestId(tokenGuest?.id ?? data.items[0].id);
       return;
     }
     setSelectedGuestId((current) => current ?? data.items[0]?.id ?? null);
@@ -230,6 +239,7 @@ export default function CheckIn() {
                   placeholder="Rechercher un invité..."
                   className="h-10 rounded-xl border-[#ece5d9] bg-white pl-10 pr-3 text-sm shadow-sm placeholder:text-slate-400"
                 />
+                {isFetching ? <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-400" /> : null}
               </div>
             </div>
 
