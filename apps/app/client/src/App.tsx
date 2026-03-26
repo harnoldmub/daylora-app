@@ -21,6 +21,8 @@ import DesignPage from "@/pages/admin/DesignPage";
 import SiteConfigPage from "@/pages/admin/SiteConfigPage";
 import PagesManagerPage from "@/pages/admin/PagesManagerPage";
 import FeedbackPage from "@/pages/admin/FeedbackPage";
+import GuestExperiencePage from "@/pages/admin/GuestExperiencePage";
+import CheckInOpsPage from "@/pages/admin/CheckInOpsPage";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
 import VerifyEmail from "@/pages/verify-email";
@@ -31,10 +33,10 @@ import OnboardingPreview from "@/pages/OnboardingPreview";
 import ContributionMerci from "@/pages/contribution-merci";
 import NotFound from "@/pages/not-found";
 import InvitationPage from "@/pages/InvitationPage";
-import Invitation from "@/pages/invitation";
+import LegacyInvitation from "@/pages/legacy-invitation";
 import CheckIn from "@/pages/checkin";
 import LiveContributions from "@/pages/live-contributions";
-import GuestInvitation from "@/pages/dot-invitation";
+import Invitation from "@/pages/invitation";
 import CustomPage from "@/pages/custom-page";
 import LegalPage from "@/pages/legal-page";
 
@@ -83,6 +85,8 @@ function AdminRoutes({ weddingId }: { weddingId: string }) {
         <Route path="/design" component={DesignPage} />
         <Route path="/pages" component={PagesManagerPage} />
         <Route path="/site" component={SiteConfigPage} />
+        <Route path="/guest-experience" component={GuestExperiencePage} />
+        <Route path="/check-in-ops" component={CheckInOpsPage} />
         <Route path="/settings" component={SettingsPage} />
         <Route path="/feedback" component={FeedbackPage} />
         <Route><Redirect to="/dashboard" /></Route>
@@ -107,7 +111,7 @@ function PublicRoutes({ slug, isPreview }: { slug: string; isPreview?: boolean }
         <Route path="/legal/:legalSlug" component={LegalPage} />
         <Route path="/page/:customSlug" component={CustomPage} />
         <Route path="/checkin" component={CheckIn} />
-        <Route path="/guest/:guestId" component={GuestInvitation} />
+        <Route path="/guest/:guestId" component={Invitation} />
         <Route component={NotFound} />
       </Switch>
     </PublicLayout>
@@ -134,10 +138,10 @@ function AppRouter() {
 
       <Route path="/contribution/merci" component={ContributionMerci} />
 
-      <Route path="/invitation/:id" component={Invitation} />
+      <Route path="/invitation/:id" component={LegacyInvitation} />
       <Route path="/checkin" component={CheckIn} />
 
-      <Route path="/:slug/guest/:guestId" component={GuestInvitation} />
+      <Route path="/:slug/guest/:guestId" component={Invitation} />
 
       <Route path="/admin/login" component={SuperAdminLogin} />
       <Route path="/admin" nest>

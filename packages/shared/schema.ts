@@ -15,6 +15,50 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
+export type GuestExperienceInvitationType = {
+  id: string;
+  label: string;
+  description?: string;
+  enabled: boolean;
+  segmentIds: string[];
+  optionIds: string[];
+  emailVariant?: string;
+};
+
+export type GuestExperienceSegment = {
+  id: string;
+  label: string;
+  time?: string;
+  venueLabel?: string;
+  venueAddress?: string;
+  description?: string;
+  enabled: boolean;
+  invitationTypeIds: string[];
+  sortOrder: number;
+};
+
+export type GuestExperienceOption = {
+  id: string;
+  label: string;
+  description?: string;
+  enabled: boolean;
+  time?: string;
+  venueLabel?: string;
+  venueAddress?: string;
+  priceCents?: number | null;
+  invitationTypeIds: string[];
+};
+
+export type GuestExperienceTable = {
+  id: string;
+  name: string;
+  number?: number | null;
+  capacity?: number | null;
+  category?: string | null;
+  notes?: string | null;
+  enabled: boolean;
+};
+
 // Session storage table.
 export const sessions = pgTable(
   "sessions",
@@ -153,6 +197,16 @@ export const weddings = pgTable("weddings", {
         title: string;
         description: string;
       }[];
+      guestExperience?: {
+        invitationTypes?: GuestExperienceInvitationType[];
+        eventSegments?: GuestExperienceSegment[];
+        eventOptions?: GuestExperienceOption[];
+        tables?: GuestExperienceTable[];
+        checkInSettings?: {
+          allowMassCheckIn?: boolean;
+          showPendingOnlyByDefault?: boolean;
+        };
+      };
     };
     navigation: {
       pages: {
@@ -297,7 +351,17 @@ export const weddings = pgTable("weddings", {
           title: "Cocktail & Dîner",
           description: "Apéritif, repas et animations."
         }
-      ]
+      ],
+      guestExperience: {
+        invitationTypes: [],
+        eventSegments: [],
+        eventOptions: [],
+        tables: [],
+        checkInSettings: {
+          allowMassCheckIn: true,
+          showPendingOnlyByDefault: false,
+        },
+      },
     },
     navigation: {
       pages: {
@@ -354,6 +418,10 @@ export const rsvpResponses = pgTable("rsvp_responses", {
   availability: varchar("availability", { length: 50 }).notNull().default('pending'), // 'confirmed', 'declined', 'pending'
   chosenDates: jsonb("chosen_dates").$type<string[]>().default([]),
   tableNumber: integer("table_number"),
+  invitationTypeId: varchar("invitation_type_id", { length: 100 }),
+  assignedTableId: varchar("assigned_table_id", { length: 100 }),
+  allowedOptionIds: jsonb("allowed_option_ids").$type<string[]>().default([]),
+  selectedOptionIds: jsonb("selected_option_ids").$type<string[]>().default([]),
   notes: text("notes"),
   status: varchar("status", { length: 50 }).notNull().default('pending'), // 'pending', 'confirmed', 'declined'
   publicToken: varchar("public_token").unique().default(sql`gen_random_uuid()`),
@@ -524,6 +592,10 @@ export const insertRsvpResponseSchema = z.object({
   availability: z.enum(['confirmed', 'declined', 'pending'], {
     errorMap: () => ({ message: "Veuillez indiquer votre disponibilité." })
   }),
+  invitationTypeId: z.string().optional().nullable().transform(val => !val || val === '' ? null : val),
+  assignedTableId: z.string().optional().nullable().transform(val => !val || val === '' ? null : val),
+  allowedOptionIds: z.array(z.string()).optional(),
+  selectedOptionIds: z.array(z.string()).optional(),
   phone: z.string().optional().nullable().transform(val => !val || val === '' ? null : val),
   notes: z.string().optional().nullable().transform(val => !val || val === '' ? null : val),
 });
@@ -543,6 +615,10 @@ export const updateRsvpResponseSchema = z.object({
     errorMap: () => ({ message: "Veuillez indiquer votre disponibilité." })
   }),
   tableNumber: z.union([z.number().int().positive(), z.null(), z.undefined()]).optional(),
+  invitationTypeId: z.string().optional().nullable(),
+  assignedTableId: z.string().optional().nullable(),
+  allowedOptionIds: z.array(z.string()).optional(),
+  selectedOptionIds: z.array(z.string()).optional(),
   notes: z.string().nullable().optional(),
   status: z.string().optional(),
   phone: z.string().optional().nullable(),

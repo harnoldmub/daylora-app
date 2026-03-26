@@ -98,6 +98,9 @@ export async function sendGuestConfirmationEmail(wedding: Wedding, guestData: {
   firstName: string;
   lastName: string;
   availability: string;
+  invitationTypeLabel?: string | null;
+  tableLabel?: string | null;
+  options?: string[];
 }) {
   const type = 'rsvp_confirmation_guest';
   const subject = `Merci ${guestData.firstName} ! Votre réponse a bien été enregistrée - ${wedding.title}`;
@@ -134,6 +137,9 @@ export async function sendGuestConfirmationEmail(wedding: Wedding, guestData: {
               <p>Votre réponse a bien été enregistrée</p>
             </div>
             <p>Cher(e) ${guestData.firstName} ${guestData.lastName}, nous avons bien reçu votre réponse : <strong>${availabilityText}</strong>.</p>
+            ${guestData.invitationTypeLabel ? `<p><strong>Format d'invitation :</strong> ${guestData.invitationTypeLabel}</p>` : ""}
+            ${guestData.tableLabel ? `<p><strong>Table :</strong> ${guestData.tableLabel}</p>` : ""}
+            ${guestData.options?.length ? `<p><strong>Options :</strong> ${guestData.options.join(", ")}</p>` : ""}
           </div>
         </body>
       </html>
@@ -249,6 +255,10 @@ export async function sendPersonalizedInvitation(wedding: Wedding, recipientData
   lastName: string;
   message?: string;
   publicToken?: string;
+  invitationTypeLabel?: string;
+  tableLabel?: string;
+  segments?: Array<{ label: string; time?: string; venueLabel?: string }>;
+  options?: string[];
 }) {
   const type = 'invitation_personalized_guest';
   const subject = `Vous êtes invité(e) à notre mariage - ${wedding.title}`;
@@ -257,8 +267,23 @@ export async function sendPersonalizedInvitation(wedding: Wedding, recipientData
     const customMessage = recipientData.message || `Nous serions honorés de votre présence à notre mariage.`;
     const domain = process.env.APP_BASE_URL || "https://daylora.app";
     const invitationPageLink = recipientData.publicToken
-      ? `${domain}/invitation/${recipientData.publicToken}`
+      ? `${domain}/${wedding.slug}/guest/${recipientData.publicToken}`
       : (recipientData.id ? `${domain}/invitation/${recipientData.id}` : null);
+    const directConfirmLink = recipientData.publicToken ? `${domain}/api/rsvp/respond/${recipientData.publicToken}/confirmed` : null;
+    const directDeclineLink = recipientData.publicToken ? `${domain}/api/rsvp/respond/${recipientData.publicToken}/declined` : null;
+    const segmentsHtml = recipientData.segments?.length
+      ? `
+        <div style="margin: 24px 0; text-align:left; border:1px solid #eee; border-radius:12px; padding:16px;">
+          <p style="margin:0 0 12px; font-weight:600;">Votre programme</p>
+          ${recipientData.segments.map((segment) => `
+            <div style="margin-bottom:10px;">
+              <div style="font-weight:600;">${segment.label}</div>
+              <div style="font-size:14px; color:#666;">${[segment.time, segment.venueLabel].filter(Boolean).join(" • ")}</div>
+            </div>
+          `).join("")}
+        </div>
+      `
+      : "";
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -278,7 +303,12 @@ export async function sendPersonalizedInvitation(wedding: Wedding, recipientData
             <div style="text-align: center;">
               <p>Cher(e) ${recipientData.firstName} ${recipientData.lastName},</p>
               <p>${customMessage}</p>
+              ${recipientData.invitationTypeLabel ? `<p><strong>Invitation :</strong> ${recipientData.invitationTypeLabel}</p>` : ""}
+              ${recipientData.tableLabel ? `<p><strong>Table :</strong> ${recipientData.tableLabel}</p>` : ""}
+              ${recipientData.options?.length ? `<p><strong>Options :</strong> ${recipientData.options.join(", ")}</p>` : ""}
+              ${segmentsHtml}
               ${invitationPageLink ? `<a href="${invitationPageLink}" class="cta-button">Accéder à mon invitation</a>` : ''}
+              ${directConfirmLink ? `<div style="margin-top: 12px;"><a href="${directConfirmLink}" style="display:inline-block;margin:0 8px 8px;padding:12px 20px;border-radius:999px;background:${wedding.config.theme.primaryColor};color:#fff !important;text-decoration:none;">Confirmer</a><a href="${directDeclineLink}" style="display:inline-block;margin:0 8px 8px;padding:12px 20px;border-radius:999px;border:1px solid ${wedding.config.theme.primaryColor};color:${wedding.config.theme.primaryColor};text-decoration:none;">Décliner</a></div>` : ""}
             </div>
           </div>
         </body>

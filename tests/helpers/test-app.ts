@@ -252,6 +252,25 @@ export function setupCrudRoutes(app: express.Express, storage: MockStorage) {
     }
   });
 
+  app.post("/api/rsvp/bulk-update", isAuthenticated, weddingMw, async (req, res) => {
+    try {
+      const wedding = (req as any).wedding;
+      const ids = Array.isArray(req.body?.ids) ? req.body.ids : [];
+      const patch = { ...(req.body?.patch || {}) };
+      const items = [];
+      for (const rawId of ids) {
+        const id = Number(rawId);
+        if (!Number.isFinite(id)) continue;
+        const existing = await storage.getRsvpResponse(wedding.id, id);
+        if (!existing) continue;
+        items.push(await storage.updateRsvpResponse(wedding.id, id, patch));
+      }
+      res.json({ success: true, updated: items.length, items });
+    } catch {
+      res.status(500).json({ message: "Failed to bulk update RSVPs" });
+    }
+  });
+
   app.get("/api/gifts", isAuthenticated, weddingMw, async (req, res) => {
     const wedding = (req as any).wedding;
     const gifts = await storage.getAllGifts(wedding.id);

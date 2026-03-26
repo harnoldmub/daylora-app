@@ -139,6 +139,16 @@ const DEFAULT_WEDDING_CONFIG = {
         description: "Apéritif, repas et animations."
       }
     ],
+    guestExperience: {
+      invitationTypes: [],
+      eventSegments: [],
+      eventOptions: [],
+      tables: [],
+      checkInSettings: {
+        allowMassCheckIn: true,
+        showPendingOnlyByDefault: false,
+      },
+    },
   },
   navigation: {
     pages: {
@@ -233,6 +243,52 @@ function applyTemplateConfig(templateId: string, currentConfig: any) {
     ...DEFAULT_WEDDING_CONFIG,
     ...currentConfig,
     theme: forceTemplateTheme,
+  };
+}
+
+function getGuestExperience(config: any) {
+  const sections = config?.sections || {};
+  const guestExperience = sections.guestExperience || {};
+  return {
+    invitationTypes: Array.isArray(guestExperience.invitationTypes) ? guestExperience.invitationTypes : [],
+    eventSegments: Array.isArray(guestExperience.eventSegments) ? guestExperience.eventSegments : [],
+    eventOptions: Array.isArray(guestExperience.eventOptions) ? guestExperience.eventOptions : [],
+    tables: Array.isArray(guestExperience.tables) ? guestExperience.tables : [],
+    checkInSettings: guestExperience.checkInSettings || {},
+  };
+}
+
+function resolveGuestContext(wedding: any, guest: any) {
+  const guestExperience = getGuestExperience(wedding?.config);
+  const invitationType = guestExperience.invitationTypes.find((item: any) => item.id === guest?.invitationTypeId) || null;
+  const allowedSegments = guestExperience.eventSegments
+    .filter((segment: any) => segment.enabled !== false)
+    .filter((segment: any) => {
+      if (!guest?.invitationTypeId) return true;
+      const ids = Array.isArray(segment.invitationTypeIds) ? segment.invitationTypeIds : [];
+      return ids.length === 0 || ids.includes(guest.invitationTypeId);
+    })
+    .sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
+
+  const allowedOptionIds = Array.isArray(guest?.allowedOptionIds) ? guest.allowedOptionIds : [];
+  const allowedOptions = guestExperience.eventOptions.filter((option: any) => {
+    if (option.enabled === false) return false;
+    if (allowedOptionIds.length > 0) return allowedOptionIds.includes(option.id);
+    if (!guest?.invitationTypeId) return false;
+    const ids = Array.isArray(option.invitationTypeIds) ? option.invitationTypeIds : [];
+    return ids.includes(guest.invitationTypeId);
+  });
+
+  const assignedTable =
+    guestExperience.tables.find((table: any) => table.id === guest?.assignedTableId) ||
+    (guest?.tableNumber ? { id: null, name: `Table ${guest.tableNumber}`, number: guest.tableNumber, category: null, capacity: null } : null);
+
+  return {
+    invitationType,
+    allowedSegments,
+    allowedOptions,
+    assignedTable,
+    guestExperience,
   };
 }
 
@@ -741,6 +797,30 @@ export async function registerRoutes(app: Express) {
               incomingConfig?.sections?.programItems ??
               wedding.config?.sections?.programItems ??
               DEFAULT_WEDDING_CONFIG.sections.programItems,
+            guestExperience: {
+              ...(wedding.config?.sections?.guestExperience || DEFAULT_WEDDING_CONFIG.sections.guestExperience || {}),
+              ...(incomingConfig?.sections?.guestExperience || {}),
+              checkInSettings: {
+                ...((wedding.config?.sections?.guestExperience as any)?.checkInSettings || (DEFAULT_WEDDING_CONFIG.sections.guestExperience as any)?.checkInSettings || {}),
+                ...((incomingConfig?.sections?.guestExperience as any)?.checkInSettings || {}),
+              },
+              invitationTypes:
+                (incomingConfig?.sections?.guestExperience as any)?.invitationTypes ??
+                (wedding.config?.sections?.guestExperience as any)?.invitationTypes ??
+                (DEFAULT_WEDDING_CONFIG.sections.guestExperience as any)?.invitationTypes,
+              eventSegments:
+                (incomingConfig?.sections?.guestExperience as any)?.eventSegments ??
+                (wedding.config?.sections?.guestExperience as any)?.eventSegments ??
+                (DEFAULT_WEDDING_CONFIG.sections.guestExperience as any)?.eventSegments,
+              eventOptions:
+                (incomingConfig?.sections?.guestExperience as any)?.eventOptions ??
+                (wedding.config?.sections?.guestExperience as any)?.eventOptions ??
+                (DEFAULT_WEDDING_CONFIG.sections.guestExperience as any)?.eventOptions,
+              tables:
+                (incomingConfig?.sections?.guestExperience as any)?.tables ??
+                (wedding.config?.sections?.guestExperience as any)?.tables ??
+                (DEFAULT_WEDDING_CONFIG.sections.guestExperience as any)?.tables,
+            },
             cagnotteSuggestedAmounts:
               incomingConfig?.sections?.cagnotteSuggestedAmounts ??
               wedding.config?.sections?.cagnotteSuggestedAmounts ??
@@ -794,6 +874,7 @@ export async function registerRoutes(app: Express) {
         return res.status(402).json({ message: `La limite de ${limits.maxRsvp} invités est atteinte. Passez au Premium pour accueillir tous vos invités.` });
       }
       const response = await storage.createRsvpResponse(wedding.id, data);
+      const resolved = resolveGuestContext(wedding, response);
 
       if (response.email) {
         sendGuestConfirmationEmail(wedding, {
@@ -801,6 +882,9 @@ export async function registerRoutes(app: Express) {
           firstName: response.firstName,
           lastName: response.lastName,
           availability: response.availability,
+          invitationTypeLabel: resolved?.invitationType?.label || null,
+          tableLabel: resolved?.assignedTable?.name || (resolved?.assignedTable?.number ? `Table ${resolved.assignedTable.number}` : null),
+          options: (resolved?.allowedOptions || []).map((option: any) => option.label),
         }).catch(() => null);
       }
       sendRsvpConfirmationEmail(wedding, {
@@ -846,6 +930,13 @@ export async function registerRoutes(app: Express) {
     try {
       const wedding = (req as any).wedding;
       const id = parseInt(req.params.id);
+      if (req.body?.assignedTableId && !req.body?.tableNumber) {
+        const guestExperience = getGuestExperience(wedding.config);
+        const assignedTable = guestExperience.tables.find((table: any) => table.id === req.body.assignedTableId);
+        if (assignedTable && typeof assignedTable.number === "number") {
+          req.body.tableNumber = assignedTable.number;
+        }
+      }
       const response = await storage.updateRsvpResponse(wedding.id, id, req.body);
       res.json(response);
     } catch (error) {
@@ -886,19 +977,56 @@ export async function registerRoutes(app: Express) {
     }
   });
 
+  app.post("/api/rsvp/bulk-update", isAuthenticated, withWedding, async (req, res) => {
+    try {
+      const wedding = (req as any).wedding;
+      const ids = Array.isArray(req.body?.ids) ? req.body.ids : [];
+      const patch = { ...(req.body?.patch || {}) };
+      const guestExperience = getGuestExperience(wedding.config);
+
+      if (patch.assignedTableId && !patch.tableNumber) {
+        const assignedTable = guestExperience.tables.find((table: any) => table.id === patch.assignedTableId);
+        if (assignedTable && typeof assignedTable.number === "number") {
+          patch.tableNumber = assignedTable.number;
+        }
+      }
+
+      const items = [];
+      for (const rawId of ids) {
+        const id = Number(rawId);
+        if (!Number.isFinite(id)) continue;
+        const guest = await storage.getRsvpResponse(wedding.id, id);
+        if (!guest) continue;
+        items.push(await storage.updateRsvpResponse(wedding.id, id, patch));
+      }
+
+      res.json({ success: true, updated: items.length, items });
+    } catch {
+      res.status(500).json({ message: "Impossible de mettre à jour la sélection." });
+    }
+  });
+
   // Guests / Invitations
   app.get("/api/guests/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const guest = await storage.getRsvpResponseById(id);
     if (!guest) return res.status(404).json({ message: "Invitation non trouvée" });
-    res.json(guest);
+    const wedding = await storage.getWedding(guest.weddingId);
+    res.json({
+      ...guest,
+      resolvedContext: wedding ? resolveGuestContext(wedding, guest) : null,
+    });
   });
 
   app.get("/api/invitation/guest/:token", async (req, res) => {
     const token = req.params.token;
     const guest = await storage.getRsvpResponseByPublicToken(token);
     if (!guest) return res.status(404).json({ message: "Invitation non trouvée" });
-    res.json(guest);
+    const wedding = await storage.getWedding(guest.weddingId);
+    res.json({
+      ...guest,
+      resolvedContext: wedding ? resolveGuestContext(wedding, guest) : null,
+    });
   });
 
   app.get("/api/invitation/guest/:token/wedding", async (req, res) => {
@@ -908,7 +1036,10 @@ export async function registerRoutes(app: Express) {
       if (!guest) return res.status(404).json({ message: "Invitation non trouvée" });
       const wedding = await storage.getWedding(guest.weddingId);
       if (!wedding) return res.status(404).json({ message: "Mariage non trouvé" });
-      res.json(wedding);
+      res.json({
+        ...wedding,
+        guestContext: resolveGuestContext(wedding, guest),
+      });
     } catch {
       res.status(500).json({ message: "Une erreur est survenue. Veuillez réessayer ou contacter le support." });
     }
@@ -920,12 +1051,15 @@ export async function registerRoutes(app: Express) {
       const token = req.params.token;
       const guest = await storage.getRsvpResponseByPublicToken(token);
       if (!guest) return res.status(404).json({ message: "Invitation non trouvée" });
+      const wedding = await storage.getWedding(guest.weddingId);
+      const resolved = wedding ? resolveGuestContext(wedding, guest) : null;
 
       const pdfBuffer = await generateInvitationPDF({
         id: guest.id,
         firstName: guest.firstName,
         lastName: guest.lastName,
         tableNumber: guest.tableNumber,
+        tableLabel: resolved?.assignedTable?.name || null,
       });
 
       res.setHeader("Content-Type", "application/pdf");
@@ -945,11 +1079,13 @@ export async function registerRoutes(app: Express) {
       const id = parseInt(req.params.id);
       const response = await storage.getRsvpResponse(wedding.id, id);
       if (!response) return res.status(404).json({ message: "Invité introuvable." });
+      const resolved = resolveGuestContext(wedding, response);
       const pdfBuffer = await generateInvitationPDF({
         id: response.id,
         firstName: response.firstName,
         lastName: response.lastName,
         tableNumber: response.tableNumber,
+        tableLabel: resolved?.assignedTable?.name || null,
       });
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", `inline; filename=\"invitation-${response.firstName}-${response.lastName}.pdf\"`);
@@ -966,10 +1102,47 @@ export async function registerRoutes(app: Express) {
       if (!email || !firstName || !lastName) {
         return res.status(400).json({ message: "Email, prénom et nom requis" });
       }
-      await sendPersonalizedInvitation(wedding, { email, firstName, lastName, message, publicToken });
+      const guest = publicToken ? await storage.getRsvpResponseByPublicToken(publicToken) : null;
+      const resolved = guest ? resolveGuestContext(wedding, guest) : null;
+      await sendPersonalizedInvitation(wedding, {
+        email,
+        firstName,
+        lastName,
+        message,
+        publicToken,
+        invitationTypeLabel: resolved?.invitationType?.label,
+        tableLabel: resolved?.assignedTable?.name || (resolved?.assignedTable?.number ? `Table ${resolved.assignedTable.number}` : undefined),
+        segments: (resolved?.allowedSegments || []).map((segment: any) => ({
+          label: segment.label,
+          time: segment.time,
+          venueLabel: segment.venueLabel,
+        })),
+        options: (resolved?.allowedOptions || []).map((option: any) => option.label),
+      });
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "L'envoi de l'invitation a échoué. Vérifiez l'adresse email et réessayez." });
+    }
+  });
+
+  app.get("/api/rsvp/respond/:token/:decision", async (req, res) => {
+    try {
+      const { token, decision } = req.params;
+      if (!["confirmed", "declined"].includes(decision)) {
+        return res.status(400).json({ message: "Décision invalide." });
+      }
+      const guest = await storage.getRsvpResponseByPublicToken(token);
+      if (!guest) return res.status(404).json({ message: "Invitation non trouvée" });
+      await storage.updateRsvpResponse(guest.weddingId, guest.id, {
+        availability: decision,
+        status: decision,
+        confirmedAt: new Date(),
+      });
+      const wedding = await storage.getWedding(guest.weddingId);
+      const slug = wedding?.slug ? `/${wedding.slug}/guest/${token}` : `/invitation/${token}`;
+      res.redirect(`${slug}?rsvp=${decision}`);
+    } catch {
+      res.status(500).json({ message: "Impossible d'enregistrer votre réponse." });
     }
   });
 
@@ -979,10 +1152,74 @@ export async function registerRoutes(app: Express) {
     if (!token) return res.status(400).json({ message: "Token manquant" });
     const guest = await storage.getRsvpResponseByPublicToken(token);
     if (!guest) return res.status(404).json({ message: "Invité introuvable." });
+    const wedding = await storage.getWedding(guest.weddingId);
+    const resolved = wedding ? resolveGuestContext(wedding, guest) : null;
     res.json({
       ...guest,
       groupType: guest.partySize > 1 ? "couple" : "solo",
+      invitationTypeLabel: resolved?.invitationType?.label || null,
+      assignedTable: resolved?.assignedTable || null,
     });
+  });
+
+  app.get("/api/checkin/public/:slug", async (req, res) => {
+    try {
+      const slug = String(req.params.slug || "").trim();
+      if (!slug) return res.status(400).json({ message: "Slug manquant" });
+
+      const wedding = await storage.getWeddingBySlug(slug);
+      if (!wedding) return res.status(404).json({ message: "Evenement introuvable." });
+
+      const query = String(req.query.q || "").trim().toLowerCase();
+      const invitationTypeId = String(req.query.invitationTypeId || "").trim();
+      const segmentId = String(req.query.segmentId || "").trim();
+      const status = String(req.query.status || "all").trim();
+      const token = String(req.query.token || "").trim();
+      const guests = await storage.getAllRsvpResponses(wedding.id);
+
+      const items = guests
+        .map((guest) => {
+          const resolved = resolveGuestContext(wedding, guest);
+          return {
+            ...guest,
+            invitationTypeLabel: resolved.invitationType?.label || null,
+            invitationTypeId: guest.invitationTypeId || null,
+            assignedTable: resolved.assignedTable || null,
+            allowedSegments: resolved.allowedSegments,
+          };
+        })
+        .filter((guest) => (!token ? true : guest.publicToken === token))
+        .filter((guest) => {
+          if (!query) return true;
+          const haystack = `${guest.firstName} ${guest.lastName} ${guest.email || ""}`.toLowerCase();
+          return haystack.includes(query);
+        })
+        .filter((guest) => (!invitationTypeId ? true : guest.invitationTypeId === invitationTypeId))
+        .filter((guest) => (!segmentId ? true : guest.allowedSegments.some((segment: any) => segment.id === segmentId)))
+        .filter((guest) => {
+          if (status === "checked_in") return !!guest.checkedInAt;
+          if (status === "pending") return !guest.checkedInAt;
+          return true;
+        });
+
+      res.json({
+        wedding: {
+          id: wedding.id,
+          slug: wedding.slug,
+          title: wedding.title,
+          weddingDate: wedding.weddingDate,
+          config: wedding.config,
+        },
+        items,
+        counts: {
+          total: guests.length,
+          checkedIn: guests.filter((guest) => !!guest.checkedInAt).length,
+          pending: guests.filter((guest) => !guest.checkedInAt).length,
+        },
+      });
+    } catch {
+      res.status(500).json({ message: "Impossible de charger le check-in public." });
+    }
   });
 
   app.post("/api/checkin/:id", async (req, res) => {
@@ -991,6 +1228,78 @@ export async function registerRoutes(app: Express) {
     if (!guest) return res.status(404).json({ message: "Invité introuvable." });
     const updated = await storage.updateRsvpResponse(guest.weddingId, id, { checkedInAt: new Date() });
     res.json(updated);
+  });
+
+  app.post("/api/checkin/:id/reset", async (req, res) => {
+    const id = parseInt(req.params.id);
+    const guest = await storage.getRsvpResponseById(id);
+    if (!guest) return res.status(404).json({ message: "Invité introuvable." });
+    const updated = await storage.updateRsvpResponse(guest.weddingId, id, { checkedInAt: null });
+    res.json(updated);
+  });
+
+  app.get("/api/checkin/ops", isAuthenticated, withWedding, async (req, res) => {
+    try {
+      const wedding = (req as any).wedding;
+      const query = String(req.query.q || "").trim().toLowerCase();
+      const invitationTypeId = String(req.query.invitationTypeId || "").trim();
+      const segmentId = String(req.query.segmentId || "").trim();
+      const status = String(req.query.status || "all").trim();
+      const guests = await storage.getAllRsvpResponses(wedding.id);
+
+      const items = guests
+        .map((guest) => {
+          const resolved = resolveGuestContext(wedding, guest);
+          return {
+            ...guest,
+            invitationTypeLabel: resolved.invitationType?.label || null,
+            invitationTypeId: guest.invitationTypeId || null,
+            assignedTable: resolved.assignedTable || null,
+            allowedSegments: resolved.allowedSegments,
+          };
+        })
+        .filter((guest) => {
+          if (!query) return true;
+          const haystack = `${guest.firstName} ${guest.lastName} ${guest.email || ""}`.toLowerCase();
+          return haystack.includes(query);
+        })
+        .filter((guest) => (!invitationTypeId ? true : guest.invitationTypeId === invitationTypeId))
+        .filter((guest) => (!segmentId ? true : guest.allowedSegments.some((segment: any) => segment.id === segmentId)))
+        .filter((guest) => {
+          if (status === "checked_in") return !!guest.checkedInAt;
+          if (status === "pending") return !guest.checkedInAt;
+          return true;
+        });
+
+      res.json({
+        items,
+        counts: {
+          total: guests.length,
+          checkedIn: guests.filter((guest) => !!guest.checkedInAt).length,
+          pending: guests.filter((guest) => !guest.checkedInAt).length,
+        },
+      });
+    } catch {
+      res.status(500).json({ message: "Impossible de charger le check-in." });
+    }
+  });
+
+  app.post("/api/checkin/bulk", isAuthenticated, withWedding, async (req, res) => {
+    try {
+      const wedding = (req as any).wedding;
+      const ids = Array.isArray(req.body?.ids) ? req.body.ids : [];
+      const updates = [];
+      for (const rawId of ids) {
+        const id = Number(rawId);
+        if (!Number.isFinite(id)) continue;
+        const guest = await storage.getRsvpResponse(wedding.id, id);
+        if (!guest) continue;
+        updates.push(await storage.updateRsvpResponse(wedding.id, id, { checkedInAt: new Date() }));
+      }
+      res.json({ success: true, updated: updates.length, items: updates });
+    } catch {
+      res.status(500).json({ message: "Impossible de faire le check-in en masse." });
+    }
   });
 
   // Gifts

@@ -186,6 +186,20 @@ describe("insertRsvpResponseSchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it("accepts invitation type and allowed options", () => {
+    const result = insertRsvpResponseSchema.safeParse({
+      firstName: "Marie",
+      lastName: "Dupont",
+      partySize: 1,
+      availability: "confirmed",
+      invitationTypeId: "full_invite",
+      assignedTableId: "table_family",
+      allowedOptionIds: ["brunch", "after_party"],
+      selectedOptionIds: ["brunch"],
+    });
+    expect(result.success).toBe(true);
+  });
 });
 
 describe("insertContributionSchema", () => {
@@ -286,6 +300,20 @@ describe("updateRsvpResponseSchema", () => {
       partySize: 1,
       availability: "confirmed",
       tableNumber: null,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts extended guest experience fields on update", () => {
+    const result = updateRsvpResponseSchema.safeParse({
+      firstName: "Marie",
+      lastName: "Dupont",
+      partySize: 2,
+      availability: "confirmed",
+      invitationTypeId: "ceremony_only",
+      assignedTableId: "vip_01",
+      allowedOptionIds: ["brunch"],
+      selectedOptionIds: ["brunch"],
     });
     expect(result.success).toBe(true);
   });

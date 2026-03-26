@@ -15,6 +15,8 @@ import {
     Settings,
     Paintbrush,
     ListTree,
+    ScanLine,
+    Tag,
     ExternalLink,
     Menu,
     X
@@ -42,6 +44,8 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
         { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
         { name: "Design", icon: Paintbrush, href: "/design" },
         { name: "Invités", icon: Users, href: "/guests" },
+        { name: "Expérience invités", icon: Tag, href: "/guest-experience" },
+        { name: "Check-in Jour J", icon: ScanLine, href: "/check-in-ops" },
         { name: "Templates", icon: Palette, href: "/templates" },
         { name: "Site & Menus", icon: ListTree, href: "/site" },
         { name: "Cadeaux", icon: Gift, href: "/gifts" },

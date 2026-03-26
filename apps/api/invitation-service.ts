@@ -8,6 +8,7 @@ export interface InvitationData {
   firstName: string;
   lastName: string;
   tableNumber: number | null;
+  tableLabel?: string | null;
   type?: '19' | '21';
 }
 
@@ -52,7 +53,9 @@ export async function generateInvitationPDF(
     });
     
     // Table number or "à communiquer"
-    const tableText = data.tableNumber 
+    const tableText = data.tableLabel
+      ? data.tableLabel
+      : data.tableNumber
       ? `Table ${data.tableNumber}` 
       : "Table à communiquer";
     

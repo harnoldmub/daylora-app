@@ -52,6 +52,30 @@ describe("HTTP CRUD Operations", () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
     });
+
+    it("bulk updates invitation type and table assignments", async () => {
+      const rsvpA = await storage.createRsvpResponse(wedding.id, { firstName: "Marie", lastName: "A" });
+      const rsvpB = await storage.createRsvpResponse(wedding.id, { firstName: "Paul", lastName: "B" });
+
+      const res = await agent
+        .post("/api/rsvp/bulk-update")
+        .set("x-wedding-slug", wedding.slug)
+        .send({
+          ids: [rsvpA.id, rsvpB.id],
+          patch: {
+            invitationTypeId: "full_invite",
+            assignedTableId: "family_a",
+          },
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.updated).toBe(2);
+
+      const updated = await storage.getAllRsvpResponses(wedding.id);
+      expect(updated.every((item: any) => item.invitationTypeId === "full_invite")).toBe(true);
+      expect(updated.every((item: any) => item.assignedTableId === "family_a")).toBe(true);
+    });
   });
 
   describe("Gifts CRUD via HTTP", () => {

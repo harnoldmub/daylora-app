@@ -51,7 +51,7 @@ import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { RsvpResponse } from "@shared/schema";
+import type { GuestExperienceOption, GuestExperienceTable, GuestExperienceInvitationType, RsvpResponse } from "@shared/schema";
 import { useParams } from "wouter";
 import { useWedding } from "@/hooks/use-api";
 import { useUpdateWedding } from "@/hooks/use-api";
@@ -73,6 +73,9 @@ export default function GuestsPage() {
     const [hasEmail, setHasEmail] = useState(false);
     const [hasPhone, setHasPhone] = useState(false);
     const [groupFilter, setGroupFilter] = useState<"all" | "solo" | "couple">("all");
+    const [invitationTypeFilter, setInvitationTypeFilter] = useState("all");
+    const [bulkInvitationTypeId, setBulkInvitationTypeId] = useState("");
+    const [bulkAssignedTableId, setBulkAssignedTableId] = useState("");
     const [addGuestOpen, setAddGuestOpen] = useState(false);
     const [editGuestOpen, setEditGuestOpen] = useState(false);
     const [editGuestId, setEditGuestId] = useState<number | null>(null);
@@ -104,6 +107,9 @@ export default function GuestsPage() {
         phone: "",
         partySize: 1,
         availability: "pending",
+        invitationTypeId: "",
+        assignedTableId: "",
+        allowedOptionIds: [] as string[],
         notes: "",
     });
     const [editGuest, setEditGuest] = useState({
@@ -113,6 +119,9 @@ export default function GuestsPage() {
         phone: "",
         partySize: 1,
         availability: "pending",
+        invitationTypeId: "",
+        assignedTableId: "",
+        allowedOptionIds: [] as string[],
         notes: "",
     });
 
@@ -133,12 +142,28 @@ export default function GuestsPage() {
             if (groupFilter === "solo") return (response.partySize || 1) === 1;
             if (groupFilter === "couple") return (response.partySize || 1) >= 2;
             return true;
-        });
+        })
+        .filter((response) => invitationTypeFilter === "all" ? true : ((response as any).invitationTypeId || "") === invitationTypeFilter);
 
     const total = responses.reduce((sum, r) => sum + (r.partySize || 1), 0);
     const confirmed = responses.filter((r) => r.availability === "confirmed").reduce((sum, r) => sum + (r.partySize || 1), 0);
     const declined = responses.filter((r) => r.availability === "declined").reduce((sum, r) => sum + (r.partySize || 1), 0);
     const pending = total - confirmed - declined;
+    const guestExperience = (wedding?.config?.sections as any)?.guestExperience || {};
+    const invitationTypes = (guestExperience.invitationTypes || []) as GuestExperienceInvitationType[];
+    const eventOptions = (guestExperience.eventOptions || []) as GuestExperienceOption[];
+    const tables = (guestExperience.tables || []) as GuestExperienceTable[];
+
+    const getInvitationTypeLabel = (invitationTypeId?: string | null) =>
+        invitationTypes.find((item) => item.id === invitationTypeId)?.label || "Standard";
+    const getTableLabel = (guest: RsvpResponse & { assignedTableId?: string | null }) => {
+        const table = tables.find((item) => item.id === guest.assignedTableId);
+        if (table?.name) return table.name;
+        if (guest.tableNumber) return `Table ${guest.tableNumber}`;
+        return "-";
+    };
+    const getOptionLabels = (optionIds?: string[] | null) =>
+        (optionIds || []).map((id) => eventOptions.find((item) => item.id === id)?.label).filter(Boolean).join(", ");
 
     const createGuestMutation = useMutation({
         mutationFn: async (data: typeof newGuest) => {
@@ -146,6 +171,9 @@ export default function GuestsPage() {
                 ...data,
                 email: data.email || null,
                 phone: data.phone || null,
+                invitationTypeId: data.invitationTypeId || null,
+                assignedTableId: data.assignedTableId || null,
+                allowedOptionIds: data.allowedOptionIds || [],
                 notes: data.notes || null,
             });
         },
@@ -163,6 +191,9 @@ export default function GuestsPage() {
                 phone: "",
                 partySize: 1,
                 availability: "pending",
+                invitationTypeId: "",
+                assignedTableId: "",
+                allowedOptionIds: [],
                 notes: "",
             });
         },
@@ -184,6 +215,9 @@ export default function GuestsPage() {
                 phone: data.phone || null,
                 partySize: data.partySize,
                 availability: data.availability,
+                invitationTypeId: data.invitationTypeId || null,
+                assignedTableId: data.assignedTableId || null,
+                allowedOptionIds: data.allowedOptionIds || [],
                 notes: data.notes || null,
             });
         },
@@ -226,7 +260,7 @@ export default function GuestsPage() {
 
     const handleExportCSV = () => {
         const data = filteredResponses;
-        const headers = ["Prénom", "Nom", "Email", "Téléphone", "Nombre", "Disponibilité", "Notes"];
+        const headers = ["Prénom", "Nom", "Email", "Téléphone", "Nombre", "Disponibilité", "Type invitation", "Table", "Options", "Notes"];
         const escapeCSV = (value: unknown) => {
             const str = String(value ?? "");
             if (/[",\n]/.test(str)) {
@@ -241,6 +275,9 @@ export default function GuestsPage() {
             escapeCSV(row.phone),
             escapeCSV(row.partySize),
             escapeCSV(row.availability),
+            escapeCSV(getInvitationTypeLabel((row as any).invitationTypeId)),
+            escapeCSV(getTableLabel(row as any)),
+            escapeCSV(getOptionLabels((row as any).allowedOptionIds as string[] | undefined)),
             escapeCSV(row.notes),
         ]);
         const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
@@ -274,6 +311,9 @@ export default function GuestsPage() {
             phone: guest.phone || "",
             partySize: guest.partySize || 1,
             availability: guest.availability || "pending",
+            invitationTypeId: (guest as any).invitationTypeId || "",
+            assignedTableId: (guest as any).assignedTableId || "",
+            allowedOptionIds: ((guest as any).allowedOptionIds || []) as string[],
             notes: guest.notes || "",
         });
         setEditGuestOpen(true);
@@ -306,6 +346,10 @@ export default function GuestsPage() {
     const getInvitationUrl = (guest: RsvpResponse) => {
         const token = (guest as any)?.publicToken as string | undefined;
         return `${publicBasePath}/guest/${token || ""}`;
+    };
+    const getCheckInUrl = (guest: RsvpResponse) => {
+        const token = (guest as any)?.publicToken as string | undefined;
+        return `${publicBasePath}/checkin?token=${token || ""}`;
     };
 
     const copyToClipboard = async (text: string) => {
@@ -354,6 +398,29 @@ export default function GuestsPage() {
             toast({ title: "Sélection supprimée", description: "Les invités sélectionnés ont été retirés." });
         } catch (error: any) {
             toast({ title: "Suppression impossible", description: error?.message || "Impossible de supprimer la sélection.", variant: "destructive" });
+        }
+    };
+
+    const handleBulkAssign = async () => {
+        if (selectedIds.length === 0) return;
+        if (!bulkInvitationTypeId && !bulkAssignedTableId) {
+            toast({ title: "Aucune affectation", description: "Choisissez un type d'invitation ou une table.", variant: "destructive" });
+            return;
+        }
+        try {
+            await apiRequest("POST", "/api/rsvp/bulk-update", {
+                ids: selectedIds,
+                patch: {
+                    ...(bulkInvitationTypeId ? { invitationTypeId: bulkInvitationTypeId } : {}),
+                    ...(bulkAssignedTableId ? { assignedTableId: bulkAssignedTableId } : {}),
+                },
+            });
+            queryClient.invalidateQueries({ queryKey: ["/api/rsvp"] });
+            toast({ title: "Affectation mise à jour", description: "La sélection a bien été mise à jour." });
+            setBulkInvitationTypeId("");
+            setBulkAssignedTableId("");
+        } catch (error: any) {
+            toast({ title: "Affectation impossible", description: error?.message || "Impossible de mettre à jour la sélection.", variant: "destructive" });
         }
     };
 
@@ -536,6 +603,57 @@ export default function GuestsPage() {
                                         </select>
                                     </div>
                                 </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Type d'invitation</Label>
+                                        <select
+                                            className="h-9 rounded-md border border-border bg-background px-3 text-xs w-full"
+                                            value={newGuest.invitationTypeId}
+                                            onChange={(e) => setNewGuest({ ...newGuest, invitationTypeId: e.target.value })}
+                                        >
+                                            <option value="">Standard</option>
+                                            {invitationTypes.map((item) => (
+                                                <option key={item.id} value={item.id}>{item.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Table</Label>
+                                        <select
+                                            className="h-9 rounded-md border border-border bg-background px-3 text-xs w-full"
+                                            value={newGuest.assignedTableId}
+                                            onChange={(e) => setNewGuest({ ...newGuest, assignedTableId: e.target.value })}
+                                        >
+                                            <option value="">Non assignée</option>
+                                            {tables.map((table) => (
+                                                <option key={table.id} value={table.id}>{table.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                {eventOptions.length > 0 && (
+                                    <div className="space-y-2">
+                                        <Label className="text-xs">Options autorisées</Label>
+                                        <div className="grid grid-cols-1 gap-2 rounded-md border p-3">
+                                            {eventOptions.map((option) => (
+                                                <label key={option.id} className="flex items-center gap-2 text-xs">
+                                                    <Checkbox
+                                                        checked={newGuest.allowedOptionIds.includes(option.id)}
+                                                        onCheckedChange={(checked) => {
+                                                            setNewGuest((prev) => ({
+                                                                ...prev,
+                                                                allowedOptionIds: checked
+                                                                    ? [...prev.allowedOptionIds, option.id]
+                                                                    : prev.allowedOptionIds.filter((id) => id !== option.id),
+                                                            }));
+                                                        }}
+                                                    />
+                                                    <span>{option.label}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="space-y-1">
                                     <Label className="text-xs">Notes</Label>
                                     <Textarea rows={2} className="text-sm" value={newGuest.notes} onChange={(e) => setNewGuest({ ...newGuest, notes: e.target.value })} />
@@ -594,6 +712,57 @@ export default function GuestsPage() {
                                         </select>
                                     </div>
                                 </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Type d'invitation</Label>
+                                        <select
+                                            className="h-9 rounded-md border border-border bg-background px-3 text-xs w-full"
+                                            value={editGuest.invitationTypeId}
+                                            onChange={(e) => setEditGuest({ ...editGuest, invitationTypeId: e.target.value })}
+                                        >
+                                            <option value="">Standard</option>
+                                            {invitationTypes.map((item) => (
+                                                <option key={item.id} value={item.id}>{item.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Table</Label>
+                                        <select
+                                            className="h-9 rounded-md border border-border bg-background px-3 text-xs w-full"
+                                            value={editGuest.assignedTableId}
+                                            onChange={(e) => setEditGuest({ ...editGuest, assignedTableId: e.target.value })}
+                                        >
+                                            <option value="">Non assignée</option>
+                                            {tables.map((table) => (
+                                                <option key={table.id} value={table.id}>{table.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                {eventOptions.length > 0 && (
+                                    <div className="space-y-2">
+                                        <Label className="text-xs">Options autorisées</Label>
+                                        <div className="grid grid-cols-1 gap-2 rounded-md border p-3">
+                                            {eventOptions.map((option) => (
+                                                <label key={option.id} className="flex items-center gap-2 text-xs">
+                                                    <Checkbox
+                                                        checked={editGuest.allowedOptionIds.includes(option.id)}
+                                                        onCheckedChange={(checked) => {
+                                                            setEditGuest((prev) => ({
+                                                                ...prev,
+                                                                allowedOptionIds: checked
+                                                                    ? [...prev.allowedOptionIds, option.id]
+                                                                    : prev.allowedOptionIds.filter((id) => id !== option.id),
+                                                            }));
+                                                        }}
+                                                    />
+                                                    <span>{option.label}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="space-y-1">
                                     <Label className="text-xs">Notes</Label>
                                     <Textarea rows={2} className="text-sm" value={editGuest.notes} onChange={(e) => setEditGuest({ ...editGuest, notes: e.target.value })} />
@@ -1091,6 +1260,21 @@ export default function GuestsPage() {
                                         </label>
                                     </div>
                                 </div>
+                                {invitationTypes.length > 0 && (
+                                    <div className="space-y-2">
+                                        <div className="text-sm font-medium">Type d'invitation</div>
+                                        <select
+                                            className="h-10 rounded-md border border-border bg-background px-3 text-sm w-full"
+                                            value={invitationTypeFilter}
+                                            onChange={(e) => setInvitationTypeFilter(e.target.value)}
+                                        >
+                                            <option value="all">Tous les types</option>
+                                            {invitationTypes.map((item) => (
+                                                <option key={item.id} value={item.id}>{item.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
                             </div>
                             <div className="flex justify-end gap-2">
                                 <Button
@@ -1099,6 +1283,7 @@ export default function GuestsPage() {
                                         setHasEmail(false);
                                         setHasPhone(false);
                                         setGroupFilter("all");
+                                        setInvitationTypeFilter("all");
                                     }}
                                 >
                                     Réinitialiser
@@ -1114,6 +1299,19 @@ export default function GuestsPage() {
                                 {selectedIds.length} invité(s) sélectionné(s)
                             </div>
                             <div className="flex flex-wrap items-center gap-2">
+                                <select className="h-9 rounded-md border border-border bg-background px-3 text-xs" value={bulkInvitationTypeId} onChange={(e) => setBulkInvitationTypeId(e.target.value)}>
+                                    <option value="">Type en masse</option>
+                                    {invitationTypes.map((item) => (
+                                        <option key={item.id} value={item.id}>{item.label}</option>
+                                    ))}
+                                </select>
+                                <select className="h-9 rounded-md border border-border bg-background px-3 text-xs" value={bulkAssignedTableId} onChange={(e) => setBulkAssignedTableId(e.target.value)}>
+                                    <option value="">Table en masse</option>
+                                    {tables.map((table) => (
+                                        <option key={table.id} value={table.id}>{table.name}</option>
+                                    ))}
+                                </select>
+                                <Button size="sm" variant="outline" onClick={handleBulkAssign}>Affecter</Button>
                                 <Button size="sm" variant="outline" onClick={handleBulkCopyInvitations}>
                                     Invitations
                                 </Button>
@@ -1158,6 +1356,15 @@ export default function GuestsPage() {
                                     {guest.email && <div>{guest.email}</div>}
                                     {guest.phone && <div>{guest.phone}</div>}
                                 </div>
+                                <div className="flex flex-wrap gap-2 text-xs">
+                                    <span className="rounded-full bg-slate-100 px-2 py-1">{getInvitationTypeLabel((guest as any).invitationTypeId)}</span>
+                                    <span className="rounded-full bg-slate-100 px-2 py-1">{getTableLabel(guest as any)}</span>
+                                </div>
+                                {getOptionLabels((guest as any).allowedOptionIds as string[] | undefined) && (
+                                    <div className="text-xs text-muted-foreground">
+                                        Options: {getOptionLabels((guest as any).allowedOptionIds as string[] | undefined)}
+                                    </div>
+                                )}
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm text-muted-foreground">Groupe : {guest.partySize} personne{(guest.partySize || 1) > 1 ? "s" : ""}</span>
                                     <div className="flex justify-end gap-2">
@@ -1175,6 +1382,14 @@ export default function GuestsPage() {
                                             }}
                                         >
                                             <ExternalLink className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="min-h-[44px] min-w-[44px]"
+                                            onClick={() => window.open(getCheckInUrl(guest), "_blank", "noopener,noreferrer")}
+                                        >
+                                            <CheckCircle2 className="h-4 w-4" />
                                         </Button>
                                         <Button
                                             variant="ghost"
@@ -1247,6 +1462,8 @@ export default function GuestsPage() {
                                 <TableHead>Invité</TableHead>
                                 <TableHead>Email / Tél</TableHead>
                                 <TableHead>Nb.</TableHead>
+                                <TableHead>Invitation</TableHead>
+                                <TableHead>Table</TableHead>
                                 <TableHead>Disponibilité</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
@@ -1275,6 +1492,15 @@ export default function GuestsPage() {
                                         {guest.phone || "-"}
                                     </TableCell>
                                     <TableCell>{guest.partySize}</TableCell>
+                                    <TableCell className="text-sm">{getInvitationTypeLabel((guest as any).invitationTypeId)}</TableCell>
+                                    <TableCell className="text-sm">
+                                        <div>{getTableLabel(guest as any)}</div>
+                                        {getOptionLabels((guest as any).allowedOptionIds as string[] | undefined) ? (
+                                            <div className="text-xs text-muted-foreground">
+                                                {getOptionLabels((guest as any).allowedOptionIds as string[] | undefined)}
+                                            </div>
+                                        ) : null}
+                                    </TableCell>
                                     <TableCell>
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${guest.availability === 'confirmed' ? 'bg-green-100 text-green-700' :
                                                 guest.availability === 'declined' ? 'bg-red-100 text-red-700' :
@@ -1304,6 +1530,18 @@ export default function GuestsPage() {
                                                     </Button>
                                                 </TooltipTrigger>
                                                 <TooltipContent>Voir l'invitation</TooltipContent>
+                                            </Tooltip>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => window.open(getCheckInUrl(guest), "_blank", "noopener,noreferrer")}
+                                                    >
+                                                        <CheckCircle2 className="h-4 w-4" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>Ouvrir le lien check-in</TooltipContent>
                                             </Tooltip>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>

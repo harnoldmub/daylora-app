@@ -112,7 +112,18 @@ export class MockStorage implements Partial<IStorage> {
 
   async createRsvpResponse(weddingId: string, data: any) {
     const id = ++this.rsvpSeq;
-    const rsvp = { ...data, id, weddingId, createdAt: new Date(), updatedAt: new Date() };
+    const rsvp = {
+      allowedOptionIds: [],
+      selectedOptionIds: [],
+      publicToken: crypto.randomUUID(),
+      availability: "pending",
+      partySize: 1,
+      ...data,
+      id,
+      weddingId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
     this.rsvps.set(id, rsvp);
     return rsvp;
   }

@@ -117,6 +117,16 @@ export function buildWeddingConfig(overrides: Record<string, any> = {}) {
       programItems: [
         { time: "14:30", title: "Accueil", description: "Bienvenue" },
       ],
+      guestExperience: {
+        invitationTypes: [],
+        eventSegments: [],
+        eventOptions: [],
+        tables: [],
+        checkInSettings: {
+          allowMassCheckIn: true,
+          showPendingOnlyByDefault: false,
+        },
+      },
     },
     navigation: {
       pages: {

@@ -1,671 +1,773 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useRoute } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
+import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import {
-    Play,
-    Pause,
-    MapPin,
-    Clock,
-    Calendar,
-    Music,
-    Gift,
-    Sparkles,
-    Download,
-    CheckCircle,
-    Copy,
-    ChevronDown,
-    Heart,
-    Shirt,
-    Hotel,
-    Utensils,
-    Camera,
-    Wine
-} from "lucide-react";
-import { toPng } from 'html-to-image';
-import heroImage from "../assets/hero-couple.jpg";
+import { useEffect, useState, useRef } from "react";
+import { Loader2, MapPin, Gift, ExternalLink, Bed, ChevronDown, Heart, Sparkles, Calendar, Clock, CheckCircle2, Users, ArrowRight } from "lucide-react";
+import QRCodeLib from "qrcode";
 
-// --- Types
-interface Guest {
-    id: number;
-    firstName: string;
-    lastName: string;
-    tableNumber: number;
-    partySize: number;
-    availability: 'confirmed' | 'declined' | 'pending';
+type GuestData = {
+  id: number;
+  weddingId: string;
+  firstName: string;
+  lastName: string;
+  availability: string;
+  partySize: number;
+  tableNumber?: number | null;
+  invitationTypeId?: string | null;
+  assignedTableId?: string | null;
+  allowedOptionIds?: string[];
+  confirmedAt?: string | null;
+  status?: string;
+  resolvedContext?: {
+    invitationType?: { id: string; label: string } | null;
+    allowedSegments?: Array<{ id: string; label: string; time?: string; venueLabel?: string; venueAddress?: string; description?: string }>;
+    allowedOptions?: Array<{ id: string; label: string; time?: string; venueLabel?: string; venueAddress?: string; priceCents?: number | null }>;
+    assignedTable?: { id?: string | null; name?: string; number?: number | null; category?: string | null } | null;
+  } | null;
+};
+
+function hexToHSL(hex: string): { h: number; s: number; l: number } {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0;
+  const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+    else if (max === g) h = ((b - r) / d + 2) / 6;
+    else h = ((r - g) / d + 4) / 6;
+  }
+  return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
 }
 
-// --- Icons / Assets ---
-// Using Lucide icons for simplicity and elegance
+function FloralDivider({ color }: { color: string }) {
+  return (
+    <div className="flex items-center justify-center gap-4 py-6">
+      <svg width="60" height="2" viewBox="0 0 60 2">
+        <line x1="0" y1="1" x2="60" y2="1" stroke={color} strokeWidth="0.5" opacity="0.3" />
+      </svg>
+      <svg width="12" height="12" viewBox="0 0 12 12">
+        <path d="M6 0 L8 4 L12 6 L8 8 L6 12 L4 8 L0 6 L4 4 Z" fill={color} opacity="0.4" />
+      </svg>
+      <svg width="60" height="2" viewBox="0 0 60 2">
+        <line x1="0" y1="1" x2="60" y2="1" stroke={color} strokeWidth="0.5" opacity="0.3" />
+      </svg>
+    </div>
+  );
+}
 
-// --- Main Component ---
-export default function Invitation() {
-    const [, params] = useRoute("/invitation/:id");
-    const id = params?.id;
-    const scrollRef = useRef<HTMLDivElement>(null);
+function CornerOrnament({ color, position }: { color: string; position: "tl" | "tr" | "bl" | "br" }) {
+  const transforms: Record<string, string> = {
+    tl: "",
+    tr: "scale(-1,1)",
+    bl: "scale(1,-1)",
+    br: "scale(-1,-1)",
+  };
+  return (
+    <svg
+      width="40" height="40" viewBox="0 0 40 40"
+      className={`absolute ${position === "tl" || position === "bl" ? "left-4" : "right-4"} ${position === "tl" || position === "tr" ? "top-4" : "bottom-4"}`}
+      style={{ opacity: 0.2 }}
+    >
+      <g transform={`translate(20,20) ${transforms[position]} translate(-20,-20)`}>
+        <path d="M2 2 Q20 2 20 20" fill="none" stroke={color} strokeWidth="1" />
+        <path d="M6 2 Q14 6 14 14" fill="none" stroke={color} strokeWidth="0.5" />
+        <circle cx="2" cy="2" r="1.5" fill={color} />
+      </g>
+    </svg>
+  );
+}
 
-    // Fetch Guest Data
-    const { data: guest, isLoading, error } = useQuery<Guest>({
-        queryKey: ["guest", id],
-        queryFn: async () => {
-            if (!id) throw new Error("No ID provided");
-            const isNumeric = /^\d+$/.test(id);
-            const res = isNumeric
-                ? await fetch(`/api/guests/${id}`)
-                : await fetch(`/api/invitation/guest/${id}`);
-            if (!res.ok) throw new Error("Invitation non trouvée");
-            return res.json();
-        },
-        enabled: !!id,
-        retry: false
-    });
+function useInView(ref: React.RefObject<HTMLElement | null>) {
+  const [isInView, setIsInView] = useState(false);
+  useEffect(() => {
+    if (!ref.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setIsInView(true); },
+      { threshold: 0.15 }
+    );
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [ref]);
+  return isInView;
+}
 
-    if (isLoading) return <LoadingScreen />;
-    if (error || !guest) return <ErrorScreen message={(error as Error)?.message} />;
+function AnimatedSection({ children, className, style, delay = 0 }: {
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+  delay?: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref);
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={{
+        ...style,
+        opacity: isInView ? 1 : 0,
+        transform: isInView ? "translateY(0)" : "translateY(24px)",
+        transition: `opacity 0.8s ease ${delay}s, transform 0.8s ease ${delay}s`,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
+export default function InvitationPage() {
+  const params = useParams();
+  const guestId = (params as any).guestId;
+  const [qrDataUrl, setQrDataUrl] = useState<string>("");
+
+  const { data: guest, isLoading, error } = useQuery<GuestData>({
+    queryKey: ["/api/invitation/guest", guestId],
+    queryFn: async () => {
+      const res = await fetch(`/api/invitation/guest/${guestId}`);
+      if (!res.ok) throw new Error("Invité non trouvé");
+      return res.json();
+    },
+    enabled: !!guestId,
+  });
+
+  const { data: wedding } = useQuery({
+    queryKey: ["/api/invitation/guest", guestId, "wedding"],
+    queryFn: async () => {
+      const res = await fetch(`/api/invitation/guest/${guestId}/wedding`);
+      if (!res.ok) throw new Error("Mariage non trouvé");
+      return res.json();
+    },
+    enabled: !!guestId && !!guest,
+  });
+
+  const primaryColor = wedding?.config?.theme?.primaryColor || "#C8A96A";
+  const secondaryColor = wedding?.config?.theme?.secondaryColor || "#FFFDF9";
+  const primaryHSL = hexToHSL(primaryColor);
+  const darkL = Math.max(primaryHSL.l - 35, 10);
+  const subtleL = Math.min(primaryHSL.l + 10, 55);
+  const textDark = `hsl(${primaryHSL.h}, ${Math.min(primaryHSL.s, 30)}%, ${darkL}%)`;
+  const textSubtle = `hsl(${primaryHSL.h}, ${Math.min(primaryHSL.s, 25)}%, ${subtleL}%)`;
+  const bgBase = `color-mix(in srgb, ${primaryColor} 2%, #FDFCFA)`;
+  const cardBg = `color-mix(in srgb, ${primaryColor} 4%, #F8F6F2)`;
+  const borderLight = `color-mix(in srgb, ${primaryColor} 12%, transparent)`;
+  const borderMedium = `color-mix(in srgb, ${primaryColor} 20%, transparent)`;
+  const accentBg = `color-mix(in srgb, ${primaryColor} 6%, #FDFCFA)`;
+  const weddingSlug = (wedding as any)?.slug || "";
+  const basePath = weddingSlug ? `/${weddingSlug}` : "/";
+  const checkInHref = `${basePath}/checkin?token=${guestId}`;
+
+  useEffect(() => {
+    if (!wedding) return;
+    const wTitle = wedding.config?.texts?.heroTitle || wedding.title;
+    document.title = wTitle ? `${wTitle} — Invitation` : "Invitation";
+    return () => { document.title = "Daylora — Créez votre site de mariage"; };
+  }, [wedding?.id]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !guestId) return;
+    let cancelled = false;
+    QRCodeLib.toDataURL(`${window.location.origin}${checkInHref}`, {
+      margin: 1,
+      width: 320,
+      color: { dark: primaryColor, light: "#00000000" },
+    })
+      .then((url) => { if (!cancelled) setQrDataUrl(url); })
+      .catch(() => { if (!cancelled) setQrDataUrl(""); });
+    return () => { cancelled = true; };
+  }, [guestId, primaryColor, checkInHref]);
+
+  const texts = (wedding?.config?.texts || {}) as any;
+  const sections = (wedding?.config?.sections || {}) as any;
+  const media = (wedding?.config?.media || {}) as any;
+  const payments = (wedding?.config?.payments || {}) as any;
+  const brandingConfig = (wedding?.config?.branding || {}) as any;
+
+  const title = wedding?.title || "Notre mariage";
+  const heroTitle = texts.heroTitle || title;
+  const logoUrl = brandingConfig.logoUrl || "";
+  const couplePhoto = media.invitationImage || media.couplePhoto || "";
+  const storyBody = texts.storyBody || "";
+  const guestContext = ((wedding as any)?.guestContext || guest?.resolvedContext || {}) as any;
+  const programItems = (guestContext.allowedSegments?.length ? guestContext.allowedSegments : sections.programItems || []) as any[];
+  const locations = sections.locationItems || [];
+  const allowedOptions = (guestContext.allowedOptions || []) as any[];
+  const assignedTable = guestContext.assignedTable || null;
+  const invitationTypeLabel = guestContext.invitationType?.label || null;
+  const cagnotteExternalUrl = (payments.externalUrl || sections.cagnotteExternalUrl || "") as string;
+  const cagnotteMode = payments.mode || (cagnotteExternalUrl ? "external" : "stripe");
+  const cagnotteHref = cagnotteMode === "external" && cagnotteExternalUrl ? cagnotteExternalUrl : `${basePath}#cagnotte`;
+
+  const invGreeting = texts.invitationGreeting || "Nous avons l'honneur de vous convier";
+  const invPrelude = texts.invitationPrelude || "à célébrer l'union de";
+  const invMessage = texts.invitationMessage || "Ce jour ne serait pas le même sans votre présence à nos côtés.";
+  const invSubmessage = texts.invitationSubmessage || "Venez comme vous êtes, avec le cœur léger et l'envie de faire la fête.";
+  const invCagnotteTitle = texts.invitationCagnotteTitle || texts.cagnotteTitle || "Liste de mariage";
+  const invCagnotteDesc = texts.invitationCagnotteDescription || texts.cagnotteDescription || "Votre présence est le plus beau des cadeaux. Si toutefois vous souhaitez contribuer, une cagnotte a été mise en place pour nous aider à construire notre avenir.";
+  const invCagnotteButton = texts.invitationCagnotteButton || "Contribuer";
+  const invDressCode = texts.invitationDressCode || texts.dressCode || "";
+  const invFooterNote = texts.invitationFooterNote || "Merci de confirmer votre présence avant la date indiquée. Nous avons hâte de vous retrouver.";
+
+  const showProgramme = sections.invitationShowProgramme ?? true;
+  const showLocations = sections.invitationShowLocations ?? true;
+  const showDressCode = sections.invitationShowDressCode ?? true;
+  const showCagnotte = sections.invitationShowCagnotte ?? true;
+  const showQrCode = sections.invitationShowQrCode ?? true;
+
+  const dateObj = wedding?.weddingDate ? new Date(wedding.weddingDate) : null;
+  const dayName = dateObj ? dateObj.toLocaleDateString("fr-FR", { weekday: "long" }) : "";
+  const dayNum = dateObj ? dateObj.getDate() : "";
+  const monthName = dateObj ? dateObj.toLocaleDateString("fr-FR", { month: "long" }) : "";
+  const yearNum = dateObj ? dateObj.getFullYear() : "";
+
+  const coupleNames = heroTitle.includes(" et ") ? heroTitle.split(" et ") : heroTitle.includes(" & ") ? heroTitle.split(" & ") : [heroTitle, ""];
+
+  const isConfirmed = guest?.availability === "confirmed" || guest?.status === "confirmed";
+  const isDeclined = guest?.availability === "declined" || guest?.status === "declined";
+
+  if (isLoading) {
     return (
-        <div ref={scrollRef} className="bg-black min-h-screen w-full font-serif text-[#D4AF37] overflow-x-hidden selection:bg-[#D4AF37] selection:text-black">
-
-            {/* 1. Envelope / Header Section */}
-            <EnvelopeHeader guest={guest} />
-
-            {/* 2. Countdown Section */}
-            <CountdownSection />
-
-            {/* 3. Quote & Intro */}
-            <QuoteSection />
-
-            {/* Accommodation (Moved here) */}
-            <AccommodationSection />
-
-            {/* 4. Photo Section */}
-            <PhotoSection />
-
-            {/* 5. Audio & Parents */}
-            <AudioParentsSection />
-
-            {/* 6. Event Details (Ceremony/Reception) */}
-            {(guest.availability === 'confirmed' || guest.availability === 'pending') && (
-                <EventDetailsSection />
-            )}
-
-            {/* 7. Timeline */}
-            <TimelineSection guest={guest} />
-
-            {/* 8. Info (Dress Code, Gifts, Accommodation) */}
-            <InfogridSection />
-
-            {/* 9. QR Pass (Preserved) */}
-            <AccessPassSection guest={guest} />
-
-            {/* 10. RSVP / Footer */}
-            <FooterSection />
-
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: bgBase }}>
+        <div className="text-center space-y-4">
+          <div className="relative mx-auto w-12 h-12">
+            <div className="absolute inset-0 rounded-full border" style={{ borderColor: borderLight }} />
+            <Loader2 className="h-6 w-6 animate-spin absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ color: primaryColor }} />
+          </div>
+          <p className="text-xs tracking-[0.2em] uppercase" style={{ color: textSubtle }}>Chargement...</p>
         </div>
+      </div>
     );
-}
+  }
 
-// --- Sub-Components ---
-
-function EnvelopeHeader({ guest }: { guest: Guest }) {
+  if (error || !guest) {
     return (
-        <section className="relative w-full min-h-[90vh] flex flex-col items-center justify-center p-8 bg-[#0a0a0a] overflow-hidden">
-            {/* Top "Fold" Decoration */}
-            <div className="absolute top-0 left-0 w-full h-[300px] bg-gradient-to-b from-[#111] to-transparent z-0 opacity-50 clip-path-envelope-top" />
-
-            <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1 }}
-                className="relative z-10 text-center space-y-8 max-w-2xl mx-auto border border-[#D4AF37]/20 p-12 py-20 bg-[#050505]/80 backdrop-blur-sm shadow-2xl"
-            >
-                <div className="space-y-2">
-                    <p className="font-sans text-xs tracking-[0.4em] uppercase text-white/60">Wedding Invitation</p>
-                    <div className="h-[1px] w-20 bg-[#D4AF37] mx-auto opacity-50 my-4" />
-                </div>
-
-                <div className="font-handwriting text-5xl md:text-7xl text-white leading-tight">
-                    Les <br />
-                    <span className="text-3xl md:text-5xl text-[#D4AF37] font-serif">&</span> <br />
-                    Mariés
-                </div>
-
-                <div className="space-y-4 pt-4">
-                    <p className="text-2xl tracking-widest border-t border-b border-[#D4AF37]/30 py-2 inline-block px-12">
-                        21.03.2026
-                    </p>
-                    <p className="text-sm font-sans tracking-widest uppercase text-white/50">
-                        Bruxelles, Belgique
-                    </p>
-                </div>
-            </motion.div>
-
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.5 }}
-                className="absolute bottom-10 animate-bounce"
-            >
-                <ChevronDown className="w-6 h-6 text-[#D4AF37]/50" />
-            </motion.div>
-        </section>
-    );
-}
-
-function CountdownSection() {
-    // Target Date: March 21, 2026 14:00:00
-    const targetDate = new Date("2026-03-21T14:00:00").getTime();
-    const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
-
-    function calculateTimeLeft() {
-        const now = new Date().getTime();
-        const difference = targetDate - now;
-
-        if (difference < 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
-
-        return {
-            days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-            hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-            minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
-            seconds: Math.floor((difference % (1000 * 60)) / 1000)
-        };
-    }
-
-    useEffect(() => {
-        const timer = setInterval(() => setTimeLeft(calculateTimeLeft()), 1000);
-        return () => clearInterval(timer);
-    }, []);
-
-    return (
-        <section className="py-20 bg-[#000] text-center">
-            <div className="border-t border-b border-[#D4AF37]/20 py-12 max-w-4xl mx-auto px-4">
-                <p className="text-xs tracking-[0.3em] uppercase mb-8 text-white/40">Le Grand Jour approche</p>
-
-                <div className="grid grid-cols-4 gap-4 md:gap-12">
-                    <CountdownItem value={timeLeft.days} label="Jours" />
-                    <CountdownItem value={timeLeft.hours} label="Heures" />
-                    <CountdownItem value={timeLeft.minutes} label="Min" />
-                    <CountdownItem value={timeLeft.seconds} label="Sec" />
-                </div>
-            </div>
-        </section>
-    );
-}
-
-function CountdownItem({ value, label }: { value: number, label: string }) {
-    return (
-        <div className="flex flex-col items-center space-y-2">
-            <span className="text-4xl md:text-6xl font-serif text-[#D4AF37] font-light">
-                {String(value).padStart(2, '0')}
-            </span>
-            <span className="text-[10px] md:text-xs uppercase tracking-widest text-white/50">{label}</span>
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ backgroundColor: bgBase }}>
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center" style={{ backgroundColor: cardBg, border: `1px solid ${borderLight}` }}>
+            <Heart className="h-6 w-6" style={{ color: primaryColor }} />
+          </div>
+          <p className="text-lg font-serif" style={{ color: textDark }}>Invitation non trouvée</p>
+          <p className="text-sm" style={{ color: textSubtle }}>Vérifiez le lien ou contactez les mariés.</p>
         </div>
+      </div>
     );
-}
+  }
 
-function QuoteSection() {
-    return (
-        <section className="py-24 px-8 text-center bg-[#050505]">
-            <div className="w-16 h-16 mx-auto mb-8 opacity-20">
-                <Sparkles className="w-full h-full text-[#D4AF37]" />
-            </div>
-            <h3 className="max-w-2xl mx-auto text-xl md:text-2xl leading-relaxed italic text-white/80 font-serif">
-                "Et par-dessus toutes ces choses, revêtez-vous de l'amour, qui est le lien de la perfection."
-            </h3>
-            <p className="mt-4 text-[#D4AF37] text-sm tracking-widest uppercase">Colossiens 3:14</p>
+  const isCouple = guest.partySize >= 2;
+  const guestDisplayName = isCouple
+    ? `${guest.firstName} ${guest.lastName}`
+    : guest.firstName;
 
-            <div className="mt-16 text-6xl md:text-8xl font-serif text-[#D4AF37] opacity-90 border border-[#D4AF37]/30 inline-block p-8 md:p-12">
-                R <span className="text-4xl align-middle mx-2 text-white/50">|</span> A
-            </div>
-
-            <p className="mt-8 text-2xl uppercase tracking-[0.2em] text-white">Nous nous marions !</p>
-        </section>
-    );
-}
-
-function PhotoSection() {
-    return (
-        <section className="py-24 px-6 bg-[#0a0a0a] flex justify-center">
-            <div className="max-w-md w-full p-3 border border-[#D4AF37]/30 bg-[#111] shadow-2xl skew-y-1 hover:skew-y-0 transition-transform duration-700">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.8 }}
-                    className="aspect-[3/4] overflow-hidden w-full relative"
-                >
-                    <div className="absolute inset-0 border border-[#D4AF37]/20 z-10 m-2" />
-                    <img
-                        src={heroImage}
-                        alt="Couple"
-                        className="w-full h-full object-cover"
-                    />
-                </motion.div>
-            </div>
-        </section>
-    );
-}
-
-function AudioParentsSection() {
-    const [isPlaying, setIsPlaying] = useState(false);
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-
-    const togglePlay = () => {
-        if (audioRef.current) {
-            if (isPlaying) {
-                audioRef.current.pause();
-            } else {
-                audioRef.current.play().catch(e => console.error("Audio play failed", e));
-            }
-            setIsPlaying(!isPlaying);
+  return (
+    <div className="min-h-screen relative" style={{ backgroundColor: bgBase, color: textDark }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap');
+        .inv-serif { font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif; }
+        .inv-display { font-family: 'Playfair Display', Georgia, serif; }
+        @keyframes inv-fade-up {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-    };
-
-    return (
-        <section className="py-24 bg-[#080808] px-6">
-            <audio ref={audioRef} src="/music.mp3" loop />
-            <div className="max-w-md mx-auto bg-[#111] p-6 text-center border border-[#D4AF37]/20 rounded-sm mb-20">
-                <p className="text-xs uppercase tracking-widest mb-4 text-white/60">Notre Chanson</p>
-                <div className="flex items-center justify-between gap-4">
-                    <span className="text-xs text-[#D4AF37]">0:00</span>
-                    <div className="h-[2px] bg-[#333] flex-1 relative">
-                        <div className={`absolute left-0 top-0 h-full bg-[#D4AF37] transition-all duration-1000`} style={{ width: isPlaying ? '100%' : '0%' }} />
-                    </div>
-                    <span className="text-xs text-[#D4AF37]">3:45</span>
-                </div>
-                <button
-                    onClick={togglePlay}
-                    className="mt-6 w-12 h-12 rounded-full border border-[#D4AF37] flex items-center justify-center mx-auto hover:bg-[#D4AF37] hover:text-black transition-colors"
-                >
-                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-1" />}
-                </button>
-                <p className="mt-4 text-sm font-serif italic text-white/80">"Bolamu" - Divine Yala</p>
-            </div>
-
-            <div className="text-center space-y-12">
-                <div className="space-y-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]">Avec la bénédiction de</p>
-                    <h3 className="text-xl text-white font-serif">Dieu et de nos parents</h3>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
-                    <div>
-                        <p className="text-sm text-white/40 uppercase mb-4 tracking-widest">Famille de la mariée</p>
-                        <p className="text-xl md:text-2xl font-serif text-[#D4AF37]">Famille KASENGA</p>
-                    </div>
-                    <div>
-                        <p className="text-sm text-white/40 uppercase mb-4 tracking-widest">Famille du marié</p>
-                        <p className="text-xl md:text-2xl font-serif text-[#D4AF37]">Famille MUBUANGA</p>
-                    </div>
-                </div>
-
-                <p className="pt-12 font-serif italic text-white/60 max-w-lg mx-auto">
-                    "Nous unirons nos vies dans le sacrement du mariage"
-                </p>
-            </div>
-        </section>
-    );
-}
-
-function EventDetailsSection() {
-    return (
-        <section className="py-24 bg-[#0a0a0a] text-center px-4">
-            <h3 className="text-3xl md:text-4xl font-serif text-[#D4AF37] mb-4 uppercase tracking-widest">Célébrations</h3>
-            <p className="text-white/60 text-sm mb-16 uppercase tracking-wide">Samedi 21 Mars 2026</p>
-
-            <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
-                {/* Mairie */}
-                <div className="bg-[#111] p-8 border border-[#D4AF37]/10 hover:border-[#D4AF37]/40 transition-colors group">
-                    <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#000] border border-[#D4AF37]/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <MapPin className="w-8 h-8 text-[#D4AF37]" />
-                    </div>
-                    <h4 className="text-xl font-serif text-[#D4AF37] mb-2">Cérémonie Civile</h4>
-                    <p className="text-[#D4AF37] text-xl font-bold mb-4">10:00</p>
-
-                    <div className="flex flex-col items-center gap-1 mb-8">
-                        <span className="text-[#D4AF37] uppercase tracking-wide text-xs font-bold">Commune de Rhode-Saint-Genèse</span>
-                        <div className="flex items-center gap-2 text-white/60 text-xs mt-1">
-                            <span>Rue du Village 46,<br />1640 Rhode-Saint-Genèse</span>
-                            <CopyButton text="Rue du Village 46, 1640 Rhode-Saint-Genèse" />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Religion */}
-                <div className="bg-[#111] p-8 border border-[#D4AF37]/10 hover:border-[#D4AF37]/40 transition-colors group">
-                    <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#000] border border-[#D4AF37]/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <ChurchIcon className="w-8 h-8 text-[#D4AF37]" />
-                    </div>
-                    <h4 className="text-xl font-serif text-[#D4AF37] mb-2">Cérémonie Religieuse</h4>
-                    <p className="text-[#D4AF37] text-xl font-bold mb-4">12:00</p>
-
-                    <div className="flex flex-col items-center gap-1 mb-8">
-                        <span className="text-[#D4AF37] uppercase tracking-wide text-xs font-bold">Église Saint-Jean</span>
-                        <div className="flex items-center gap-2 text-white/60 text-xs mt-1">
-                            <span>Place Saint-Jean,<br />1000 Bruxelles</span>
-                            <CopyButton text="Place Saint-Jean, 1000 Bruxelles" />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Party */}
-                <div className="bg-[#111] p-8 border border-[#D4AF37]/10 hover:border-[#D4AF37]/40 transition-colors group">
-                    <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#000] border border-[#D4AF37]/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Wine className="w-8 h-8 text-[#D4AF37]" />
-                    </div>
-                    <h4 className="text-xl font-serif text-[#D4AF37] mb-2">Soirée</h4>
-                    <p className="text-[#D4AF37] text-xl font-bold mb-4">19:00</p>
-
-                    <div className="flex flex-col items-center gap-1 mb-8">
-                        <span className="text-[#D4AF37] uppercase tracking-wide text-xs font-bold">Yeni Yaşam</span>
-                        <div className="flex items-center gap-2 text-white/60 text-xs mt-1">
-                            <span>Dobbelenbergstraat 107,<br />1130 Brussel</span>
-                            <CopyButton text="Dobbelenbergstraat 107, 1130 Brussel" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    );
-}
-
-function TimelineSection({ guest }: { guest: Guest }) {
-    const show19 = guest.availability === 'confirmed' || guest.availability === 'pending';
-    const show21 = guest.availability === 'confirmed' || guest.availability === 'pending';
-
-    return (
-        <section className="py-24 bg-[#0a0a0a] px-6 text-center overflow-hidden">
-            <h3 className="text-2xl md:text-3xl uppercase tracking-[0.3em] text-[#D4AF37] mb-20 font-light">Programme</h3>
-
-            <div className="max-w-4xl mx-auto space-y-20">
-                {/* March 19 - Mariage coutumier */}
-                {show19 && (
-                    <div className="border border-[#D4AF37]/20 p-8 md:p-12">
-                        <div className="mb-12">
-                            <h4 className="text-xl md:text-2xl font-serif text-[#D4AF37] mb-2">Jeudi 19 Mars 2026</h4>
-                            <p className="text-white text-sm uppercase tracking-wide">Remise de dot et Mariage coutumier</p>
-                        </div>
-
-                        <div className="relative max-w-md mx-auto">
-                            <div className="absolute left-[60px] top-0 bottom-0 w-[2px] bg-[#D4AF37]/20" />
-                            <div className="space-y-12">
-                                <TimelineItem time="19h30" title="Mariage coutumier" icon={Heart} />
-                            </div>
-                            <div className="mt-8 text-center bg-[#D4AF37]/5 p-4 border border-[#D4AF37]/20">
-                                <p className="text-white text-lg font-serif mb-2">Yeni Yaşam</p>
-                                <div className="text-white/80 text-sm flex items-center justify-center gap-2">
-                                    Dobbelenbergstraat 107, 1130 Brussel
-                                    <CopyButton text="Dobbelenbergstraat 107, 1130 Brussel" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* March 21 - Wedding Day */}
-                {show21 && (
-                    <div className="border border-[#D4AF37]/20 p-8 md:p-12">
-                        <div className="mb-12">
-                            <h4 className="text-xl md:text-2xl font-serif text-[#D4AF37] mb-2">Samedi 21 Mars 2026</h4>
-                            <p className="text-white text-sm uppercase tracking-wide">Mariage & Réception</p>
-                        </div>
-
-                        <div className="relative max-w-md mx-auto">
-                            <div className="absolute left-[60px] top-0 bottom-0 w-[2px] bg-[#D4AF37]/20" />
-                            <div className="space-y-12">
-                                <TimelineItem time="10h00" title="Mairie - Cérémonie Civile" icon={MapPin} />
-                                <TimelineItem time="12h00" title="Église - Cérémonie Religieuse" icon={ChurchIcon} />
-                                <TimelineItem time="15h00" title="Séance photo & Cocktail" icon={Camera} />
-                                <TimelineItem time="19h00" title="Réception & Dîner" icon={Utensils} />
-                                <TimelineItem time="22h00" title="Soirée dansante" icon={Music} />
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-        </section>
-    );
-}
-
-function AccommodationSection() {
-    return (
-        <section className="py-24 bg-[#080808] text-center px-4 border-b border-[#D4AF37]/10">
-            <Hotel className="w-12 h-12 text-[#D4AF37] mx-auto mb-6 opacity-80" />
-            <h3 className="text-3xl font-serif text-[#D4AF37] mb-12 uppercase tracking-wide">Hébergement</h3>
-
-            <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8 text-left">
-                <div className="bg-[#111] p-8 border border-[#D4AF37]/20 hover:border-[#D4AF37]/40 transition-colors group">
-                    <h4 className="text-xl font-serif text-white mb-2 group-hover:text-[#D4AF37] transition-colors">Tangla Hotel Brussels</h4>
-                    <p className="text-white/60 text-sm mb-6 flex items-start gap-2">
-                        <MapPin className="w-4 h-4 mt-1 flex-shrink-0 text-[#D4AF37]" />
-                        Avenue E. Mounier 5,<br />1200 Bruxelles
-                    </p>
-                    <a
-                        href="https://tanglabrussels.com/"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-block border-b border-[#D4AF37] text-[#D4AF37] text-xs uppercase tracking-widest pb-1 hover:text-white hover:border-white transition-colors"
-                    >
-                        Réserver
-                    </a>
-                </div>
-
-                <div className="bg-[#111] p-8 border border-[#D4AF37]/20 hover:border-[#D4AF37]/40 transition-colors group">
-                    <h4 className="text-xl font-serif text-white mb-2 group-hover:text-[#D4AF37] transition-colors">Van der Valk Hotel</h4>
-                    <p className="text-white/60 text-sm mb-6 flex items-start gap-2">
-                        <MapPin className="w-4 h-4 mt-1 flex-shrink-0 text-[#D4AF37]" />
-                        Culliganlaan 4b,<br />1831 Diegem
-                    </p>
-                    <a
-                        href="https://www.hotelbrusselsairport.com/"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-block border-b border-[#D4AF37] text-[#D4AF37] text-xs uppercase tracking-widest pb-1 hover:text-white hover:border-white transition-colors"
-                    >
-                        Réserver
-                    </a>
-                </div>
-            </div>
-        </section>
-    );
-}
-
-// Custom Church Icon
-function ChurchIcon(props: any) {
-    return <Hotel {...props} />; // Placeholder using Hotel as church
-}
-
-function TimelineItem({ time, title, icon: Icon }: any) {
-    return (
-        <div className="relative flex items-start gap-6">
-            {/* Icon on the left */}
-            <div className="relative z-10 w-12 h-12 flex-shrink-0 flex items-center justify-center">
-                <Icon className="w-10 h-10 text-[#D4AF37]/70 stroke-[1.5]" />
-            </div>
-
-            {/* Dot on the timeline */}
-            <div className="absolute left-[60px] top-[20px] w-3 h-3 rounded-full bg-[#D4AF37] -translate-x-1/2 z-20" />
-
-            {/* Content on the right */}
-            <div className="text-left pt-2 flex-1">
-                <p className="text-[#D4AF37] text-lg md:text-xl font-light mb-1">{time}</p>
-                <p className="text-white/70 text-sm md:text-base font-light">{title}</p>
-            </div>
-        </div>
-    );
-}
-
-function InfogridSection() {
-    return (
-        <section className="py-24 bg-[#0a0a0a] px-4">
-            <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
-
-                {/* Dress Code */}
-                <div className="text-center p-8 bg-[#111] border-t-2 border-[#D4AF37]">
-                    <Shirt className="w-12 h-12 text-[#D4AF37] mx-auto mb-6" />
-                    <h4 className="text-xl uppercase tracking-widest text-white mb-4">
-                        Dress Code<br />Soirée
-                    </h4>
-                    <p className="text-[#D4AF37] font-serif italic text-2xl mb-2">Golden Chic</p>
-                    <p className="text-white/50 text-xs max-w-xs mx-auto">
-                        Nous vous invitons à porter une tenue élégante avec une touche dorée.
-                    </p>
-                </div>
-
-                {/* Gifts */}
-                <div className="text-center p-8 bg-[#111] border-t-2 border-[#D4AF37]">
-                    <Gift className="w-12 h-12 text-[#D4AF37] mx-auto mb-6" />
-                    <h4 className="text-xl uppercase tracking-widest text-white mb-4">Cadeaux</h4>
-                    <p className="text-white/60 text-sm max-w-xs mx-auto mb-4">
-                        Votre présence est notre plus beau cadeau. Si vous souhaitez nous gâter, une urne sera disponible.
-                    </p>
-                    <p className="text-[#D4AF37]/80 text-xs max-w-xs mx-auto italic mb-6">
-                        Nous acceptons également avec joie le farotage.
-                    </p>
-                    <div className="w-12 h-[1px] bg-[#D4AF37] mx-auto" />
-                </div>
-            </div>
-        </section>
-    );
-}
-
-function AccessPassSection({ guest }: { guest: Guest }) {
-    const cardRef = useRef<HTMLDivElement>(null);
-    const downloadRef = useRef<HTMLDivElement>(null); // Ref for purely the download part
-
-    const handleDownload = async (type: '19' | '21') => {
-        try {
-            const response = await fetch(`/api/invitation/generate/${guest.id || 1}?type=${type}`, {
-                method: 'POST'
-            });
-
-            if (!response.ok) throw new Error("Download failed");
-
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `Invitation-${type}-Mars-${guest.firstName}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-        } catch (err) {
-            console.error("PDF Download failed", err);
-            alert("Erreur lors du téléchargement du PDF");
+        .inv-animate { animation: inv-fade-up 1s ease forwards; }
+        .inv-animate-d1 { animation: inv-fade-up 1s ease 0.2s forwards; opacity: 0; }
+        .inv-animate-d2 { animation: inv-fade-up 1s ease 0.4s forwards; opacity: 0; }
+        .inv-animate-d3 { animation: inv-fade-up 1s ease 0.6s forwards; opacity: 0; }
+        .inv-animate-d4 { animation: inv-fade-up 1s ease 0.8s forwards; opacity: 0; }
+        .inv-animate-d5 { animation: inv-fade-up 1s ease 1s forwards; opacity: 0; }
+        .inv-animate-d6 { animation: inv-fade-up 1s ease 1.2s forwards; opacity: 0; }
+        @keyframes inv-pulse-ring {
+          0%, 100% { transform: scale(1); opacity: 0.15; }
+          50% { transform: scale(1.05); opacity: 0.25; }
         }
-    };
+        .inv-pulse-ring { animation: inv-pulse-ring 4s ease-in-out infinite; }
+        @keyframes inv-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+        .inv-float { animation: inv-float 3s ease-in-out infinite; }
+        @keyframes inv-shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+      `}</style>
 
-    return (
-        <section className="py-24 bg-[#050505] relative overflow-hidden">
+      <section className="min-h-[100dvh] flex flex-col items-center justify-center px-6 py-16 relative overflow-hidden">
+        <CornerOrnament color={primaryColor} position="tl" />
+        <CornerOrnament color={primaryColor} position="tr" />
+        <CornerOrnament color={primaryColor} position="bl" />
+        <CornerOrnament color={primaryColor} position="br" />
 
-            <div className="text-center mb-12 relative z-10">
-                <Sparkles className="w-8 h-8 text-[#D4AF37] mx-auto mb-4" />
-                <h3 className="text-3xl text-white font-serif">Votre Pass d'Accès</h3>
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-[15%] left-[8%] w-1 h-1 rounded-full inv-pulse-ring" style={{ backgroundColor: primaryColor }} />
+          <div className="absolute top-[25%] right-[12%] w-1.5 h-1.5 rounded-full inv-pulse-ring" style={{ backgroundColor: primaryColor, animationDelay: "1s" }} />
+          <div className="absolute bottom-[30%] left-[15%] w-1 h-1 rounded-full inv-pulse-ring" style={{ backgroundColor: primaryColor, animationDelay: "2s" }} />
+          <div className="absolute bottom-[20%] right-[10%] w-1 h-1 rounded-full inv-pulse-ring" style={{ backgroundColor: primaryColor, animationDelay: "3s" }} />
+        </div>
+
+        <div className="w-full max-w-md mx-auto text-center space-y-8 relative z-10">
+          {logoUrl ? (
+            <div className="inv-animate">
+              <img src={logoUrl} alt="" className="mx-auto h-20 w-20 object-contain rounded-full" />
             </div>
+          ) : null}
 
-            <div className="flex flex-col items-center relative z-10 p-4">
-
-                {/* The Card Container that gets downloaded */}
-                <div ref={downloadRef} className="bg-[#111] p-8 md:p-12 max-w-sm w-full border border-[#D4AF37]/50 relative text-center shadow-2xl">
-                    <div className="absolute top-4 right-4 w-3 h-3 border-t border-r border-[#D4AF37]" />
-                    <div className="absolute top-4 left-4 w-3 h-3 border-t border-l border-[#D4AF37]" />
-                    <div className="absolute bottom-4 right-4 w-3 h-3 border-b border-r border-[#D4AF37]" />
-                    <div className="absolute bottom-4 left-4 w-3 h-3 border-b border-l border-[#D4AF37]" />
-
-                    <h4 className="text-[#D4AF37] font-serif italic text-xl mb-1">Wedding Invitation</h4>
-                    <h4 className="text-white uppercase tracking-[0.2em] text-[10px] mb-8">Les Mariés</h4>
-
-                    <p className="text-white/40 text-[10px] uppercase tracking-widest mb-2">Invité(e)</p>
-                    <h2 className="text-3xl font-serif text-white mb-2">{guest.firstName}</h2>
-                    <h2 className="text-xl font-serif text-white/50 mb-8">{guest.lastName}</h2>
-
-                    <div className="bg-white p-4 inline-block mb-8 rounded-lg">
-                        <img
-                            // Placeholder QR - in production use a real QR gen lib
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=GUEST-${guest.firstName}`}
-                            alt="QR Code"
-                            className="w-32 h-32 opacity-90"
-                        />
-                    </div>
-
-                    <p className="text-[#D4AF37] text-sm font-serif mb-1">Nombre d'invités : {guest.partySize}</p>
-                </div>
-
-                <div className="flex gap-4 mt-12 flex-wrap justify-center">
-                    {(guest.availability === 'confirmed' || guest.availability === 'pending') && (
-                        <button
-                            onClick={() => handleDownload('19')}
-                            className="bg-[#D4AF37] text-black px-8 py-4 rounded-sm uppercase tracking-[0.2em] text-xs font-bold hover:bg-white transition-colors flex items-center gap-3"
-                        >
-                            <Download className="w-4 h-4" />
-                            Pass 19 Mars
-                        </button>
-                    )}
-
-                    {(guest.availability === 'confirmed' || guest.availability === 'pending') && (
-                        <button
-                            onClick={() => handleDownload('21')}
-                            className="bg-white text-black px-8 py-4 rounded-sm uppercase tracking-[0.2em] text-xs font-bold hover:bg-[#D4AF37] transition-colors flex items-center gap-3"
-                        >
-                            <Download className="w-4 h-4" />
-                            Pass 21 Mars
-                        </button>
-                    )}
-                </div>
-            </div>
-        </section>
-    );
-}
-
-function FooterSection() {
-    return (
-        <section className="py-20 bg-black text-center border-t border-[#D4AF37]/20">
-            <h3 className="text-4xl font-handwriting text-white mb-6">Merci</h3>
-            <p className="text-white/60 text-sm tracking-widest mb-12">Nous avons hâte de célébrer avec vous</p>
-
-            <p className="mt-24 text-[10px] text-white/20 uppercase tracking-widest">
-                Les Mariés 2026 • Designed with Love
+          <div className="inv-animate-d1 space-y-3">
+            <p className="text-[10px] tracking-[0.4em] uppercase inv-serif" style={{ color: textSubtle }}>
+              {invGreeting}{isCouple ? "s" : ""}
             </p>
-        </section>
-    );
-}
+            <h2 className="text-2xl md:text-3xl inv-display italic font-light" style={{ color: textDark }}>
+              {guestDisplayName}
+            </h2>
+            {isCouple && guest.partySize > 1 && (
+              <p className="text-xs inv-serif tracking-wide" style={{ color: textSubtle }}>
+                <Users className="inline h-3 w-3 mr-1" style={{ color: primaryColor }} />
+                {guest.partySize} {guest.partySize > 1 ? "personnes" : "personne"}
+              </p>
+            )}
+          </div>
 
-// Stats / Loading
-function LoadingScreen() {
-    return (
-        <div className="h-screen bg-black flex items-center justify-center">
-            <div className="text-[#D4AF37] animate-pulse tracking-[0.4em] uppercase text-xs">Chargement...</div>
-        </div>
-    );
-}
+          <div className="inv-animate-d2">
+            <p className="text-[10px] tracking-[0.3em] uppercase inv-serif" style={{ color: textSubtle }}>
+              {invPrelude}
+            </p>
+          </div>
 
-function ErrorScreen({ message }: { message: string }) {
-    return (
-        <div className="h-screen bg-black flex items-center justify-center p-8 text-center">
-            <div className="border border-[#D4AF37] p-12 max-w-md">
-                <p className="text-[#D4AF37] mb-4">Accès Restreint</p>
-                <p className="text-white/50 text-sm">{message}</p>
+          <div className="inv-animate-d3 py-2">
+            {coupleNames[1] ? (
+              <div className="space-y-1">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl inv-display font-medium tracking-wide" style={{ color: textDark }}>
+                  {coupleNames[0].trim()}
+                </h1>
+                <div className="flex items-center justify-center gap-4 py-1">
+                  <div className="w-10 h-px" style={{ backgroundColor: primaryColor, opacity: 0.3 }} />
+                  <span className="text-3xl md:text-4xl inv-display italic font-light" style={{ color: primaryColor }}>&</span>
+                  <div className="w-10 h-px" style={{ backgroundColor: primaryColor, opacity: 0.3 }} />
+                </div>
+                <h1 className="text-4xl sm:text-5xl md:text-6xl inv-display font-medium tracking-wide" style={{ color: textDark }}>
+                  {coupleNames[1].trim()}
+                </h1>
+              </div>
+            ) : (
+              <h1 className="text-4xl sm:text-5xl md:text-6xl inv-display font-medium tracking-wide" style={{ color: textDark }}>
+                {heroTitle}
+              </h1>
+            )}
+          </div>
+
+          {dateObj && (
+            <div className="inv-animate-d4">
+              <div className="inline-block relative">
+                <div className="absolute -inset-3 rounded-full inv-pulse-ring" style={{ border: `1px solid ${borderLight}` }} />
+                <div
+                  className="px-10 py-6 rounded-full relative"
+                  style={{ border: `1px solid ${borderMedium}` }}
+                >
+                  <p className="text-[10px] tracking-[0.35em] uppercase inv-serif" style={{ color: primaryColor }}>
+                    {dayName}
+                  </p>
+                  <p className="text-5xl md:text-6xl inv-display font-light leading-none my-1" style={{ color: primaryColor }}>
+                    {dayNum}
+                  </p>
+                  <p className="text-[10px] tracking-[0.3em] uppercase inv-serif" style={{ color: primaryColor }}>
+                    {monthName} {yearNum}
+                  </p>
+                </div>
+              </div>
             </div>
+          )}
+
+          {storyBody && (
+            <div className="inv-animate-d5">
+              <p className="text-sm inv-serif leading-relaxed max-w-sm mx-auto italic" style={{ color: textSubtle }}>
+                {storyBody.length > 180 ? storyBody.slice(0, 180) + "…" : storyBody}
+              </p>
+            </div>
+          )}
+
+          <div className="inv-animate-d5 pt-6">
+            <ChevronDown className="h-5 w-5 mx-auto inv-float" style={{ color: textSubtle, opacity: 0.4 }} />
+          </div>
         </div>
-    );
-}
+      </section>
 
-function CopyButton({ text }: { text: string }) {
-    const [copied, setCopied] = useState(false);
+      {couplePhoto && (
+        <AnimatedSection className="px-6 pb-16 flex justify-center">
+          <div className="relative max-w-sm w-full">
+            <div className="absolute -inset-2 rounded-2xl" style={{ border: `1px solid ${borderLight}` }} />
+            <img
+              src={couplePhoto}
+              alt={heroTitle}
+              className="w-full aspect-[4/5] object-cover rounded-xl"
+              style={{ border: `1px solid ${borderMedium}` }}
+            />
+          </div>
+        </AnimatedSection>
+      )}
 
-    const handleCopy = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
+      <AnimatedSection className="py-20 px-6 text-center">
+        <FloralDivider color={primaryColor} />
+        <div className="max-w-sm mx-auto space-y-4 py-4">
+          <p className="text-lg md:text-xl inv-serif italic leading-relaxed" style={{ color: textDark }}>
+            {invMessage}
+          </p>
+          <p className="text-sm inv-serif" style={{ color: textSubtle }}>
+            {invSubmessage}
+          </p>
+        </div>
+        <FloralDivider color={primaryColor} />
+      </AnimatedSection>
 
-    return (
-        <button
-            onClick={handleCopy}
-            className="inline-flex items-center gap-1 ml-2 text-[#D4AF37] hover:text-white transition-colors"
-            title="Copier l'adresse"
-        >
-            {copied ? <CheckCircle className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-        </button>
-    );
+      {weddingSlug && (
+        <AnimatedSection className="pb-16 px-6">
+          <div className="max-w-sm mx-auto">
+            <div
+              className="rounded-2xl p-8 text-center space-y-5 relative overflow-hidden"
+              style={{ backgroundColor: accentBg, border: `1px solid ${borderLight}` }}
+            >
+              {isConfirmed ? (
+                <>
+                  <div className="w-14 h-14 mx-auto rounded-full flex items-center justify-center" style={{ backgroundColor: cardBg, border: `1px solid ${borderMedium}` }}>
+                    <CheckCircle2 className="h-6 w-6" style={{ color: primaryColor }} />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] tracking-[0.4em] uppercase inv-serif font-semibold" style={{ color: primaryColor }}>
+                      Présence confirmée
+                    </p>
+                    <p className="text-sm inv-serif" style={{ color: textSubtle }}>
+                      Merci d'avoir confirmé votre présence. Nous avons hâte de vous retrouver !
+                    </p>
+                  </div>
+                  {(assignedTable?.name || assignedTable?.number || guest.tableNumber) && (
+                    <div
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full"
+                      style={{ backgroundColor: cardBg, border: `1px solid ${borderMedium}` }}
+                    >
+                      <span className="text-[10px] tracking-[0.2em] uppercase inv-serif" style={{ color: textSubtle }}>Table</span>
+                      <span className="text-xl inv-display font-medium" style={{ color: primaryColor }}>{assignedTable?.name || assignedTable?.number || guest.tableNumber}</span>
+                    </div>
+                  )}
+                </>
+              ) : isDeclined ? (
+                <>
+                  <div className="w-14 h-14 mx-auto rounded-full flex items-center justify-center" style={{ backgroundColor: cardBg, border: `1px solid ${borderLight}` }}>
+                    <Heart className="h-6 w-6" style={{ color: textSubtle }} />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] tracking-[0.4em] uppercase inv-serif font-semibold" style={{ color: textSubtle }}>
+                      Absence notée
+                    </p>
+                    <p className="text-sm inv-serif" style={{ color: textSubtle }}>
+                      Nous comprenons et vous souhaitons le meilleur. Vous nous manquerez !
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-14 h-14 mx-auto rounded-full flex items-center justify-center" style={{ backgroundColor: cardBg, border: `1px solid ${borderMedium}` }}>
+                    <Calendar className="h-6 w-6" style={{ color: primaryColor }} />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] tracking-[0.4em] uppercase inv-serif font-semibold" style={{ color: primaryColor }}>
+                      Confirmez votre présence
+                    </p>
+                    <p className="text-sm inv-serif" style={{ color: textSubtle }}>
+                      Rendez-vous sur notre site pour confirmer votre venue et découvrir tous les détails.
+                    </p>
+                  </div>
+                  <a
+                    href={`${basePath}#rsvp`}
+                    className="inline-flex items-center gap-2.5 px-8 py-3 text-[10px] tracking-[0.3em] uppercase font-bold text-white transition-all hover:opacity-90 hover:shadow-lg rounded-full"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    Répondre
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </a>
+                </>
+              )}
+
+              {weddingSlug && !isDeclined && (
+                <div className="pt-2">
+                  {invitationTypeLabel ? (
+                    <p className="mb-3 text-[10px] tracking-[0.25em] uppercase inv-serif" style={{ color: textSubtle }}>
+                      Invitation: {invitationTypeLabel}
+                    </p>
+                  ) : null}
+                  <a
+                    href={basePath}
+                    className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase font-semibold hover:opacity-70 transition-opacity inv-serif"
+                    style={{ color: primaryColor }}
+                  >
+                    Voir notre site
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </AnimatedSection>
+      )}
+
+      {showProgramme && programItems.length > 0 && (
+        <section className="py-20 px-6">
+          <AnimatedSection className="max-w-lg mx-auto">
+            <div className="text-center mb-16 space-y-3">
+              <p className="text-[10px] tracking-[0.4em] uppercase inv-serif" style={{ color: primaryColor }}>
+                Le déroulement
+              </p>
+              <h2 className="text-4xl md:text-5xl inv-display font-medium italic" style={{ color: textDark }}>
+                Programme
+              </h2>
+            </div>
+
+            <div className="relative">
+              <div
+                className="absolute left-6 md:left-1/2 top-0 bottom-0 w-px md:-translate-x-px"
+                style={{ background: `linear-gradient(to bottom, transparent, ${primaryColor}33, ${primaryColor}33, transparent)` }}
+              />
+
+              <div className="space-y-0">
+                {programItems.map((item: any, idx: number) => {
+                  const isRight = idx % 2 === 1;
+                  return (
+                    <AnimatedSection key={idx} delay={idx * 0.1}>
+                      <div className={`relative flex items-start gap-6 py-8 ${isRight ? "md:flex-row-reverse" : ""}`}>
+                        <div className="absolute left-6 md:left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: bgBase, border: `2px solid ${primaryColor}` }} />
+                        </div>
+
+                        <div className="w-0 md:w-[calc(50%-20px)]" />
+
+                        <div className={`flex-1 pl-10 md:pl-0 ${isRight ? "md:pr-10 md:text-right" : "md:pl-10"}`}>
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2" style={isRight ? { justifyContent: "flex-end" } : {}}>
+                              <Clock className="h-3.5 w-3.5 shrink-0 md:hidden" style={{ color: primaryColor, opacity: 0.6 }} />
+                              <p className="text-lg md:text-xl inv-display font-light" style={{ color: primaryColor }}>
+                                {(item.time || "").replace(":", "h")}
+                              </p>
+                            </div>
+                            <h3 className="text-xs tracking-[0.2em] uppercase font-bold" style={{ color: textDark }}>
+                              {item.title}
+                            </h3>
+                            {item.description && (
+                              <p className="text-sm inv-serif" style={{ color: textSubtle }}>
+                                {item.description}
+                              </p>
+                            )}
+                            {(item.location || item.venueLabel) && (
+                              <p className="text-xs inv-serif italic flex items-center gap-1" style={{ color: textSubtle }}>
+                                <MapPin className="h-2.5 w-2.5 shrink-0" />
+                                {item.location || item.venueLabel}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </AnimatedSection>
+                  );
+                })}
+              </div>
+            </div>
+          </AnimatedSection>
+        </section>
+      )}
+
+      {allowedOptions.length > 0 && (
+        <section className="py-20 px-6">
+          <AnimatedSection className="max-w-lg mx-auto">
+            <div className="text-center mb-12 space-y-3">
+              <p className="text-[10px] tracking-[0.4em] uppercase inv-serif" style={{ color: primaryColor }}>
+                Vos options
+              </p>
+              <h2 className="text-4xl md:text-5xl inv-display font-medium italic" style={{ color: textDark }}>
+                Compléments
+              </h2>
+            </div>
+
+            <div className="space-y-4">
+              {allowedOptions.map((option: any) => (
+                <div key={option.id} className="rounded-xl p-6 text-center space-y-2" style={{ backgroundColor: cardBg, border: `1px solid ${borderLight}` }}>
+                  <div className="text-sm tracking-[0.2em] uppercase font-semibold" style={{ color: primaryColor }}>{option.label}</div>
+                  <div className="text-sm inv-serif" style={{ color: textSubtle }}>
+                    {[option.time, option.venueLabel].filter(Boolean).join(" • ")}
+                  </div>
+                  {typeof option.priceCents === "number" ? (
+                    <div className="text-xs inv-serif" style={{ color: textSubtle }}>
+                      {(option.priceCents / 100).toFixed(2)} EUR / personne
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </AnimatedSection>
+        </section>
+      )}
+
+      {showLocations && locations.length > 0 && (
+        <section className="py-20 px-6" style={{ backgroundColor: cardBg }}>
+          <AnimatedSection className="max-w-lg mx-auto">
+            <div className="text-center mb-14 space-y-3">
+              <p className="text-[10px] tracking-[0.4em] uppercase inv-serif" style={{ color: primaryColor }}>
+                Où nous retrouver
+              </p>
+              <h2 className="text-4xl md:text-5xl inv-display font-medium italic" style={{ color: textDark }}>
+                Lieux
+              </h2>
+            </div>
+
+            <div className="space-y-10">
+              {locations.map((loc: any, idx: number) => (
+                <AnimatedSection key={idx} delay={idx * 0.15}>
+                  <div
+                    className="rounded-xl p-8 text-center space-y-4 relative overflow-hidden"
+                    style={{ backgroundColor: bgBase, border: `1px solid ${borderLight}` }}
+                  >
+                    <div className="w-10 h-10 mx-auto rounded-full flex items-center justify-center" style={{ backgroundColor: cardBg, border: `1px solid ${borderLight}` }}>
+                      <MapPin className="h-4 w-4" style={{ color: primaryColor }} />
+                    </div>
+                    <h3 className="text-xs tracking-[0.2em] uppercase font-bold" style={{ color: textDark }}>
+                      {loc.title}
+                    </h3>
+                    {loc.address && (
+                      <p className="text-sm inv-serif" style={{ color: textSubtle }}>{loc.address}</p>
+                    )}
+                    {loc.description && (
+                      <p className="text-sm inv-serif italic" style={{ color: textSubtle }}>{loc.description}</p>
+                    )}
+                    {loc.address && (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.address)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase font-semibold hover:opacity-70 transition-opacity"
+                        style={{ color: primaryColor }}
+                      >
+                        <MapPin className="h-3 w-3" />
+                        Itinéraire
+                        <ExternalLink className="h-2.5 w-2.5" />
+                      </a>
+                    )}
+
+                    {loc.accommodations && loc.accommodations.length > 0 && (
+                      <div className="pt-4 mt-4 space-y-2" style={{ borderTop: `1px solid ${borderLight}` }}>
+                        <div className="flex items-center justify-center gap-2">
+                          <Bed className="h-3.5 w-3.5" style={{ color: primaryColor }} />
+                          <span className="text-[10px] tracking-[0.2em] uppercase font-semibold" style={{ color: textSubtle }}>Hébergements</span>
+                        </div>
+                        {loc.accommodations.map((acc: any, accIdx: number) => (
+                          <div key={accIdx} className="text-xs inv-serif" style={{ color: textSubtle }}>
+                            <span className="font-medium" style={{ color: textDark }}>{acc.name}</span>
+                            {acc.address && <span> — {acc.address}</span>}
+                            {acc.url && (
+                              <a href={acc.url} target="_blank" rel="noopener noreferrer" className="ml-1.5 inline-flex items-center hover:opacity-70 transition-opacity" style={{ color: primaryColor }}>
+                                <ExternalLink className="h-2.5 w-2.5" />
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </AnimatedSection>
+              ))}
+            </div>
+          </AnimatedSection>
+        </section>
+      )}
+
+      {showDressCode && invDressCode && (
+        <AnimatedSection className="py-16 px-6">
+          <div className="max-w-sm mx-auto">
+            <div
+              className="rounded-xl p-8 text-center space-y-4 relative"
+              style={{ backgroundColor: cardBg, border: `1px solid ${borderLight}` }}
+            >
+              <Sparkles className="h-5 w-5 mx-auto" style={{ color: primaryColor }} />
+              <h3 className="text-xs tracking-[0.2em] uppercase font-bold" style={{ color: textDark }}>
+                Dress Code
+              </h3>
+              <p className="text-sm inv-serif" style={{ color: textDark }}>
+                {invDressCode}
+              </p>
+            </div>
+          </div>
+        </AnimatedSection>
+      )}
+
+      {showCagnotte && cagnotteHref && (
+        <AnimatedSection className="py-20 px-6">
+          <div className="max-w-sm mx-auto text-center space-y-6">
+            <div className="w-14 h-14 mx-auto rounded-full flex items-center justify-center" style={{ backgroundColor: cardBg, border: `1px solid ${borderLight}` }}>
+              <Gift className="h-6 w-6" style={{ color: primaryColor }} />
+            </div>
+            <div className="space-y-3">
+              <p className="text-[10px] tracking-[0.4em] uppercase inv-serif" style={{ color: primaryColor }}>
+                Notre cagnotte
+              </p>
+              <h2 className="text-3xl md:text-4xl inv-display font-medium italic" style={{ color: textDark }}>
+                {invCagnotteTitle}
+              </h2>
+            </div>
+            <p className="text-sm inv-serif leading-relaxed" style={{ color: textSubtle }}>
+              {invCagnotteDesc}
+            </p>
+            <a
+              href={cagnotteHref}
+              target={cagnotteMode === "external" && cagnotteExternalUrl ? "_blank" : undefined}
+              rel={cagnotteMode === "external" && cagnotteExternalUrl ? "noopener noreferrer" : undefined}
+              className="inline-flex items-center gap-2.5 px-10 py-3.5 text-[10px] tracking-[0.3em] uppercase font-bold text-white transition-all hover:opacity-90 hover:shadow-lg rounded-full"
+              style={{ backgroundColor: primaryColor }}
+            >
+              <Gift className="h-3.5 w-3.5" />
+              {invCagnotteButton}
+            </a>
+          </div>
+        </AnimatedSection>
+      )}
+
+      {invFooterNote && (
+        <AnimatedSection className="py-6 px-6 text-center">
+          <FloralDivider color={primaryColor} />
+          <p className="text-xs inv-serif pt-2" style={{ color: textSubtle }}>
+            {invFooterNote}
+          </p>
+        </AnimatedSection>
+      )}
+
+      {showQrCode && qrDataUrl && (
+        <AnimatedSection className="py-16 px-6">
+          <div className="max-w-sm mx-auto text-center space-y-4">
+            <div
+              className="inline-block p-6 rounded-2xl relative"
+              style={{ backgroundColor: cardBg, border: `1px solid ${borderLight}` }}
+            >
+              <div className="absolute -inset-1 rounded-2xl" style={{ border: `1px solid ${borderLight}`, opacity: 0.5 }} />
+              <img src={qrDataUrl} alt="QR code invitation" className="h-28 w-28 mx-auto relative" />
+            </div>
+            <p className="text-[10px] tracking-[0.2em] uppercase inv-serif" style={{ color: textSubtle }}>
+              Scannez pour votre check-in jour J
+            </p>
+            <a
+              href={checkInHref}
+              className="inline-flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase font-semibold hover:opacity-70 transition-opacity"
+              style={{ color: primaryColor }}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Ouvrir le lien public check-in
+            </a>
+          </div>
+        </AnimatedSection>
+      )}
+
+      <footer className="py-12 px-6 text-center space-y-4">
+        {logoUrl ? (
+          <img src={logoUrl} alt="" className="mx-auto h-16 w-16 object-contain rounded-full" />
+        ) : null}
+        <p className="text-[10px] tracking-[0.15em] uppercase inv-serif" style={{ color: textSubtle, opacity: 0.5 }}>
+          {heroTitle}
+        </p>
+      </footer>
+    </div>
+  );
 }
