@@ -18,6 +18,7 @@ import {
     ScanLine,
     Tag,
     ExternalLink,
+    HelpCircle,
     Menu,
     X
 } from "lucide-react";
@@ -27,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { HelpChatbot } from "@/components/admin/HelpChatbot";
 import { FeedbackModal } from "@/components/admin/FeedbackModal";
 import { PremiumUpsellModal } from "@/components/admin/PremiumUpsellModal";
+import { InternalSupportChat } from "@/components/support/InternalSupportChat";
 import { useState } from "react";
 
 export function AdminLayout({ children, weddingId: weddingIdProp }: { children: ReactNode; weddingId?: string }) {
@@ -38,6 +40,27 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
     const currentWeddingForModal = weddings.find((w: any) => w.id === (weddingIdProp || params.weddingId));
     const isDesignRoute = location.includes("/design");
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [helpMenuOpen, setHelpMenuOpen] = useState(false);
+    const supportPageLabel =
+        location === "/templates" ? "Templates" :
+        location === "/design" ? "Édition live" :
+        location === "/guests" ? "Invités" :
+        location === "/guest-experience" ? "Expérience invités" :
+        location === "/billing" ? "Facturation" :
+        location === "/gifts" ? "Cadeaux" :
+        location === "/site" ? "Site & Menus" :
+        location === "/check-in-ops" ? "Check-in Jour J" :
+        "";
+    const fallbackSupportPageLabel = (() => {
+        if (supportPageLabel) return supportPageLabel;
+        const cleanedLocation = location.replace(/^~\//, "/").split("?")[0].split("#")[0];
+        if (cleanedLocation === "/" || cleanedLocation === "") return "Accueil";
+        const lastSegment = cleanedLocation.split("/").filter(Boolean).pop();
+        if (!lastSegment) return "Espace Daylora";
+        return decodeURIComponent(lastSegment)
+            .replace(/[-_]+/g, " ")
+            .replace(/\b\w/g, (letter) => letter.toUpperCase());
+    })();
 
     const navItems = [
         { name: "Accueil", icon: Home, href: "/welcome" },
@@ -98,16 +121,34 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                                 <span className="hidden sm:inline">Voir le site</span>
                             </Button>
                         )}
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-2 text-muted-foreground hover:text-foreground"
+                            onClick={() => setHelpMenuOpen(true)}
+                        >
+                            <HelpCircle className="h-4 w-4" />
+                            <span className="hidden sm:inline">Centre d'aide</span>
+                        </Button>
                     </div>
                 </header>
                 <div className="flex-1 overflow-y-auto p-0">
-                    <div className="w-full">
-                        {children}
-                    </div>
+                <div className="w-full">
+                    {children}
                 </div>
-                <HelpChatbot />
             </div>
-        );
+            <InternalSupportChat
+                pageLabel={fallbackSupportPageLabel}
+                weddingId={currentWedding?.id || weddingId || null}
+                weddingSlug={currentWedding?.slug || null}
+                weddingName={currentWedding?.title || null}
+                userEmail={user?.email || null}
+                currentPlan={currentWedding?.currentPlan || null}
+                className="bottom-4 right-4 left-auto"
+            />
+            <HelpChatbot isOpen={helpMenuOpen} onOpenChange={setHelpMenuOpen} hideTrigger />
+        </div>
+    );
     }
 
     return (
@@ -142,6 +183,15 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                             <p className="text-sm font-medium truncate">{user?.firstName} {user?.lastName}</p>
                         </div>
                     </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground"
+                        onClick={() => setHelpMenuOpen(true)}
+                    >
+                        <HelpCircle className="mr-2 h-4 w-4" />
+                        Centre d'aide
+                    </Button>
                     <FeedbackModal />
                     <Button
                         variant="ghost"
@@ -181,6 +231,18 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                                     </Link>
                                 );
                             })}
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="w-full justify-start min-h-[44px] text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                onClick={() => {
+                                    setMobileMenuOpen(false);
+                                    setHelpMenuOpen(true);
+                                }}
+                            >
+                                <HelpCircle className="mr-2 h-5 w-5" />
+                                Centre d'aide
+                            </Button>
                         </nav>
                         <div className="p-4 border-t border-sidebar-border space-y-2">
                             <FeedbackModal />
@@ -250,7 +312,16 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                     </div>
                 </div>
             </main>
-            <HelpChatbot />
+            <InternalSupportChat
+                pageLabel={fallbackSupportPageLabel}
+                weddingId={currentWeddingForModal?.id || weddingId || null}
+                weddingSlug={currentWeddingForModal?.slug || null}
+                weddingName={currentWeddingForModal?.title || null}
+                userEmail={user?.email || null}
+                currentPlan={currentWeddingForModal?.currentPlan || null}
+                className="bottom-4 right-4 left-auto"
+            />
+            <HelpChatbot isOpen={helpMenuOpen} onOpenChange={setHelpMenuOpen} hideTrigger />
             {user && currentWeddingForModal && (
                 <PremiumUpsellModal user={user} wedding={currentWeddingForModal} />
             )}

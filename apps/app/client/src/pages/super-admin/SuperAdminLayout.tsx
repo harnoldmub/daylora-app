@@ -7,6 +7,7 @@ import {
   Tag,
   ScrollText,
   Settings,
+  MessageSquare,
   LogOut,
   Shield,
   Menu,
@@ -22,6 +23,7 @@ interface AdminInfo {
 const navItems = [
   { path: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { path: "/tenants", label: "Mariages", icon: Users },
+  { path: "/conversations", label: "Conversations", icon: MessageSquare },
   { path: "/promos", label: "Codes promos", icon: Tag },
   { path: "/audit", label: "Logs d'audit", icon: ScrollText },
   { path: "/settings", label: "Paramètres", icon: Settings },
@@ -32,6 +34,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
   const [admin, setAdmin] = useState<AdminInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreadConversations, setUnreadConversations] = useState(0);
 
   useEffect(() => {
     fetch("/api/super-admin/me", { credentials: "include" })
@@ -49,6 +52,41 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
         navigate("~/admin/login");
         setLoading(false);
       });
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadUnread = async () => {
+      try {
+        const res = await fetch("/api/super-admin/conversations", { credentials: "include" });
+        if (!res.ok) return;
+        const items = await res.json();
+        if (cancelled) return;
+        const total = items.reduce((sum: number, item: any) => sum + (item.unreadCount || 0), 0);
+        setUnreadConversations(total);
+      } catch {
+        if (!cancelled) setUnreadConversations(0);
+      }
+    };
+
+    loadUnread();
+
+    const es = new EventSource("/api/super-admin/conversations/stream", { withCredentials: true });
+    const refresh = () => {
+      loadUnread();
+    };
+    es.addEventListener("support.message", refresh);
+    es.addEventListener("support.read", refresh);
+    es.addEventListener("support.conversation", refresh);
+    es.onerror = () => es.close();
+
+    return () => {
+      cancelled = true;
+      es.removeEventListener("support.message", refresh);
+      es.removeEventListener("support.read", refresh);
+      es.removeEventListener("support.conversation", refresh);
+      es.close();
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -107,7 +145,12 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                     onClick={() => setSidebarOpen(false)}
                   >
                     <Icon className="h-4 w-4" />
-                    {item.label}
+                    <span className="flex-1">{item.label}</span>
+                    {item.path === "/conversations" && unreadConversations > 0 ? (
+                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                        {unreadConversations}
+                      </span>
+                    ) : null}
                   </div>
                 </Link>
               );

@@ -4,6 +4,10 @@ import { db } from "./db";
 import { superAdmins, adminAuditLogs, promoCodes, weddings, users, rsvpResponses, contributions, stripeSubscriptions } from "@shared/schema";
 import { eq, sql, desc, ilike, or, and, gte, lte, count } from "drizzle-orm";
 import { authService } from "./auth-service";
+import { storage } from "./storage";
+import { insertSupportMessageSchema } from "@shared/schema";
+import { supportChatService } from "./support-chat-service";
+import { validateRequest } from "./middleware/guards";
 
 declare module "express-session" {
   interface SessionData {
@@ -501,6 +505,225 @@ export function registerSuperAdminRoutes(app: Express) {
     } catch (error: any) {
       res.status(500).json({ valid: false, message: "Erreur interne." });
     }
+  });
+
+  app.get("/api/super-admin/conversations", isSuperAdmin, async (_req: Request, res: Response) => {
+    try {
+      const conversations = await storage.listSupportConversations();
+      const enriched = await Promise.all(
+        conversations.map(async (conversation) => {
+          const [user, wedding, messages] = await Promise.all([
+            storage.getUser(conversation.userId),
+            conversation.weddingId ? storage.getWedding(conversation.weddingId) : Promise.resolve(undefined),
+            storage.listSupportMessages(conversation.id),
+          ]);
+
+          const lastMessage = messages[messages.length - 1] || null;
+          const unreadCount = messages.filter((message) => (message.senderType || message.role) === "user" && !message.readAt).length;
+
+          return {
+            id: conversation.id,
+            userId: conversation.userId,
+            weddingId: conversation.weddingId,
+            name: [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() || user?.email || "Utilisateur",
+            email: user?.email || "",
+            weddingSlug: wedding?.slug || null,
+            weddingTitle: wedding?.title || null,
+            lastMessage,
+            unreadCount,
+            status: conversation.status,
+            isUnread: unreadCount > 0,
+            sourcePage: conversation.sourcePage,
+            sourcePlan: conversation.sourcePlan,
+            updatedAt: conversation.updatedAt,
+            lastMessageAt: conversation.lastMessageAt,
+          };
+        }),
+      );
+
+      res.json(enriched);
+    } catch (error: any) {
+      console.error("Conversations list error:", error?.message);
+      res.status(500).json({ message: "Impossible de charger les conversations." });
+    }
+  });
+
+  app.get("/api/super-admin/conversations/:id(\\d+)", isSuperAdmin, async (req: Request, res: Response) => {
+    try {
+      const conversationId = parseInt(req.params.id, 10);
+      if (!Number.isFinite(conversationId)) {
+        return res.status(400).json({ message: "Conversation invalide." });
+      }
+
+      const conversation = await storage.getSupportConversationById(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversation introuvable." });
+      }
+
+      await storage.markSupportMessagesRead(conversation.id, "admin");
+      const updatedConversation = await storage.touchSupportConversation(conversation.id, {
+        lastReadByAdminAt: new Date(),
+      });
+
+      const [user, wedding, messages] = await Promise.all([
+        storage.getUser(updatedConversation.userId),
+        updatedConversation.weddingId ? storage.getWedding(updatedConversation.weddingId) : Promise.resolve(undefined),
+        storage.listSupportMessages(updatedConversation.id),
+      ]);
+
+      supportChatService.emitToUser(updatedConversation.userId, "support.read", {
+        conversationId: updatedConversation.id,
+        reader: "admin",
+      });
+
+      res.json({
+        conversation: updatedConversation,
+        user: user
+          ? {
+              id: user.id,
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
+            }
+          : null,
+        wedding: wedding
+          ? {
+              id: wedding.id,
+              slug: wedding.slug,
+              title: wedding.title,
+            }
+          : null,
+        messages,
+        quickActions: messages.find((message) => (message.senderType || message.role) === "bot")?.metadata?.quickActions || [],
+      });
+    } catch (error: any) {
+      console.error("Conversation detail error:", error?.message);
+      res.status(500).json({ message: "Impossible de charger cette conversation." });
+    }
+  });
+
+  app.post("/api/super-admin/conversations/:id(\\d+)/messages", isSuperAdmin, validateRequest(insertSupportMessageSchema), async (req: Request, res: Response) => {
+    try {
+      const conversationId = parseInt(req.params.id, 10);
+      if (!Number.isFinite(conversationId)) {
+        return res.status(400).json({ message: "Conversation invalide." });
+      }
+
+      const conversation = await storage.getSupportConversationById(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversation introuvable." });
+      }
+
+      const now = new Date();
+      const message = await storage.createSupportMessage({
+        conversationId: conversation.id,
+        userId: conversation.userId,
+        weddingId: conversation.weddingId,
+        role: "admin",
+        senderType: "admin",
+        senderId: String(req.session.superAdminId || ""),
+        content: req.body.content.trim(),
+        pageLabel: req.body.pageLabel || null,
+        currentUrl: req.body.currentUrl || null,
+      });
+
+      const updatedConversation = await storage.touchSupportConversation(conversation.id, {
+        lastMessageAt: now,
+        lastReadByAdminAt: now,
+        status: "answered",
+      });
+
+      const payload = {
+        conversationId: updatedConversation.id,
+        conversation: updatedConversation,
+        message,
+      };
+
+      supportChatService.emitToUser(updatedConversation.userId, "support.message", payload);
+      supportChatService.emitToAdmins("support.message", payload);
+      await logAdminAction(req.session.superAdminId!, "reply_support_conversation", "support_conversation", String(conversation.id), {}, getClientIp(req));
+
+      res.status(201).json(payload);
+    } catch (error: any) {
+      console.error("Conversation reply error:", error?.message);
+      res.status(500).json({ message: "Impossible d'envoyer la réponse." });
+    }
+  });
+
+  app.post("/api/super-admin/conversations/:id(\\d+)/read", isSuperAdmin, async (req: Request, res: Response) => {
+    try {
+      const conversationId = parseInt(req.params.id, 10);
+      if (!Number.isFinite(conversationId)) {
+        return res.status(400).json({ message: "Conversation invalide." });
+      }
+
+      const conversation = await storage.getSupportConversationById(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversation introuvable." });
+      }
+
+      await storage.markSupportMessagesRead(conversation.id, "admin");
+      const updatedConversation = await storage.touchSupportConversation(conversation.id, {
+        lastReadByAdminAt: new Date(),
+      });
+
+      supportChatService.emitToUser(updatedConversation.userId, "support.read", {
+        conversationId: updatedConversation.id,
+        reader: "admin",
+      });
+
+      res.json({ success: true, conversation: updatedConversation });
+    } catch (error: any) {
+      console.error("Conversation read error:", error?.message);
+      res.status(500).json({ message: "Impossible de marquer la conversation comme lue." });
+    }
+  });
+
+  app.post("/api/super-admin/conversations/:id(\\d+)/status", isSuperAdmin, async (req: Request, res: Response) => {
+    try {
+      const conversationId = parseInt(req.params.id, 10);
+      const nextStatus = String(req.body?.status || "");
+      if (!Number.isFinite(conversationId)) {
+        return res.status(400).json({ message: "Conversation invalide." });
+      }
+      if (!["open", "pending", "answered", "closed"].includes(nextStatus)) {
+        return res.status(400).json({ message: "Statut invalide." });
+      }
+
+      const conversation = await storage.getSupportConversationById(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversation introuvable." });
+      }
+
+      const updatedConversation = await storage.touchSupportConversation(conversation.id, {
+        status: nextStatus as any,
+      });
+
+      supportChatService.emitToUser(updatedConversation.userId, "support.conversation", {
+        conversation: updatedConversation,
+      });
+      supportChatService.emitToAdmins("support.conversation", {
+        conversation: updatedConversation,
+      });
+
+      await logAdminAction(
+        req.session.superAdminId!,
+        "update_support_conversation_status",
+        "support_conversation",
+        String(conversation.id),
+        { status: nextStatus },
+        getClientIp(req),
+      );
+
+      res.json({ success: true, conversation: updatedConversation });
+    } catch (error: any) {
+      console.error("Conversation status error:", error?.message);
+      res.status(500).json({ message: "Impossible de mettre à jour le statut." });
+    }
+  });
+
+  app.get("/api/super-admin/conversations/stream", isSuperAdmin, async (req: Request, res: Response) => {
+    supportChatService.addAdminConnection(req, res);
   });
 
   app.get("/api/super-admin/audit-logs", isSuperAdmin, async (req: Request, res: Response) => {

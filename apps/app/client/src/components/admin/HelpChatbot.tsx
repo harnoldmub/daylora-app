@@ -163,10 +163,25 @@ const categoryIcons: Record<string, typeof Paintbrush> = {
   Pages: FileText,
 };
 
-export function HelpChatbot() {
-  const [isOpen, setIsOpen] = useState(false);
+type HelpChatbotProps = {
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+};
+
+export function HelpChatbot({ isOpen: isOpenProp, onOpenChange, hideTrigger = false }: HelpChatbotProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const isControlled = typeof isOpenProp === "boolean";
+  const isOpen = isControlled ? isOpenProp : internalOpen;
+
+  const setIsOpen = (open: boolean) => {
+    if (!isControlled) {
+      setInternalOpen(open);
+    }
+    onOpenChange?.(open);
+  };
 
   const filteredItems = useMemo(() => {
     if (!search.trim()) return faqItems;
@@ -190,13 +205,15 @@ export function HelpChatbot() {
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-40 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all hover:scale-105 flex items-center justify-center"
-        aria-label="Aide"
-      >
-        <HelpCircle className="h-6 w-6" />
-      </button>
+      {!hideTrigger ? (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-6 right-6 z-40 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all hover:scale-105 flex items-center justify-center"
+          aria-label="Aide"
+        >
+          <HelpCircle className="h-6 w-6" />
+        </button>
+      ) : null}
 
       {isOpen && (
         <div className="fixed inset-0 z-50">

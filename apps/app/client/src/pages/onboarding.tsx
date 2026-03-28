@@ -43,6 +43,7 @@ import {
   Star,
 } from "lucide-react";
 import { compressImageFileToJpegDataUrl } from "@/lib/image";
+import { WhatsAppSupportButton } from "@/components/support/WhatsAppSupportButton";
 
 const TEMPLATES = [
   { id: "classic", name: "Classique", description: "Élégant et intemporel", image: "/previews/template_classic_preview_v2.png", premium: false },
@@ -759,6 +760,14 @@ export default function Onboarding() {
           </div>
         </div>
       </div>
+      <WhatsAppSupportButton
+        pageLabel="Onboarding"
+        weddingName={form.watch("title") || null}
+        weddingSlug={form.watch("slug") || null}
+        userEmail={form.watch("email") || null}
+        showHint
+        className="bottom-5 right-5"
+      />
     </div>
   );
 }

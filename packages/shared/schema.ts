@@ -662,6 +662,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   emailVerificationTokens: many(emailVerificationTokens),
   passwordResetTokens: many(passwordResetTokens),
   memberships: many(memberships),
+  supportConversations: many(supportConversations),
+  supportMessages: many(supportMessages),
 }));
 
 export const weddingsRelations = relations(weddings, ({ one, many }) => ({
@@ -675,6 +677,8 @@ export const weddingsRelations = relations(weddings, ({ one, many }) => ({
   liveJokes: many(liveJokes),
   memberships: many(memberships),
   subscriptions: many(stripeSubscriptions),
+  supportConversations: many(supportConversations),
+  supportMessages: many(supportMessages),
 }));
 
 export const membershipsRelations = relations(memberships, ({ one }) => ({
@@ -780,9 +784,53 @@ export const productFeedback = pgTable("product_feedback", {
 export type ProductFeedback = typeof productFeedback.$inferSelect;
 export type InsertProductFeedback = typeof productFeedback.$inferInsert;
 
+export const supportConversations = pgTable("support_conversations", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  weddingId: uuid("wedding_id").references(() => weddings.id),
+  status: varchar("status", { length: 20 }).notNull().default("open"),
+  sourcePage: varchar("source_page", { length: 255 }),
+  sourcePlan: varchar("source_plan", { length: 20 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  lastMessageAt: timestamp("last_message_at").defaultNow(),
+  lastReadByUserAt: timestamp("last_read_by_user_at"),
+  lastReadByAdminAt: timestamp("last_read_by_admin_at"),
+});
+
+export type SupportConversation = typeof supportConversations.$inferSelect;
+export type InsertSupportConversation = typeof supportConversations.$inferInsert;
+
+export const supportMessages = pgTable("support_messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").references(() => supportConversations.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  weddingId: uuid("wedding_id").references(() => weddings.id),
+  role: varchar("role", { length: 20 }).notNull(),
+  senderType: varchar("sender_type", { length: 20 }).notNull().default("user"),
+  senderId: varchar("sender_id", { length: 255 }),
+  content: text("content").notNull(),
+  pageLabel: varchar("page_label", { length: 255 }),
+  currentUrl: varchar("current_url", { length: 1000 }),
+  metadata: jsonb("metadata").$type<Record<string, any>>().default({}),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type SupportMessage = typeof supportMessages.$inferSelect;
+export type InsertSupportMessage = typeof supportMessages.$inferInsert;
+
 export const insertProductFeedbackSchema = createInsertSchema(productFeedback).omit({
   id: true,
   createdAt: true,
+});
+
+export const insertSupportMessageSchema = z.object({
+  content: z.string().min(1, "Le message est requis.").max(3000, "Le message est trop long."),
+  pageLabel: z.string().max(255).optional().nullable(),
+  currentUrl: z.string().max(1000).optional().nullable(),
+  weddingId: z.string().uuid().optional().nullable(),
+  actionKey: z.string().max(100).optional().nullable(),
 });
 
 export const productFeedbackRelations = relations(productFeedback, ({ one }) => ({
@@ -792,6 +840,33 @@ export const productFeedbackRelations = relations(productFeedback, ({ one }) => 
   }),
   user: one(users, {
     fields: [productFeedback.userId],
+    references: [users.id],
+  }),
+}));
+
+export const supportConversationsRelations = relations(supportConversations, ({ one, many }) => ({
+  wedding: one(weddings, {
+    fields: [supportConversations.weddingId],
+    references: [weddings.id],
+  }),
+  user: one(users, {
+    fields: [supportConversations.userId],
+    references: [users.id],
+  }),
+  messages: many(supportMessages),
+}));
+
+export const supportMessagesRelations = relations(supportMessages, ({ one }) => ({
+  conversation: one(supportConversations, {
+    fields: [supportMessages.conversationId],
+    references: [supportConversations.id],
+  }),
+  wedding: one(weddings, {
+    fields: [supportMessages.weddingId],
+    references: [weddings.id],
+  }),
+  user: one(users, {
+    fields: [supportMessages.userId],
     references: [users.id],
   }),
 }));

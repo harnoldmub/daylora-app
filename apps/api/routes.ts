@@ -12,6 +12,7 @@ import {
   insertContributionSchema,
   insertGiftSchema,
   insertProductFeedbackSchema,
+  insertSupportMessageSchema,
   PLAN_LIMITS,
   type InsertRsvpResponse,
   promoCodes,
@@ -22,6 +23,8 @@ import { z } from "zod";
 import { sendRsvpConfirmationEmail, sendGuestConfirmationEmail, sendContributionNotification, sendPersonalizedInvitation } from "./email";
 import { generateInvitationPDF } from "./invitation-service";
 import { liveService } from "./live-service";
+import { supportChatService } from "./support-chat-service";
+import { getSupportBotQuickActions, getSupportBotWelcomeMessage, resolveSupportBotReply } from "./support-bot";
 import { getStripePublishableKey, getUncachableStripeClient } from "./stripeClient";
 import { withWeddingFromRequest } from "./middleware/tenant";
 
@@ -258,6 +261,78 @@ function getGuestExperience(config: any) {
   };
 }
 
+async function resolveOptionalWeddingFromRequest(req: any) {
+  const explicitWeddingId = req.body?.weddingId || req.headers["x-wedding-id"] || req.query?.weddingId;
+  const explicitSlug = req.headers["x-wedding-slug"] || req.query?.slug;
+
+  if (explicitWeddingId) {
+    return storage.getWedding(String(explicitWeddingId));
+  }
+
+  if (explicitSlug && explicitSlug !== "undefined") {
+    return storage.getWeddingBySlug(String(explicitSlug));
+  }
+
+  return null;
+}
+
+async function getOrCreateSupportConversationForRequest(userId: string, req: any) {
+  const wedding = await resolveOptionalWeddingFromRequest(req);
+  const weddingId = wedding?.id || null;
+  let conversation = await storage.getSupportConversationForUser(userId, weddingId);
+  const sourcePage = req.body?.pageLabel || req.query?.pageLabel || null;
+  const sourcePlan = wedding?.currentPlan || null;
+
+  if (!conversation) {
+    conversation = await storage.createSupportConversation({
+      userId,
+      weddingId,
+      status: "pending",
+      sourcePage,
+      sourcePlan,
+      lastReadByUserAt: new Date(),
+    });
+  } else if ((sourcePage && conversation.sourcePage !== sourcePage) || (sourcePlan && conversation.sourcePlan !== sourcePlan)) {
+    conversation = await storage.touchSupportConversation(conversation.id, {
+      sourcePage: sourcePage || conversation.sourcePage,
+      sourcePlan: sourcePlan || conversation.sourcePlan,
+    });
+  }
+
+  return { conversation, wedding };
+}
+
+async function ensureSupportWelcomeMessage(conversation: any, userId: string, weddingId?: string | null) {
+  const messages = await storage.listSupportMessages(conversation.id);
+  if (messages.length > 0) {
+    return messages;
+  }
+
+  await storage.createSupportMessage({
+    conversationId: conversation.id,
+    userId,
+    weddingId: weddingId || null,
+    role: "bot",
+    senderType: "bot",
+    senderId: null,
+    content: getSupportBotWelcomeMessage(),
+    metadata: {
+      quickActions: getSupportBotQuickActions(),
+    },
+    readAt: new Date(),
+  });
+
+  return storage.listSupportMessages(conversation.id);
+}
+
+function buildSupportPayload(conversation: any, message: any) {
+  return {
+    conversationId: conversation.id,
+    conversation,
+    message,
+  };
+}
+
 function resolveGuestContext(wedding: any, guest: any) {
   const guestExperience = getGuestExperience(wedding?.config);
   const invitationType = guestExperience.invitationTypes.find((item: any) => item.id === guest?.invitationTypeId) || null;
@@ -425,6 +500,138 @@ export async function registerRoutes(app: Express) {
       console.error("Signup with wedding error:", error);
       res.status(500).json({ message: "Erreur lors de la création. Réessayez." });
     }
+  });
+
+  app.get("/api/support/conversation", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) return res.status(401).json({ message: "Non authentifié." });
+
+      const { conversation, wedding } = await getOrCreateSupportConversationForRequest(userId, req);
+      await storage.markSupportMessagesRead(conversation.id, "user");
+      const refreshedConversation = await storage.touchSupportConversation(conversation.id, {
+        lastReadByUserAt: new Date(),
+      });
+      const messages = await ensureSupportWelcomeMessage(refreshedConversation, userId, wedding?.id || null);
+
+      res.json({
+        conversation: refreshedConversation,
+        wedding: wedding ? { id: wedding.id, slug: wedding.slug, title: wedding.title } : null,
+        quickActions: getSupportBotQuickActions(),
+        messages,
+      });
+    } catch (error: any) {
+      console.error("Support conversation error:", error?.message);
+      res.status(500).json({ message: "Impossible de charger la conversation." });
+    }
+  });
+
+  app.post("/api/support/messages", isAuthenticated, validateRequest(insertSupportMessageSchema), async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) return res.status(401).json({ message: "Non authentifié." });
+
+      const { conversation, wedding } = await getOrCreateSupportConversationForRequest(userId, req);
+      const now = new Date();
+      await ensureSupportWelcomeMessage(conversation, userId, wedding?.id || null);
+
+      const userMessage = await storage.createSupportMessage({
+        conversationId: conversation.id,
+        userId,
+        weddingId: wedding?.id || null,
+        role: "user",
+        senderType: "user",
+        senderId: userId,
+        content: req.body.content.trim(),
+        pageLabel: req.body.pageLabel || null,
+        currentUrl: req.body.currentUrl || null,
+        metadata: {
+          actionKey: req.body.actionKey || null,
+          plan: wedding?.currentPlan || null,
+        },
+      });
+
+      let updatedConversation = await storage.touchSupportConversation(conversation.id, {
+        lastMessageAt: now,
+        lastReadByUserAt: now,
+        status: "pending",
+      });
+
+      supportChatService.emitToUser(userId, "support.message", buildSupportPayload(updatedConversation, userMessage));
+      supportChatService.emitToAdmins("support.message", buildSupportPayload(updatedConversation, userMessage));
+
+      const botReply = resolveSupportBotReply({
+        content: req.body.content,
+        actionKey: req.body.actionKey || null,
+      });
+
+      const botMessage = await storage.createSupportMessage({
+        conversationId: conversation.id,
+        userId,
+        weddingId: wedding?.id || null,
+        role: "bot",
+        senderType: "bot",
+        senderId: null,
+        content: botReply.content,
+        pageLabel: req.body.pageLabel || null,
+        currentUrl: req.body.currentUrl || null,
+        metadata: {
+          topic: botReply.topic,
+          quickActions: getSupportBotQuickActions(),
+          escalated: botReply.escalateToAdmin,
+        },
+        readAt: new Date(),
+      });
+
+      updatedConversation = await storage.touchSupportConversation(conversation.id, {
+        lastMessageAt: new Date(),
+        lastReadByUserAt: new Date(),
+        status: botReply.status,
+      });
+
+      const botPayload = buildSupportPayload(updatedConversation, botMessage);
+      supportChatService.emitToUser(userId, "support.message", botPayload);
+      supportChatService.emitToAdmins("support.message", botPayload);
+
+      res.status(201).json({
+        conversation: updatedConversation,
+        userMessage,
+        botMessage,
+        quickActions: getSupportBotQuickActions(),
+      });
+    } catch (error: any) {
+      console.error("Support message create error:", error?.message);
+      res.status(500).json({ message: "Impossible d'envoyer votre message." });
+    }
+  });
+
+  app.post("/api/support/conversation/read", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) return res.status(401).json({ message: "Non authentifié." });
+
+      const { conversation } = await getOrCreateSupportConversationForRequest(userId, req);
+      await storage.markSupportMessagesRead(conversation.id, "user");
+      const updatedConversation = await storage.touchSupportConversation(conversation.id, {
+        lastReadByUserAt: new Date(),
+      });
+
+      supportChatService.emitToAdmins("support.read", {
+        conversationId: updatedConversation.id,
+        reader: "user",
+      });
+
+      res.json({ success: true, conversation: updatedConversation });
+    } catch (error: any) {
+      console.error("Support read error:", error?.message);
+      res.status(500).json({ message: "Impossible de mettre à jour la conversation." });
+    }
+  });
+
+  app.get("/api/support/stream", isAuthenticated, async (req, res) => {
+    const userId = (req.user as any)?.id;
+    if (!userId) return res.status(401).json({ message: "Non authentifié." });
+    supportChatService.addUserConnection(userId, req, res);
   });
 
   const liveJokeInputSchema = z.object({
@@ -2104,6 +2311,7 @@ export async function registerRoutes(app: Express) {
     res.json({
       appBaseUrl: process.env.APP_BASE_URL || "http://localhost:5174",
       marketingBaseUrl: process.env.MARKETING_BASE_URL || "http://localhost:5173",
+      whatsappSupportNumber: process.env.WHATSAPP_SUPPORT_NUMBER || process.env.VITE_WHATSAPP_SUPPORT_NUMBER || "",
     });
   });
 

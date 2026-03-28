@@ -36,6 +36,12 @@ import {
   productFeedback,
   type ProductFeedback,
   type InsertProductFeedback,
+  supportConversations,
+  supportMessages,
+  type SupportConversation,
+  type InsertSupportConversation,
+  type SupportMessage,
+  type InsertSupportMessage,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, ne, sql, desc } from "drizzle-orm";
@@ -127,6 +133,16 @@ export interface IStorage {
   listProductFeedback(status?: string): Promise<ProductFeedback[]>;
   getProductFeedbackByUser(userId: string): Promise<ProductFeedback[]>;
   updateProductFeedbackStatus(id: number, status: string): Promise<ProductFeedback>;
+
+  // Support chat operations
+  getSupportConversationById(id: number): Promise<SupportConversation | undefined>;
+  getSupportConversationForUser(userId: string, weddingId?: string | null): Promise<SupportConversation | undefined>;
+  listSupportConversations(): Promise<SupportConversation[]>;
+  createSupportConversation(data: InsertSupportConversation): Promise<SupportConversation>;
+  touchSupportConversation(id: number, updates: Partial<SupportConversation>): Promise<SupportConversation>;
+  listSupportMessages(conversationId: number): Promise<SupportMessage[]>;
+  createSupportMessage(data: InsertSupportMessage): Promise<SupportMessage>;
+  markSupportMessagesRead(conversationId: number, role: "user" | "admin"): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -585,6 +601,71 @@ export class DatabaseStorage implements IStorage {
   async updateProductFeedbackStatus(id: number, status: string): Promise<ProductFeedback> {
     const [row] = await db.update(productFeedback).set({ status }).where(eq(productFeedback.id, id)).returning();
     return row;
+  }
+
+  async getSupportConversationById(id: number): Promise<SupportConversation | undefined> {
+    const [row] = await db.select().from(supportConversations).where(eq(supportConversations.id, id));
+    return row;
+  }
+
+  async getSupportConversationForUser(userId: string, weddingId?: string | null): Promise<SupportConversation | undefined> {
+    const [row] = weddingId
+      ? await db
+          .select()
+          .from(supportConversations)
+          .where(and(eq(supportConversations.userId, userId), eq(supportConversations.weddingId, weddingId)))
+          .limit(1)
+      : await db
+          .select()
+          .from(supportConversations)
+          .where(and(eq(supportConversations.userId, userId), sql`${supportConversations.weddingId} IS NULL`))
+          .limit(1);
+    return row;
+  }
+
+  async listSupportConversations(): Promise<SupportConversation[]> {
+    return db.select().from(supportConversations).orderBy(desc(supportConversations.lastMessageAt), desc(supportConversations.updatedAt));
+  }
+
+  async createSupportConversation(data: InsertSupportConversation): Promise<SupportConversation> {
+    const [row] = await db.insert(supportConversations).values(data).returning();
+    return row;
+  }
+
+  async touchSupportConversation(id: number, updates: Partial<SupportConversation>): Promise<SupportConversation> {
+    const [row] = await db
+      .update(supportConversations)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(supportConversations.id, id))
+      .returning();
+    return row;
+  }
+
+  async listSupportMessages(conversationId: number): Promise<SupportMessage[]> {
+    return db
+      .select()
+      .from(supportMessages)
+      .where(eq(supportMessages.conversationId, conversationId))
+      .orderBy(supportMessages.createdAt);
+  }
+
+  async createSupportMessage(data: InsertSupportMessage): Promise<SupportMessage> {
+    const [row] = await db.insert(supportMessages).values(data).returning();
+    return row;
+  }
+
+  async markSupportMessagesRead(conversationId: number, role: "user" | "admin"): Promise<void> {
+    const readerRole = role === "admin" ? "user" : "admin";
+    await db
+      .update(supportMessages)
+      .set({ readAt: new Date() })
+      .where(
+        and(
+          eq(supportMessages.conversationId, conversationId),
+          eq(supportMessages.role, readerRole),
+          sql`${supportMessages.readAt} IS NULL`,
+        ),
+      );
   }
 }
 

@@ -48,6 +48,7 @@ import SuperAdminTenantDetail from "@/pages/super-admin/SuperAdminTenantDetail";
 import SuperAdminPromos from "@/pages/super-admin/SuperAdminPromos";
 import SuperAdminAuditLogs from "@/pages/super-admin/SuperAdminAuditLogs";
 import SuperAdminSettings from "@/pages/super-admin/SuperAdminSettings";
+import SuperAdminConversations from "@/pages/super-admin/SuperAdminConversations";
 
 import { useWedding } from "@/hooks/use-api";
 
@@ -151,6 +152,7 @@ function AppRouter() {
               <Route path="/dashboard" component={SuperAdminDashboard} />
               <Route path="/tenants/:id" component={SuperAdminTenantDetail} />
               <Route path="/tenants" component={SuperAdminTenants} />
+              <Route path="/conversations" component={SuperAdminConversations} />
               <Route path="/promos" component={SuperAdminPromos} />
               <Route path="/audit" component={SuperAdminAuditLogs} />
               <Route path="/settings" component={SuperAdminSettings} />

@@ -7,6 +7,7 @@ import { PublicEditProvider } from "@/contexts/public-edit";
 import { TemplateRenderer } from "@/features/public-site/templates/TemplateRenderer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { resolveTone, getTemplatePreset } from "@/lib/design-presets";
+import { WhatsAppSupportButton } from "@/components/support/WhatsAppSupportButton";
 
 const noop = () => {};
 const noopAsync = async () => {};
@@ -174,6 +175,13 @@ export default function OnboardingPreview() {
           onSetDraftCagnotteExternalUrl={noop}
           toDateInputValue={(v) => v}
           fromDateInputValue={(v) => v}
+        />
+        <WhatsAppSupportButton
+          pageLabel="Aperçu onboarding"
+          weddingName={data.title || null}
+          weddingSlug={data.slug || null}
+          showHint
+          className="bottom-5 right-5"
         />
       </ThemeProvider>
     </PublicEditProvider>

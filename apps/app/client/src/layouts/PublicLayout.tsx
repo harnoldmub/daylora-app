@@ -12,6 +12,7 @@ import { InlineEditor } from "@/components/ui/inline-editor";
 import { compressImageFileToJpegDataUrl } from "@/lib/image";
 import { useToast } from "@/hooks/use-toast";
 import { GuidedTour, useShouldShowTour } from "@/components/guided-tour";
+import { InternalSupportChat } from "@/components/support/InternalSupportChat";
 
 function EditModeTooltip() {
     const [visible, setVisible] = useState(() => {
@@ -423,6 +424,13 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
         { id: "cookies", label: "Cookies", href: `${basePath}/legal/cookies` },
     ];
     const dayloraHref = marketingBaseUrl || "https://daylora.app";
+    const previewPageLabel = routePath.includes("/cagnotte")
+        ? "Aperçu cagnotte"
+        : routePath.includes("/gifts")
+            ? "Aperçu cadeaux"
+            : routePath.includes("/rsvp")
+                ? "Aperçu RSVP"
+                : "Aperçu live";
 
     return (
         <ThemeProvider wedding={wedding}>
@@ -579,6 +587,21 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
                         </header>
                     ) : null}
                     <main className="flex-1">{children}</main>
+                    {isPreviewRoute ? (
+                        <>
+                            {canEdit ? (
+                                <InternalSupportChat
+                                    pageLabel={previewPageLabel}
+                                    weddingId={wedding.id}
+                                    weddingSlug={wedding.slug}
+                                    weddingName={wedding.title}
+                                    userEmail={user?.email || null}
+                                    currentPlan={wedding.currentPlan || null}
+                                    className="right-5"
+                                />
+                            ) : null}
+                        </>
+                    ) : null}
                     {shouldShowFooter ? (
                     <footer className="border-t bg-background">
                         <div className="container mx-auto px-6 py-12">
