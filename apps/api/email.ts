@@ -45,7 +45,13 @@ export async function sendRsvpConfirmationEmail(wedding: Wedding, guestData: {
 }) {
   const type = 'rsvp_received_admin';
   const subject = `Nouvelle réponse RSVP - ${guestData.firstName} ${guestData.lastName}`;
-  const recipient = wedding.config.seo.title.includes('Marie') ? "we@ar2k26.com" : wedding.ownerId;
+
+  const owner = await storage.getUser(wedding.ownerId);
+  if (!owner?.email) {
+    console.warn(`[email] Skipping RSVP admin notification: no email found for owner ${wedding.ownerId}`);
+    return;
+  }
+  const recipient = owner.email;
 
   try {
     const availabilityText =
@@ -163,7 +169,13 @@ export async function sendContributionNotification(wedding: Wedding, contributio
   const formattedAmount = (contributionData.amount / 100).toFixed(2);
   const currencySymbol = contributionData.currency === 'eur' ? '€' : contributionData.currency.toUpperCase();
   const subject = `Nouvelle contribution - ${contributionData.donorName} : ${formattedAmount}${currencySymbol}`;
-  const recipient = wedding.ownerId;
+
+  const owner = await storage.getUser(wedding.ownerId);
+  if (!owner?.email) {
+    console.warn(`[email] Skipping contribution admin notification: no email found for owner ${wedding.ownerId}`);
+    return;
+  }
+  const recipient = owner.email;
 
   try {
     const emailHtml = `
