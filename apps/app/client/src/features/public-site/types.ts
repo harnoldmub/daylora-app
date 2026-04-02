@@ -141,10 +141,9 @@ export interface CagnotteSectionProps extends SectionEditProps {
   cagnotteTitle: string;
   cagnotteDescription: string;
   cagnotteSubmitLabel: string;
-  cagnottePath: string;
-  hasContributionMethods: boolean;
-  contributionMethodsCount: number;
-  buttonToneClass: string;
+  contributionMethods: import("@shared/schema").ContributionMethod[];
+  suggestedAmounts: number[];
+  slug: string;
   buttonRadiusClass: string;
   onSaveText: SaveTextFn;
   order?: number;

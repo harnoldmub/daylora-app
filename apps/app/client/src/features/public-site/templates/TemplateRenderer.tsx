@@ -190,9 +190,7 @@ export function TemplateRenderer(props: TemplateRendererProps) {
   const showLocation = wedding.config?.navigation?.pages?.location ?? true;
   const showProgram = wedding.config?.navigation?.pages?.program ?? true;
 
-  const cagnottePath = slug ? `/${slug}/cagnotte` : "/cagnotte";
   const contributionMethods = wedding.config?.payments?.contributionMethods || [];
-  const hasContributionMethods = contributionMethods.filter((m: any) => m.enabled).length > 0;
 
   const buttonToneClass = getButtonClass(wedding.config?.theme?.buttonStyle);
   const buttonRadiusClass = getButtonRadiusClass(wedding.config?.theme?.buttonRadius);
@@ -288,10 +286,13 @@ export function TemplateRenderer(props: TemplateRendererProps) {
             cagnotteTitle={cagnotteTitle}
             cagnotteDescription={cagnotteDescription}
             cagnotteSubmitLabel={cagnotteSubmitLabel}
-            cagnottePath={cagnottePath}
-            hasContributionMethods={hasContributionMethods}
-            contributionMethodsCount={contributionMethods.filter((m: any) => m.enabled).length}
-            buttonToneClass={buttonToneClass}
+            contributionMethods={contributionMethods}
+            suggestedAmounts={
+              wedding.config?.sections?.cagnotteSuggestedAmounts?.length
+                ? wedding.config.sections.cagnotteSuggestedAmounts
+                : [20, 50, 100, 150, 200]
+            }
+            slug={slug}
             buttonRadiusClass={buttonRadiusClass}
             onSaveText={props.onSaveText}
             order={sectionOrder.cagnotte ?? 2}
