@@ -619,7 +619,7 @@ export default function PricingPage() {
                   Redirection vers Stripe...
                 </>
               ) : (
-                <>S'abonner — {formatPrice(computeEffectivePrice(23.99))}/mois</>
+                <>S'abonner — 23,99€/mois</>
               )}
             </Button>
             <p className="text-center text-xs text-muted-foreground">
