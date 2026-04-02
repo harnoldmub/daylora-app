@@ -2098,7 +2098,7 @@ export async function registerRoutes(app: Express) {
       }
 
       if (!subs.length) {
-        return res.json({ ok: true, found: false, currentPlan: wedding.currentPlan || "free" });
+        return res.json({ ok: true, found: false, currentPlan: wedding.currentPlan || "free", preserved: true });
       }
 
       const preferred = subs.find((s: any) => ["active", "trialing"].includes(String(s.status))) || subs[0];

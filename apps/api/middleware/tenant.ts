@@ -37,14 +37,13 @@ export async function withWeddingFromRequest(req: Request, res: Response, next: 
 
     if (!wedding) return res.status(404).json({ message: "Mariage introuvable" });
 
-    // Derive effective plan (avoid stale "premium" display if no active subscription exists).
     try {
       const sub = await storage.getSubscriptionByWedding(wedding.id);
-      const isPremium = !!sub && ["active", "trialing"].includes(String(sub.status));
-      wedding.currentPlan = isPremium ? "premium" : "free";
-    } catch {
-      wedding.currentPlan = wedding.currentPlan === "premium" ? "premium" : "free";
-    }
+      if (sub && sub.stripeSubscriptionId) {
+        const isPremium = ["active", "trialing"].includes(String(sub.status));
+        wedding.currentPlan = isPremium ? "premium" : "free";
+      }
+    } catch {}
 
     (req as any).wedding = wedding;
 
