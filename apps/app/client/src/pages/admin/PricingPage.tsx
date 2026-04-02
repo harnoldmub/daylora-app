@@ -115,6 +115,7 @@ export default function PricingPage() {
   const [promoInput, setPromoInput] = useState("");
   const [promoValid, setPromoValid] = useState<boolean | null>(null);
   const [promoInfo, setPromoInfo] = useState<{ type: string; value: number } | null>(null);
+  const [activeCheckoutPlan, setActiveCheckoutPlan] = useState<"one_time" | "subscription" | null>(null);
 
   const { data: wedding, isLoading } = useQuery<Wedding>({
     queryKey: [`/api/weddings/${weddingId}`],
@@ -135,6 +136,7 @@ export default function PricingPage() {
 
   const checkoutMutation = useMutation({
     mutationFn: async (type: "subscription" | "one_time") => {
+      setActiveCheckoutPlan(type);
       const body: any = { type };
       if (referralInput.trim() && referralValid) {
         body.referralCode = referralInput.trim();
@@ -146,9 +148,17 @@ export default function PricingPage() {
       return res.json();
     },
     onSuccess: (data) => {
+      if (data.activated) {
+        toast({ title: "Premium activé !", description: "Votre compte est maintenant Premium." });
+        queryClient.invalidateQueries({ queryKey: [`/api/weddings/${weddingId}`] });
+        queryClient.invalidateQueries({ queryKey: ["/api/billing/info"] });
+        setActiveCheckoutPlan(null);
+        return;
+      }
       window.location.href = data.url;
     },
     onError: (err: any) => {
+      setActiveCheckoutPlan(null);
       toast({
         title: "Paiement impossible",
         description:
@@ -302,6 +312,27 @@ export default function PricingPage() {
     if (!promoInfo) return "";
     if (promoInfo.type === "percentage") return `-${promoInfo.value}%`;
     return `-${(promoInfo.value / 100).toFixed(0)}€`;
+  };
+
+  const computeEffectivePrice = (basePrice: number) => {
+    let price = basePrice;
+    if (referralValid && referralInput.trim()) {
+      price = Math.max(0, price - 10);
+    }
+    if (promoValid && promoInfo) {
+      if (promoInfo.type === "percentage") {
+        price = Math.max(0, price - (basePrice * promoInfo.value) / 100);
+      } else {
+        price = Math.max(0, price - promoInfo.value / 100);
+      }
+    }
+    return price;
+  };
+
+  const formatPrice = (price: number) => {
+    if (price === 0) return "0€";
+    if (Number.isInteger(price)) return `${price}€`;
+    return `${price.toFixed(2).replace(".", ",")}€`;
   };
 
   const copyReferralCode = () => {
@@ -545,10 +576,14 @@ export default function PricingPage() {
               disabled={checkoutMutation.isPending}
               onClick={() => checkoutMutation.mutate("one_time")}
             >
-              {checkoutMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {checkoutMutation.isPending && activeCheckoutPlan === "one_time" ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Redirection vers Stripe...
+                </>
+              ) : (
+                <>Débloquer Daylora Premium — {formatPrice(computeEffectivePrice(149))}</>
               )}
-              Débloquer Daylora Premium — 149€
             </Button>
             <p className="text-center text-xs text-muted-foreground">
               Paiement unique — aucun renouvellement automatique.
@@ -572,63 +607,20 @@ export default function PricingPage() {
               <Feature text="Sans engagement après" checked />
               <Feature text="Résiliable à tout moment" checked />
             </ul>
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Code parrainage"
-                  value={referralInput}
-                  onChange={(e) => {
-                    setReferralInput(e.target.value);
-                    setReferralValid(null);
-                  }}
-                  onBlur={() => validateReferral(referralInput)}
-                  className="h-10 font-mono uppercase"
-                />
-                {referralValid === true && (
-                  <span className="text-green-600 text-xs self-center font-semibold">
-                    -10€
-                  </span>
-                )}
-                {referralValid === false && (
-                  <span className="text-red-500 text-xs self-center">
-                    Invalide
-                  </span>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Code promo"
-                  value={promoInput}
-                  onChange={(e) => {
-                    setPromoInput(e.target.value);
-                    setPromoValid(null);
-                    setPromoInfo(null);
-                  }}
-                  onBlur={() => validatePromo(promoInput)}
-                  className="h-10 font-mono uppercase"
-                />
-                {promoValid === true && (
-                  <span className="text-green-600 text-xs self-center font-semibold">
-                    {formatPromoDiscount()}
-                  </span>
-                )}
-                {promoValid === false && (
-                  <span className="text-red-500 text-xs self-center">
-                    Invalide
-                  </span>
-                )}
-              </div>
-            </div>
             <Button
               variant="outline"
               className="w-full"
               disabled={checkoutMutation.isPending}
               onClick={() => checkoutMutation.mutate("subscription")}
             >
-              {checkoutMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {checkoutMutation.isPending && activeCheckoutPlan === "subscription" ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Redirection vers Stripe...
+                </>
+              ) : (
+                <>S'abonner — {formatPrice(computeEffectivePrice(23.99))}/mois</>
               )}
-              S'abonner — 23,99€/mois
             </Button>
             <p className="text-center text-xs text-muted-foreground">
               Minimum 2 mois, puis sans engagement.

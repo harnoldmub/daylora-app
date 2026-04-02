@@ -2003,6 +2003,34 @@ export async function registerRoutes(app: Express) {
         }
       }
 
+      let totalDiscountPercent = 0;
+      let totalDiscountFixed = 0;
+      if (referralCode && validatedReferralCode) {
+        totalDiscountFixed += 1000;
+      }
+      if (promoCode && validatedPromoCode) {
+        const [promo] = await db.select().from(promoCodes).where(eq(promoCodes.code, validatedPromoCode));
+        if (promo) {
+          if (promo.type === "percentage") totalDiscountPercent += promo.value;
+          else totalDiscountFixed += promo.value;
+        }
+      }
+
+      const basePriceCents = type === "one_time" ? 14900 : 2399;
+      const afterPercent = basePriceCents - Math.round(basePriceCents * totalDiscountPercent / 100);
+      const effectivePriceCents = Math.max(0, afterPercent - totalDiscountFixed);
+
+      if (effectivePriceCents === 0) {
+        if (validatedPromoCode) {
+          const [promo] = await db.select().from(promoCodes).where(eq(promoCodes.code, validatedPromoCode));
+          if (promo && promo.maxUses) {
+            await db.update(promoCodes).set({ currentUses: promo.currentUses + 1 }).where(eq(promoCodes.id, promo.id));
+          }
+        }
+        await storage.updateWedding(wedding.id, { currentPlan: "premium" });
+        return res.json({ activated: true });
+      }
+
       const existingSub = await storage.getSubscriptionByWedding(wedding.id);
 
       const sessionConfig: any = {
