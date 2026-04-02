@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "0cEiQ_HytSsQNvFxSrfJB"
+uri = "file://Guide_Admin_Daylora.md"
+type = "text"
+title = "Guide Administrateur Daylora"
