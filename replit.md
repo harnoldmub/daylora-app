@@ -2,7 +2,7 @@
 
 ## Overview
 
-Daylora is a multi-tenant SaaS platform enabling couples to create personalized wedding websites. Users can select from various templates, customize content and media, and share a public URL. The platform integrates features like RSVP management, gift lists, and a money pot (cagnotte) powered by Stripe Connect, all managed through a comprehensive admin dashboard. The business vision is to provide an elegant, user-friendly, and feature-rich solution for couples to manage their wedding communications online, tapping into the significant market for wedding planning tools.
+Daylora is a multi-tenant SaaS platform enabling couples to create personalized wedding websites. Users can select from various templates, customize content and media, and share a public URL. The platform integrates features like RSVP management, gift lists, and a multi-method contribution system (cagnotte) with external payment methods, all managed through a comprehensive admin dashboard. The business vision is to provide an elegant, user-friendly, and feature-rich solution for couples to manage their wedding communications online, tapping into the significant market for wedding planning tools.
 
 **Domain**: https://daylora.app
 
@@ -20,7 +20,7 @@ The frontend is built with React 18 and TypeScript, using Vite for development. 
 
 ### Backend Architecture
 
-The backend is developed with Node.js and Express.js in TypeScript, providing a RESTful API for managing RSVPs, gifts, contributions, and user authentication. Authentication uses Passport-local with bcrypt and express-session, backed by PostgreSQL. Drizzle ORM is used for database interactions. Stripe Connect handles all payment-related functionalities for the money pot feature. Server-side rendering is implemented for dynamic OG meta tags to ensure proper social media sharing, and publication guards prevent indexing of unpublished sites. A robust plan and referral system enforce feature limits based on subscription tiers, with backend enforcement for RSVP limits. Gift management includes a reservation system and URL scraping for automated gift details.
+The backend is developed with Node.js and Express.js in TypeScript, providing a RESTful API for managing RSVPs, gifts, contributions, and user authentication. Authentication uses Passport-local with bcrypt and express-session, backed by PostgreSQL. Drizzle ORM is used for database interactions. The cagnotte (money pot) uses a multi-method external contribution system (PayPal, Mobile Money, external link, bank transfer) with a public `POST /api/contributions/declare` route for guest self-declarations, rate-limited per IP+wedding (5 req/min). Stripe is used only for premium billing. Server-side rendering is implemented for dynamic OG meta tags to ensure proper social media sharing, and publication guards prevent indexing of unpublished sites. A robust plan and referral system enforce feature limits based on subscription tiers, with backend enforcement for RSVP limits. Gift management includes a reservation system and URL scraping for automated gift details.
 
 ### Database
 

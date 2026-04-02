@@ -91,6 +91,50 @@ export const users = pgTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
+export type ContributionMethodPaypal = {
+  id: string;
+  type: "paypal";
+  enabled: boolean;
+  sortOrder: number;
+  paypalUrl: string;
+  label?: string;
+};
+
+export type ContributionMethodPhone = {
+  id: string;
+  type: "phone";
+  enabled: boolean;
+  sortOrder: number;
+  number: string;
+  label: string;
+};
+
+export type ContributionMethodLink = {
+  id: string;
+  type: "link";
+  enabled: boolean;
+  sortOrder: number;
+  url: string;
+  serviceName: string;
+};
+
+export type ContributionMethodBank = {
+  id: string;
+  type: "bank";
+  enabled: boolean;
+  sortOrder: number;
+  iban: string;
+  accountHolder: string;
+  bankName: string;
+  bic?: string;
+};
+
+export type ContributionMethod =
+  | ContributionMethodPaypal
+  | ContributionMethodPhone
+  | ContributionMethodLink
+  | ContributionMethodBank;
+
 // Weddings storage table (Multi-tenancy)
 export const weddings = pgTable("weddings", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -128,6 +172,7 @@ export const weddings = pgTable("weddings", {
       stripeStatus: "not_connected" | "connected";
       stripeAccountId?: string;
       allowManualLiveContributions: boolean;
+      contributionMethods?: ContributionMethod[];
     };
     texts: {
       siteTitle: string;

@@ -1718,6 +1718,59 @@ export async function registerRoutes(app: Express) {
     res.status(201).json(updatedContribution || contribution);
   });
 
+  const declareRateMap = new Map<string, number[]>();
+  const DECLARE_RATE_LIMIT = 5;
+  const DECLARE_RATE_WINDOW = 60_000;
+
+  app.post("/api/contributions/declare", withWedding, validateRequest(manualContributionSchema), async (req, res) => {
+    try {
+      const wedding = (req as any).wedding;
+      const ip = req.ip || req.socket.remoteAddress || "unknown";
+      const rateKey = `${ip}__${wedding.id}`;
+      const now = Date.now();
+      const timestamps = (declareRateMap.get(rateKey) || []).filter((t) => now - t < DECLARE_RATE_WINDOW);
+      if (timestamps.length >= DECLARE_RATE_LIMIT) {
+        return res.status(429).json({ message: "Trop de déclarations. Veuillez patienter avant de réessayer." });
+      }
+      timestamps.push(now);
+      declareRateMap.set(rateKey, timestamps);
+
+      if (!wedding.config?.features?.cagnotteEnabled) {
+        return res.status(403).json({ message: "La cagnotte n'est pas activée." });
+      }
+
+      const declareId = `declare_${wedding.id}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+      const contribution = await storage.createContribution(wedding.id, {
+        donorName: req.body.donorName,
+        donorEmail: req.body.donorEmail || null,
+        amount: req.body.amount,
+        message: req.body.message || null,
+        stripePaymentIntentId: declareId,
+      });
+      const updated = await storage.updateContributionStatus(declareId, "paid");
+
+      liveService.broadcast(wedding.id, "contribution_created", updated || contribution);
+      await storage.createLiveEvent(wedding.id, "contribution_created", updated || contribution);
+
+      try {
+        const owner = await storage.getUser(wedding.ownerId);
+        if (owner?.email) {
+          const { sendContributionNotification } = await import("./email");
+          await sendContributionNotification(wedding, {
+            donorName: req.body.donorName,
+            amount: req.body.amount,
+            currency: "eur",
+            message: req.body.message || "",
+          });
+        }
+      } catch {}
+
+      res.status(201).json(updated || contribution);
+    } catch {
+      res.status(500).json({ message: "Une erreur est survenue. Veuillez réessayer." });
+    }
+  });
+
   // SSE Live Stream
   app.get("/api/live/stream", withWedding, async (req, res) => {
     const wedding = (req as any).wedding;

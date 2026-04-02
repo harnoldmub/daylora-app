@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BUTTON_RADIUS_OPTIONS, BUTTON_STYLE_OPTIONS, COLOR_TONES } from "@/lib/design-presets";
 import { GuidedTour, useShouldShowTour } from "@/components/guided-tour";
+import ContributionMethodsEditor from "@/components/admin/ContributionMethodsEditor";
+import type { ContributionMethod } from "@shared/schema";
 
 const MAX_LOGO_DATA_URL_LENGTH = 220_000;
 const MAX_IMAGE_DATA_URL_LENGTH = 3_000_000;
@@ -131,6 +133,8 @@ export default function DesignPage() {
     programItems: DEFAULT_PROGRAM_ITEMS,
   }));
 
+  const [contributionMethods, setContributionMethods] = useState<ContributionMethod[]>([]);
+
   useEffect(() => {
     if (!wedding) return;
 
@@ -224,6 +228,9 @@ export default function DesignPage() {
         ? cfgSections.programItems
         : DEFAULT_PROGRAM_ITEMS,
     });
+
+    const cfgPayments = config.payments || ({} as any);
+    setContributionMethods(Array.isArray(cfgPayments.contributionMethods) ? cfgPayments.contributionMethods : []);
   }, [wedding?.id, (wedding as any)?.updatedAt]);
 
   const toDateInputValue = (value: string) => {
@@ -316,6 +323,10 @@ export default function DesignPage() {
           sections: {
             ...wedding.config.sections,
             ...sections,
+          },
+          payments: {
+            ...wedding.config.payments,
+            contributionMethods,
           },
         },
       });
@@ -848,6 +859,12 @@ export default function DesignPage() {
                           }));
                         }}
                         placeholder="20, 50, 100, 150, 200"
+                      />
+                    </div>
+                    <div className="border-t pt-4 mt-4">
+                      <ContributionMethodsEditor
+                        methods={contributionMethods}
+                        onChange={setContributionMethods}
                       />
                     </div>
                     <Button onClick={saveDesign} disabled={isSaving} size="sm" className="w-full mt-2">
