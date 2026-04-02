@@ -299,6 +299,14 @@ export default function GuestsPage() {
             });
             return;
         }
+        if (newGuest.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newGuest.email)) {
+            toast({
+                title: "Email invalide",
+                description: "Veuillez saisir une adresse email valide ou laisser le champ vide.",
+                variant: "destructive",
+            });
+            return;
+        }
         createGuestMutation.mutate(newGuest);
     };
 

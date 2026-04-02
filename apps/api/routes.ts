@@ -1101,8 +1101,14 @@ export async function registerRoutes(app: Express) {
       }).catch(() => null);
 
       res.json(response);
-    } catch (error) {
-      res.status(400).json({ message: "Certaines informations sont incorrectes. Merci de vérifier les champs en rouge." });
+    } catch (error: any) {
+      const zodErrors = error?.errors;
+      if (Array.isArray(zodErrors) && zodErrors.length > 0) {
+        const fieldMessages = zodErrors.map((e: any) => e.message || "Champ invalide").join(". ");
+        res.status(400).json({ message: fieldMessages });
+      } else {
+        res.status(400).json({ message: "Impossible d'ajouter cet invité. Vérifiez que l'email est valide ou laissez-le vide." });
+      }
     }
   });
 
@@ -1128,8 +1134,14 @@ export async function registerRoutes(app: Express) {
       const id = parseInt(req.params.id);
       const response = await storage.updateRsvpResponse(wedding.id, id, req.body);
       res.json(response);
-    } catch (error) {
-      res.status(400).json({ message: "Certaines informations sont incorrectes. Merci de vérifier les champs en rouge." });
+    } catch (error: any) {
+      const zodErrors = error?.errors;
+      if (Array.isArray(zodErrors) && zodErrors.length > 0) {
+        const fieldMessages = zodErrors.map((e: any) => e.message || "Champ invalide").join(". ");
+        res.status(400).json({ message: fieldMessages });
+      } else {
+        res.status(400).json({ message: "Impossible de modifier cet invité. Vérifiez que l'email est valide ou laissez-le vide." });
+      }
     }
   });
 

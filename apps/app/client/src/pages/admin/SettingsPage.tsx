@@ -12,7 +12,7 @@ import { useLocation } from "wouter";
 import { useMemo } from "react";
 import { Copy, ExternalLink, HelpCircle } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { resetAllTours } from "@/components/guided-tour";
 
 type SiteConfig = {
@@ -214,7 +214,13 @@ export default function SettingsPage() {
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
-              onClick={() => setLocation("/login")}
+              onClick={async () => {
+                try {
+                  await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+                } catch {}
+                queryClient.setQueryData(["/api/auth/me"], null);
+                setLocation("/login");
+              }}
             >
               Changer de compte
             </Button>

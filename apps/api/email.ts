@@ -60,7 +60,13 @@ export async function sendRsvpConfirmationEmail(wedding: Wedding, guestData: {
         "21-march": "21 mars uniquement",
         both: "Les deux dates",
         unavailable: "Pas disponible",
+        pending: "En attente",
+        confirmed: "Confirmé",
+        declined: "Refusé",
       }[guestData.availability] || guestData.availability;
+
+    const appDomain = process.env.APP_DOMAIN || "daylora.app";
+    const dashboardUrl = `https://${appDomain}/${wedding.slug}/guests`;
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -73,6 +79,7 @@ export async function sendRsvpConfirmationEmail(wedding: Wedding, guestData: {
             .header h1 { color: ${wedding.config.theme.primaryColor}; margin: 0; }
             .content { padding: 30px 0; }
             .info-box { background: #f9f9f9; border-left: 4px solid ${wedding.config.theme.primaryColor}; padding: 15px; margin: 20px 0; }
+            .cta-btn { display: inline-block; background: ${wedding.config.theme.primaryColor}; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; margin-top: 15px; }
           </style>
         </head>
         <body>
@@ -85,7 +92,8 @@ export async function sendRsvpConfirmationEmail(wedding: Wedding, guestData: {
               <p><strong>Invité :</strong> ${guestData.firstName} ${guestData.lastName}</p>
               <p><strong>Disponibilité :</strong> ${availabilityText}</p>
             </div>
-            <p>Gérez vos invités dans votre tableau de bord.</p>
+            <p>Gérez vos invités dans votre tableau de bord :</p>
+            <a href="${dashboardUrl}" class="cta-btn">Voir mes invités</a>
           </div>
         </body>
       </html>
