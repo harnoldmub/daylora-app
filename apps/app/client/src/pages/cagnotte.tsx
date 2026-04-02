@@ -229,13 +229,24 @@ function MethodCard({ method, buttonRadiusClass }: { method: ContributionMethod;
                 <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Titulaire</div>
                 <div className="text-xs font-medium">{method.accountHolder}</div>
               </div>
-              <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
-                <div className="flex-1">
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">IBAN</div>
-                  <div className="font-mono text-xs break-all">{method.iban}</div>
+              {method.accountNumber && (
+                <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
+                  <div className="flex-1">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">N° de compte</div>
+                    <div className="font-mono text-xs break-all">{method.accountNumber}</div>
+                  </div>
+                  <CopyButton text={method.accountNumber} label="Copier" />
                 </div>
-                <CopyButton text={method.iban} label="Copier" />
-              </div>
+              )}
+              {method.iban && (
+                <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
+                  <div className="flex-1">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">IBAN</div>
+                    <div className="font-mono text-xs break-all">{method.iban}</div>
+                  </div>
+                  <CopyButton text={method.iban} label="Copier" />
+                </div>
+              )}
               {method.bic && (
                 <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
                   <div className="flex-1">

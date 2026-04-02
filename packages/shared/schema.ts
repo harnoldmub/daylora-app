@@ -123,10 +123,11 @@ export type ContributionMethodBank = {
   type: "bank";
   enabled: boolean;
   sortOrder: number;
-  iban: string;
   accountHolder: string;
   bankName: string;
+  iban?: string;
   bic?: string;
+  accountNumber?: string;
 };
 
 export type ContributionMethod =

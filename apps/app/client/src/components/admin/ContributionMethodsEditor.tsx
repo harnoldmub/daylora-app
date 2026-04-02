@@ -51,7 +51,7 @@ const emptyMethod = (type: MethodType, sortOrder: number): ContributionMethod =>
     case "link":
       return { ...base, type: "link", url: "", serviceName: "" };
     case "bank":
-      return { ...base, type: "bank", iban: "", accountHolder: "", bankName: "", bic: "" };
+      return { ...base, type: "bank", accountHolder: "", bankName: "", iban: "", bic: "", accountNumber: "" };
   }
 };
 
@@ -257,7 +257,15 @@ export default function ContributionMethodsEditor({ methods, onChange }: Props) 
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">IBAN</label>
+                    <label className="text-sm font-medium">Numéro de compte (optionnel)</label>
+                    <Input
+                      placeholder="Ex: 01234 56789 01234567890 12"
+                      value={(editingMethod as any).accountNumber || ""}
+                      onChange={(e) => updateField("accountNumber", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">IBAN (optionnel)</label>
                     <Input
                       placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX"
                       value={(editingMethod as any).iban || ""}
@@ -272,6 +280,7 @@ export default function ContributionMethodsEditor({ methods, onChange }: Props) 
                       onChange={(e) => updateField("bic", e.target.value)}
                     />
                   </div>
+                  <p className="text-xs text-muted-foreground">Renseignez un numéro de compte ou un IBAN selon votre pays.</p>
                 </>
               )}
             </div>
