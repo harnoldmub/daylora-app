@@ -163,7 +163,7 @@ export function TemplateRenderer(props: TemplateRendererProps) {
   const giftsDescription = (wedding.config?.texts as any)?.giftsDescription || "Quelques idées pour ceux qui souhaitez nous faire plaisir.";
   const cagnotteTitle = wedding.config?.texts?.cagnotteTitle || "CAGNOTTE MARIAGE";
   const cagnotteDescription = wedding.config?.texts?.cagnotteDescription || "Votre présence est notre plus beau cadeau. Si vous souhaitez contribuer à notre voyage de noces ou à notre nouveau départ, vous pouvez participer à notre cagnotte.";
-  const cagnotteSubmitLabel = wedding.config?.texts?.cagnotteSubmitLabel || "Contribuer";
+
   const countdownTitle = (wedding.config?.texts as any)?.countdownTitle || "Compte à rebours";
 
   const heroImage = draftMedia.heroImage || "";
@@ -285,14 +285,7 @@ export function TemplateRenderer(props: TemplateRendererProps) {
             tokens={tokens}
             cagnotteTitle={cagnotteTitle}
             cagnotteDescription={cagnotteDescription}
-            cagnotteSubmitLabel={cagnotteSubmitLabel}
             contributionMethods={contributionMethods}
-            suggestedAmounts={
-              wedding.config?.sections?.cagnotteSuggestedAmounts?.length
-                ? wedding.config.sections.cagnotteSuggestedAmounts
-                : [20, 50, 100, 150, 200]
-            }
-            slug={slug}
             buttonRadiusClass={buttonRadiusClass}
             onSaveText={props.onSaveText}
             order={sectionOrder.cagnotte ?? 2}

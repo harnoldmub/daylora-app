@@ -1,41 +1,10 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Gift as GiftIcon, ExternalLink, Phone, Building2, CreditCard, Copy, Check, Send, Loader2 } from "lucide-react";
+import { Gift as GiftIcon, ExternalLink, Phone, Building2, CreditCard, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import { InlineEditor } from "@/components/ui/inline-editor";
 import type { CagnotteSectionProps } from "@/features/public-site/types";
 import type { ContributionMethod } from "@shared/schema";
-import { z } from "zod";
-
-const declareFormSchema = z.object({
-  donorName: z.string().min(1, "Veuillez saisir votre nom."),
-  amount: z.string().min(1, "Veuillez indiquer le montant.").refine(
-    (val) => {
-      const num = parseFloat(val);
-      return !isNaN(num) && num >= 1;
-    },
-    { message: "Le montant minimum est de 1 €." }
-  ),
-  message: z.string().optional(),
-});
-
-type DeclareFormValues = z.infer<typeof declareFormSchema>;
 
 function getMethodIcon(type: ContributionMethod["type"]) {
   switch (type) {
@@ -149,62 +118,14 @@ export function CagnotteSection({
   tokens,
   cagnotteTitle,
   cagnotteDescription,
-  cagnotteSubmitLabel,
   contributionMethods,
-  suggestedAmounts,
-  slug,
   buttonRadiusClass,
   onSaveText,
   canEdit,
   editMode,
   order,
 }: CagnotteSectionProps) {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [declareOpen, setDeclareOpen] = useState(false);
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
-
   const enabledMethods = contributionMethods.filter((m) => m.enabled).sort((a, b) => a.sortOrder - b.sortOrder);
-
-  const form = useForm<DeclareFormValues>({
-    resolver: zodResolver(declareFormSchema),
-    defaultValues: { donorName: "", amount: "", message: "" },
-  });
-
-  const declareMutation = useMutation({
-    mutationFn: async (data: { donorName: string; amount: number; message?: string }) => {
-      const response = await apiRequest("POST", "/api/contributions/declare", data);
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Merci !", description: "Votre contribution a été enregistrée." });
-      setDeclareOpen(false);
-      form.reset();
-      setSelectedAmount(null);
-      queryClient.invalidateQueries({ queryKey: ["/api/contributions/confirmed", slug] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Erreur",
-        description: error.message || "Une erreur est survenue.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleAmountSelect = (amount: number) => {
-    setSelectedAmount(amount);
-    form.setValue("amount", amount.toString());
-  };
-
-  const onSubmitDeclare = (values: DeclareFormValues) => {
-    const amountInCents = Math.round(parseFloat(values.amount) * 100);
-    declareMutation.mutate({
-      donorName: values.donorName,
-      amount: amountInCents,
-      message: values.message || undefined,
-    });
-  };
 
   return (
     <section
@@ -234,38 +155,11 @@ export function CagnotteSection({
 
         {enabledMethods.length > 0 && (
           <div className="mt-10 space-y-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-              Comment contribuer
-            </h3>
             <div className="grid gap-3 sm:grid-cols-2 text-left">
               {enabledMethods.map((method) => (
                 <MethodCard key={method.id} method={method} buttonRadiusClass={buttonRadiusClass} />
               ))}
             </div>
-          </div>
-        )}
-
-        {enabledMethods.length > 0 && (
-          <div className="mt-8">
-            <Button
-              onClick={() => setDeclareOpen(true)}
-              variant="outline"
-              className={`px-10 py-6 text-xs tracking-[0.2em] uppercase font-semibold ${buttonRadiusClass}`}
-              style={{
-                borderColor: 'var(--wedding-primary)',
-                color: 'var(--wedding-primary)',
-              }}
-            >
-              <Send className="h-4 w-4 mr-2" />
-              <InlineEditor
-                value={cagnotteSubmitLabel}
-                onSave={(val) => onSaveText("cagnotteSubmitLabel", val)}
-                canEdit={canEdit && editMode}
-              />
-            </Button>
-            <p className="text-center text-xs text-muted-foreground mt-2">
-              Vous avez déjà envoyé votre contribution ? Déclarez-la ici.
-            </p>
           </div>
         )}
 
@@ -277,109 +171,6 @@ export function CagnotteSection({
           </div>
         )}
       </div>
-
-      <Dialog open={declareOpen} onOpenChange={setDeclareOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-serif text-xl">Déclarer ma contribution</DialogTitle>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmitDeclare)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="donorName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Votre nom *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Prénom Nom" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="space-y-2">
-                <FormLabel>Montant *</FormLabel>
-                <div className="flex flex-wrap gap-2">
-                  {suggestedAmounts.map((amount) => (
-                    <Button
-                      key={amount}
-                      type="button"
-                      variant={selectedAmount === amount ? "default" : "outline"}
-                      size="sm"
-                      className="flex-1 min-w-[60px]"
-                      onClick={() => handleAmountSelect(amount)}
-                    >
-                      {amount} €
-                    </Button>
-                  ))}
-                </div>
-                <FormField
-                  control={form.control}
-                  name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            type="number"
-                            min="1"
-                            step="1"
-                            placeholder="Montant personnalisé"
-                            className="pr-12"
-                            {...field}
-                            onChange={(e) => {
-                              field.onChange(e);
-                              setSelectedAmount(null);
-                            }}
-                          />
-                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">€</span>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="message"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Message (optionnel)</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Un petit mot pour les mariés..."
-                        className="min-h-[80px] resize-none"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setDeclareOpen(false)}>
-                  Annuler
-                </Button>
-                <Button type="submit" disabled={declareMutation.isPending}>
-                  {declareMutation.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Envoi...
-                    </>
-                  ) : (
-                    "Envoyer"
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
     </section>
   );
 }
