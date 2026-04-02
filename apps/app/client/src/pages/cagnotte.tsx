@@ -191,7 +191,6 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 }
 
 function MethodCard({ method, buttonRadiusClass }: { method: ContributionMethod; buttonRadiusClass: string }) {
-  const [expanded, setExpanded] = useState(false);
   const Icon = getMethodIcon(method.type);
   const isRedirect = method.type === "paypal" || method.type === "link";
   const redirectUrl = method.type === "paypal" ? method.paypalUrl : method.type === "link" ? method.url : "";
@@ -225,37 +224,25 @@ function MethodCard({ method, buttonRadiusClass }: { method: ContributionMethod;
               </div>
             </div>
           ) : method.type === "bank" ? (
-            <div>
-              <Button
-                variant="outline"
-                size="sm"
-                className={`w-full ${buttonRadiusClass}`}
-                onClick={() => setExpanded(!expanded)}
-              >
-                {expanded ? "Masquer les coordonnées" : "Voir les coordonnées bancaires"}
-              </Button>
-              {expanded && (
-                <div className="mt-3 space-y-2 text-sm">
-                  <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
-                    <div className="flex-1">
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">IBAN</div>
-                      <div className="font-mono text-xs">{method.iban}</div>
-                    </div>
-                    <CopyButton text={method.iban} label="Copier" />
+            <div className="space-y-2">
+              <div className="bg-muted/50 rounded-lg px-3 py-2">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Titulaire</div>
+                <div className="text-xs font-medium">{method.accountHolder}</div>
+              </div>
+              <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
+                <div className="flex-1">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">IBAN</div>
+                  <div className="font-mono text-xs break-all">{method.iban}</div>
+                </div>
+                <CopyButton text={method.iban} label="Copier" />
+              </div>
+              {method.bic && (
+                <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
+                  <div className="flex-1">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">BIC</div>
+                    <div className="font-mono text-xs">{method.bic}</div>
                   </div>
-                  {method.bic && (
-                    <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
-                      <div className="flex-1">
-                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">BIC</div>
-                        <div className="font-mono text-xs">{method.bic}</div>
-                      </div>
-                      <CopyButton text={method.bic} label="Copier" />
-                    </div>
-                  )}
-                  <div className="bg-muted/50 rounded-lg px-3 py-2">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Titulaire</div>
-                    <div className="text-xs">{method.accountHolder}</div>
-                  </div>
+                  <CopyButton text={method.bic} label="Copier" />
                 </div>
               )}
             </div>
