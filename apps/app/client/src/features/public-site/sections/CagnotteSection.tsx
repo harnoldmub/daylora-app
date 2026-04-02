@@ -1,6 +1,5 @@
 import { Gift as GiftIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { InlineEditor } from "@/components/ui/inline-editor";
 import type { CagnotteSectionProps } from "@/features/public-site/types";
 
@@ -9,15 +8,11 @@ export function CagnotteSection({
   cagnotteTitle,
   cagnotteDescription,
   cagnotteSubmitLabel,
-  cagnotteCtaUrl,
-  cagnotteMode,
-  cagnotteExternalUrl,
-  draftCagnotteExternalUrl,
-  buttonToneClass,
+  cagnottePath,
+  hasContributionMethods,
+  contributionMethodsCount,
   buttonRadiusClass,
   onSaveText,
-  onSaveCagnotteExternalUrl,
-  onSetDraftCagnotteExternalUrl,
   canEdit,
   editMode,
   order,
@@ -48,28 +43,9 @@ export function CagnotteSection({
           />
         </div>
 
-        {canEdit && editMode ? (
-          <div className="mt-10 max-w-md mx-auto animate-in fade-in zoom-in-[0.98] duration-200">
-            <div className="rounded-2xl bg-white/70 backdrop-blur-xl border border-white/50 shadow-xl p-5 space-y-3 text-left">
-              <div className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground/70 font-medium">Lien de cagnotte</div>
-              <Input
-                value={draftCagnotteExternalUrl}
-                onChange={(e) => onSetDraftCagnotteExternalUrl(e.target.value)}
-                onBlur={(e) => onSaveCagnotteExternalUrl(e.target.value)}
-                placeholder="https://leetchi.com/..."
-                className="h-10 rounded-xl border-transparent bg-[#FAF8F5] shadow-inner focus:ring-2 focus:ring-primary/30 transition-all duration-200"
-                inputMode="url"
-              />
-              <div className="text-[11px] text-muted-foreground/60">
-                Leetchi, PayPal, Lydia, Stripe Payment Link, etc.
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        {cagnotteCtaUrl ? (
+        {hasContributionMethods ? (
           <div className="mt-10 flex justify-center">
-            <a href={cagnotteCtaUrl} target={cagnotteMode === "external" ? "_blank" : undefined} rel={cagnotteMode === "external" ? "noopener noreferrer" : undefined}>
+            <a href={cagnottePath}>
               <Button
                 size="lg"
                 className={`px-14 py-7 text-xs tracking-[0.3em] uppercase font-black shadow-2xl transition-all hover:scale-[1.02] ${buttonRadiusClass}`}
@@ -85,17 +61,15 @@ export function CagnotteSection({
           </div>
         ) : null}
 
-        {cagnotteMode === "external" && cagnotteExternalUrl ? (
-          <div className="mt-4 text-[10px] uppercase tracking-widest opacity-60">
-            Paiement externe
-          </div>
-        ) : canEdit && editMode ? (
+        {canEdit && editMode && (
           <div className="mt-10 flex justify-center animate-in fade-in duration-200">
             <div className="text-xs text-muted-foreground/50 font-medium px-5 py-2.5 rounded-full border border-dashed border-muted-foreground/20">
-              Ajoutez un lien ci-dessus pour activer la cagnotte
+              {hasContributionMethods
+                ? `${contributionMethodsCount} moyen${contributionMethodsCount > 1 ? "s" : ""} de contribution configuré${contributionMethodsCount > 1 ? "s" : ""}`
+                : "Configurez vos moyens de contribution dans le design (section cagnotte)"}
             </div>
           </div>
-        ) : null}
+        )}
       </div>
     </section>
   );

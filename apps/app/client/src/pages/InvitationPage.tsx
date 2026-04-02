@@ -76,7 +76,6 @@ export default function InvitationPage() {
   const [ctaPath, setCtaPath] = useState("rsvp");
   const [draftMedia, setDraftMedia] = useState<{ heroImage: string; couplePhoto: string }>({ heroImage: "", couplePhoto: "" });
   const [isUploading, setIsUploading] = useState<{ heroImage: boolean; couplePhoto: boolean }>({ heroImage: false, couplePhoto: false });
-  const [draftCagnotteExternalUrl, setDraftCagnotteExternalUrl] = useState("");
 
   useEffect(() => {
     if (!wedding) return;
@@ -279,17 +278,6 @@ export default function InvitationPage() {
       await updateWedding.mutateAsync({ id: wedding.id, config: { navigation: { heroCtaPath: normalized } as any } });
     } catch {
       toast({ title: "Sauvegarde impossible", description: "L'action du bouton n'a pas pu être enregistrée. Veuillez réessayer.", variant: "destructive" });
-    }
-  };
-
-  const saveCagnotteExternalUrl = async (value: string) => {
-    if (!wedding) return;
-    const next = value.trim();
-    setDraftCagnotteExternalUrl(next);
-    try {
-      await updateWedding.mutateAsync({ id: wedding.id, config: { sections: { cagnotteExternalUrl: next } as any } });
-    } catch {
-      toast({ title: "Sauvegarde impossible", description: "Le lien de cagnotte n'a pas pu être enregistré. Veuillez réessayer.", variant: "destructive" });
     }
   };
 
@@ -504,7 +492,6 @@ export default function InvitationPage() {
         draftMedia={draftMedia}
         isUploading={isUploading}
         ctaPath={ctaPath}
-        draftCagnotteExternalUrl={draftCagnotteExternalUrl}
         gifts={gifts}
         slug={slug}
         basePath={basePath}
@@ -528,8 +515,6 @@ export default function InvitationPage() {
         onEditGift={openEditGift}
         onDeleteGift={(gift) => { setGiftDeleting(gift); setGiftDeleteOpen(true); }}
         onReserveGift={handleReserveGift}
-        onSaveCagnotteExternalUrl={saveCagnotteExternalUrl}
-        onSetDraftCagnotteExternalUrl={setDraftCagnotteExternalUrl}
         toDateInputValue={toDateInputValue}
         fromDateInputValue={fromDateInputValue}
       />

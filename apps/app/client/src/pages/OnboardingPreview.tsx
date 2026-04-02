@@ -149,7 +149,6 @@ export default function OnboardingPreview() {
           draftMedia={{ heroImage: data.heroImage || "", couplePhoto: data.couplePhoto || "" }}
           isUploading={{ heroImage: false, couplePhoto: false }}
           ctaPath="rsvp"
-          draftCagnotteExternalUrl=""
           gifts={[]}
           slug={data.slug || "preview"}
           basePath=""
@@ -171,8 +170,6 @@ export default function OnboardingPreview() {
           onCreateGift={noop}
           onEditGift={noop}
           onDeleteGift={noop}
-          onSaveCagnotteExternalUrl={noopStr}
-          onSetDraftCagnotteExternalUrl={noop}
           toDateInputValue={(v) => v}
           fromDateInputValue={(v) => v}
         />

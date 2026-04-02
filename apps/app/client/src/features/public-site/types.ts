@@ -141,14 +141,11 @@ export interface CagnotteSectionProps extends SectionEditProps {
   cagnotteTitle: string;
   cagnotteDescription: string;
   cagnotteSubmitLabel: string;
-  cagnotteCtaUrl: string;
-  cagnotteMode: string;
-  cagnotteExternalUrl: string;
-  draftCagnotteExternalUrl: string;
+  cagnottePath: string;
+  hasContributionMethods: boolean;
+  contributionMethodsCount: number;
   buttonToneClass: string;
   buttonRadiusClass: string;
   onSaveText: SaveTextFn;
-  onSaveCagnotteExternalUrl: (value: string) => Promise<void>;
-  onSetDraftCagnotteExternalUrl: (value: string) => void;
   order?: number;
 }

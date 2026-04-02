@@ -69,7 +69,6 @@ interface TemplateRendererProps {
   draftMedia: { heroImage: string; couplePhoto: string };
   isUploading: { heroImage: boolean; couplePhoto: boolean };
   ctaPath: string;
-  draftCagnotteExternalUrl: string;
   gifts: GiftDb[];
   slug: string;
   basePath: string;
@@ -93,8 +92,6 @@ interface TemplateRendererProps {
   onEditGift: (gift: GiftDb) => void;
   onDeleteGift: (gift: GiftDb) => void;
   onReserveGift?: (giftId: number, guestName: string) => void;
-  onSaveCagnotteExternalUrl: (value: string) => Promise<void>;
-  onSetDraftCagnotteExternalUrl: (value: string) => void;
   toDateInputValue: (value: string) => string;
   fromDateInputValue: (value: string) => string;
 }
@@ -193,10 +190,9 @@ export function TemplateRenderer(props: TemplateRendererProps) {
   const showLocation = wedding.config?.navigation?.pages?.location ?? true;
   const showProgram = wedding.config?.navigation?.pages?.program ?? true;
 
-  const cagnotteMode = wedding.config?.payments?.mode || (props.draftCagnotteExternalUrl ? "external" : "stripe");
-  const cagnotteExternalUrl = wedding.config?.payments?.externalUrl || props.draftCagnotteExternalUrl || "";
-  const defaultCagnottePath = slug ? `/${slug}/cagnotte` : "/cagnotte";
-  const cagnotteCtaUrl = cagnotteMode === "external" ? cagnotteExternalUrl : defaultCagnottePath;
+  const cagnottePath = slug ? `/${slug}/cagnotte` : "/cagnotte";
+  const contributionMethods = wedding.config?.payments?.contributionMethods || [];
+  const hasContributionMethods = contributionMethods.filter((m: any) => m.enabled).length > 0;
 
   const buttonToneClass = getButtonClass(wedding.config?.theme?.buttonStyle);
   const buttonRadiusClass = getButtonRadiusClass(wedding.config?.theme?.buttonRadius);
@@ -292,15 +288,12 @@ export function TemplateRenderer(props: TemplateRendererProps) {
             cagnotteTitle={cagnotteTitle}
             cagnotteDescription={cagnotteDescription}
             cagnotteSubmitLabel={cagnotteSubmitLabel}
-            cagnotteCtaUrl={cagnotteCtaUrl}
-            cagnotteMode={cagnotteMode}
-            cagnotteExternalUrl={cagnotteExternalUrl}
-            draftCagnotteExternalUrl={props.draftCagnotteExternalUrl}
+            cagnottePath={cagnottePath}
+            hasContributionMethods={hasContributionMethods}
+            contributionMethodsCount={contributionMethods.filter((m: any) => m.enabled).length}
             buttonToneClass={buttonToneClass}
             buttonRadiusClass={buttonRadiusClass}
             onSaveText={props.onSaveText}
-            onSaveCagnotteExternalUrl={props.onSaveCagnotteExternalUrl}
-            onSetDraftCagnotteExternalUrl={props.onSetDraftCagnotteExternalUrl}
             order={sectionOrder.cagnotte ?? 2}
           />
         )}
