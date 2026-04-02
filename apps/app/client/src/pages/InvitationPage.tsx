@@ -86,11 +86,6 @@ export default function InvitationPage() {
     });
   }, [wedding?.id, (wedding as any)?.updatedAt]);
 
-  useEffect(() => {
-    if (!wedding) return;
-    setDraftCagnotteExternalUrl(((wedding.config?.sections as any)?.cagnotteExternalUrl || "") as string);
-  }, [wedding?.id, (wedding as any)?.updatedAt]);
-
   const queryParams = useMemo(() => new URLSearchParams(search), [search]);
   const routeSection = useMemo(() => routePath.replace(/^\//, "").trim(), [routePath]);
   const requestedSection = useMemo(() => {
