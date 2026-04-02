@@ -37,6 +37,7 @@ import LegacyInvitation from "@/pages/legacy-invitation";
 import CheckIn from "@/pages/checkin";
 import LiveContributions from "@/pages/live-contributions";
 import Invitation from "@/pages/invitation";
+import CagnottePage from "@/pages/cagnotte";
 import CustomPage from "@/pages/custom-page";
 import LegalPage from "@/pages/legal-page";
 
@@ -107,7 +108,7 @@ function PublicRoutes({ slug, isPreview }: { slug: string; isPreview?: boolean }
         <Route path="/gifts" component={InvitationPage} />
         <Route path="/location" component={InvitationPage} />
         <Route path="/program" component={InvitationPage} />
-        <Route path="/cagnotte" component={InvitationPage} />
+        <Route path="/cagnotte" component={CagnottePage} />
         <Route path="/live" component={LiveContributions} />
         <Route path="/legal/:legalSlug" component={LegalPage} />
         <Route path="/page/:customSlug" component={CustomPage} />
