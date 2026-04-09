@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { getSiteLanguagePack } from "@/lib/site-language";
 
 type PublicCheckInItem = {
   id: number;
@@ -43,11 +44,11 @@ function getSlugFromPath(pathname: string) {
   return "";
 }
 
-function formatEventDate(value?: string | null) {
+function formatEventDate(value?: string | null, locale = "fr-FR") {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+  return date.toLocaleDateString(locale, { day: "numeric", month: "long" });
 }
 
 function getGuestName(guest: PublicCheckInItem) {
@@ -133,6 +134,12 @@ export default function CheckIn() {
     setSelectedGuestId((current) => current ?? data.items[0]?.id ?? null);
   }, [data?.items, token]);
 
+  const counts = data?.counts || { total: 0, checkedIn: 0, pending: 0 };
+  const wedding = data?.wedding;
+  const languagePack = getSiteLanguagePack((wedding?.config as any)?.language);
+  const isEnglish = languagePack.language === "en";
+  const eventDate = formatEventDate(wedding?.weddingDate, languagePack.locale);
+
   const checkInMutation = useMutation({
     mutationFn: async (id: number) => {
       const res = await fetch(`/api/checkin/${id}`, { method: "POST" });
@@ -141,16 +148,16 @@ export default function CheckIn() {
     },
     onSuccess: () => {
       toast({
-        title: "Succès",
-        description: "Invité marqué comme présent",
+        title: isEnglish ? "Success" : "Succès",
+        description: isEnglish ? "Guest marked as arrived" : "Invité marqué comme présent",
         className: "bg-green-600 text-white border-none",
       });
       refetch();
     },
     onError: () => {
       toast({
-        title: "Erreur",
-        description: "Impossible de valider l'entrée",
+        title: isEnglish ? "Error" : "Erreur",
+        description: isEnglish ? "Unable to validate check-in" : "Impossible de valider l'entrée",
         variant: "destructive",
       });
     },
@@ -164,23 +171,19 @@ export default function CheckIn() {
     },
     onSuccess: () => {
       toast({
-        title: "Succès",
-        description: "Arrivée supprimée",
+        title: isEnglish ? "Success" : "Succès",
+        description: isEnglish ? "Arrival removed" : "Arrivée supprimée",
       });
       refetch();
     },
     onError: () => {
       toast({
-        title: "Erreur",
-        description: "Impossible de supprimer l'arrivée",
+        title: isEnglish ? "Error" : "Erreur",
+        description: isEnglish ? "Unable to remove arrival" : "Impossible de supprimer l'arrivée",
         variant: "destructive",
       });
     },
   });
-
-  const counts = data?.counts || { total: 0, checkedIn: 0, pending: 0 };
-  const wedding = data?.wedding;
-  const eventDate = formatEventDate(wedding?.weddingDate);
   const clearToken = () => {
     if (slug) {
       setLocation(`/${slug}/checkin`);
@@ -201,7 +204,7 @@ export default function CheckIn() {
     return (
       <div className="min-h-screen bg-[#f7f2ea] flex items-center justify-center p-6">
         <Card className="max-w-md rounded-[28px] border-[#ece5d9] p-8 text-center text-slate-600">
-          Impossible de charger l'accueil invités.
+          {isEnglish ? "Unable to load guest welcome." : "Impossible de charger l'accueil invités."}
         </Card>
       </div>
     );
@@ -220,13 +223,13 @@ export default function CheckIn() {
                   </span>
                 </div>
                 <div>
-                  <h1 className="font-serif text-xl text-slate-900 sm:text-[1.7rem]">Accueil Invités</h1>
-                  <p className="mt-0.5 text-xs text-slate-500 sm:text-sm">{eventDate || "Jour J"}</p>
+                  <h1 className="font-serif text-xl text-slate-900 sm:text-[1.7rem]">{isEnglish ? "Guest welcome" : "Accueil Invités"}</h1>
+                  <p className="mt-0.5 text-xs text-slate-500 sm:text-sm">{eventDate || (isEnglish ? "Event day" : "Jour J")}</p>
                 </div>
               </div>
 
               <div className="pt-1 text-right">
-                <div className="text-lg font-semibold text-slate-900 sm:text-xl">{counts.checkedIn} présents</div>
+                <div className="text-lg font-semibold text-slate-900 sm:text-xl">{counts.checkedIn} {isEnglish ? "present" : "présents"}</div>
               </div>
             </div>
 
@@ -236,7 +239,7 @@ export default function CheckIn() {
                 <Input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Rechercher un invité..."
+                  placeholder={isEnglish ? "Search for a guest..." : "Rechercher un invité..."}
                   className="h-10 rounded-xl border-[#ece5d9] bg-white pl-10 pr-3 text-sm shadow-sm placeholder:text-slate-400"
                 />
                 {isFetching ? <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-400" /> : null}
@@ -244,18 +247,18 @@ export default function CheckIn() {
             </div>
 
             <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-3">
-              <FilterTab active={status === "all"} value="all" label={`Tous (${counts.total})`} onClick={setStatus} />
-              <FilterTab active={status === "pending"} value="pending" label={`Attendus (${counts.pending})`} onClick={setStatus} />
-              <FilterTab active={status === "checked_in"} value="checked_in" label={`Arrivés (${counts.checkedIn})`} onClick={setStatus} />
+              <FilterTab active={status === "all"} value="all" label={`${isEnglish ? "All" : "Tous"} (${counts.total})`} onClick={setStatus} />
+              <FilterTab active={status === "pending"} value="pending" label={`${isEnglish ? "Expected" : "Attendus"} (${counts.pending})`} onClick={setStatus} />
+              <FilterTab active={status === "checked_in"} value="checked_in" label={`${isEnglish ? "Arrived" : "Arrivés"} (${counts.checkedIn})`} onClick={setStatus} />
             </div>
 
             {token ? (
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <div className="rounded-full bg-white px-3 py-1.5 text-xs text-slate-600 shadow-sm">
-                  Mode invitation ciblée
+                  {isEnglish ? "Focused invitation mode" : "Mode invitation ciblée"}
                 </div>
                 <Button variant="outline" className="h-9 rounded-xl border-[#e7ddce] bg-white px-3 text-xs" onClick={clearToken}>
-                  Voir toute la liste
+                  {isEnglish ? "See full list" : "Voir toute la liste"}
                 </Button>
               </div>
             ) : null}
@@ -265,7 +268,7 @@ export default function CheckIn() {
         <section className="space-y-3">
           {data.items.length === 0 ? (
             <Card className="rounded-[20px] border-[#ece5d9] p-6 text-center text-sm text-slate-500">
-              Aucun invité trouvé.
+              {isEnglish ? "No guests found." : "Aucun invité trouvé."}
             </Card>
           ) : (
             data.items.map((guest) => {
@@ -317,7 +320,7 @@ export default function CheckIn() {
                             : "border-[#efe5cf] bg-[#fff8e6] text-[#9b8747]",
                         )}
                       >
-                        {isCheckedIn ? "Arrivé" : "Attendu"}
+                        {isCheckedIn ? (isEnglish ? "Arrived" : "Arrivé") : (isEnglish ? "Expected" : "Attendu")}
                       </div>
                       {isActive ? <ChevronUp className="h-4 w-4 text-slate-500" /> : <ChevronDown className="h-4 w-4 text-slate-500" />}
                     </div>
@@ -329,14 +332,14 @@ export default function CheckIn() {
                         <div className="space-y-1 text-sm text-slate-600">
                           <div className="flex items-center gap-2">
                             <Users className="h-3.5 w-3.5 text-slate-400" />
-                            <span>Groupe : {guest.partySize > 1 ? `${guest.partySize} personnes` : "1 personne"}</span>
+                            <span>{isEnglish ? "Group" : "Groupe"} : {guest.partySize > 1 ? `${guest.partySize} ${isEnglish ? "people" : "personnes"}` : `1 ${isEnglish ? "person" : "personne"}`}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <Clock3 className="h-3.5 w-3.5 text-slate-400" />
                             <span>
                               {guest.checkedInAt
-                                ? `Arrivée : ${new Date(guest.checkedInAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-                                : "En attente d'arrivée"}
+                                ? `${isEnglish ? "Arrival" : "Arrivée"} : ${new Date(guest.checkedInAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                                : (isEnglish ? "Waiting for arrival" : "En attente d'arrivée")}
                             </span>
                           </div>
                         </div>
@@ -352,7 +355,7 @@ export default function CheckIn() {
                             disabled={resetCheckInMutation.isPending}
                           >
                             <X className="mr-2 h-4 w-4" />
-                            Supprimer l'arrivée
+                            {isEnglish ? "Remove arrival" : "Supprimer l'arrivée"}
                           </Button>
                         ) : (
                           <Button
@@ -363,7 +366,7 @@ export default function CheckIn() {
                             }}
                             disabled={checkInMutation.isPending}
                           >
-                            Valider l'arrivée
+                            {isEnglish ? "Validate arrival" : "Valider l'arrivée"}
                           </Button>
                         )}
                       </div>

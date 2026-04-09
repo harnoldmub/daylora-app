@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { KpiCard } from "@/components/admin/KpiCard";
+import { getAppNls } from "@/lib/nls";
 
 type SiteConfig = {
     appBaseUrl: string;
@@ -29,6 +30,8 @@ export default function WelcomePage() {
     }, []);
 
     if (isLoading || !wedding) return <div className="animate-pulse h-screen bg-muted" />;
+    const language = wedding.config?.language === "en" ? "en" : "fr";
+    const nls = getAppNls(language);
 
     const appOrigin = typeof window !== "undefined" ? window.location.origin : (siteConfig?.appBaseUrl || "https://daylora.app");
     const publicUrl = `${appOrigin}/${wedding.slug || wedding.id}`;
@@ -41,15 +44,15 @@ export default function WelcomePage() {
                 isPublished: !wedding.isPublished
             });
             toast({
-                title: wedding.isPublished ? "Site dépublié" : "Site publié !",
+                title: wedding.isPublished ? nls.welcome.unpublishedTitle : nls.welcome.publishedTitle,
                 description: wedding.isPublished
-                    ? "Votre site n'est plus accessible publiquement"
-                    : "Votre site est maintenant visible par tous",
+                    ? nls.welcome.unpublishedDesc
+                    : nls.welcome.publishedDesc,
             });
         } catch (error) {
             toast({
-                title: "Publication impossible",
-                description: "Impossible de modifier le statut de publication. Veuillez réessayer.",
+                title: nls.welcome.publishErrorTitle,
+                description: nls.welcome.publishErrorDesc,
                 variant: "destructive",
             });
         }
@@ -58,18 +61,18 @@ export default function WelcomePage() {
     return (
         <div className="space-y-8">
             <AdminPageHeader
-                title={`Bienvenue, ${wedding.title}`}
-                description="Votre site est prêt. Publiez-le et partagez vos liens."
+                title={nls.welcome.title.replace("{title}", wedding.title)}
+                description={nls.welcome.description}
                 actions={
                     wedding.isPublished ? (
                         <Button onClick={handlePublishToggle} variant="outline">
                             <EyeOff className="h-4 w-4 mr-2" />
-                            Dépublier
+                            {nls.welcome.unpublish}
                         </Button>
                     ) : (
                         <Button onClick={handlePublishToggle}>
                             <Eye className="h-4 w-4 mr-2" />
-                            Publier le site
+                            {nls.welcome.publish}
                         </Button>
                     )
                 }
@@ -77,21 +80,21 @@ export default function WelcomePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <KpiCard
-                    label="Statut"
-                    value={wedding.isPublished ? "En ligne" : "Brouillon"}
-                    hint={wedding.isPublished ? "Visible publiquement" : "Preview uniquement"}
+                    label={nls.welcome.status}
+                    value={wedding.isPublished ? nls.welcome.online : nls.welcome.draft}
+                    hint={wedding.isPublished ? nls.welcome.publiclyVisible : nls.welcome.previewOnly}
                     icon={wedding.isPublished ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                 />
                 <KpiCard
-                    label="Template"
+                    label={nls.welcome.template}
                     value={wedding.templateId || "classic"}
-                    hint="Style actuel"
+                    hint={nls.welcome.currentStyle}
                     icon={<Sparkles className="h-5 w-5" />}
                 />
                 <KpiCard
-                    label="Plan"
+                    label={nls.welcome.plan}
                     value={wedding.currentPlan === "premium" ? "Premium" : "Free"}
-                    hint="Facturation active"
+                    hint={nls.welcome.activeBilling}
                     icon={<CheckCircle2 className="h-5 w-5" />}
                 />
             </div>
@@ -99,52 +102,52 @@ export default function WelcomePage() {
             <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="grid md:grid-cols-3 gap-6">
                 <Card className="shadow-sm">
                     <CardHeader>
-                        <CardTitle className="text-xl font-serif">Prévisualisation</CardTitle>
-                        <CardDescription>Accessible même en brouillon.</CardDescription>
+                        <CardTitle className="text-xl font-serif">{nls.welcome.preview}</CardTitle>
+                        <CardDescription>{nls.welcome.previewDesc}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <div className="p-3 rounded-lg border bg-muted/30 text-xs font-mono break-all">{previewUrl}</div>
                         <Button asChild className="w-full">
-                            <a href={previewUrl} target="_blank" rel="noopener noreferrer">Ouvrir la preview</a>
+                            <a href={previewUrl} target="_blank" rel="noopener noreferrer">{nls.welcome.openPreview}</a>
                         </Button>
                     </CardContent>
                 </Card>
 
                 <Card className="shadow-sm">
                     <CardHeader>
-                        <CardTitle className="text-xl font-serif">Site public</CardTitle>
-                        <CardDescription>{wedding.isPublished ? "En ligne" : "Publiez pour l'activer"}</CardDescription>
+                        <CardTitle className="text-xl font-serif">{nls.welcome.publicSite}</CardTitle>
+                        <CardDescription>{wedding.isPublished ? nls.welcome.online : nls.welcome.publishToActivate}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <div className="p-3 rounded-lg border bg-muted/30 text-xs font-mono break-all">{publicUrl}</div>
                         <Button asChild className="w-full" disabled={!wedding.isPublished}>
-                            <a href={publicUrl} target="_blank" rel="noopener noreferrer">Voir le site</a>
+                            <a href={publicUrl} target="_blank" rel="noopener noreferrer">{nls.welcome.viewSite}</a>
                         </Button>
                     </CardContent>
                 </Card>
 
                 <Card className="shadow-sm">
                     <CardHeader>
-                        <CardTitle className="text-xl font-serif">Administration</CardTitle>
-                        <CardDescription>Accédez aux modules de gestion.</CardDescription>
+                        <CardTitle className="text-xl font-serif">{nls.welcome.administration}</CardTitle>
+                        <CardDescription>{nls.welcome.administrationDesc}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <Button variant="outline" asChild className="w-full">
                             <Link href="/dashboard">
                                 <Layout className="h-4 w-4 mr-2" />
-                                Tableau de bord
+                                {nls.welcome.dashboard}
                             </Link>
                         </Button>
                         <Button asChild className="w-full">
                             <Link href="/design">
                                 <FileEdit className="h-4 w-4 mr-2" />
-                                Modifier l'invitation
+                                {nls.welcome.editInvitation}
                             </Link>
                         </Button>
                         <Button variant="outline" asChild className="w-full">
                             <Link href="/templates">
                                 <ExternalLink className="h-4 w-4 mr-2" />
-                                Templates & design
+                                {nls.welcome.templatesAndDesign}
                             </Link>
                         </Button>
                     </CardContent>

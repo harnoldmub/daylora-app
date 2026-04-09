@@ -23,6 +23,7 @@ import { Link, useParams } from "wouter";
 import { type Contribution, type ContributionMethod } from "@shared/schema";
 import { useWedding } from "@/hooks/use-api";
 import { getButtonClass } from "@/lib/design-presets";
+import { getSiteLanguagePack } from "@/lib/site-language";
 
 const declareFormSchema = z.object({
   donorName: z.string().min(1, "Veuillez saisir votre nom."),
@@ -102,7 +103,7 @@ function Countdown({ weddingDate }: { weddingDate: string }) {
   );
 }
 
-function AnimatedMessages({ messages }: { messages: string[] }) {
+function AnimatedMessages({ messages, title }: { messages: string[]; title: string }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
 
@@ -124,7 +125,7 @@ function AnimatedMessages({ messages }: { messages: string[] }) {
     <div className="py-8 px-6 bg-gradient-to-br from-primary/10 via-primary/5 to-background rounded-xl border border-primary/20 mb-8 shadow-sm">
       <div className="flex items-center justify-center gap-2 text-sm font-medium text-primary/80 mb-6">
         <MessageCircle className="h-4 w-4" />
-        <span className="uppercase tracking-wider">Leurs messages d'affection</span>
+        <span className="uppercase tracking-wider">{title}</span>
         <MessageCircle className="h-4 w-4" />
       </div>
       <div className={`text-center transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
@@ -146,6 +147,56 @@ function AnimatedMessages({ messages }: { messages: string[] }) {
   );
 }
 
+function getCagnotteUi(language: "fr" | "en") {
+  return language === "en"
+    ? {
+        unavailable: "Fund unavailable",
+        unavailableDesc: "This page has been disabled by the couple.",
+        backToSite: "Back to website",
+        contributeHow: "How to contribute",
+        noMethods: "Contribution methods will be available soon.",
+        declare: "I've contributed",
+        declareHelp: "Have you already sent your contribution? Declare it here so the couple can see it.",
+        declareTitle: "Declare my contribution",
+        yourName: "Your name *",
+        amount: "Amount *",
+        customAmount: "Custom amount",
+        message: "Message (optional)",
+        messagePlaceholder: "A little note for the couple...",
+        cancel: "Cancel",
+        sending: "Sending...",
+        confirm: "Confirm",
+        thanks: "Thank you!",
+        saved: "Your contribution has been saved.",
+        error: "Error",
+        loveMessages: "Their kind messages",
+        withLove: "With all our love",
+      }
+    : {
+        unavailable: "Cagnotte indisponible",
+        unavailableDesc: "Cette page a été désactivée par les mariés.",
+        backToSite: "Retour au site",
+        contributeHow: "Comment contribuer",
+        noMethods: "Les moyens de contribution seront bientôt disponibles.",
+        declare: "J'ai contribué",
+        declareHelp: "Vous avez déjà envoyé votre contribution ? Déclarez-la ici pour que les mariés la voient.",
+        declareTitle: "Déclarer ma contribution",
+        yourName: "Votre nom *",
+        amount: "Montant *",
+        customAmount: "Montant personnalisé",
+        message: "Message (optionnel)",
+        messagePlaceholder: "Un petit mot pour les mariés...",
+        cancel: "Annuler",
+        sending: "Envoi...",
+        confirm: "Confirmer",
+        thanks: "Merci !",
+        saved: "Votre contribution a été enregistrée.",
+        error: "Erreur",
+        loveMessages: "Leurs messages d'affection",
+        withLove: "Avec tout notre amour",
+      };
+}
+
 function getMethodIcon(type: ContributionMethod["type"]) {
   switch (type) {
     case "paypal": return CreditCard;
@@ -164,16 +215,16 @@ function getMethodTitle(method: ContributionMethod) {
   }
 }
 
-function getMethodDescription(method: ContributionMethod) {
+function getMethodDescription(method: ContributionMethod, isEnglish: boolean) {
   switch (method.type) {
-    case "paypal": return "Envoyez via PayPal";
-    case "phone": return `Envoyez à ${method.number}`;
-    case "link": return "Cliquez pour être redirigé";
+    case "paypal": return isEnglish ? "Send via PayPal" : "Envoyez via PayPal";
+    case "phone": return isEnglish ? `Send to ${method.number}` : `Envoyez à ${method.number}`;
+    case "link": return isEnglish ? "Click to open the link" : "Cliquez pour être redirigé";
     case "bank": return `${method.accountHolder} — ${method.bankName}`;
   }
 }
 
-function CopyButton({ text, label }: { text: string; label: string }) {
+function CopyButton({ text, label, copiedLabel }: { text: string; label: string; copiedLabel: string }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = async () => {
     try {
@@ -185,12 +236,12 @@ function CopyButton({ text, label }: { text: string; label: string }) {
   return (
     <Button variant="outline" size="sm" onClick={handleCopy} className="gap-1.5 text-xs">
       {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
-      {copied ? "Copié !" : label}
+      {copied ? copiedLabel : label}
     </Button>
   );
 }
 
-function MethodCard({ method, buttonRadiusClass }: { method: ContributionMethod; buttonRadiusClass: string }) {
+function MethodCard({ method, buttonRadiusClass, isEnglish }: { method: ContributionMethod; buttonRadiusClass: string; isEnglish: boolean }) {
   const Icon = getMethodIcon(method.type);
   const isRedirect = method.type === "paypal" || method.type === "link";
   const redirectUrl = method.type === "paypal" ? method.paypalUrl : method.type === "link" ? method.url : "";
@@ -204,7 +255,7 @@ function MethodCard({ method, buttonRadiusClass }: { method: ContributionMethod;
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-sm text-foreground">{getMethodTitle(method)}</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">{getMethodDescription(method)}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{getMethodDescription(method, isEnglish)}</p>
           </div>
         </div>
 
@@ -213,29 +264,29 @@ function MethodCard({ method, buttonRadiusClass }: { method: ContributionMethod;
             <Button asChild className={`w-full ${buttonRadiusClass}`} size="sm">
               <a href={redirectUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-3.5 w-3.5 mr-2" />
-                {method.type === "paypal" ? "Ouvrir PayPal" : "Ouvrir le lien"}
+                {method.type === "paypal" ? (isEnglish ? "Open PayPal" : "Ouvrir PayPal") : (isEnglish ? "Open link" : "Ouvrir le lien")}
               </a>
             </Button>
           ) : method.type === "phone" ? (
             <div className="space-y-2">
               <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
                 <span className="text-sm font-mono flex-1">{method.number}</span>
-                <CopyButton text={method.number} label="Copier" />
+                <CopyButton text={method.number} label={isEnglish ? "Copy" : "Copier"} copiedLabel={isEnglish ? "Copied!" : "Copié !"} />
               </div>
             </div>
           ) : method.type === "bank" ? (
             <div className="space-y-2">
               <div className="bg-muted/50 rounded-lg px-3 py-2">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Titulaire</div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{isEnglish ? "Account holder" : "Titulaire"}</div>
                 <div className="text-xs font-medium">{method.accountHolder}</div>
               </div>
               {method.accountNumber && (
                 <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
                   <div className="flex-1">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">N° de compte</div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{isEnglish ? "Account number" : "N° de compte"}</div>
                     <div className="font-mono text-xs break-all">{method.accountNumber}</div>
                   </div>
-                  <CopyButton text={method.accountNumber} label="Copier" />
+                  <CopyButton text={method.accountNumber} label={isEnglish ? "Copy" : "Copier"} copiedLabel={isEnglish ? "Copied!" : "Copié !"} />
                 </div>
               )}
               {method.iban && (
@@ -244,7 +295,7 @@ function MethodCard({ method, buttonRadiusClass }: { method: ContributionMethod;
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground">IBAN</div>
                     <div className="font-mono text-xs break-all">{method.iban}</div>
                   </div>
-                  <CopyButton text={method.iban} label="Copier" />
+                  <CopyButton text={method.iban} label={isEnglish ? "Copy" : "Copier"} copiedLabel={isEnglish ? "Copied!" : "Copié !"} />
                 </div>
               )}
               {method.bic && (
@@ -253,7 +304,7 @@ function MethodCard({ method, buttonRadiusClass }: { method: ContributionMethod;
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground">BIC</div>
                     <div className="font-mono text-xs">{method.bic}</div>
                   </div>
-                  <CopyButton text={method.bic} label="Copier" />
+                  <CopyButton text={method.bic} label={isEnglish ? "Copy" : "Copier"} copiedLabel={isEnglish ? "Copied!" : "Copié !"} />
                 </div>
               )}
             </div>
@@ -295,25 +346,28 @@ export default function CagnottePage() {
   const messages = contributions
     ?.map((c) => c.message)
     .filter((m): m is string => !!m && m.length > 0) || [];
+  const languagePack = getSiteLanguagePack((wedding?.config as any)?.language);
+  const isEnglish = languagePack.language === "en";
+  const ui = getCagnotteUi(languagePack.language);
 
-  const displayTitle = wedding?.title || "Notre Mariage";
+  const displayTitle = wedding?.title || (isEnglish ? "Our Wedding" : "Notre Mariage");
   const displayDate =
     wedding?.config?.texts?.weddingDate ||
     (wedding?.weddingDate
-      ? new Date(wedding.weddingDate).toLocaleDateString("fr-FR", {
+      ? new Date(wedding.weddingDate).toLocaleDateString(languagePack.locale, {
           day: "numeric",
           month: "long",
           year: "numeric",
         })
-      : "Prochainement");
+      : (isEnglish ? "Coming soon" : "Prochainement"));
   const heroImage = wedding?.config?.media?.heroImage || "";
   const templateId = (wedding?.templateId as keyof typeof TEMPLATE_THEME) || "classic";
   const templateTheme = TEMPLATE_THEME[templateId] || TEMPLATE_THEME.classic;
   const buttonToneClass = getButtonClass(wedding?.config?.theme?.buttonStyle);
   const buttonRadiusClass = getButtonRadiusClass(wedding?.config?.theme?.buttonRadius);
-  const cagnotteTitle = wedding?.config?.texts?.cagnotteTitle || "CAGNOTTE MARIAGE";
-  const cagnotteDescription = wedding?.config?.texts?.cagnotteDescription || "Votre présence est notre plus beau cadeau. Si vous souhaitez contribuer à notre voyage de noces ou à notre nouveau départ, vous pouvez participer à notre cagnotte.";
-  const cagnotteBackLabel = wedding?.config?.texts?.cagnotteBackLabel || "Retour";
+  const cagnotteTitle = wedding?.config?.texts?.cagnotteTitle || languagePack.texts.cagnotteTitle;
+  const cagnotteDescription = wedding?.config?.texts?.cagnotteDescription || languagePack.texts.cagnotteDescription;
+  const cagnotteBackLabel = wedding?.config?.texts?.cagnotteBackLabel || languagePack.texts.cagnotteBackLabel;
   const suggestedAmounts =
     wedding?.config?.sections?.cagnotteSuggestedAmounts?.length
       ? wedding.config.sections.cagnotteSuggestedAmounts
@@ -355,7 +409,7 @@ export default function CagnottePage() {
       return response.json();
     },
     onSuccess: () => {
-      toast({ title: "Merci !", description: "Votre contribution a été enregistrée." });
+      toast({ title: ui.thanks, description: ui.saved });
       setDeclareOpen(false);
       form.reset();
       setSelectedAmount(null);
@@ -363,7 +417,7 @@ export default function CagnottePage() {
     },
     onError: (error: any) => {
       toast({
-        title: "Erreur",
+        title: ui.error,
         description: error.message || "Une erreur est survenue.",
         variant: "destructive",
       });
@@ -388,10 +442,10 @@ export default function CagnottePage() {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
         <Card className="p-8 max-w-lg text-center">
-          <h2 className="text-2xl font-serif font-bold mb-3">Cagnotte indisponible</h2>
-          <p className="text-muted-foreground mb-6">Cette page a été désactivée par les mariés.</p>
+          <h2 className="text-2xl font-serif font-bold mb-3">{ui.unavailable}</h2>
+          <p className="text-muted-foreground mb-6">{ui.unavailableDesc}</p>
           <Link href={basePath}>
-            <Button>Retour au site</Button>
+            <Button>{ui.backToSite}</Button>
           </Link>
         </Card>
       </div>
@@ -444,16 +498,16 @@ export default function CagnottePage() {
               <Countdown weddingDate={countdownDate} />
             </div>
 
-            <AnimatedMessages messages={messages} />
+            <AnimatedMessages messages={messages} title={ui.loveMessages} />
 
             {contributionMethods.length > 0 && (
               <div className="space-y-3 mb-8">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center mb-4">
-                  Comment contribuer
+                  {ui.contributeHow}
                 </h3>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {contributionMethods.map((method) => (
-                    <MethodCard key={method.id} method={method} buttonRadiusClass={buttonRadiusClass} />
+                    <MethodCard key={method.id} method={method} buttonRadiusClass={buttonRadiusClass} isEnglish={isEnglish} />
                   ))}
                 </div>
               </div>
@@ -461,7 +515,7 @@ export default function CagnottePage() {
 
             {contributionMethods.length === 0 && (
               <div className="text-center py-6 text-muted-foreground text-sm">
-                Les moyens de contribution seront bientôt disponibles.
+                {ui.noMethods}
               </div>
             )}
 
@@ -471,10 +525,10 @@ export default function CagnottePage() {
                 className={`w-full h-14 text-base font-sans tracking-wider uppercase ${buttonToneClass} ${buttonRadiusClass}`}
               >
                 <Send className="h-5 w-5 mr-2" />
-                J'ai contribué
+                {ui.declare}
               </Button>
               <p className="text-center text-xs text-muted-foreground mt-3">
-                Vous avez déjà envoyé votre contribution ? Déclarez-la ici pour que les mariés la voient.
+                {ui.declareHelp}
               </p>
             </div>
           </Card>
@@ -484,7 +538,7 @@ export default function CagnottePage() {
       <Dialog open={declareOpen} onOpenChange={setDeclareOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif text-xl">Déclarer ma contribution</DialogTitle>
+            <DialogTitle className="font-serif text-xl">{ui.declareTitle}</DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmitDeclare)} className="space-y-4">
@@ -493,9 +547,9 @@ export default function CagnottePage() {
                 name="donorName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Votre nom *</FormLabel>
+                    <FormLabel>{ui.yourName}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Prénom Nom" {...field} />
+                      <Input placeholder={isEnglish ? "First name Last name" : "Prénom Nom"} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -503,7 +557,7 @@ export default function CagnottePage() {
               />
 
               <div className="space-y-2">
-                <FormLabel>Montant *</FormLabel>
+                <FormLabel>{ui.amount}</FormLabel>
                 <div className="flex flex-wrap gap-2">
                   {suggestedAmounts.map((amount) => (
                     <Button
@@ -529,7 +583,7 @@ export default function CagnottePage() {
                             type="number"
                             min="1"
                             step="1"
-                            placeholder="Montant personnalisé"
+                            placeholder={ui.customAmount}
                             className="pr-12"
                             {...field}
                             onChange={(e) => {
@@ -551,10 +605,10 @@ export default function CagnottePage() {
                 name="message"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Message (optionnel)</FormLabel>
+                    <FormLabel>{ui.message}</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Un petit mot pour les mariés..."
+                        placeholder={ui.messagePlaceholder}
                         className="min-h-[80px] resize-none"
                         {...field}
                       />
@@ -566,18 +620,18 @@ export default function CagnottePage() {
 
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setDeclareOpen(false)}>
-                  Annuler
+                  {ui.cancel}
                 </Button>
                 <Button type="submit" disabled={declareMutation.isPending}>
                   {declareMutation.isPending ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Envoi...
+                      {ui.sending}
                     </>
                   ) : (
                     <>
                       <Heart className="h-4 w-4 mr-2" />
-                      Confirmer
+                      {ui.confirm}
                     </>
                   )}
                 </Button>
@@ -591,7 +645,7 @@ export default function CagnottePage() {
         <p className="text-sm text-muted-foreground font-sans">
           {displayTitle} &middot; {displayDate}
         </p>
-        <p className="text-xs text-muted-foreground/60 mt-2 font-sans">Avec tout notre amour</p>
+        <p className="text-xs text-muted-foreground/60 mt-2 font-sans">{ui.withLove}</p>
       </footer>
     </div>
   );

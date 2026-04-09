@@ -12,10 +12,10 @@ const CORE_PAGES = [
   { key: "gifts", label: "Cadeaux", path: "gifts" },
   { key: "story", label: "Histoire", path: "story" },
   { key: "gallery", label: "Photos", path: "gallery" },
+  { key: "accommodation", label: "Hébergement", path: "accommodation" },
   { key: "location", label: "Lieux & accès", path: "location" },
   { key: "program", label: "Déroulé", path: "program" },
   { key: "cagnotte", label: "Cagnotte", path: "cagnotte" },
-  { key: "live", label: "Live", path: "live" },
 ] as const;
 
 export default function PagesManagerPage() {

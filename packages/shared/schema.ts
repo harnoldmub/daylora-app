@@ -147,6 +147,7 @@ export const weddings = pgTable("weddings", {
   datesConfig: varchar("dates_config", { length: 50 }).notNull().default('both'), // '19', '21', 'both'
   templateId: varchar("template_id", { length: 50 }).default('classic'),
   config: jsonb("config").$type<{
+    language?: "fr" | "en";
     theme: {
       primaryColor: string;
       secondaryColor: string;
@@ -285,6 +286,7 @@ export const weddings = pgTable("weddings", {
       heroCtaPath?: string;
     };
   }>().notNull().default({
+    language: "fr",
     theme: {
       primaryColor: '#D4AF37',
       secondaryColor: '#FFFFFF',
@@ -725,6 +727,11 @@ export const weddingsRelations = relations(weddings, ({ one, many }) => ({
   subscriptions: many(stripeSubscriptions),
   supportConversations: many(supportConversations),
   supportMessages: many(supportMessages),
+  organizationChecklistCategories: many(organizationChecklistCategories),
+  organizationChecklistItems: many(organizationChecklistItems),
+  organizationPlanningItems: many(organizationPlanningItems),
+  organizationBudgetCategories: many(organizationBudgetCategories),
+  organizationBudgetItems: many(organizationBudgetItems),
 }));
 
 export const membershipsRelations = relations(memberships, ({ one }) => ({
@@ -866,9 +873,128 @@ export const supportMessages = pgTable("support_messages", {
 export type SupportMessage = typeof supportMessages.$inferSelect;
 export type InsertSupportMessage = typeof supportMessages.$inferInsert;
 
+export const organizationChecklistCategories = pgTable("organization_checklist_categories", {
+  id: serial("id").primaryKey(),
+  weddingId: uuid("wedding_id").references(() => weddings.id).notNull(),
+  key: varchar("key", { length: 80 }),
+  label: varchar("label", { length: 255 }).notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  isDefault: boolean("is_default").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type OrganizationChecklistCategory = typeof organizationChecklistCategories.$inferSelect;
+export type InsertOrganizationChecklistCategory = typeof organizationChecklistCategories.$inferInsert;
+
+export const organizationChecklistItems = pgTable("organization_checklist_items", {
+  id: serial("id").primaryKey(),
+  weddingId: uuid("wedding_id").references(() => weddings.id).notNull(),
+  categoryId: integer("category_id").references(() => organizationChecklistCategories.id).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  status: varchar("status", { length: 20 }).notNull().default("todo"),
+  isDefault: boolean("is_default").notNull().default(false),
+  sortOrder: integer("sort_order").notNull().default(0),
+  dueDate: timestamp("due_date"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type OrganizationChecklistItem = typeof organizationChecklistItems.$inferSelect;
+export type InsertOrganizationChecklistItem = typeof organizationChecklistItems.$inferInsert;
+
+export const organizationPlanningItems = pgTable("organization_planning_items", {
+  id: serial("id").primaryKey(),
+  weddingId: uuid("wedding_id").references(() => weddings.id).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  status: varchar("status", { length: 20 }).notNull().default("todo"),
+  kind: varchar("kind", { length: 30 }).notNull().default("milestone"),
+  startsAt: timestamp("starts_at"),
+  dueAt: timestamp("due_at"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type OrganizationPlanningItem = typeof organizationPlanningItems.$inferSelect;
+export type InsertOrganizationPlanningItem = typeof organizationPlanningItems.$inferInsert;
+
+export const organizationBudgetCategories = pgTable("organization_budget_categories", {
+  id: serial("id").primaryKey(),
+  weddingId: uuid("wedding_id").references(() => weddings.id).notNull(),
+  key: varchar("key", { length: 80 }),
+  label: varchar("label", { length: 255 }).notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  isDefault: boolean("is_default").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type OrganizationBudgetCategory = typeof organizationBudgetCategories.$inferSelect;
+export type InsertOrganizationBudgetCategory = typeof organizationBudgetCategories.$inferInsert;
+
+export const organizationBudgetItems = pgTable("organization_budget_items", {
+  id: serial("id").primaryKey(),
+  weddingId: uuid("wedding_id").references(() => weddings.id).notNull(),
+  categoryId: integer("category_id").references(() => organizationBudgetCategories.id).notNull(),
+  label: varchar("label", { length: 255 }).notNull(),
+  plannedAmountCents: integer("planned_amount_cents").notNull().default(0),
+  actualAmountCents: integer("actual_amount_cents").notNull().default(0),
+  status: varchar("status", { length: 20 }).notNull().default("planned"),
+  vendorName: varchar("vendor_name", { length: 255 }),
+  notes: text("notes"),
+  paymentDueAt: timestamp("payment_due_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type OrganizationBudgetItem = typeof organizationBudgetItems.$inferSelect;
+export type InsertOrganizationBudgetItem = typeof organizationBudgetItems.$inferInsert;
+
 export const insertProductFeedbackSchema = createInsertSchema(productFeedback).omit({
   id: true,
   createdAt: true,
+});
+
+export const insertOrganizationChecklistCategorySchema = createInsertSchema(organizationChecklistCategories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  weddingId: true,
+});
+
+export const insertOrganizationChecklistItemSchema = createInsertSchema(organizationChecklistItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  weddingId: true,
+  completedAt: true,
+});
+
+export const insertOrganizationPlanningItemSchema = createInsertSchema(organizationPlanningItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  weddingId: true,
+  completedAt: true,
+});
+
+export const insertOrganizationBudgetCategorySchema = createInsertSchema(organizationBudgetCategories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  weddingId: true,
+});
+
+export const insertOrganizationBudgetItemSchema = createInsertSchema(organizationBudgetItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  weddingId: true,
 });
 
 export const insertSupportMessageSchema = z.object({
@@ -914,6 +1040,51 @@ export const supportMessagesRelations = relations(supportMessages, ({ one }) => 
   user: one(users, {
     fields: [supportMessages.userId],
     references: [users.id],
+  }),
+}));
+
+export const organizationChecklistCategoriesRelations = relations(organizationChecklistCategories, ({ one, many }) => ({
+  wedding: one(weddings, {
+    fields: [organizationChecklistCategories.weddingId],
+    references: [weddings.id],
+  }),
+  items: many(organizationChecklistItems),
+}));
+
+export const organizationChecklistItemsRelations = relations(organizationChecklistItems, ({ one }) => ({
+  wedding: one(weddings, {
+    fields: [organizationChecklistItems.weddingId],
+    references: [weddings.id],
+  }),
+  category: one(organizationChecklistCategories, {
+    fields: [organizationChecklistItems.categoryId],
+    references: [organizationChecklistCategories.id],
+  }),
+}));
+
+export const organizationPlanningItemsRelations = relations(organizationPlanningItems, ({ one }) => ({
+  wedding: one(weddings, {
+    fields: [organizationPlanningItems.weddingId],
+    references: [weddings.id],
+  }),
+}));
+
+export const organizationBudgetCategoriesRelations = relations(organizationBudgetCategories, ({ one, many }) => ({
+  wedding: one(weddings, {
+    fields: [organizationBudgetCategories.weddingId],
+    references: [weddings.id],
+  }),
+  items: many(organizationBudgetItems),
+}));
+
+export const organizationBudgetItemsRelations = relations(organizationBudgetItems, ({ one }) => ({
+  wedding: one(weddings, {
+    fields: [organizationBudgetItems.weddingId],
+    references: [weddings.id],
+  }),
+  category: one(organizationBudgetCategories, {
+    fields: [organizationBudgetItems.categoryId],
+    references: [organizationBudgetCategories.id],
   }),
 }));
 
@@ -971,6 +1142,7 @@ export type InsertPromoCode = typeof promoCodes.$inferInsert;
 
 export const PLAN_LIMITS = {
   free: {
+    maxSites: 1,
     maxRsvp: 10,
     maxGifts: 2,
     giftsEnabled: true,
@@ -982,6 +1154,7 @@ export const PLAN_LIMITS = {
     maxGalleryImages: 6,
   },
   premium: {
+    maxSites: Infinity,
     maxRsvp: Infinity,
     maxGifts: Infinity,
     giftsEnabled: true,

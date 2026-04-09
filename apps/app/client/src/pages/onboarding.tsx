@@ -44,30 +44,41 @@ import {
 } from "lucide-react";
 import { compressImageFileToJpegDataUrl } from "@/lib/image";
 import { WhatsAppSupportButton } from "@/components/support/WhatsAppSupportButton";
+import { getSiteLanguagePack, type SiteLanguage } from "@/lib/site-language";
 
-const TEMPLATES = [
-  { id: "classic", name: "Classique", description: "Élégant et intemporel", image: "/previews/template_classic_preview_v2.png", premium: false },
-  { id: "modern", name: "Moderne", description: "Épuré et minimaliste", image: "/previews/template_modern_preview_v2.png", premium: true },
-  { id: "minimal", name: "Minimal", description: "Audacieux et chic", image: "/previews/template_minimal_preview_v2.png", premium: true },
-];
+function getTemplates(language: SiteLanguage) {
+  return language === "en"
+    ? [
+        { id: "classic", name: "Classic", description: "Elegant and timeless", image: "/previews/template_classic_preview_v2.png", premium: false },
+        { id: "modern", name: "Modern", description: "Clean and minimal", image: "/previews/template_modern_preview_v2.png", premium: true },
+        { id: "minimal", name: "Minimal", description: "Bold and chic", image: "/previews/template_minimal_preview_v2.png", premium: true },
+      ]
+    : [
+        { id: "classic", name: "Classique", description: "Élégant et intemporel", image: "/previews/template_classic_preview_v2.png", premium: false },
+        { id: "modern", name: "Moderne", description: "Épuré et minimaliste", image: "/previews/template_modern_preview_v2.png", premium: true },
+        { id: "minimal", name: "Minimal", description: "Audacieux et chic", image: "/previews/template_minimal_preview_v2.png", premium: true },
+      ];
+}
 
 const MAX_ONBOARDING_GALLERY_IMAGES = 6;
 
-const onboardingSchema = z.object({
-  title: z.string().min(3, "Le titre de votre mariage doit contenir au moins 3 caractères (ex : Marie & Pierre)."),
-  slug: z
-    .string()
-    .min(3, "L'adresse de votre site doit contenir au moins 3 caractères.")
-    .regex(/^[a-z0-9-]+$/, "L'adresse ne peut contenir que des lettres minuscules, des chiffres et des tirets."),
-  weddingDate: z.string().min(1, "Veuillez indiquer la date de votre mariage."),
-  templateId: z.string().default("classic"),
-  storyBody: z.string().optional(),
-  email: z.string().email("Veuillez saisir une adresse email valide."),
-  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères."),
-  firstName: z.string().min(1, "Veuillez renseigner votre prénom."),
-});
+function createOnboardingSchema(language: SiteLanguage) {
+  return z.object({
+    title: z.string().min(3, language === "en" ? "Your wedding title must contain at least 3 characters (for example: Emma & James)." : "Le titre de votre mariage doit contenir au moins 3 caractères (ex : Marie & Pierre)."),
+    slug: z
+      .string()
+      .min(3, language === "en" ? "Your site address must contain at least 3 characters." : "L'adresse de votre site doit contenir au moins 3 caractères.")
+      .regex(/^[a-z0-9-]+$/, language === "en" ? "The address can only contain lowercase letters, numbers and hyphens." : "L'adresse ne peut contenir que des lettres minuscules, des chiffres et des tirets."),
+    weddingDate: z.string().min(1, language === "en" ? "Please choose your wedding date." : "Veuillez indiquer la date de votre mariage."),
+    templateId: z.string().default("classic"),
+    storyBody: z.string().optional(),
+    email: z.string().email(language === "en" ? "Please enter a valid email address." : "Veuillez saisir une adresse email valide."),
+    password: z.string().min(8, language === "en" ? "Your password must contain at least 8 characters." : "Le mot de passe doit contenir au moins 8 caractères."),
+    firstName: z.string().min(1, language === "en" ? "Please tell us your first name." : "Veuillez renseigner votre prénom."),
+  });
+}
 
-type OnboardingForm = z.infer<typeof onboardingSchema>;
+type OnboardingForm = z.infer<ReturnType<typeof createOnboardingSchema>>;
 
 type ModulesState = {
   cagnotteEnabled: boolean;
@@ -77,11 +88,160 @@ type ModulesState = {
 };
 
 const TOTAL_STEPS = 6;
-const stepLabels = ["Mariage", "Style", "Photos", "Galerie", "Aperçu", "Compte"];
+
+const ONBOARDING_COPY = {
+  fr: {
+    badge: "Créez votre site de mariage",
+    title: "Votre site en quelques minutes",
+    subtitle: "Configurez tout, visualisez le résultat, puis créez votre compte pour le publier.",
+    stepPrefix: "Étape",
+    weddingHeading: "Parlez-nous de votre mariage",
+    weddingSubheading: "Ces informations apparaîtront sur votre site",
+    projectTitle: "Titre du projet",
+    publicUrl: "URL publique",
+    weddingDate: "Date du mariage",
+    firstName: "Votre prénom",
+    storyLabel: "Quelques mots sur votre histoire",
+    optional: "optionnel",
+    storyPlaceholder: "Nous nous sommes rencontrés...",
+    styleHeading: "Choisissez votre style",
+    styleSubheading: "Template et palette de couleurs de votre site",
+    availableLater: "Disponible après création du compte",
+    colorTone: "Ton de couleurs",
+    photosHeading: "Vos photos",
+    photosSubheading: "Ajoutez vos plus belles photos pour personnaliser le site",
+    heroPhoto: "Photo principale",
+    heroAdd: "Ajouter une photo",
+    heroFormat: "Format paysage recommandé",
+    couplePhoto: "Photo secondaire",
+    coupleButton: "Photo du couple",
+    coupleFormat: "Format carré",
+    galleryHeading: "Votre galerie",
+    gallerySubheading: `Importez jusqu'à ${MAX_ONBOARDING_GALLERY_IMAGES} photos de vos meilleurs moments`,
+    add: "Ajouter",
+    previewHeading: "Aperçu de votre site",
+    previewSubheading: "Voici à quoi ressemblera votre site de mariage",
+    weddingOf: "Le mariage de",
+    enabled: "Activé",
+    enabledF: "Activée",
+    disabledF: "Désactivée",
+    storySection: "Notre histoire",
+    gallerySection: "Galerie",
+    ready: "Votre site est prêt à être publié",
+    previewFull: "Voir l'aperçu complet du site",
+    accountHeading: "Créez votre compte",
+    accountSubheading: "Dernière étape pour publier votre site",
+    email: "Email",
+    password: "Mot de passe",
+    passwordPlaceholder: "8 caractères minimum",
+    referral: "Code parrainage",
+    referralHelp: "Vous avez un code d'un ami ? Entrez-le pour 10€ de réduction sur Premium.",
+    summary: "Récapitulatif",
+    site: "Site",
+    url: "URL",
+    template: "Template",
+    date: "Date",
+    plan: "Plan",
+    freePlan: "Découverte (gratuit)",
+    verify: "Un email de vérification sera envoyé à votre adresse pour activer votre compte.",
+    back: "Retour",
+    skip: "Passer",
+    continue: "Continuer",
+    importing: "Import...",
+    readyContinue: "Tout est bon, je continue",
+    creating: "Création en cours...",
+    createAndPublish: "Créer mon compte et publier",
+    editableLater: "Tout est modifiable plus tard depuis votre espace admin.",
+    already: "Déjà un compte ?",
+    login: "Connectez-vous",
+    imageTooLarge: "Image trop volumineuse",
+    imageTooLargeDesc: "L'image sélectionnée est trop lourde. Essayez une photo de moins de 5 Mo.",
+    imagesTooLarge: "Images trop volumineuses",
+    imagesTooLargeDesc: "Une ou plusieurs images sont trop lourdes. Essayez des photos de moins de 5 Mo chacune.",
+    creationError: "Création impossible",
+    creationErrorDesc: "Impossible de créer votre site pour le moment. Veuillez réessayer.",
+    accountExists: "Un compte existe déjà avec cette adresse email. Connectez-vous ou utilisez une autre adresse.",
+    slugTaken: "Cette adresse de site est déjà prise. Choisissez une autre URL.",
+  },
+  en: {
+    badge: "Create your wedding website",
+    title: "Your website in minutes",
+    subtitle: "Set everything up, preview the result, then create your account to publish it.",
+    stepPrefix: "Step",
+    weddingHeading: "Tell us about your wedding",
+    weddingSubheading: "This information will appear on your website",
+    projectTitle: "Project title",
+    publicUrl: "Public URL",
+    weddingDate: "Wedding date",
+    firstName: "Your first name",
+    storyLabel: "A few words about your story",
+    optional: "optional",
+    storyPlaceholder: "We met...",
+    styleHeading: "Choose your style",
+    styleSubheading: "Template and color palette for your website",
+    availableLater: "Available after account creation",
+    colorTone: "Color mood",
+    photosHeading: "Your photos",
+    photosSubheading: "Add your best photos to personalize the website",
+    heroPhoto: "Main photo",
+    heroAdd: "Add a photo",
+    heroFormat: "Landscape format recommended",
+    couplePhoto: "Secondary photo",
+    coupleButton: "Couple photo",
+    coupleFormat: "Square format",
+    galleryHeading: "Your gallery",
+    gallerySubheading: `Upload up to ${MAX_ONBOARDING_GALLERY_IMAGES} photos of your favorite moments`,
+    add: "Add",
+    previewHeading: "Website preview",
+    previewSubheading: "Here is what your wedding website will look like",
+    weddingOf: "The wedding of",
+    enabled: "Enabled",
+    enabledF: "Enabled",
+    disabledF: "Disabled",
+    storySection: "Our story",
+    gallerySection: "Gallery",
+    ready: "Your website is ready to be published",
+    previewFull: "View the full website preview",
+    accountHeading: "Create your account",
+    accountSubheading: "Final step before publishing your website",
+    email: "Email",
+    password: "Password",
+    passwordPlaceholder: "Minimum 8 characters",
+    referral: "Referral code",
+    referralHelp: "Have a friend's code? Enter it to get €10 off Premium.",
+    summary: "Summary",
+    site: "Website",
+    url: "URL",
+    template: "Template",
+    date: "Date",
+    plan: "Plan",
+    freePlan: "Discovery (free)",
+    verify: "A verification email will be sent to activate your account.",
+    back: "Back",
+    skip: "Skip",
+    continue: "Continue",
+    importing: "Uploading...",
+    readyContinue: "Looks good, continue",
+    creating: "Creating...",
+    createAndPublish: "Create my account and publish",
+    editableLater: "Everything can be edited later from your admin area.",
+    already: "Already have an account?",
+    login: "Log in",
+    imageTooLarge: "Image too large",
+    imageTooLargeDesc: "The selected image is too large. Try a photo under 5 MB.",
+    imagesTooLarge: "Images too large",
+    imagesTooLargeDesc: "One or more images are too large. Try photos under 5 MB each.",
+    creationError: "Unable to create",
+    creationErrorDesc: "We could not create your website right now. Please try again.",
+    accountExists: "An account already exists with this email address. Log in or use another address.",
+    slugTaken: "This site address is already taken. Choose another URL.",
+  },
+} as const;
 
 export default function Onboarding() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [siteLanguage, setSiteLanguage] = useState<SiteLanguage>("fr");
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [toneId, setToneId] = useState<string>(COLOR_TONES[0].id);
@@ -100,6 +260,10 @@ export default function Onboarding() {
   const [isUploading, setIsUploading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [referralCode, setReferralCode] = useState("");
+  const languagePack = getSiteLanguagePack(siteLanguage);
+  const copy = ONBOARDING_COPY[siteLanguage];
+  const templates = useMemo(() => getTemplates(siteLanguage), [siteLanguage]);
+  const onboardingSchema = useMemo(() => createOnboardingSchema(siteLanguage), [siteLanguage]);
 
   const form = useForm<OnboardingForm>({
     resolver: zodResolver(onboardingSchema),
@@ -128,7 +292,7 @@ export default function Onboarding() {
       if (target === 'hero') setHeroImage(compressed);
       else setCouplePhoto(compressed);
     } catch (err) {
-      toast({ title: "Image trop volumineuse", description: "L'image sélectionnée est trop lourde. Essayez une photo de moins de 5 Mo.", variant: "destructive" });
+      toast({ title: copy.imageTooLarge, description: copy.imageTooLargeDesc, variant: "destructive" });
     } finally {
       setIsUploading(false);
     }
@@ -153,7 +317,7 @@ export default function Onboarding() {
       }
       setGalleryImages(next);
     } catch (err) {
-      toast({ title: "Images trop volumineuses", description: "Une ou plusieurs images sont trop lourdes. Essayez des photos de moins de 5 Mo chacune.", variant: "destructive" });
+      toast({ title: copy.imagesTooLarge, description: copy.imagesTooLargeDesc, variant: "destructive" });
     } finally {
       setIsUploading(false);
     }
@@ -189,7 +353,7 @@ export default function Onboarding() {
 
   const goBack = () => setStep((s) => Math.max(1, s - 1));
 
-  const selectedTemplate = TEMPLATES.find(t => t.id === form.watch("templateId")) || TEMPLATES[0];
+  const selectedTemplate = templates.find(t => t.id === form.watch("templateId")) || templates[0];
   const selectedTone = COLOR_TONES.find(t => t.id === toneId) || COLOR_TONES[0];
 
   const onSubmit = async (data: OnboardingForm) => {
@@ -222,13 +386,14 @@ export default function Onboarding() {
           couplePhoto,
           galleryImages,
           plan: "free",
+          language: siteLanguage,
           referralCode: referralCode.trim() || undefined,
         }),
       });
 
       if (!response.ok) {
-        const body = await response.json().catch(() => ({ message: "Une erreur inattendue est survenue." }));
-        throw new Error(body.message || "Impossible de créer votre site. Veuillez réessayer.");
+        const body = await response.json().catch(() => ({ message: copy.creationErrorDesc }));
+        throw new Error(body.message || copy.creationErrorDesc);
       }
 
       const result = await response.json();
@@ -244,16 +409,16 @@ export default function Onboarding() {
     } catch (error: any) {
       setIsLoading(false);
       const msg = error?.message || "";
-      let description = "Impossible de créer votre site pour le moment. Veuillez réessayer.";
+      let description: string = copy.creationErrorDesc;
       if (msg.includes("existe déjà") || msg.includes("already") || msg.includes("déjà utilisé")) {
-        description = "Un compte existe déjà avec cette adresse email. Connectez-vous ou utilisez une autre adresse.";
+        description = copy.accountExists;
       } else if (msg.includes("slug") || msg.includes("URL")) {
-        description = "Cette adresse de site est déjà prise. Choisissez une autre URL.";
+        description = copy.slugTaken;
       } else if (msg) {
         description = msg;
       }
       toast({
-        title: "Création impossible",
+        title: copy.creationError,
         description,
         variant: "destructive",
       });
@@ -263,7 +428,7 @@ export default function Onboarding() {
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "";
     try {
-      return new Date(dateStr).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+      return new Date(dateStr).toLocaleDateString(languagePack.locale, { day: "numeric", month: "long", year: "numeric" });
     } catch { return dateStr; }
   };
 
@@ -273,24 +438,30 @@ export default function Onboarding() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 text-[10px] font-semibold tracking-wider uppercase text-primary border border-[#E9DFD2] mb-4">
             <Sparkles className="h-3 w-3" />
-            Créez votre site de mariage
+            {copy.badge}
           </div>
-          <h1 className="text-3xl md:text-5xl font-serif font-bold mb-2">Votre site en quelques minutes</h1>
+          <h1 className="text-3xl md:text-5xl font-serif font-bold mb-2">{copy.title}</h1>
           <p className="text-[#7A6B5E] max-w-2xl mx-auto text-sm md:text-base">
-            Configurez tout, visualisez le résultat, puis créez votre compte pour le publier.
+            {copy.subtitle}
           </p>
         </div>
 
         <Card className="p-5 md:p-8 bg-white border border-[#E6DCCF] rounded-[2rem] shadow-sm">
           <div className="mb-6">
             <div className="flex items-center justify-between text-xs uppercase tracking-widest text-[#8C7A6B] font-semibold mb-3">
-              <span>Étape {step}/{TOTAL_STEPS}</span>
-              <span>{stepLabels[step - 1]}</span>
+              <span>{copy.stepPrefix} {step}/{TOTAL_STEPS}</span>
+              <span>{languagePack.stepLabels[step - 1]}</span>
             </div>
             <div className="flex gap-1">
-              {stepLabels.map((_, i) => (
+              {languagePack.stepLabels.map((_, i) => (
                 <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${i < step ? 'bg-primary' : 'bg-[#EFE5D9]'}`} />
               ))}
+            </div>
+            <div className="mt-4 flex justify-end">
+              <div className="inline-flex rounded-full border border-[#E6DCCF] bg-white p-1">
+                <button type="button" onClick={() => setSiteLanguage("fr")} className={`rounded-full px-3 py-1 text-xs font-semibold ${siteLanguage === "fr" ? "bg-primary text-white" : "text-[#7A6B5E]"}`}>FR</button>
+                <button type="button" onClick={() => setSiteLanguage("en")} className={`rounded-full px-3 py-1 text-xs font-semibold ${siteLanguage === "en" ? "bg-primary text-white" : "text-[#7A6B5E]"}`}>EN</button>
+              </div>
             </div>
           </div>
 
@@ -300,8 +471,8 @@ export default function Onboarding() {
                 {step === 1 && (
                   <motion.div key="s1" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="space-y-6">
                     <div className="text-center mb-2">
-                      <h2 className="text-2xl font-serif font-bold">Parlez-nous de votre mariage</h2>
-                      <p className="text-[#7A6B5E] text-sm mt-1">Ces informations apparaîtront sur votre site</p>
+                      <h2 className="text-2xl font-serif font-bold">{copy.weddingHeading}</h2>
+                      <p className="text-[#7A6B5E] text-sm mt-1">{copy.weddingSubheading}</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <FormField
@@ -309,9 +480,9 @@ export default function Onboarding() {
                         name="title"
                         render={({ field }) => (
                           <FormItem className="md:col-span-2">
-                            <FormLabel>Titre du projet</FormLabel>
+                            <FormLabel>{copy.projectTitle}</FormLabel>
                             <FormControl>
-                              <Input placeholder="Ex: Marie & Pierre" {...field} className="h-12" />
+                              <Input placeholder={siteLanguage === "en" ? "Ex: Emma & James" : "Ex: Marie & Pierre"} {...field} className="h-12" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -322,7 +493,7 @@ export default function Onboarding() {
                         name="slug"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>URL publique</FormLabel>
+                            <FormLabel>{copy.publicUrl}</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">daylora.app/</span>
@@ -338,7 +509,7 @@ export default function Onboarding() {
                         name="weddingDate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Date du mariage</FormLabel>
+                            <FormLabel>{copy.weddingDate}</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -354,9 +525,9 @@ export default function Onboarding() {
                         name="firstName"
                         render={({ field }) => (
                           <FormItem className="md:col-span-2">
-                            <FormLabel>Votre prénom</FormLabel>
+                            <FormLabel>{copy.firstName}</FormLabel>
                             <FormControl>
-                              <Input placeholder="Marie" {...field} className="h-12" />
+                              <Input placeholder={siteLanguage === "en" ? "Emma" : "Marie"} {...field} className="h-12" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -367,9 +538,9 @@ export default function Onboarding() {
                         name="storyBody"
                         render={({ field }) => (
                           <FormItem className="md:col-span-2">
-                            <FormLabel>Quelques mots sur votre histoire <span className="text-muted-foreground font-normal">(optionnel)</span></FormLabel>
+                            <FormLabel>{copy.storyLabel} <span className="text-muted-foreground font-normal">({copy.optional})</span></FormLabel>
                             <FormControl>
-                              <Input placeholder="Nous nous sommes rencontrés..." {...field} className="h-12" />
+                              <Input placeholder={copy.storyPlaceholder} {...field} className="h-12" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -382,11 +553,11 @@ export default function Onboarding() {
                 {step === 2 && (
                   <motion.div key="s2" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="space-y-6">
                     <div className="text-center mb-2">
-                      <h2 className="text-2xl font-serif font-bold">Choisissez votre style</h2>
-                      <p className="text-[#7A6B5E] text-sm mt-1">Template et palette de couleurs de votre site</p>
+                      <h2 className="text-2xl font-serif font-bold">{copy.styleHeading}</h2>
+                      <p className="text-[#7A6B5E] text-sm mt-1">{copy.styleSubheading}</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                      {TEMPLATES.filter(t => !t.premium).map((tmpl) => (
+                      {templates.filter(t => !t.premium).map((tmpl) => (
                         <button
                           type="button"
                           key={tmpl.id}
@@ -400,7 +571,7 @@ export default function Onboarding() {
                           </div>
                         </button>
                       ))}
-                      {TEMPLATES.filter(t => t.premium).map((tmpl) => (
+                      {templates.filter(t => t.premium).map((tmpl) => (
                         <div
                           key={tmpl.id}
                           className="text-left border rounded-3xl overflow-hidden relative border-[#E6DCCF] opacity-50 cursor-not-allowed"
@@ -413,13 +584,13 @@ export default function Onboarding() {
                           <div className="p-4 space-y-1 bg-white">
                             <div className="font-serif text-2xl font-bold text-muted-foreground">{tmpl.name}</div>
                             <div className="text-xs uppercase tracking-wider text-muted-foreground">{tmpl.description}</div>
-                            <div className="text-[10px] text-primary font-medium">Disponible après création du compte</div>
+                            <div className="text-[10px] text-primary font-medium">{copy.availableLater}</div>
                           </div>
                         </div>
                       ))}
                     </div>
                     <div className="rounded-3xl border border-[#E6DCCF] p-5 bg-[#FBF8F3]">
-                      <div className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">Ton de couleurs</div>
+                      <div className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">{copy.colorTone}</div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {COLOR_TONES.map((tone) => (
                           <button
@@ -444,12 +615,12 @@ export default function Onboarding() {
                 {step === 3 && (
                   <motion.div key="s3" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="space-y-8">
                     <div className="text-center mb-2">
-                      <h2 className="text-2xl font-serif font-bold">Vos photos</h2>
-                      <p className="text-[#7A6B5E] text-sm mt-1">Ajoutez vos plus belles photos pour personnaliser le site</p>
+                      <h2 className="text-2xl font-serif font-bold">{copy.photosHeading}</h2>
+                      <p className="text-[#7A6B5E] text-sm mt-1">{copy.photosSubheading}</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-4">
-                        <FormLabel className="text-lg">Photo principale (Hero)</FormLabel>
+                        <FormLabel className="text-lg">{copy.heroPhoto}</FormLabel>
                         <div className="relative aspect-[16/9] rounded-3xl overflow-hidden border-2 border-dashed border-[#E6DCCF] bg-[#FBF8F3] group transition-all hover:border-primary/30">
                           {heroImage ? (
                             <>
@@ -461,15 +632,15 @@ export default function Onboarding() {
                           ) : (
                             <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer">
                               <Camera className="h-10 w-10 text-[#8C7A6B] mb-2" />
-                              <span className="text-sm font-semibold text-[#8C7A6B]">Ajouter une photo</span>
-                              <span className="text-[10px] text-[#A69585] mt-1 uppercase tracking-wider">Format paysage recommandé</span>
+                              <span className="text-sm font-semibold text-[#8C7A6B]">{copy.heroAdd}</span>
+                              <span className="text-[10px] text-[#A69585] mt-1 uppercase tracking-wider">{copy.heroFormat}</span>
                               <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoUpload(e, 'hero')} />
                             </label>
                           )}
                         </div>
                       </div>
                       <div className="space-y-4">
-                        <FormLabel className="text-lg">Photo secondaire (Histoire)</FormLabel>
+                        <FormLabel className="text-lg">{copy.couplePhoto}</FormLabel>
                         <div className="relative aspect-square rounded-3xl overflow-hidden border-2 border-dashed border-[#E6DCCF] bg-[#FBF8F3] group transition-all hover:border-primary/30 max-w-[320px] mx-auto md:mx-0">
                           {couplePhoto ? (
                             <>
@@ -481,8 +652,8 @@ export default function Onboarding() {
                           ) : (
                             <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer">
                               <ImageIcon className="h-10 w-10 text-[#8C7A6B] mb-2" />
-                              <span className="text-sm font-semibold text-[#8C7A6B]">Photo du couple</span>
-                              <span className="text-[10px] text-[#A69585] mt-1 uppercase tracking-wider">Format carré</span>
+                              <span className="text-sm font-semibold text-[#8C7A6B]">{copy.coupleButton}</span>
+                              <span className="text-[10px] text-[#A69585] mt-1 uppercase tracking-wider">{copy.coupleFormat}</span>
                               <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoUpload(e, 'couple')} />
                             </label>
                           )}
@@ -495,8 +666,8 @@ export default function Onboarding() {
                 {step === 4 && (
                   <motion.div key="s4" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="space-y-6">
                     <div className="text-center mb-2">
-                      <h2 className="text-2xl font-serif font-bold">Votre galerie</h2>
-                      <p className="text-[#7A6B5E] text-sm mt-1">Importez jusqu'à {MAX_ONBOARDING_GALLERY_IMAGES} photos de vos meilleurs moments</p>
+                      <h2 className="text-2xl font-serif font-bold">{copy.galleryHeading}</h2>
+                      <p className="text-[#7A6B5E] text-sm mt-1">{copy.gallerySubheading}</p>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {galleryImages.map((src, idx) => (
@@ -510,7 +681,7 @@ export default function Onboarding() {
                       {galleryImages.length < MAX_ONBOARDING_GALLERY_IMAGES && (
                         <label className="aspect-square rounded-2xl border-2 border-dashed border-[#E6DCCF] bg-[#FBF8F3] flex flex-col items-center justify-center cursor-pointer hover:border-primary/30 transition-all">
                           <Plus className="h-8 w-8 text-[#8C7A6B] mb-1" />
-                          <span className="text-xs font-semibold text-[#8C7A6B]">Ajouter</span>
+                          <span className="text-xs font-semibold text-[#8C7A6B]">{copy.add}</span>
                           <input type="file" accept="image/*" multiple className="hidden" onChange={handleGalleryUpload} />
                         </label>
                       )}
@@ -521,8 +692,8 @@ export default function Onboarding() {
                 {step === 5 && (
                   <motion.div key="s6" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="space-y-6">
                     <div className="text-center mb-2">
-                      <h2 className="text-2xl font-serif font-bold">Aperçu de votre site</h2>
-                      <p className="text-[#7A6B5E] text-sm mt-1">Voici à quoi ressemblera votre site de mariage</p>
+                      <h2 className="text-2xl font-serif font-bold">{copy.previewHeading}</h2>
+                      <p className="text-[#7A6B5E] text-sm mt-1">{copy.previewSubheading}</p>
                     </div>
 
                     <div className="rounded-3xl border border-[#E6DCCF] overflow-hidden shadow-lg">
@@ -535,13 +706,13 @@ export default function Onboarding() {
                           </div>
                         )}
                         <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center text-white">
-                          <div className="text-sm uppercase tracking-[0.3em] font-semibold mb-2 opacity-80">Le mariage de</div>
-                          <h3 className="text-3xl md:text-5xl font-serif font-bold mb-3">{form.watch("title") || "Marie & Pierre"}</h3>
+                          <div className="text-sm uppercase tracking-[0.3em] font-semibold mb-2 opacity-80">{copy.weddingOf}</div>
+                          <h3 className="text-3xl md:text-5xl font-serif font-bold mb-3">{form.watch("title") || (siteLanguage === "en" ? "Emma & James" : "Marie & Pierre")}</h3>
                           {form.watch("weddingDate") && (
                             <div className="text-lg font-light opacity-90">{formatDate(form.watch("weddingDate"))}</div>
                           )}
                           <button type="button" className="mt-6 px-8 py-3 rounded-full text-sm font-semibold transition-all" style={{ backgroundColor: selectedTone.primaryColor, color: "#fff" }}>
-                            Confirmer votre présence
+                            {languagePack.texts.heroCta}
                           </button>
                         </div>
                       </div>
@@ -549,10 +720,10 @@ export default function Onboarding() {
                       <div className="p-6 md:p-8 space-y-6" style={{ backgroundColor: selectedTone.secondaryColor }}>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           {[
-                            { label: "Template", value: selectedTemplate.name },
-                            { label: "Couleur", value: selectedTone.name },
-                            { label: "RSVP", value: "Activé" },
-                            { label: "Cagnotte", value: modules.cagnotteEnabled ? "Activée" : "Désactivée" },
+                            { label: copy.template, value: selectedTemplate.name },
+                            { label: siteLanguage === "en" ? "Color" : "Couleur", value: selectedTone.name },
+                            { label: "RSVP", value: copy.enabled },
+                            { label: languagePack.texts.navCagnotte, value: modules.cagnotteEnabled ? copy.enabledF : copy.disabledF },
                           ].map((item, i) => (
                             <div key={i} className="rounded-2xl bg-white/80 border border-[#E6DCCF]/50 p-3 text-center">
                               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{item.label}</div>
@@ -562,7 +733,7 @@ export default function Onboarding() {
                         </div>
 
                         <div className="flex flex-wrap gap-2 justify-center">
-                          {["Accueil", "RSVP", modules.giftsEnabled && "Cadeaux", "Histoire", "Photos", "Lieux", "Programme", modules.cagnotteEnabled && "Cagnotte"].filter(Boolean).map((item, i) => (
+                          {[languagePack.menuLabels.home, "RSVP", modules.giftsEnabled && languagePack.menuLabels.gifts, languagePack.menuLabels.story, languagePack.menuLabels.gallery, languagePack.menuLabels.location, languagePack.menuLabels.program, modules.cagnotteEnabled && languagePack.texts.navCagnotte].filter(Boolean).map((item, i) => (
                             <span key={i} className="px-3 py-1.5 rounded-full text-xs font-semibold border" style={{ borderColor: selectedTone.primaryColor, color: selectedTone.primaryColor }}>
                               {item}
                             </span>
@@ -573,15 +744,15 @@ export default function Onboarding() {
                           <div className="flex items-center gap-6 rounded-2xl bg-white/60 p-5 border border-[#E6DCCF]/50">
                             {couplePhoto && <img src={couplePhoto} className="w-20 h-20 rounded-2xl object-cover flex-shrink-0" alt="Couple" />}
                             <div>
-                              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Notre histoire</div>
-                              <div className="text-sm text-[#6B5B4F]">{form.watch("storyBody") || "Votre histoire d'amour..."}</div>
+                              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{copy.storySection}</div>
+                              <div className="text-sm text-[#6B5B4F]">{form.watch("storyBody") || (siteLanguage === "en" ? "Your love story..." : "Votre histoire d'amour...")}</div>
                             </div>
                           </div>
                         )}
 
                         {galleryImages.length > 0 && (
                           <div>
-                            <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3 text-center">Galerie</div>
+                            <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3 text-center">{copy.gallerySection}</div>
                             <div className="flex gap-2 overflow-x-auto pb-2">
                               {galleryImages.map((src, idx) => (
                                 <img key={idx} src={src} className="w-20 h-20 rounded-xl object-cover flex-shrink-0" alt={`Preview ${idx}`} />
@@ -593,7 +764,7 @@ export default function Onboarding() {
                         <div className="text-center pt-4 space-y-4">
                           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-50 text-green-700 text-sm font-semibold border border-green-200">
                             <Check className="h-4 w-4" />
-                            Votre site est prêt à être publié
+                            {copy.ready}
                           </div>
                           <p className="text-xs text-muted-foreground">URL : <span className="font-semibold">daylora.app/{form.watch("slug")}</span></p>
                           <Button
@@ -608,6 +779,7 @@ export default function Onboarding() {
                                 templateId: form.getValues("templateId"),
                                 storyBody: form.getValues("storyBody"),
                                 toneId,
+                                language: siteLanguage,
                                 heroImage,
                                 couplePhoto,
                                 galleryImages,
@@ -618,7 +790,7 @@ export default function Onboarding() {
                             }}
                           >
                             <ExternalLink className="h-4 w-4" />
-                            Voir l'aperçu complet du site
+                            {copy.previewFull}
                           </Button>
                         </div>
                       </div>
@@ -629,8 +801,8 @@ export default function Onboarding() {
                 {step === 6 && (
                   <motion.div key="s7" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} className="space-y-6">
                     <div className="text-center mb-2">
-                      <h2 className="text-2xl font-serif font-bold">Créez votre compte</h2>
-                      <p className="text-[#7A6B5E] text-sm mt-1">Dernière étape pour publier votre site</p>
+                      <h2 className="text-2xl font-serif font-bold">{copy.accountHeading}</h2>
+                      <p className="text-[#7A6B5E] text-sm mt-1">{copy.accountSubheading}</p>
                     </div>
 
                     <div className="max-w-md mx-auto space-y-5">
@@ -639,11 +811,11 @@ export default function Onboarding() {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[#6B5B4F] uppercase tracking-widest text-[10px] font-bold">Email</FormLabel>
+                            <FormLabel className="text-[#6B5B4F] uppercase tracking-widest text-[10px] font-bold">{copy.email}</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input type="email" autoComplete="username" placeholder="marie@exemple.com" {...field} className="h-12 pl-10" />
+                                <Input type="email" autoComplete="username" placeholder={siteLanguage === "en" ? "emma@example.com" : "marie@exemple.com"} {...field} className="h-12 pl-10" />
                               </div>
                             </FormControl>
                             <FormMessage />
@@ -655,14 +827,14 @@ export default function Onboarding() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[#6B5B4F] uppercase tracking-widest text-[10px] font-bold">Mot de passe</FormLabel>
+                            <FormLabel className="text-[#6B5B4F] uppercase tracking-widest text-[10px] font-bold">{copy.password}</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                   type={showPassword ? "text" : "password"}
                                   autoComplete="new-password"
-                                  placeholder="8 caractères minimum"
+                                  placeholder={copy.passwordPlaceholder}
                                   {...field}
                                   className="h-12 pl-10 pr-12"
                                 />
@@ -682,14 +854,14 @@ export default function Onboarding() {
                       />
 
                       <div>
-                        <label className="text-[#6B5B4F] uppercase tracking-widest text-[10px] font-bold block mb-2">Code parrainage (optionnel)</label>
+                        <label className="text-[#6B5B4F] uppercase tracking-widest text-[10px] font-bold block mb-2">{copy.referral} ({copy.optional})</label>
                         <Input
                           value={referralCode}
                           onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
                           placeholder="Ex: ABC123"
                           className="h-12 font-mono tracking-widest uppercase"
                         />
-                        <p className="text-xs text-[#7A6B5E] mt-1">Vous avez un code d'un ami ? Entrez-le pour 10€ de réduction sur Premium.</p>
+                        <p className="text-xs text-[#7A6B5E] mt-1">{copy.referralHelp}</p>
                       </div>
 
                       <div className="rounded-2xl bg-[#FBF8F3] border border-[#E6DCCF] p-4">
@@ -698,20 +870,20 @@ export default function Onboarding() {
                             <Check className="h-4 w-4 text-primary" />
                           </div>
                           <div>
-                            <div className="font-semibold text-sm">Récapitulatif</div>
+                            <div className="font-semibold text-sm">{copy.summary}</div>
                             <div className="text-xs text-[#7A6B5E] mt-1 space-y-1">
-                              <div>Site : <span className="font-semibold">{form.watch("title")}</span></div>
-                              <div>URL : <span className="font-semibold">daylora.app/{form.watch("slug")}</span></div>
-                              <div>Template : <span className="font-semibold">{selectedTemplate.name}</span></div>
-                              <div>Date : <span className="font-semibold">{formatDate(form.watch("weddingDate"))}</span></div>
-                              <div>Plan : <span className="font-semibold">Découverte (gratuit)</span></div>
+                              <div>{copy.site} : <span className="font-semibold">{form.watch("title")}</span></div>
+                              <div>{copy.url} : <span className="font-semibold">daylora.app/{form.watch("slug")}</span></div>
+                              <div>{copy.template} : <span className="font-semibold">{selectedTemplate.name}</span></div>
+                              <div>{copy.date} : <span className="font-semibold">{formatDate(form.watch("weddingDate"))}</span></div>
+                              <div>{copy.plan} : <span className="font-semibold">{copy.freePlan}</span></div>
                             </div>
                           </div>
                         </div>
                       </div>
 
                       <p className="text-xs text-center text-muted-foreground">
-                        Un email de vérification sera envoyé à votre adresse pour activer votre compte.
+                        {copy.verify}
                       </p>
                     </div>
                   </motion.div>
@@ -720,24 +892,24 @@ export default function Onboarding() {
 
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
                 <Button type="button" variant="ghost" onClick={goBack} disabled={step === 1 || isLoading}>
-                  Retour
+                  {copy.back}
                 </Button>
 
                 <div className="flex items-center gap-2">
                   {step < TOTAL_STEPS && step !== 5 && (
                     <Button type="button" variant="outline" onClick={goNext} disabled={isLoading || isUploading}>
-                      Passer
+                      {copy.skip}
                     </Button>
                   )}
 
                   {step < TOTAL_STEPS ? (
                     <Button type="button" onClick={goNext} disabled={isLoading || isUploading}>
-                      {isUploading ? "Import..." : step === 5 ? "Tout est bon, je continue" : "Continuer"}
+                      {isUploading ? copy.importing : step === 5 ? copy.readyContinue : copy.continue}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   ) : (
                     <Button type="submit" disabled={isLoading || isUploading} className="px-8">
-                      {isLoading ? "Création en cours..." : "Créer mon compte et publier"}
+                      {isLoading ? copy.creating : copy.createAndPublish}
                       {!isLoading && <Heart className="ml-2 h-4 w-4" />}
                     </Button>
                   )}
@@ -750,12 +922,12 @@ export default function Onboarding() {
         <div className="text-center mt-5 space-y-2">
           <div className="text-xs text-[#8C7A6B]">
             <Heart className="inline h-3.5 w-3.5 mr-1" />
-            Tout est modifiable plus tard depuis votre espace admin.
+            {copy.editableLater}
           </div>
           <div className="text-sm">
-            <span className="text-[#7A6B5E]">Déjà un compte ?</span>{" "}
+            <span className="text-[#7A6B5E]">{copy.already}</span>{" "}
             <Link href="/login" className="text-primary font-bold hover:text-primary/80 transition-colors">
-              Connectez-vous
+              {copy.login}
             </Link>
           </div>
         </div>

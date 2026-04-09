@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "wouter";
 import {
     LayoutDashboard,
@@ -10,26 +10,34 @@ import {
     LogOut,
     ChevronRight,
     Home,
-    Laugh,
     MessageSquare,
     Settings,
     Paintbrush,
     ListTree,
     ScanLine,
     Tag,
+    ListChecks,
+    CalendarDays,
+    Wallet,
     ExternalLink,
     HelpCircle,
     Menu,
-    X
+    X,
+    Languages,
+    Plus
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useWeddings } from "@/hooks/use-api";
+import { useCreateWedding, useUpdateWedding, useWeddings } from "@/hooks/use-api";
 import { Button } from "@/components/ui/button";
 import { HelpChatbot } from "@/components/admin/HelpChatbot";
 import { FeedbackModal } from "@/components/admin/FeedbackModal";
 import { PremiumUpsellModal } from "@/components/admin/PremiumUpsellModal";
 import { InternalSupportChat } from "@/components/support/InternalSupportChat";
-import { useState } from "react";
+import { getAppNls } from "@/lib/nls";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function AdminLayout({ children, weddingId: weddingIdProp }: { children: ReactNode; weddingId?: string }) {
     const params = useParams<{ weddingId: string }>();
@@ -37,47 +45,181 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
     const [location, setLocation] = useLocation();
     const { logoutMutation, user } = useAuth();
     const { data: weddings = [] } = useWeddings();
+    const updateWedding = useUpdateWedding();
+    const createWedding = useCreateWedding();
+    const { toast } = useToast();
     const currentWeddingForModal = weddings.find((w: any) => w.id === (weddingIdProp || params.weddingId));
+    const ownedWeddings = weddings.filter((item: any) => item.ownerId === user?.id);
+    const canManageMultipleSites = !!user?.isAdmin || ownedWeddings.some((item: any) => item.currentPlan === "premium");
+    const persistedLanguage = (currentWeddingForModal?.config as any)?.language === "en" ? "en" : "fr";
+    const [languageOverride, setLanguageOverride] = useState<"fr" | "en" | null>(null);
+    const currentLanguage = languageOverride ?? persistedLanguage;
+    const nls = getAppNls(currentLanguage);
     const isDesignRoute = location.includes("/design");
+    const currentWeddingTitle = currentWeddingForModal?.title || "Choisir un site";
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [helpMenuOpen, setHelpMenuOpen] = useState(false);
+    const [createSiteDialogOpen, setCreateSiteDialogOpen] = useState(false);
+    const [newSiteTitle, setNewSiteTitle] = useState("");
+    const [newSiteSlug, setNewSiteSlug] = useState("");
+    const [newSiteDate, setNewSiteDate] = useState("");
+    const [newSiteSlugEdited, setNewSiteSlugEdited] = useState(false);
+
+    useEffect(() => {
+        setLanguageOverride(null);
+    }, [persistedLanguage, currentWeddingForModal?.id]);
+
+    const handleLanguageChange = async (nextLanguage: "fr" | "en") => {
+        if (!currentWeddingForModal || nextLanguage === persistedLanguage || updateWedding.isPending) return;
+        setLanguageOverride(nextLanguage);
+        try {
+            await updateWedding.mutateAsync({
+                id: currentWeddingForModal.id,
+                config: {
+                    ...(currentWeddingForModal.config || {}),
+                    language: nextLanguage,
+                },
+            });
+        } catch {
+            setLanguageOverride(null);
+        }
+    };
+
+    const languageSwitcher = (
+        <div className="rounded-xl border border-sidebar-border/80 bg-sidebar-accent/40 p-3">
+            <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-sidebar-foreground/60">
+                <Languages className="h-3.5 w-3.5" />
+                <span>{nls.adminLayout.languageLabel}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+                {([
+                    ["fr", nls.adminLayout.languageFr],
+                    ["en", nls.adminLayout.languageEn],
+                ] as const).map(([value, label]) => {
+                    const isActive = currentLanguage === value;
+                    return (
+                        <Button
+                            key={value}
+                            type="button"
+                            variant={isActive ? "default" : "outline"}
+                            size="sm"
+                            disabled={!currentWeddingForModal || updateWedding.isPending}
+                            className={isActive
+                                ? "h-9 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
+                                : "h-9 rounded-lg border-sidebar-border bg-background/80 text-sidebar-foreground hover:bg-sidebar-accent"}
+                            onClick={() => handleLanguageChange(value)}
+                        >
+                            {label}
+                        </Button>
+                    );
+                })}
+            </div>
+        </div>
+    );
     const supportPageLabel =
-        location === "/templates" ? "Templates" :
-        location === "/design" ? "Édition live" :
-        location === "/guests" ? "Invités" :
-        location === "/guest-experience" ? "Expérience invités" :
-        location === "/billing" ? "Facturation" :
-        location === "/gifts" ? "Cadeaux" :
-        location === "/site" ? "Site & Menus" :
-        location === "/check-in-ops" ? "Check-in Jour J" :
+        location === "/templates" ? nls.adminLayout.pageLabels.templates :
+        location === "/design" ? nls.adminLayout.pageLabels.design :
+        location === "/guests" ? nls.adminLayout.pageLabels.guests :
+        location === "/guest-experience" ? nls.adminLayout.pageLabels.guestExperience :
+        location === "/billing" ? nls.adminLayout.pageLabels.billing :
+        location === "/gifts" ? nls.adminLayout.pageLabels.gifts :
+        location === "/site" ? nls.adminLayout.pageLabels.site :
+        location === "/check-in-ops" ? nls.adminLayout.pageLabels.checkInOps :
         "";
     const fallbackSupportPageLabel = (() => {
         if (supportPageLabel) return supportPageLabel;
         const cleanedLocation = location.replace(/^~\//, "/").split("?")[0].split("#")[0];
-        if (cleanedLocation === "/" || cleanedLocation === "") return "Accueil";
+        if (cleanedLocation === "/" || cleanedLocation === "") return nls.adminLayout.pageLabels.home;
         const lastSegment = cleanedLocation.split("/").filter(Boolean).pop();
-        if (!lastSegment) return "Espace Daylora";
+        if (!lastSegment) return nls.adminLayout.pageLabels.fallback;
         return decodeURIComponent(lastSegment)
             .replace(/[-_]+/g, " ")
             .replace(/\b\w/g, (letter) => letter.toUpperCase());
     })();
 
     const navItems = [
-        { name: "Accueil", icon: Home, href: "/welcome" },
-        { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-        { name: "Design", icon: Paintbrush, href: "/design" },
-        { name: "Invités", icon: Users, href: "/guests" },
-        { name: "Expérience invités", icon: Tag, href: "/guest-experience" },
-        { name: "Check-in Jour J", icon: ScanLine, href: "/check-in-ops" },
-        { name: "Templates", icon: Palette, href: "/templates" },
-        { name: "Site & Menus", icon: ListTree, href: "/site" },
-        { name: "Cadeaux", icon: Gift, href: "/gifts" },
-        { name: "Emails", icon: Mail, href: "/emails" },
-        { name: "Blagues Live", icon: Laugh, href: "/live" },
-        { name: "Facturation", icon: CreditCard, href: "/billing" },
-        ...(user?.isAdmin ? [{ name: "Avis", icon: MessageSquare, href: "/feedback" }] : []),
-        { name: "Paramètres", icon: Settings, href: "/settings" },
+        { name: nls.adminLayout.nav.home, icon: Home, href: "/welcome" },
+        { name: nls.adminLayout.nav.dashboard, icon: LayoutDashboard, href: "/dashboard" },
+        { name: nls.adminLayout.nav.design, icon: Paintbrush, href: "/design" },
+        { name: nls.adminLayout.nav.guests, icon: Users, href: "/guests" },
+        { name: "Checklist", icon: ListChecks, href: "/checklist" },
+        { name: "Planning", icon: CalendarDays, href: "/planning" },
+        { name: "Budget", icon: Wallet, href: "/budget" },
+        { name: nls.adminLayout.nav.guestExperience, icon: Tag, href: "/guest-experience" },
+        { name: nls.adminLayout.nav.checkInOps, icon: ScanLine, href: "/check-in-ops" },
+        { name: nls.adminLayout.nav.templates, icon: Palette, href: "/templates" },
+        { name: nls.adminLayout.nav.site, icon: ListTree, href: "/site" },
+        { name: nls.adminLayout.nav.gifts, icon: Gift, href: "/gifts" },
+        { name: nls.adminLayout.nav.emails, icon: Mail, href: "/emails" },
+        { name: nls.adminLayout.nav.billing, icon: CreditCard, href: "/billing" },
+        ...(user?.isAdmin ? [{ name: nls.adminLayout.nav.feedback, icon: MessageSquare, href: "/feedback" }] : []),
+        { name: nls.adminLayout.nav.settings, icon: Settings, href: "/settings" },
     ];
+
+    const buildSlug = (value: string) =>
+        value
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "")
+            .slice(0, 80);
+
+    const handleOpenCreateSite = () => {
+        if (!canManageMultipleSites && ownedWeddings.length >= 1) {
+            toast({
+                title: "Fonction Premium",
+                description: "Les sites multiples sont réservés au plan Premium.",
+                variant: "destructive",
+            });
+            setLocation("/billing");
+            return;
+        }
+        setCreateSiteDialogOpen(true);
+    };
+
+    const handleCreateSite = async () => {
+        const nextTitle = newSiteTitle.trim();
+        const nextSlug = buildSlug(newSiteSlug || newSiteTitle);
+
+        if (nextTitle.length < 3) {
+            toast({ title: "Nom trop court", description: "Ajoutez un nom de site plus clair.", variant: "destructive" });
+            return;
+        }
+
+        if (nextSlug.length < 3) {
+            toast({ title: "URL invalide", description: "Ajoutez une adresse de site valide.", variant: "destructive" });
+            return;
+        }
+
+        try {
+            const created = await createWedding.mutateAsync({
+                title: nextTitle,
+                slug: nextSlug,
+                weddingDate: newSiteDate ? new Date(newSiteDate) : undefined,
+                templateId: currentWeddingForModal?.templateId || "classic",
+                toneId: (currentWeddingForModal?.config as any)?.theme?.toneId || "golden-ivory",
+                language: (currentWeddingForModal?.config as any)?.language || "fr",
+            });
+
+            setCreateSiteDialogOpen(false);
+            setNewSiteTitle("");
+            setNewSiteSlug("");
+            setNewSiteDate("");
+            setNewSiteSlugEdited(false);
+            toast({ title: "Nouveau site créé", description: "Vous pouvez maintenant le personnaliser." });
+            setLocation(`~/${created.id}/dashboard`);
+        } catch (error: any) {
+            const message = String(error?.message || "");
+            toast({
+                title: "Création impossible",
+                description: message.includes("Premium")
+                    ? "Les sites multiples sont réservés au plan Premium."
+                    : "Réessayez dans quelques secondes.",
+                variant: "destructive",
+            });
+        }
+    };
 
     if (isDesignRoute) {
         const currentWedding = weddings.find(w => w.id === weddingId);
@@ -91,12 +233,12 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                         onClick={() => setLocation("/dashboard")}
                     >
                         <ChevronRight className="h-4 w-4 rotate-180" />
-                        <span>Retour</span>
+                        <span>{nls.adminLayout.back}</span>
                     </Button>
                     <div className="h-6 w-px bg-border" />
                     <div className="flex items-center gap-2">
                         <Paintbrush className="h-4 w-4 text-primary" />
-                        <span className="text-sm font-semibold">Design</span>
+                        <span className="text-sm font-semibold">{nls.adminLayout.design}</span>
                     </div>
                     <div className="ml-auto flex items-center gap-3">
                         {currentWedding && (
@@ -107,7 +249,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                                 onClick={() => window.open(`/preview/${currentWedding.slug}`, "_blank")}
                             >
                                 <Paintbrush className="h-4 w-4" />
-                                <span className="hidden sm:inline">Modifier en live</span>
+                                <span className="hidden sm:inline">{nls.adminLayout.editLive}</span>
                             </Button>
                         )}
                         {currentWedding && (
@@ -118,7 +260,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                                 onClick={() => window.open(`/${currentWedding.slug}`, "_blank")}
                             >
                                 <ExternalLink className="h-4 w-4" />
-                                <span className="hidden sm:inline">Voir le site</span>
+                                <span className="hidden sm:inline">{nls.adminLayout.viewSite}</span>
                             </Button>
                         )}
                         <Button
@@ -128,7 +270,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                             onClick={() => setHelpMenuOpen(true)}
                         >
                             <HelpCircle className="h-4 w-4" />
-                            <span className="hidden sm:inline">Centre d'aide</span>
+                            <span className="hidden sm:inline">{nls.adminLayout.helpCenter}</span>
                         </Button>
                     </div>
                 </header>
@@ -146,7 +288,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                 currentPlan={currentWedding?.currentPlan || null}
                 className="bottom-4 right-4 left-auto"
             />
-            <HelpChatbot isOpen={helpMenuOpen} onOpenChange={setHelpMenuOpen} hideTrigger />
+            <HelpChatbot isOpen={helpMenuOpen} onOpenChange={setHelpMenuOpen} hideTrigger language={currentLanguage} />
         </div>
     );
     }
@@ -156,7 +298,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
             <aside className="w-64 hidden md:flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
                 <div className="p-6 border-b border-sidebar-border">
                     <Link href="/" className="flex items-center space-x-2">
-                        <span className="text-xl font-semibold tracking-tight text-sidebar-foreground">Daylora Admin</span>
+                        <span className="text-xl font-semibold tracking-tight text-sidebar-foreground">{nls.adminLayout.brand}</span>
                     </Link>
                 </div>
                 <nav className="flex-1 p-4 space-y-1" data-tour="sidebar-nav">
@@ -183,6 +325,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                             <p className="text-sm font-medium truncate">{user?.firstName} {user?.lastName}</p>
                         </div>
                     </div>
+                    {languageSwitcher}
                     <Button
                         variant="ghost"
                         size="sm"
@@ -190,7 +333,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                         onClick={() => setHelpMenuOpen(true)}
                     >
                         <HelpCircle className="mr-2 h-4 w-4" />
-                        Centre d'aide
+                        {nls.adminLayout.helpCenter}
                     </Button>
                     <FeedbackModal />
                     <Button
@@ -200,7 +343,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                         onClick={() => logoutMutation.mutate()}
                     >
                         <LogOut className="mr-2 h-4 w-4" />
-                        Déconnexion
+                        {nls.adminLayout.logout}
                     </Button>
                 </div>
             </aside>
@@ -210,12 +353,15 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                     <div className="fixed inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
                     <aside className="fixed inset-y-0 left-0 w-72 bg-sidebar text-sidebar-foreground flex flex-col z-50 shadow-xl">
                         <div className="p-4 flex items-center justify-between border-b border-sidebar-border">
-                            <span className="text-lg font-semibold">Daylora Admin</span>
+                            <span className="text-lg font-semibold">{nls.adminLayout.brand}</span>
                             <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
                                 <X className="h-5 w-5" />
                             </Button>
                         </div>
                         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+                            <div className="mb-4">
+                                {languageSwitcher}
+                            </div>
                             {navItems.map((item) => {
                                 const isActive = location === item.href;
                                 return (
@@ -241,7 +387,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                                 }}
                             >
                                 <HelpCircle className="mr-2 h-5 w-5" />
-                                Centre d'aide
+                                {nls.adminLayout.helpCenter}
                             </Button>
                         </nav>
                         <div className="p-4 border-t border-sidebar-border space-y-2">
@@ -253,7 +399,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                                 onClick={() => logoutMutation.mutate()}
                             >
                                 <LogOut className="mr-2 h-4 w-4" />
-                                Déconnexion
+                                {nls.adminLayout.logout}
                             </Button>
                         </div>
                     </aside>
@@ -268,18 +414,45 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                     <div className="flex items-center text-sm text-muted-foreground">
                         <Link href="/" className="hover:text-foreground">Daylora</Link>
                         <ChevronRight className="h-4 w-4 mx-2" />
-                        <span className="text-foreground font-medium">Gestion du mariage</span>
+                        <span className="text-foreground font-medium">{nls.adminLayout.weddingManagement}</span>
                     </div>
                     <div className="ml-auto flex items-center gap-3">
-                        <select
-                            className="h-9 rounded-md border border-border bg-background px-3 text-sm hidden sm:block"
-                            value={weddingId}
-                            onChange={(e) => setLocation(`~/${e.target.value}/dashboard`)}
-                        >
-                            {weddings.map((w) => (
-                                <option key={w.id} value={w.id}>{w.title}</option>
-                            ))}
-                        </select>
+                        <div className="hidden sm:block min-w-[240px]">
+                            <Select
+                                value={weddingId}
+                                onValueChange={(value) => {
+                                    if (value === "__create__") {
+                                        handleOpenCreateSite();
+                                        return;
+                                    }
+                                    setLocation(`~/${value}/dashboard`);
+                                }}
+                            >
+                                <SelectTrigger className="h-11 rounded-xl border-border/70 bg-white/90 px-4 text-sm font-medium shadow-sm hover:border-primary/30 focus:ring-primary/20">
+                                    <SelectValue>{currentWeddingTitle}</SelectValue>
+                                </SelectTrigger>
+                                <SelectContent className="rounded-2xl border-border/70 bg-white/95 p-2 shadow-2xl backdrop-blur-sm">
+                                    {weddings.map((w) => (
+                                        <SelectItem
+                                            key={w.id}
+                                            value={w.id}
+                                            className="rounded-xl py-3 pl-9 pr-3 text-sm font-medium"
+                                        >
+                                            {w.title}
+                                        </SelectItem>
+                                    ))}
+                                    <SelectItem
+                                        value="__create__"
+                                        className="rounded-xl py-3 pl-9 pr-3 text-sm font-semibold text-primary"
+                                    >
+                                        <span className="flex items-center gap-2">
+                                            <Plus className="h-4 w-4" />
+                                            Nouveau site
+                                        </span>
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                         {weddings.find(w => w.id === weddingId) && (
                             <Button
                                 data-tour="view-site"
@@ -292,7 +465,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                                 }}
                             >
                                 <ExternalLink className="h-4 w-4" />
-                                <span className="hidden sm:inline">Voir le site</span>
+                                <span className="hidden sm:inline">{nls.adminLayout.viewSite}</span>
                             </Button>
                         )}
                         <Button
@@ -300,7 +473,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                             size="icon"
                             className="text-muted-foreground hover:text-destructive"
                             onClick={() => logoutMutation.mutate()}
-                            title="Se déconnecter"
+                            title={nls.adminLayout.logoutTitle}
                         >
                             <LogOut className="h-4 w-4" />
                         </Button>
@@ -321,10 +494,71 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                 currentPlan={currentWeddingForModal?.currentPlan || null}
                 className="bottom-4 right-4 left-auto"
             />
-            <HelpChatbot isOpen={helpMenuOpen} onOpenChange={setHelpMenuOpen} hideTrigger />
+            <HelpChatbot isOpen={helpMenuOpen} onOpenChange={setHelpMenuOpen} hideTrigger language={currentLanguage} />
             {user && currentWeddingForModal && (
                 <PremiumUpsellModal user={user} wedding={currentWeddingForModal} />
             )}
+            <Dialog open={createSiteDialogOpen} onOpenChange={setCreateSiteDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Créer un nouveau site</DialogTitle>
+                        <DialogDescription>
+                            Ajoutez un nouveau site à votre espace. Vous pourrez ensuite le personnaliser normalement.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-foreground">Nom du site</label>
+                            <Input
+                                value={newSiteTitle}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setNewSiteTitle(value);
+                                    if (!newSiteSlugEdited) setNewSiteSlug(buildSlug(value));
+                                }}
+                                placeholder="Ex : Mariage Emma & James"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-foreground">Adresse du site</label>
+                            <Input
+                                value={newSiteSlug}
+                                onChange={(e) => {
+                                    const value = buildSlug(e.target.value);
+                                    setNewSiteSlug(value);
+                                    setNewSiteSlugEdited(value.length > 0);
+                                }}
+                                placeholder="emma-et-james"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-foreground">Date</label>
+                            <Input
+                                type="date"
+                                value={newSiteDate}
+                                onChange={(e) => setNewSiteDate(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setCreateSiteDialogOpen(false);
+                                setNewSiteTitle("");
+                                setNewSiteSlug("");
+                                setNewSiteDate("");
+                                setNewSiteSlugEdited(false);
+                            }}
+                        >
+                            Annuler
+                        </Button>
+                        <Button onClick={handleCreateSite} disabled={createWedding.isPending}>
+                            {createWedding.isPending ? "Création..." : "Créer le site"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

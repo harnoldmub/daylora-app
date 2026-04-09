@@ -434,6 +434,32 @@ export default function GiftsPage() {
         }
       />
 
+      <Card className="p-5 border-border/70">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <Sparkles className={`h-4 w-4 ${isPremium ? "text-amber-600" : "text-muted-foreground"}`} />
+              <p className="text-sm font-semibold">
+                {isPremium ? "Cadeaux illimités inclus dans Premium" : `Plan Découverte : ${gifts.length}/${maxGifts} cadeaux utilisés`}
+              </p>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {isPremium
+                ? "Ajoutez autant de cadeaux que nécessaire à votre liste."
+                : "Le plan Découverte inclut jusqu'à 2 cadeaux. Premium débloque une liste illimitée."}
+            </p>
+          </div>
+          {!isPremium ? (
+            <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/5" asChild>
+              <a href={`/${weddingId}/billing`}>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Passer au Premium
+              </a>
+            </Button>
+          ) : null}
+        </div>
+      </Card>
+
       {giftLimitReached && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">

@@ -38,10 +38,25 @@ import {
   type InsertProductFeedback,
   supportConversations,
   supportMessages,
+  organizationChecklistCategories,
+  organizationChecklistItems,
+  organizationPlanningItems,
+  organizationBudgetCategories,
+  organizationBudgetItems,
   type SupportConversation,
   type InsertSupportConversation,
   type SupportMessage,
   type InsertSupportMessage,
+  type OrganizationChecklistCategory,
+  type InsertOrganizationChecklistCategory,
+  type OrganizationChecklistItem,
+  type InsertOrganizationChecklistItem,
+  type OrganizationPlanningItem,
+  type InsertOrganizationPlanningItem,
+  type OrganizationBudgetCategory,
+  type InsertOrganizationBudgetCategory,
+  type OrganizationBudgetItem,
+  type InsertOrganizationBudgetItem,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, ne, sql, desc } from "drizzle-orm";
@@ -68,6 +83,7 @@ export interface IStorage {
 
   updateUser(id: string, data: Partial<User>): Promise<User>;
   deleteUser(id: string): Promise<void>;
+  deleteUserAccount(id: string): Promise<void>;
 
   // Wedding operations
   getWedding(id: string): Promise<Wedding | undefined>;
@@ -76,6 +92,7 @@ export interface IStorage {
   getWeddingsForUser(userId: string): Promise<Wedding[]>;
   createWedding(wedding: InsertWedding): Promise<Wedding>;
   updateWedding(id: string, wedding: Partial<Wedding>): Promise<Wedding>;
+  deleteWedding(id: string): Promise<void>;
 
   // Membership operations
   getMembershipsByWedding(weddingId: string): Promise<any[]>;
@@ -143,6 +160,32 @@ export interface IStorage {
   listSupportMessages(conversationId: number): Promise<SupportMessage[]>;
   createSupportMessage(data: InsertSupportMessage): Promise<SupportMessage>;
   markSupportMessagesRead(conversationId: number, role: "user" | "admin"): Promise<void>;
+
+  // Organization - checklist
+  getChecklistCategories(weddingId: string): Promise<OrganizationChecklistCategory[]>;
+  createChecklistCategory(weddingId: string, data: InsertOrganizationChecklistCategory): Promise<OrganizationChecklistCategory>;
+  updateChecklistCategory(weddingId: string, id: number, data: Partial<OrganizationChecklistCategory>): Promise<OrganizationChecklistCategory>;
+  deleteChecklistCategory(weddingId: string, id: number): Promise<void>;
+  getChecklistItems(weddingId: string): Promise<OrganizationChecklistItem[]>;
+  createChecklistItem(weddingId: string, data: InsertOrganizationChecklistItem): Promise<OrganizationChecklistItem>;
+  updateChecklistItem(weddingId: string, id: number, data: Partial<OrganizationChecklistItem>): Promise<OrganizationChecklistItem>;
+  deleteChecklistItem(weddingId: string, id: number): Promise<void>;
+
+  // Organization - planning
+  getPlanningItems(weddingId: string): Promise<OrganizationPlanningItem[]>;
+  createPlanningItem(weddingId: string, data: InsertOrganizationPlanningItem): Promise<OrganizationPlanningItem>;
+  updatePlanningItem(weddingId: string, id: number, data: Partial<OrganizationPlanningItem>): Promise<OrganizationPlanningItem>;
+  deletePlanningItem(weddingId: string, id: number): Promise<void>;
+
+  // Organization - budget
+  getBudgetCategories(weddingId: string): Promise<OrganizationBudgetCategory[]>;
+  createBudgetCategory(weddingId: string, data: InsertOrganizationBudgetCategory): Promise<OrganizationBudgetCategory>;
+  updateBudgetCategory(weddingId: string, id: number, data: Partial<OrganizationBudgetCategory>): Promise<OrganizationBudgetCategory>;
+  deleteBudgetCategory(weddingId: string, id: number): Promise<void>;
+  getBudgetItems(weddingId: string): Promise<OrganizationBudgetItem[]>;
+  createBudgetItem(weddingId: string, data: InsertOrganizationBudgetItem): Promise<OrganizationBudgetItem>;
+  updateBudgetItem(weddingId: string, id: number, data: Partial<OrganizationBudgetItem>): Promise<OrganizationBudgetItem>;
+  deleteBudgetItem(weddingId: string, id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -192,6 +235,25 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUser(id: string): Promise<void> {
     await db.delete(users).where(eq(users.id, id));
+  }
+
+  async deleteUserAccount(id: string): Promise<void> {
+    const ownedWeddings = await this.getWeddingsByOwner(id);
+    for (const wedding of ownedWeddings) {
+      await this.deleteWedding(wedding.id);
+    }
+
+    await db.transaction(async (tx) => {
+      await tx.delete(supportMessages).where(eq(supportMessages.userId, id));
+      await tx.delete(supportConversations).where(eq(supportConversations.userId, id));
+      await tx.delete(productFeedback).where(eq(productFeedback.userId, id));
+      await tx.delete(memberships).where(eq(memberships.userId, id));
+      await tx.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, id));
+      await tx.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, id));
+      await tx.delete(referralCodes).where(eq(referralCodes.ownerUserId, id));
+      await tx.delete(referralCodes).where(eq(referralCodes.usedByUserId, id));
+      await tx.delete(users).where(eq(users.id, id));
+    });
   }
 
   // Email verification token operations
@@ -298,6 +360,28 @@ export class DatabaseStorage implements IStorage {
       .where(eq(weddings.id, id))
       .returning();
     return wedding;
+  }
+
+  async deleteWedding(id: string): Promise<void> {
+    await db.transaction(async (tx) => {
+      await tx.delete(organizationChecklistItems).where(eq(organizationChecklistItems.weddingId, id));
+      await tx.delete(organizationChecklistCategories).where(eq(organizationChecklistCategories.weddingId, id));
+      await tx.delete(organizationPlanningItems).where(eq(organizationPlanningItems.weddingId, id));
+      await tx.delete(organizationBudgetItems).where(eq(organizationBudgetItems.weddingId, id));
+      await tx.delete(organizationBudgetCategories).where(eq(organizationBudgetCategories.weddingId, id));
+      await tx.delete(supportMessages).where(eq(supportMessages.weddingId, id));
+      await tx.delete(supportConversations).where(eq(supportConversations.weddingId, id));
+      await tx.delete(productFeedback).where(eq(productFeedback.weddingId, id));
+      await tx.delete(emailLogs).where(eq(emailLogs.weddingId, id));
+      await tx.delete(liveEvents).where(eq(liveEvents.weddingId, id));
+      await tx.delete(liveJokes).where(eq(liveJokes.weddingId, id));
+      await tx.delete(contributions).where(eq(contributions.weddingId, id));
+      await tx.delete(gifts).where(eq(gifts.weddingId, id));
+      await tx.delete(stripeSubscriptions).where(eq(stripeSubscriptions.weddingId, id));
+      await tx.delete(rsvpResponses).where(eq(rsvpResponses.weddingId, id));
+      await tx.delete(memberships).where(eq(memberships.weddingId, id));
+      await tx.delete(weddings).where(eq(weddings.id, id));
+    });
   }
 
   // Membership operations
@@ -666,6 +750,162 @@ export class DatabaseStorage implements IStorage {
           sql`${supportMessages.readAt} IS NULL`,
         ),
       );
+  }
+
+  async getChecklistCategories(weddingId: string): Promise<OrganizationChecklistCategory[]> {
+    return db
+      .select()
+      .from(organizationChecklistCategories)
+      .where(eq(organizationChecklistCategories.weddingId, weddingId))
+      .orderBy(organizationChecklistCategories.sortOrder, organizationChecklistCategories.id);
+  }
+
+  async createChecklistCategory(weddingId: string, data: InsertOrganizationChecklistCategory): Promise<OrganizationChecklistCategory> {
+    const [row] = await db.insert(organizationChecklistCategories).values({ ...data, weddingId }).returning();
+    return row;
+  }
+
+  async updateChecklistCategory(weddingId: string, id: number, data: Partial<OrganizationChecklistCategory>): Promise<OrganizationChecklistCategory> {
+    const [row] = await db
+      .update(organizationChecklistCategories)
+      .set({ ...data, updatedAt: new Date() })
+      .where(and(eq(organizationChecklistCategories.id, id), eq(organizationChecklistCategories.weddingId, weddingId)))
+      .returning();
+    return row;
+  }
+
+  async deleteChecklistCategory(weddingId: string, id: number): Promise<void> {
+    await db.transaction(async (tx) => {
+      await tx.delete(organizationChecklistItems).where(and(eq(organizationChecklistItems.categoryId, id), eq(organizationChecklistItems.weddingId, weddingId)));
+      await tx.delete(organizationChecklistCategories).where(and(eq(organizationChecklistCategories.id, id), eq(organizationChecklistCategories.weddingId, weddingId)));
+    });
+  }
+
+  async getChecklistItems(weddingId: string): Promise<OrganizationChecklistItem[]> {
+    return db
+      .select()
+      .from(organizationChecklistItems)
+      .where(eq(organizationChecklistItems.weddingId, weddingId))
+      .orderBy(organizationChecklistItems.sortOrder, organizationChecklistItems.id);
+  }
+
+  async createChecklistItem(weddingId: string, data: InsertOrganizationChecklistItem): Promise<OrganizationChecklistItem> {
+    const values = {
+      ...data,
+      weddingId,
+      completedAt: data.status === "done" ? new Date() : null,
+    };
+    const [row] = await db.insert(organizationChecklistItems).values(values).returning();
+    return row;
+  }
+
+  async updateChecklistItem(weddingId: string, id: number, data: Partial<OrganizationChecklistItem>): Promise<OrganizationChecklistItem> {
+    const nextStatus = data.status;
+    const [row] = await db
+      .update(organizationChecklistItems)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+        completedAt: nextStatus === "done" ? new Date() : nextStatus && nextStatus !== "done" ? null : data.completedAt,
+      })
+      .where(and(eq(organizationChecklistItems.id, id), eq(organizationChecklistItems.weddingId, weddingId)))
+      .returning();
+    return row;
+  }
+
+  async deleteChecklistItem(weddingId: string, id: number): Promise<void> {
+    await db.delete(organizationChecklistItems).where(and(eq(organizationChecklistItems.id, id), eq(organizationChecklistItems.weddingId, weddingId)));
+  }
+
+  async getPlanningItems(weddingId: string): Promise<OrganizationPlanningItem[]> {
+    return db
+      .select()
+      .from(organizationPlanningItems)
+      .where(eq(organizationPlanningItems.weddingId, weddingId))
+      .orderBy(organizationPlanningItems.dueAt, organizationPlanningItems.sortOrder, organizationPlanningItems.id);
+  }
+
+  async createPlanningItem(weddingId: string, data: InsertOrganizationPlanningItem): Promise<OrganizationPlanningItem> {
+    const values = {
+      ...data,
+      weddingId,
+      completedAt: data.status === "done" ? new Date() : null,
+    };
+    const [row] = await db.insert(organizationPlanningItems).values(values).returning();
+    return row;
+  }
+
+  async updatePlanningItem(weddingId: string, id: number, data: Partial<OrganizationPlanningItem>): Promise<OrganizationPlanningItem> {
+    const nextStatus = data.status;
+    const [row] = await db
+      .update(organizationPlanningItems)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+        completedAt: nextStatus === "done" ? new Date() : nextStatus && nextStatus !== "done" ? null : data.completedAt,
+      })
+      .where(and(eq(organizationPlanningItems.id, id), eq(organizationPlanningItems.weddingId, weddingId)))
+      .returning();
+    return row;
+  }
+
+  async deletePlanningItem(weddingId: string, id: number): Promise<void> {
+    await db.delete(organizationPlanningItems).where(and(eq(organizationPlanningItems.id, id), eq(organizationPlanningItems.weddingId, weddingId)));
+  }
+
+  async getBudgetCategories(weddingId: string): Promise<OrganizationBudgetCategory[]> {
+    return db
+      .select()
+      .from(organizationBudgetCategories)
+      .where(eq(organizationBudgetCategories.weddingId, weddingId))
+      .orderBy(organizationBudgetCategories.sortOrder, organizationBudgetCategories.id);
+  }
+
+  async createBudgetCategory(weddingId: string, data: InsertOrganizationBudgetCategory): Promise<OrganizationBudgetCategory> {
+    const [row] = await db.insert(organizationBudgetCategories).values({ ...data, weddingId }).returning();
+    return row;
+  }
+
+  async updateBudgetCategory(weddingId: string, id: number, data: Partial<OrganizationBudgetCategory>): Promise<OrganizationBudgetCategory> {
+    const [row] = await db
+      .update(organizationBudgetCategories)
+      .set({ ...data, updatedAt: new Date() })
+      .where(and(eq(organizationBudgetCategories.id, id), eq(organizationBudgetCategories.weddingId, weddingId)))
+      .returning();
+    return row;
+  }
+
+  async deleteBudgetCategory(weddingId: string, id: number): Promise<void> {
+    await db.transaction(async (tx) => {
+      await tx.delete(organizationBudgetItems).where(and(eq(organizationBudgetItems.categoryId, id), eq(organizationBudgetItems.weddingId, weddingId)));
+      await tx.delete(organizationBudgetCategories).where(and(eq(organizationBudgetCategories.id, id), eq(organizationBudgetCategories.weddingId, weddingId)));
+    });
+  }
+
+  async getBudgetItems(weddingId: string): Promise<OrganizationBudgetItem[]> {
+    return db
+      .select()
+      .from(organizationBudgetItems)
+      .where(eq(organizationBudgetItems.weddingId, weddingId))
+      .orderBy(organizationBudgetItems.createdAt, organizationBudgetItems.id);
+  }
+
+  async createBudgetItem(weddingId: string, data: InsertOrganizationBudgetItem): Promise<OrganizationBudgetItem> {
+    const [row] = await db.insert(organizationBudgetItems).values({ ...data, weddingId }).returning();
+    return row;
+  }
+
+  async updateBudgetItem(weddingId: string, id: number, data: Partial<OrganizationBudgetItem>): Promise<OrganizationBudgetItem> {
+    const [row] = await db
+      .update(organizationBudgetItems)
+      .set({ ...data, updatedAt: new Date() })
+      .where(and(eq(organizationBudgetItems.id, id), eq(organizationBudgetItems.weddingId, weddingId)))
+      .returning();
+    return row;
+  }
+
+  async deleteBudgetItem(weddingId: string, id: number): Promise<void> {
+    await db.delete(organizationBudgetItems).where(and(eq(organizationBudgetItems.id, id), eq(organizationBudgetItems.weddingId, weddingId)));
   }
 }
 

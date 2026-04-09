@@ -8,6 +8,9 @@ import { rateLimit } from "express-rate-limit";
 import { handleStripeWebhook } from "./stripeWebhook";
 import path from "path";
 import { fileURLToPath } from "url";
+import { db } from "./db";
+import { weddings } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 const app = express();
 const isProduction = process.env.NODE_ENV === "production";
@@ -18,6 +21,38 @@ function escapeHtml(str: string): string {
     .replace(/"/g, "&quot;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+}
+
+function injectSeoHtml(
+  html: string,
+  options: {
+    title: string;
+    description: string;
+    canonicalUrl: string;
+    imageUrl: string;
+    robots?: string;
+    locale?: string;
+    jsonLd?: Record<string, any>;
+  }
+): string {
+  const robots = options.robots || "index,follow,max-image-preview:large";
+  const locale = options.locale || "fr_FR";
+  const jsonLd = JSON.stringify(options.jsonLd || {}).replace(/</g, "\\u003c");
+
+  return html
+    .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(options.title)}</title>`)
+    .replace(/<meta name="description"[^>]*>/, `<meta name="description" content="${escapeHtml(options.description)}">`)
+    .replace(/<meta name="robots"[^>]*>/, `<meta name="robots" content="${escapeHtml(robots)}">`)
+    .replace(/<link rel="canonical"[^>]*>/, `<link rel="canonical" href="${escapeHtml(options.canonicalUrl)}">`)
+    .replace(/<meta property="og:title"[^>]*>/, `<meta property="og:title" content="${escapeHtml(options.title)}">`)
+    .replace(/<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${escapeHtml(options.description)}">`)
+    .replace(/<meta property="og:image" content="[^"]*">/, `<meta property="og:image" content="${escapeHtml(options.imageUrl)}">`)
+    .replace(/<meta property="og:url"[^>]*>/, `<meta property="og:url" content="${escapeHtml(options.canonicalUrl)}">`)
+    .replace(/<meta property="og:locale"[^>]*>/, `<meta property="og:locale" content="${escapeHtml(locale)}">`)
+    .replace(/<meta name="twitter:title"[^>]*>/, `<meta name="twitter:title" content="${escapeHtml(options.title)}">`)
+    .replace(/<meta name="twitter:description"[^>]*>/, `<meta name="twitter:description" content="${escapeHtml(options.description)}">`)
+    .replace(/<meta name="twitter:image"[^>]*>/, `<meta name="twitter:image" content="${escapeHtml(options.imageUrl)}">`)
+    .replace(/<script id="daylora-jsonld" type="application\/ld\+json">[\s\S]*?<\/script>/, `<script id="daylora-jsonld" type="application/ld+json">${jsonLd}</script>`);
 }
 
 app.use(helmet({
@@ -182,6 +217,61 @@ app.use((req, res, next) => {
   }
 
   const server = await registerRoutes(app);
+  const appUrl = process.env.APP_BASE_URL || "https://daylora.app";
+
+  app.get("/robots.txt", async (_req, res) => {
+    res.type("text/plain");
+    return res.send(
+      [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /admin",
+        "Disallow: /api",
+        "Disallow: /preview",
+        "Disallow: /login",
+        "Disallow: /signup",
+        "Disallow: /dashboard",
+        "",
+        `Sitemap: ${appUrl}/sitemap.xml`,
+      ].join("\n")
+    );
+  });
+
+  app.get("/sitemap.xml", async (_req, res) => {
+    const publishedWeddings = await db
+      .select({ slug: weddings.slug, updatedAt: weddings.updatedAt })
+      .from(weddings)
+      .where(eq(weddings.isPublished, true));
+
+    const staticUrls = [
+      { loc: `${appUrl}/`, changefreq: "weekly", priority: "1.0" },
+      { loc: `${appUrl}/onboarding`, changefreq: "monthly", priority: "0.8" },
+    ];
+
+    const dynamicUrls = publishedWeddings.map((wedding) => ({
+      loc: `${appUrl}/${wedding.slug}`,
+      changefreq: "weekly",
+      priority: "0.7",
+      lastmod: wedding.updatedAt ? new Date(wedding.updatedAt).toISOString() : undefined,
+    }));
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${[...staticUrls, ...dynamicUrls]
+  .map(
+    (entry) => `<url>
+  <loc>${escapeHtml(entry.loc)}</loc>
+  ${"lastmod" in entry && entry.lastmod ? `<lastmod>${entry.lastmod}</lastmod>` : ""}
+  <changefreq>${entry.changefreq}</changefreq>
+  <priority>${entry.priority}</priority>
+</url>`
+  )
+  .join("\n")}
+</urlset>`;
+
+    res.type("application/xml");
+    return res.send(xml);
+  });
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -197,6 +287,7 @@ app.use((req, res, next) => {
     const fs = await import("fs");
     const indexHtml = fs.readFileSync(path.join(publicDir, "index.html"), "utf-8");
     const { storage } = await import("./storage");
+    const appUrl = process.env.APP_BASE_URL || "https://daylora.app";
 
     const knownPrefixes = new Set([
       "login", "signup", "dashboard", "onboarding", "onboarding-preview",
@@ -210,7 +301,28 @@ app.use((req, res, next) => {
       const segments = req.path.split("/").filter(Boolean);
       const firstSegment = segments[0] || "";
 
-      if (!firstSegment || knownPrefixes.has(firstSegment) || firstSegment.startsWith("_")) {
+      if (!firstSegment) {
+        return res.send(indexHtml);
+      }
+
+      if (["preview", "admin", "login", "signup", "dashboard", "onboarding-preview"].includes(firstSegment)) {
+        const noIndexHtml = injectSeoHtml(indexHtml, {
+          title: "Daylora",
+          description: "Daylora",
+          canonicalUrl: `${appUrl}${req.path}`,
+          imageUrl: `${appUrl}/og-image.png`,
+          robots: "noindex,nofollow,noarchive",
+          jsonLd: {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            name: "Daylora",
+            url: `${appUrl}${req.path}`,
+          },
+        });
+        return res.send(noIndexHtml);
+      }
+
+      if (knownPrefixes.has(firstSegment) || firstSegment.startsWith("_")) {
         return res.send(indexHtml);
       }
 
@@ -239,23 +351,46 @@ app.use((req, res, next) => {
           }
         }
 
-        const appUrl = process.env.APP_BASE_URL || "https://daylora.app";
         const heroTitle = wedding.config?.texts?.heroTitle || wedding.title || "Notre Mariage";
         const seoTitle = wedding.config?.seo?.title || `Mariage de ${heroTitle}`;
         const seoDesc = wedding.config?.seo?.description || `Vous êtes invité(e) au mariage de ${heroTitle}. Découvrez tous les détails et confirmez votre présence.`;
         const seoImage = wedding.config?.seo?.ogImage || wedding.config?.media?.couplePhoto || `${appUrl}/og-image.png`;
         const pageUrl = `${appUrl}/${wedding.slug}`;
 
-        const injected = indexHtml
-          .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(seoTitle)}</title>`)
-          .replace(/<meta name="description"[^>]*>/, `<meta name="description" content="${escapeHtml(seoDesc)}">`)
-          .replace(/<meta property="og:title"[^>]*>/, `<meta property="og:title" content="${escapeHtml(seoTitle)}">`)
-          .replace(/<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${escapeHtml(seoDesc)}">`)
-          .replace(/<meta property="og:image" content="[^"]*">/, `<meta property="og:image" content="${escapeHtml(seoImage)}">`)
-          .replace(/<meta property="og:url"[^>]*>/, `<meta property="og:url" content="${escapeHtml(pageUrl)}">`)
-          .replace(/<meta name="twitter:title"[^>]*>/, `<meta name="twitter:title" content="${escapeHtml(seoTitle)}">`)
-          .replace(/<meta name="twitter:description"[^>]*>/, `<meta name="twitter:description" content="${escapeHtml(seoDesc)}">`)
-          .replace(/<meta name="twitter:image"[^>]*>/, `<meta name="twitter:image" content="${escapeHtml(seoImage)}">`);
+        const eventStartDate = wedding.weddingDate ? new Date(wedding.weddingDate).toISOString() : undefined;
+        const locationName = wedding.config?.sections?.locationItems?.[0]?.title || undefined;
+        const locationAddress = wedding.config?.sections?.locationItems?.[0]?.address || undefined;
+
+        const injected = injectSeoHtml(indexHtml, {
+          title: seoTitle,
+          description: seoDesc,
+          canonicalUrl: pageUrl,
+          imageUrl: seoImage,
+          locale: (wedding.config?.language || "fr") === "en" ? "en_US" : "fr_FR",
+          jsonLd: {
+            "@context": "https://schema.org",
+            "@type": "Event",
+            name: seoTitle,
+            description: seoDesc,
+            eventStatus: "https://schema.org/EventScheduled",
+            eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+            startDate: eventStartDate,
+            image: [seoImage],
+            url: pageUrl,
+            organizer: {
+              "@type": "Organization",
+              name: "Daylora",
+              url: appUrl,
+            },
+            location: locationName || locationAddress
+              ? {
+                  "@type": "Place",
+                  name: locationName || wedding.title,
+                  address: locationAddress || "",
+                }
+              : undefined,
+          },
+        });
 
         return res.send(injected);
       } catch {

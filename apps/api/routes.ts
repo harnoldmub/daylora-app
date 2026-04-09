@@ -13,6 +13,11 @@ import {
   insertGiftSchema,
   insertProductFeedbackSchema,
   insertSupportMessageSchema,
+  insertOrganizationChecklistCategorySchema,
+  insertOrganizationChecklistItemSchema,
+  insertOrganizationPlanningItemSchema,
+  insertOrganizationBudgetCategorySchema,
+  insertOrganizationBudgetItemSchema,
   PLAN_LIMITS,
   type InsertRsvpResponse,
   promoCodes,
@@ -27,8 +32,17 @@ import { supportChatService } from "./support-chat-service";
 import { getSupportBotQuickActions, getSupportBotWelcomeMessage, resolveSupportBotReply } from "./support-bot";
 import { getStripePublishableKey, getUncachableStripeClient } from "./stripeClient";
 import { withWeddingFromRequest } from "./middleware/tenant";
+import {
+  buildBudgetSummary,
+  buildChecklistSummary,
+  buildDefaultPlanning,
+  computeOrganizationProgress,
+  DEFAULT_BUDGET_BLUEPRINT,
+  DEFAULT_CHECKLIST_BLUEPRINT,
+} from "./organization-service";
 
 const DEFAULT_WEDDING_CONFIG = {
+  language: "fr",
   theme: {
     primaryColor: "#D4AF37",
     secondaryColor: "#FFFFFF",
@@ -64,7 +78,7 @@ const DEFAULT_WEDDING_CONFIG = {
     programTitle: "DÉROULEMENT",
     programDescription: "Le programme de notre journée",
     storyTitle: "NOTRE HISTOIRE",
-    storyBody: "",
+    storyBody: "Tout a commencé par une rencontre inattendue au cœur de Paris. Entre rires partagés et voyages mémorables, nous avons construit une complicité unique. Aujourd'hui, nous avons hâte de célébrer ce nouveau chapitre avec vous, entourés de ceux qui nous sont chers.",
     cagnotteTitle: "CAGNOTTE MARIAGE",
     cagnotteDescription: "Votre présence est notre plus beau cadeau. Si vous souhaitez contribuer à notre voyage de noces ou à notre nouveau départ, vous pouvez participer à notre cagnotte.",
     cagnotteBackLabel: "Retour",
@@ -115,31 +129,36 @@ const DEFAULT_WEDDING_CONFIG = {
     ],
     locationItems: [
       {
-        title: "Cérémonie civile",
-        address: "Mairie de Lille — 10 Rue Pierre Mauroy",
-        description: "Rendez-vous à 14h30 pour accueillir les invités."
+        title: "Cérémonie & Réception",
+        address: "Le Domaine de la Fontaine — 14 Route de l'Élégance",
+        description: "Un havre de paix entouré de nature pour célébrer notre union."
       },
       {
-        title: "Réception",
-        address: "Château de la Verrière — Salle des Roses",
-        description: "Cocktail et dîner à partir de 18h."
+        title: "Hébergement",
+        address: "Hôtel du Parc — 2 Rue Sadi Carnot",
+        description: "Un bloc de chambres a été réservé pour nos invités."
       }
     ],
     programItems: [
       {
         time: "14:30",
         title: "Accueil des invités",
-        description: "Installation et photos de famille."
+        description: "Installation et rafraîchissements au Château."
       },
       {
-        time: "15:00",
-        title: "Cérémonie",
-        description: "Échange des vœux et sortie des mariés."
+        time: "15:30",
+        title: "Cérémonie Laïque",
+        description: "Échange des vœux et rituels symboliques dans le jardin."
       },
       {
-        time: "18:30",
-        title: "Cocktail & Dîner",
-        description: "Apéritif, repas et animations."
+        time: "17:30",
+        title: "Cocktail Dînatoire",
+        description: "Jazz live, animations et dégustation de produits locaux."
+      },
+      {
+        time: "20:00",
+        title: "Dîner & Soirée",
+        description: "Banquet sous les étoiles et ouverture de balle."
       }
     ],
     guestExperience: {
@@ -208,6 +227,16 @@ const WEDDING_TEMPLATES = {
       toneId: "custom",
       buttonStyle: "outline",
       buttonRadius: "square",
+    },
+  },
+  avantgarde: {
+    theme: {
+      primaryColor: "#A47A2A",
+      secondaryColor: "#F7F3EE",
+      fontFamily: "editorial",
+      toneId: "custom",
+      buttonStyle: "outline",
+      buttonRadius: "rounded",
     },
   },
 } as const;
@@ -382,7 +411,7 @@ export async function registerRoutes(app: Express) {
 
   app.post("/api/auth/signup-with-wedding", signupWithWeddingLimiter, async (req, res) => {
     try {
-      const { email, password, firstName, title, slug, weddingDate, templateId, storyBody, toneId, features, paymentMode, externalCagnotteUrl, externalProvider, heroImage, couplePhoto, galleryImages, plan } = req.body || {};
+      const { email, password, firstName, title, slug, weddingDate, templateId, storyBody, toneId, features, paymentMode, externalCagnotteUrl, externalProvider, heroImage, couplePhoto, galleryImages, plan, language } = req.body || {};
 
       if (!email || !password || !firstName) return res.status(400).json({ message: "Email, mot de passe et prénom requis." });
       if (!title || !slug) return res.status(400).json({ message: "Titre et URL du site requis." });
@@ -430,6 +459,7 @@ export async function registerRoutes(app: Express) {
       const tone = resolveTone(toneId);
       const mergedConfig = {
         ...config,
+        language: language === "en" ? "en" : "fr",
         theme: { ...config.theme, toneId: tone.id, primaryColor: tone.primaryColor, secondaryColor: tone.secondaryColor },
         features: { ...config.features, ...(features || {}) },
         payments: {
@@ -800,6 +830,12 @@ export async function registerRoutes(app: Express) {
   app.post("/api/weddings", isAuthenticated, async (req, res) => {
     try {
       const user = (req as any).user;
+      const ownerWeddings = await storage.getWeddingsByOwner(user.id);
+      const hasPremiumOwnership = !!user?.isAdmin || ownerWeddings.some((item) => item.currentPlan === "premium");
+      const siteLimit = hasPremiumOwnership ? PLAN_LIMITS.premium.maxSites : PLAN_LIMITS.free.maxSites;
+      if (ownerWeddings.length >= siteLimit) {
+        return res.status(402).json({ message: "La création de plusieurs sites est réservée au plan Premium." });
+      }
       const {
         title,
         slug,
@@ -814,7 +850,8 @@ export async function registerRoutes(app: Express) {
         heroImage,
         couplePhoto,
         galleryImages,
-        storyBody
+        storyBody,
+        language,
       } = req.body || {};
 
       if (!title || !slug) return res.status(400).json({ message: "Titre et slug requis" });
@@ -843,6 +880,7 @@ export async function registerRoutes(app: Express) {
       const tone = resolveTone(toneId);
       const mergedConfig = {
         ...config,
+        language: language === "en" ? "en" : "fr",
         theme: {
           ...config.theme,
           toneId: tone.id,
@@ -903,7 +941,7 @@ export async function registerRoutes(app: Express) {
         slug,
         templateId: resolvedTemplateId,
         weddingDate: weddingDate ? new Date(weddingDate) : null,
-        currentPlan: currentPlan === "premium" ? "premium" : "free",
+        currentPlan: hasPremiumOwnership && currentPlan === "premium" ? "premium" : "free",
         config: mergedConfig,
         status: "draft",
       });
@@ -1066,6 +1104,211 @@ export async function registerRoutes(app: Express) {
     } catch (error) {
       res.status(500).json({ message: "Une erreur est survenue. Veuillez réessayer ou contacter le support." });
     }
+  });
+
+  app.delete("/api/weddings/:id", isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const wedding = await storage.getWedding(id);
+      if (!wedding) {
+        return res.status(404).json({ message: "Mariage introuvable" });
+      }
+
+      const user = (req as any).user;
+      if (!user?.isAdmin && wedding.ownerId !== user?.id) {
+        return res.status(403).json({ message: "Seul le propriétaire du site peut le supprimer" });
+      }
+
+      await storage.deleteWedding(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("DELETE /api/weddings/:id failed", error);
+      res.status(500).json({ message: "Impossible de supprimer le site" });
+    }
+  });
+
+  const ensureDefaultChecklist = async (weddingId: string) => {
+    const existingCategories = await storage.getChecklistCategories(weddingId);
+    if (existingCategories.length > 0) return;
+
+    for (const [categoryIndex, category] of DEFAULT_CHECKLIST_BLUEPRINT.entries()) {
+      const createdCategory = await storage.createChecklistCategory(weddingId, {
+        key: category.key,
+        label: category.label,
+        sortOrder: categoryIndex,
+        isDefault: true,
+      });
+
+      for (const [itemIndex, itemTitle] of category.items.entries()) {
+        await storage.createChecklistItem(weddingId, {
+          categoryId: createdCategory.id,
+          title: itemTitle,
+          description: null,
+          status: "todo",
+          isDefault: true,
+          sortOrder: itemIndex,
+          dueDate: null,
+        });
+      }
+    }
+  };
+
+  const ensureDefaultBudgetCategories = async (weddingId: string) => {
+    const existingCategories = await storage.getBudgetCategories(weddingId);
+    if (existingCategories.length > 0) return;
+
+    for (const [index, category] of DEFAULT_BUDGET_BLUEPRINT.entries()) {
+      await storage.createBudgetCategory(weddingId, {
+        key: category.key,
+        label: category.label,
+        sortOrder: index,
+        isDefault: true,
+      });
+    }
+  };
+
+  // Organization
+  app.get("/api/organization/checklist", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor", "viewer"]), async (req, res) => {
+    const wedding = (req as any).wedding;
+    await ensureDefaultChecklist(wedding.id);
+    const categories = await storage.getChecklistCategories(wedding.id);
+    const items = await storage.getChecklistItems(wedding.id);
+    res.json({
+      categories: buildChecklistSummary(categories, items),
+      totals: {
+        total: items.length,
+        done: items.filter((item) => item.status === "done").length,
+        inProgress: items.filter((item) => item.status === "in_progress").length,
+      },
+    });
+  });
+
+  app.post("/api/organization/checklist/categories", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor"]), validateRequest(insertOrganizationChecklistCategorySchema), async (req, res) => {
+    const wedding = (req as any).wedding;
+    const created = await storage.createChecklistCategory(wedding.id, req.body);
+    res.status(201).json(created);
+  });
+
+  app.patch("/api/organization/checklist/categories/:id", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor"]), async (req, res) => {
+    const wedding = (req as any).wedding;
+    const updated = await storage.updateChecklistCategory(wedding.id, Number(req.params.id), req.body || {});
+    res.json(updated);
+  });
+
+  app.delete("/api/organization/checklist/categories/:id", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor"]), async (req, res) => {
+    const wedding = (req as any).wedding;
+    await storage.deleteChecklistCategory(wedding.id, Number(req.params.id));
+    res.status(204).send();
+  });
+
+  app.post("/api/organization/checklist/items", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor"]), validateRequest(insertOrganizationChecklistItemSchema), async (req, res) => {
+    const wedding = (req as any).wedding;
+    const created = await storage.createChecklistItem(wedding.id, req.body);
+    res.status(201).json(created);
+  });
+
+  app.patch("/api/organization/checklist/items/:id", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor"]), async (req, res) => {
+    const wedding = (req as any).wedding;
+    const updated = await storage.updateChecklistItem(wedding.id, Number(req.params.id), req.body || {});
+    res.json(updated);
+  });
+
+  app.delete("/api/organization/checklist/items/:id", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor"]), async (req, res) => {
+    const wedding = (req as any).wedding;
+    await storage.deleteChecklistItem(wedding.id, Number(req.params.id));
+    res.status(204).send();
+  });
+
+  app.get("/api/organization/planning", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor", "viewer"]), async (req, res) => {
+    const wedding = (req as any).wedding;
+    const items = await storage.getPlanningItems(wedding.id);
+    res.json({
+      items,
+      suggestedItems: items.length > 0 ? [] : buildDefaultPlanning(wedding.weddingDate),
+    });
+  });
+
+  app.post("/api/organization/planning/items", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor"]), validateRequest(insertOrganizationPlanningItemSchema), async (req, res) => {
+    const wedding = (req as any).wedding;
+    const created = await storage.createPlanningItem(wedding.id, req.body);
+    res.status(201).json(created);
+  });
+
+  app.patch("/api/organization/planning/items/:id", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor"]), async (req, res) => {
+    const wedding = (req as any).wedding;
+    const updated = await storage.updatePlanningItem(wedding.id, Number(req.params.id), req.body || {});
+    res.json(updated);
+  });
+
+  app.delete("/api/organization/planning/items/:id", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor"]), async (req, res) => {
+    const wedding = (req as any).wedding;
+    await storage.deletePlanningItem(wedding.id, Number(req.params.id));
+    res.status(204).send();
+  });
+
+  app.get("/api/organization/budget", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor", "viewer"]), async (req, res) => {
+    const wedding = (req as any).wedding;
+    await ensureDefaultBudgetCategories(wedding.id);
+    const categories = await storage.getBudgetCategories(wedding.id);
+    const items = await storage.getBudgetItems(wedding.id);
+    res.json(buildBudgetSummary(categories, items));
+  });
+
+  app.post("/api/organization/budget/categories", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor"]), validateRequest(insertOrganizationBudgetCategorySchema), async (req, res) => {
+    const wedding = (req as any).wedding;
+    const created = await storage.createBudgetCategory(wedding.id, req.body);
+    res.status(201).json(created);
+  });
+
+  app.patch("/api/organization/budget/categories/:id", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor"]), async (req, res) => {
+    const wedding = (req as any).wedding;
+    const updated = await storage.updateBudgetCategory(wedding.id, Number(req.params.id), req.body || {});
+    res.json(updated);
+  });
+
+  app.delete("/api/organization/budget/categories/:id", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor"]), async (req, res) => {
+    const wedding = (req as any).wedding;
+    await storage.deleteBudgetCategory(wedding.id, Number(req.params.id));
+    res.status(204).send();
+  });
+
+  app.post("/api/organization/budget/items", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor"]), validateRequest(insertOrganizationBudgetItemSchema), async (req, res) => {
+    const wedding = (req as any).wedding;
+    const created = await storage.createBudgetItem(wedding.id, req.body);
+    res.status(201).json(created);
+  });
+
+  app.patch("/api/organization/budget/items/:id", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor"]), async (req, res) => {
+    const wedding = (req as any).wedding;
+    const updated = await storage.updateBudgetItem(wedding.id, Number(req.params.id), req.body || {});
+    res.json(updated);
+  });
+
+  app.delete("/api/organization/budget/items/:id", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor"]), async (req, res) => {
+    const wedding = (req as any).wedding;
+    await storage.deleteBudgetItem(wedding.id, Number(req.params.id));
+    res.status(204).send();
+  });
+
+  app.get("/api/organization/progress", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor", "viewer"]), async (req, res) => {
+    const wedding = (req as any).wedding;
+    await ensureDefaultChecklist(wedding.id);
+    const [guests, gifts, emails, checklistItems, planningItems] = await Promise.all([
+      storage.getAllRsvpResponses(wedding.id),
+      storage.getGifts(wedding.id),
+      storage.getEmailLogs(wedding.id),
+      storage.getChecklistItems(wedding.id),
+      storage.getPlanningItems(wedding.id),
+    ]);
+
+    res.json(computeOrganizationProgress({
+      wedding,
+      guests,
+      gifts,
+      emails,
+      checklistItems,
+      planningItems,
+    }));
   });
 
   // RSVP
@@ -1353,8 +1596,8 @@ export async function registerRoutes(app: Express) {
       const guest = await storage.getRsvpResponseByPublicToken(token);
       if (!guest) return res.status(404).json({ message: "Invitation non trouvée" });
       await storage.updateRsvpResponse(guest.weddingId, guest.id, {
-        availability: decision,
-        status: decision,
+        availability: decision as "confirmed" | "declined",
+        status: decision as "confirmed" | "declined",
         confirmedAt: new Date(),
       });
       const wedding = await storage.getWedding(guest.weddingId);

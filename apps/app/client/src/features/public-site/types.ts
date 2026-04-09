@@ -20,6 +20,7 @@ export interface HeroSectionProps extends SectionEditProps {
   heroImage: string;
   logoUrl: string;
   logoText: string;
+  logoTextStyle?: string;
   countdownDate: string;
   ctaPath: string;
   buttonToneClass: string;
@@ -106,6 +107,15 @@ export interface ScheduleSectionProps extends SectionEditProps {
   onUpdateProgramItem: (index: number, patch: Partial<ProgramItem>) => Promise<void>;
   onDeleteProgramItem: (index: number) => Promise<void>;
   onAddProgramItem: () => Promise<void>;
+  order?: number;
+}
+
+export interface AccommodationsSectionProps extends SectionEditProps {
+  tokens: TemplateTokens;
+  accommodationTitle: string;
+  accommodationDescription: string;
+  accommodationItems: AccommodationItem[];
+  onSaveText: SaveTextFn;
   order?: number;
 }
 

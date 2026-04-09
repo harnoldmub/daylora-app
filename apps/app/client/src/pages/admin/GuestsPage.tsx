@@ -20,6 +20,8 @@ import {
     RefreshCw,
     Image as ImageIcon,
     X,
+    Sparkles,
+    Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -558,7 +560,7 @@ export default function GuestsPage() {
                     </Button>
                     <Button variant="outline" size="sm" onClick={openInvitationSettings} disabled={!wedding}>
                         <FileEdit className="h-4 w-4 mr-1.5" />
-                        <span className="hidden sm:inline">Modifier l'</span>invitation
+                        <span className="hidden sm:inline">Invitation </span>invités
                     </Button>
                     <Dialog open={addGuestOpen} onOpenChange={setAddGuestOpen}>
                         <DialogTrigger asChild>
@@ -819,9 +821,9 @@ export default function GuestsPage() {
                 <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
                     <div className="px-6 pt-6 pb-4 border-b bg-gradient-to-b from-amber-50/60 to-transparent">
                         <DialogHeader>
-                            <DialogTitle className="text-xl font-serif">Page invitation</DialogTitle>
+                            <DialogTitle className="text-xl font-serif">Invitation invités</DialogTitle>
                             <DialogDescription>
-                                Personnalisez les textes et sections visibles sur l'invitation envoyée à vos invités.
+                                Personnalisez les textes et sections visibles sur les invitations envoyées à vos invités.
                             </DialogDescription>
                         </DialogHeader>
                     </div>
@@ -1115,6 +1117,32 @@ export default function GuestsPage() {
                     <a href={`/${weddingId}/billing`} className="text-sm font-semibold text-amber-700 hover:text-amber-900 underline">Passer à Premium</a>
                 </div>
             )}
+
+            <Card className="p-5 border-border/70">
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <Crown className={`h-4 w-4 ${wedding?.currentPlan === "premium" ? "text-amber-600" : "text-muted-foreground"}`} />
+                            <p className="text-sm font-semibold">
+                                {wedding?.currentPlan === "premium" ? "Invités illimités inclus dans Premium" : `Plan Découverte : ${total}/10 invités utilisés`}
+                            </p>
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            {wedding?.currentPlan === "premium"
+                                ? "Ajoutez autant d'invités que nécessaire et gérez-les librement."
+                                : "Le plan Découverte inclut jusqu'à 10 invités. Premium débloque les invités illimités."}
+                        </p>
+                    </div>
+                    {wedding?.currentPlan !== "premium" ? (
+                        <a href={`/${weddingId}/billing`}>
+                            <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/5">
+                                <Sparkles className="mr-2 h-4 w-4" />
+                                Passer au Premium
+                            </Button>
+                        </a>
+                    ) : null}
+                </div>
+            </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[

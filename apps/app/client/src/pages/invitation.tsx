@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState, useRef } from "react";
 import { Loader2, MapPin, Gift, ExternalLink, Bed, ChevronDown, Heart, Sparkles, Calendar, Clock, CheckCircle2, Users, ArrowRight } from "lucide-react";
 import QRCodeLib from "qrcode";
+import { getSiteLanguagePack } from "@/lib/site-language";
 
 type GuestData = {
   id: number;
@@ -144,6 +145,50 @@ export default function InvitationPage() {
   });
 
   const primaryColor = wedding?.config?.theme?.primaryColor || "#C8A96A";
+  const languagePack = getSiteLanguagePack((wedding?.config as any)?.language);
+  const invitationUi = languagePack.language === "en"
+    ? {
+        loading: "Loading...",
+        confirmed: "Attendance confirmed",
+        confirmedDesc: "Thank you for confirming. We can't wait to celebrate with you.",
+        declined: "Noted with love",
+        declinedDesc: "We understand and send you our warmest thoughts. We will miss you.",
+        pending: "Please confirm your attendance",
+        pendingDesc: "Visit our website to confirm your attendance and discover all the details.",
+        reply: "Reply",
+        invitationLabel: "Invitation",
+        viewSite: "View our website",
+        scheduleIntro: "The day",
+        scheduleTitle: "Schedule",
+        optionsIntro: "Your options",
+        optionsTitle: "Extras",
+        locationsIntro: "Where to find us",
+        locationsTitle: "Venues",
+        directions: "Directions",
+        stay: "Places to stay",
+        fundIntro: "Our fund",
+      }
+    : {
+        loading: "Chargement...",
+        confirmed: "Présence confirmée",
+        confirmedDesc: "Merci d'avoir confirmé votre présence. Nous avons hâte de vous retrouver !",
+        declined: "Absence notée",
+        declinedDesc: "Nous comprenons et vous souhaitons le meilleur. Vous nous manquerez !",
+        pending: "Confirmez votre présence",
+        pendingDesc: "Rendez-vous sur notre site pour confirmer votre venue et découvrir tous les détails.",
+        reply: "Répondre",
+        invitationLabel: "Invitation",
+        viewSite: "Voir notre site",
+        scheduleIntro: "Le déroulement",
+        scheduleTitle: "Programme",
+        optionsIntro: "Vos options",
+        optionsTitle: "Compléments",
+        locationsIntro: "Où nous retrouver",
+        locationsTitle: "Lieux",
+        directions: "Itinéraire",
+        stay: "Hébergements",
+        fundIntro: "Notre cagnotte",
+      };
   const secondaryColor = wedding?.config?.theme?.secondaryColor || "#FFFDF9";
   const primaryHSL = hexToHSL(primaryColor);
   const darkL = Math.max(primaryHSL.l - 35, 10);
@@ -162,9 +207,9 @@ export default function InvitationPage() {
   useEffect(() => {
     if (!wedding) return;
     const wTitle = wedding.config?.texts?.heroTitle || wedding.title;
-    document.title = wTitle ? `${wTitle} — Invitation` : "Invitation";
-    return () => { document.title = "Daylora — Créez votre site de mariage"; };
-  }, [wedding?.id]);
+    document.title = wTitle ? `${wTitle} — ${languagePack.invitation.pageTitle}` : languagePack.invitation.pageTitle;
+    return () => { document.title = languagePack.language === "en" ? "Daylora — Create your wedding website" : "Daylora — Créez votre site de mariage"; };
+  }, [wedding?.id, languagePack]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !guestId) return;
@@ -200,15 +245,15 @@ export default function InvitationPage() {
   const cagnotteMode = payments.mode || (cagnotteExternalUrl ? "external" : "stripe");
   const cagnotteHref = cagnotteMode === "external" && cagnotteExternalUrl ? cagnotteExternalUrl : `${basePath}#cagnotte`;
 
-  const invGreeting = texts.invitationGreeting || "Nous avons l'honneur de vous convier";
-  const invPrelude = texts.invitationPrelude || "à célébrer l'union de";
-  const invMessage = texts.invitationMessage || "Ce jour ne serait pas le même sans votre présence à nos côtés.";
-  const invSubmessage = texts.invitationSubmessage || "Venez comme vous êtes, avec le cœur léger et l'envie de faire la fête.";
-  const invCagnotteTitle = texts.invitationCagnotteTitle || texts.cagnotteTitle || "Liste de mariage";
-  const invCagnotteDesc = texts.invitationCagnotteDescription || texts.cagnotteDescription || "Votre présence est le plus beau des cadeaux. Si toutefois vous souhaitez contribuer, une cagnotte a été mise en place pour nous aider à construire notre avenir.";
-  const invCagnotteButton = texts.invitationCagnotteButton || "Contribuer";
+  const invGreeting = texts.invitationGreeting || languagePack.texts.invitationGreeting;
+  const invPrelude = texts.invitationPrelude || languagePack.texts.invitationPrelude;
+  const invMessage = texts.invitationMessage || languagePack.texts.invitationMessage;
+  const invSubmessage = texts.invitationSubmessage || languagePack.texts.invitationSubmessage;
+  const invCagnotteTitle = texts.invitationCagnotteTitle || texts.cagnotteTitle || languagePack.texts.invitationCagnotteTitle;
+  const invCagnotteDesc = texts.invitationCagnotteDescription || texts.cagnotteDescription || languagePack.texts.invitationCagnotteDescription;
+  const invCagnotteButton = texts.invitationCagnotteButton || languagePack.texts.invitationCagnotteButton;
   const invDressCode = texts.invitationDressCode || texts.dressCode || "";
-  const invFooterNote = texts.invitationFooterNote || "Merci de confirmer votre présence avant la date indiquée. Nous avons hâte de vous retrouver.";
+  const invFooterNote = texts.invitationFooterNote || languagePack.texts.invitationFooterNote;
 
   const showProgramme = sections.invitationShowProgramme ?? true;
   const showLocations = sections.invitationShowLocations ?? true;
@@ -217,9 +262,9 @@ export default function InvitationPage() {
   const showQrCode = sections.invitationShowQrCode ?? true;
 
   const dateObj = wedding?.weddingDate ? new Date(wedding.weddingDate) : null;
-  const dayName = dateObj ? dateObj.toLocaleDateString("fr-FR", { weekday: "long" }) : "";
+  const dayName = dateObj ? dateObj.toLocaleDateString(languagePack.locale, { weekday: "long" }) : "";
   const dayNum = dateObj ? dateObj.getDate() : "";
-  const monthName = dateObj ? dateObj.toLocaleDateString("fr-FR", { month: "long" }) : "";
+  const monthName = dateObj ? dateObj.toLocaleDateString(languagePack.locale, { month: "long" }) : "";
   const yearNum = dateObj ? dateObj.getFullYear() : "";
 
   const coupleNames = heroTitle.includes(" et ") ? heroTitle.split(" et ") : heroTitle.includes(" & ") ? heroTitle.split(" & ") : [heroTitle, ""];
@@ -235,7 +280,7 @@ export default function InvitationPage() {
             <div className="absolute inset-0 rounded-full border" style={{ borderColor: borderLight }} />
             <Loader2 className="h-6 w-6 animate-spin absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ color: primaryColor }} />
           </div>
-          <p className="text-xs tracking-[0.2em] uppercase" style={{ color: textSubtle }}>Chargement...</p>
+          <p className="text-xs tracking-[0.2em] uppercase" style={{ color: textSubtle }}>{invitationUi.loading}</p>
         </div>
       </div>
     );
@@ -248,8 +293,8 @@ export default function InvitationPage() {
           <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center" style={{ backgroundColor: cardBg, border: `1px solid ${borderLight}` }}>
             <Heart className="h-6 w-6" style={{ color: primaryColor }} />
           </div>
-          <p className="text-lg font-serif" style={{ color: textDark }}>Invitation non trouvée</p>
-          <p className="text-sm" style={{ color: textSubtle }}>Vérifiez le lien ou contactez les mariés.</p>
+          <p className="text-lg font-serif" style={{ color: textDark }}>{languagePack.invitation.notFoundTitle}</p>
+          <p className="text-sm" style={{ color: textSubtle }}>{languagePack.invitation.notFoundDescription}</p>
         </div>
       </div>
     );
@@ -323,7 +368,7 @@ export default function InvitationPage() {
             {isCouple && guest.partySize > 1 && (
               <p className="text-xs inv-serif tracking-wide" style={{ color: textSubtle }}>
                 <Users className="inline h-3 w-3 mr-1" style={{ color: primaryColor }} />
-                {guest.partySize} {guest.partySize > 1 ? "personnes" : "personne"}
+                {guest.partySize} {guest.partySize > 1 ? languagePack.invitation.people : languagePack.invitation.person}
               </p>
             )}
           </div>
@@ -433,10 +478,10 @@ export default function InvitationPage() {
                   </div>
                   <div className="space-y-2">
                     <p className="text-[10px] tracking-[0.4em] uppercase inv-serif font-semibold" style={{ color: primaryColor }}>
-                      Présence confirmée
+                      {invitationUi.confirmed}
                     </p>
                     <p className="text-sm inv-serif" style={{ color: textSubtle }}>
-                      Merci d'avoir confirmé votre présence. Nous avons hâte de vous retrouver !
+                      {invitationUi.confirmedDesc}
                     </p>
                   </div>
                   {(assignedTable?.name || assignedTable?.number || guest.tableNumber) && (
@@ -444,7 +489,7 @@ export default function InvitationPage() {
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full"
                       style={{ backgroundColor: cardBg, border: `1px solid ${borderMedium}` }}
                     >
-                      <span className="text-[10px] tracking-[0.2em] uppercase inv-serif" style={{ color: textSubtle }}>Table</span>
+                      <span className="text-[10px] tracking-[0.2em] uppercase inv-serif" style={{ color: textSubtle }}>{languagePack.invitation.table}</span>
                       <span className="text-xl inv-display font-medium" style={{ color: primaryColor }}>{assignedTable?.name || assignedTable?.number || guest.tableNumber}</span>
                     </div>
                   )}
@@ -456,10 +501,10 @@ export default function InvitationPage() {
                   </div>
                   <div className="space-y-2">
                     <p className="text-[10px] tracking-[0.4em] uppercase inv-serif font-semibold" style={{ color: textSubtle }}>
-                      Absence notée
+                      {invitationUi.declined}
                     </p>
                     <p className="text-sm inv-serif" style={{ color: textSubtle }}>
-                      Nous comprenons et vous souhaitons le meilleur. Vous nous manquerez !
+                      {invitationUi.declinedDesc}
                     </p>
                   </div>
                 </>
@@ -470,10 +515,10 @@ export default function InvitationPage() {
                   </div>
                   <div className="space-y-2">
                     <p className="text-[10px] tracking-[0.4em] uppercase inv-serif font-semibold" style={{ color: primaryColor }}>
-                      Confirmez votre présence
+                      {invitationUi.pending}
                     </p>
                     <p className="text-sm inv-serif" style={{ color: textSubtle }}>
-                      Rendez-vous sur notre site pour confirmer votre venue et découvrir tous les détails.
+                      {invitationUi.pendingDesc}
                     </p>
                   </div>
                   <a
@@ -481,7 +526,7 @@ export default function InvitationPage() {
                     className="inline-flex items-center gap-2.5 px-8 py-3 text-[10px] tracking-[0.3em] uppercase font-bold text-white transition-all hover:opacity-90 hover:shadow-lg rounded-full"
                     style={{ backgroundColor: primaryColor }}
                   >
-                    Répondre
+                    {invitationUi.reply}
                     <ArrowRight className="h-3.5 w-3.5" />
                   </a>
                 </>
@@ -491,7 +536,7 @@ export default function InvitationPage() {
                 <div className="pt-2">
                   {invitationTypeLabel ? (
                     <p className="mb-3 text-[10px] tracking-[0.25em] uppercase inv-serif" style={{ color: textSubtle }}>
-                      Invitation: {invitationTypeLabel}
+                      {languagePack.invitation.invitationType}: {invitationTypeLabel}
                     </p>
                   ) : null}
                   <a
@@ -499,7 +544,7 @@ export default function InvitationPage() {
                     className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase font-semibold hover:opacity-70 transition-opacity inv-serif"
                     style={{ color: primaryColor }}
                   >
-                    Voir notre site
+                    {invitationUi.viewSite}
                     <ExternalLink className="h-3 w-3" />
                   </a>
                 </div>
@@ -514,10 +559,10 @@ export default function InvitationPage() {
           <AnimatedSection className="max-w-lg mx-auto">
             <div className="text-center mb-16 space-y-3">
               <p className="text-[10px] tracking-[0.4em] uppercase inv-serif" style={{ color: primaryColor }}>
-                Le déroulement
+                {invitationUi.scheduleIntro}
               </p>
               <h2 className="text-4xl md:text-5xl inv-display font-medium italic" style={{ color: textDark }}>
-                Programme
+                {invitationUi.scheduleTitle}
               </h2>
             </div>
 
@@ -578,10 +623,10 @@ export default function InvitationPage() {
           <AnimatedSection className="max-w-lg mx-auto">
             <div className="text-center mb-12 space-y-3">
               <p className="text-[10px] tracking-[0.4em] uppercase inv-serif" style={{ color: primaryColor }}>
-                Vos options
+                {invitationUi.optionsIntro}
               </p>
               <h2 className="text-4xl md:text-5xl inv-display font-medium italic" style={{ color: textDark }}>
-                Compléments
+                {invitationUi.optionsTitle}
               </h2>
             </div>
 
@@ -594,7 +639,7 @@ export default function InvitationPage() {
                   </div>
                   {typeof option.priceCents === "number" ? (
                     <div className="text-xs inv-serif" style={{ color: textSubtle }}>
-                      {(option.priceCents / 100).toFixed(2)} EUR / personne
+                      {(option.priceCents / 100).toFixed(2)} EUR / {languagePack.invitation.person}
                     </div>
                   ) : null}
                 </div>
@@ -609,10 +654,10 @@ export default function InvitationPage() {
           <AnimatedSection className="max-w-lg mx-auto">
             <div className="text-center mb-14 space-y-3">
               <p className="text-[10px] tracking-[0.4em] uppercase inv-serif" style={{ color: primaryColor }}>
-                Où nous retrouver
+                {invitationUi.locationsIntro}
               </p>
               <h2 className="text-4xl md:text-5xl inv-display font-medium italic" style={{ color: textDark }}>
-                Lieux
+                {invitationUi.locationsTitle}
               </h2>
             </div>
 
@@ -644,7 +689,7 @@ export default function InvitationPage() {
                         style={{ color: primaryColor }}
                       >
                         <MapPin className="h-3 w-3" />
-                        Itinéraire
+                        {invitationUi.directions}
                         <ExternalLink className="h-2.5 w-2.5" />
                       </a>
                     )}
@@ -653,7 +698,7 @@ export default function InvitationPage() {
                       <div className="pt-4 mt-4 space-y-2" style={{ borderTop: `1px solid ${borderLight}` }}>
                         <div className="flex items-center justify-center gap-2">
                           <Bed className="h-3.5 w-3.5" style={{ color: primaryColor }} />
-                          <span className="text-[10px] tracking-[0.2em] uppercase font-semibold" style={{ color: textSubtle }}>Hébergements</span>
+                          <span className="text-[10px] tracking-[0.2em] uppercase font-semibold" style={{ color: textSubtle }}>{invitationUi.stay}</span>
                         </div>
                         {loc.accommodations.map((acc: any, accIdx: number) => (
                           <div key={accIdx} className="text-xs inv-serif" style={{ color: textSubtle }}>
@@ -685,7 +730,7 @@ export default function InvitationPage() {
             >
               <Sparkles className="h-5 w-5 mx-auto" style={{ color: primaryColor }} />
               <h3 className="text-xs tracking-[0.2em] uppercase font-bold" style={{ color: textDark }}>
-                Dress Code
+                {languagePack.language === "en" ? "Dress code" : "Dress Code"}
               </h3>
               <p className="text-sm inv-serif" style={{ color: textDark }}>
                 {invDressCode}
@@ -703,7 +748,7 @@ export default function InvitationPage() {
             </div>
             <div className="space-y-3">
               <p className="text-[10px] tracking-[0.4em] uppercase inv-serif" style={{ color: primaryColor }}>
-                Notre cagnotte
+                {invitationUi.fundIntro}
               </p>
               <h2 className="text-3xl md:text-4xl inv-display font-medium italic" style={{ color: textDark }}>
                 {invCagnotteTitle}

@@ -5,9 +5,11 @@ import { ArrowLeft } from "lucide-react";
 import type { Wedding } from "@shared/schema";
 import { PublicEditProvider } from "@/contexts/public-edit";
 import { TemplateRenderer } from "@/features/public-site/templates/TemplateRenderer";
+import { AvantGardeTemplateRenderer } from "@/features/public-site/templates/AvantGardeTemplateRenderer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { resolveTone, getTemplatePreset } from "@/lib/design-presets";
 import { WhatsAppSupportButton } from "@/components/support/WhatsAppSupportButton";
+import { getSiteLanguagePack } from "@/lib/site-language";
 
 const noop = () => {};
 const noopAsync = async () => {};
@@ -25,14 +27,17 @@ export default function OnboardingPreview() {
     } catch { return null; }
   }, []);
 
+  const languagePack = getSiteLanguagePack(data?.language);
+  const isEnglish = languagePack.language === "en";
+
   if (!data) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-8 text-center">
-        <h1 className="text-2xl font-serif font-bold">Aperçu non disponible</h1>
-        <p className="text-muted-foreground">Retournez à l'assistant de création pour générer un aperçu.</p>
+        <h1 className="text-2xl font-serif font-bold">{isEnglish ? "Preview unavailable" : "Aperçu non disponible"}</h1>
+        <p className="text-muted-foreground">{isEnglish ? "Go back to the setup assistant to generate a preview." : "Retournez à l'assistant de création pour générer un aperçu."}</p>
         <Button onClick={() => setLocation("/onboarding")} className="gap-2">
           <ArrowLeft className="h-4 w-4" />
-          Retour
+          {isEnglish ? "Back" : "Retour"}
         </Button>
       </div>
     );
@@ -44,7 +49,7 @@ export default function OnboardingPreview() {
   const wedding: Wedding = {
     id: "preview",
     ownerId: "preview",
-    title: data.title || "Mon Mariage",
+    title: data.title || (isEnglish ? "My Wedding" : "Mon Mariage"),
     slug: data.slug || "preview",
     weddingDate: data.weddingDate || null,
     templateId: data.templateId || "classic",
@@ -55,22 +60,22 @@ export default function OnboardingPreview() {
     stripeOnboardingComplete: false,
     config: {
       texts: {
-        heroTitle: data.title || "Mon Mariage",
-        heroSubtitle: "Le mariage de",
+        heroTitle: data.title || (isEnglish ? "My Wedding" : "Mon Mariage"),
+        heroSubtitle: languagePack.texts.heroSubtitle,
         weddingDate: data.weddingDate || "",
-        heroCta: "Confirmer votre présence",
-        rsvpTitle: "Confirmez votre présence",
-        rsvpSubtitle: "Nous serions ravis de vous compter parmi nous",
-        rsvpButton: "Je confirme ma présence",
-        storyTitle: "Notre Histoire",
+        heroCta: languagePack.texts.heroCta,
+        rsvpTitle: languagePack.texts.rsvpTitle,
+        rsvpSubtitle: languagePack.texts.rsvpDescription,
+        rsvpButton: languagePack.texts.rsvpButton,
+        storyTitle: languagePack.texts.storyTitle,
         storyBody: data.storyBody || "",
-        galleryTitle: "Galerie Photos",
-        locationTitle: "Lieux",
-        scheduleTitle: "Programme",
-        giftsTitle: "Liste de Cadeaux",
-        giftsSubtitle: "Faites plaisir aux mariés",
-        cagnotteTitle: "Cagnotte",
-        cagnotteDescription: "Votre présence est notre plus beau cadeau.",
+        galleryTitle: languagePack.texts.galleryTitle,
+        locationTitle: languagePack.texts.locationTitle,
+        scheduleTitle: languagePack.texts.programTitle,
+        giftsTitle: languagePack.texts.giftsTitle,
+        giftsSubtitle: languagePack.texts.giftsDescription,
+        cagnotteTitle: languagePack.texts.cagnotteTitle,
+        cagnotteDescription: languagePack.texts.cagnotteDescription,
       },
       media: {
         heroImage: data.heroImage || "",
@@ -97,14 +102,15 @@ export default function OnboardingPreview() {
       },
       navigation: {
         menuItems: [
-          { id: "home", path: "home", label: "Accueil", enabled: true },
+          { id: "home", path: "home", label: languagePack.menuLabels.home, enabled: true },
           { id: "rsvp", path: "rsvp", label: "RSVP", enabled: true },
-          { id: "gifts", path: "gifts", label: "Cadeaux", enabled: data.features?.giftsEnabled ?? true },
-          { id: "story", path: "story", label: "Histoire", enabled: true },
-          { id: "gallery", path: "gallery", label: "Photos", enabled: true },
-          { id: "location", path: "location", label: "Lieux", enabled: true },
-          { id: "program", path: "program", label: "Programme", enabled: true },
-          { id: "cagnotte", path: "cagnotte", label: "Cagnotte", enabled: data.features?.cagnotteEnabled ?? true },
+          { id: "gifts", path: "gifts", label: languagePack.menuLabels.gifts, enabled: data.features?.giftsEnabled ?? true },
+          { id: "story", path: "story", label: languagePack.menuLabels.story, enabled: true },
+          { id: "gallery", path: "gallery", label: languagePack.menuLabels.gallery, enabled: true },
+          { id: "accommodation", path: "accommodation", label: languagePack.menuLabels.accommodation, enabled: false },
+          { id: "location", path: "location", label: languagePack.menuLabels.location, enabled: true },
+          { id: "program", path: "program", label: languagePack.menuLabels.program, enabled: true },
+          { id: "cagnotte", path: "cagnotte", label: languagePack.texts.navCagnotte, enabled: data.features?.cagnotteEnabled ?? true },
         ],
         pages: {
           rsvp: true,
@@ -113,6 +119,7 @@ export default function OnboardingPreview() {
           live: data.features?.liveEnabled ?? true,
           story: true,
           gallery: true,
+          accommodation: false,
           location: true,
           program: true,
         },
@@ -140,41 +147,73 @@ export default function OnboardingPreview() {
             onClick={() => { window.close(); setTimeout(() => setLocation("/onboarding"), 100); }}
           >
             <ArrowLeft className="h-4 w-4" />
-            Fermer l'aperçu
+            {isEnglish ? "Close preview" : "Fermer l'aperçu"}
           </Button>
         </div>
 
-        <TemplateRenderer
-          wedding={wedding}
-          draftMedia={{ heroImage: data.heroImage || "", couplePhoto: data.couplePhoto || "" }}
-          isUploading={{ heroImage: false, couplePhoto: false }}
-          ctaPath="rsvp"
-          gifts={[]}
-          slug={data.slug || "preview"}
-          basePath=""
-          onSaveText={noopSave}
-          onHeroCtaClick={handleScrollTo}
-          onMediaUpload={() => () => {}}
-          onUpdateMedia={noopStr as any}
-          onSaveCountdownDate={noopStr}
-          onSaveCtaPath={noopStr}
-          onUpdateLocationItem={noopAsync as any}
-          onDeleteLocationItem={noopAsync as any}
-          onAddLocationItem={noopAsync}
-          onUpdateProgramItem={noopAsync as any}
-          onDeleteProgramItem={noopAsync as any}
-          onAddProgramItem={noopAsync}
-          onGalleryFilesSelected={noopAsync as any}
-          onRemoveGalleryImage={noopAsync as any}
-          onResetGallery={noopAsync}
-          onCreateGift={noop}
-          onEditGift={noop}
-          onDeleteGift={noop}
-          toDateInputValue={(v) => v}
-          fromDateInputValue={(v) => v}
-        />
+        {data.templateId === "avantgarde" ? (
+          <AvantGardeTemplateRenderer
+            wedding={wedding}
+            draftMedia={{ heroImage: data.heroImage || "", couplePhoto: data.couplePhoto || "" }}
+            isUploading={{ heroImage: false, couplePhoto: false }}
+            ctaPath="rsvp"
+            gifts={[]}
+            slug={data.slug || "preview"}
+            basePath=""
+            onSaveText={noopSave}
+            onHeroCtaClick={handleScrollTo}
+            onMediaUpload={() => () => {}}
+            onUpdateMedia={noopStr as any}
+            onSaveCountdownDate={noopStr}
+            onSaveCtaPath={noopStr}
+            onUpdateLocationItem={noopAsync as any}
+            onDeleteLocationItem={noopAsync as any}
+            onAddLocationItem={noopAsync}
+            onUpdateProgramItem={noopAsync as any}
+            onDeleteProgramItem={noopAsync as any}
+            onAddProgramItem={noopAsync}
+            onGalleryFilesSelected={noopAsync as any}
+            onRemoveGalleryImage={noopAsync as any}
+            onResetGallery={noopAsync}
+            onCreateGift={noop}
+            onEditGift={noop}
+            onDeleteGift={noop}
+            toDateInputValue={(v: any) => v}
+            fromDateInputValue={(v: any) => v}
+          />
+        ) : (
+          <TemplateRenderer
+            wedding={wedding}
+            draftMedia={{ heroImage: data.heroImage || "", couplePhoto: data.couplePhoto || "" }}
+            isUploading={{ heroImage: false, couplePhoto: false }}
+            ctaPath="rsvp"
+            gifts={[]}
+            slug={data.slug || "preview"}
+            basePath=""
+            onSaveText={noopSave}
+            onHeroCtaClick={handleScrollTo}
+            onMediaUpload={() => () => {}}
+            onUpdateMedia={noopStr as any}
+            onSaveCountdownDate={noopStr}
+            onSaveCtaPath={noopStr}
+            onUpdateLocationItem={noopAsync as any}
+            onDeleteLocationItem={noopAsync as any}
+            onAddLocationItem={noopAsync}
+            onUpdateProgramItem={noopAsync as any}
+            onDeleteProgramItem={noopAsync as any}
+            onAddProgramItem={noopAsync}
+            onGalleryFilesSelected={noopAsync as any}
+            onRemoveGalleryImage={noopAsync as any}
+            onResetGallery={noopAsync}
+            onCreateGift={noop}
+            onEditGift={noop}
+            onDeleteGift={noop}
+            toDateInputValue={(v: any) => v}
+            fromDateInputValue={(v: any) => v}
+          />
+        )}
         <WhatsAppSupportButton
-          pageLabel="Aperçu onboarding"
+          pageLabel={isEnglish ? "Onboarding preview" : "Aperçu onboarding"}
           weddingName={data.title || null}
           weddingSlug={data.slug || null}
           showHint

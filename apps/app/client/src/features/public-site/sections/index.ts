@@ -7,3 +7,4 @@ export { LocationsSection } from "./LocationsSection";
 export { ScheduleSection } from "./ScheduleSection";
 export { GiftsSection } from "./GiftsSection";
 export { CagnotteSection } from "./CagnotteSection";
+export { AccommodationsSection } from "./AccommodationsSection";

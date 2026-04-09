@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, ReactNode } from "react";
 import { type Wedding } from "@shared/schema";
+import { resolveFontProfile } from "@/lib/font-profiles";
 
 interface ThemeContextType {
     theme: Wedding["config"]["theme"];
@@ -77,6 +78,7 @@ export function ThemeProvider({
 
     useEffect(() => {
         const root = document.documentElement;
+        const fontProfile = resolveFontProfile(theme.fontFamily || "serif");
         const primaryHsl = hexToHsl(theme.primaryColor || "#C8A96A");
         const secondaryHsl = hexToHsl(theme.secondaryColor || "#FFFFFF");
         const backgroundHsl = adjustHslLightness(secondaryHsl, -1);
@@ -92,15 +94,19 @@ export function ThemeProvider({
         root.style.setProperty("--ring", primaryHsl);
         root.style.setProperty("--primary-foreground", getForegroundFor(theme.primaryColor || "#C8A96A"));
         root.style.setProperty("--secondary-foreground", getForegroundFor(theme.secondaryColor || "#FFFFFF"));
-        root.style.setProperty("--font-primary", theme.fontFamily === "serif" ? "'Playfair Display', serif" : "'Manrope', sans-serif");
+        root.style.setProperty("--font-primary", fontProfile.serif);
+        root.style.setProperty("--font-serif", fontProfile.serif);
+        root.style.setProperty("--font-sans", fontProfile.sans);
         root.style.setProperty("--button-radius", theme.buttonRadius === "square" ? "0.5rem" : theme.buttonRadius === "rounded" ? "0.9rem" : "9999px");
 
         root.style.setProperty("transition", "all 0.3s ease-in-out");
     }, [theme]);
 
+    const fontProfile = resolveFontProfile(theme.fontFamily || "serif");
+
     return (
         <ThemeContext.Provider value={{ theme }}>
-            <div className={`theme-${theme.fontFamily} template-${wedding.templateId || "classic"} min-h-screen bg-background text-foreground`}>
+            <div className={`theme-font-${theme.fontFamily || "serif"} ${fontProfile.baseClass} template-${wedding.templateId || "classic"} min-h-screen bg-background text-foreground`}>
                 {children}
             </div>
         </ThemeContext.Provider>

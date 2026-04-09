@@ -15,13 +15,16 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { RsvpResponse } from "@shared/schema";
+import { getAppNls } from "@/lib/nls";
 interface DashboardWidgetsProps {
   responses: RsvpResponse[];
   onFilterChange?: (filter: string) => void;
+  language?: string;
 }
 
-export function DashboardWidgets({ responses, onFilterChange }: DashboardWidgetsProps) {
+export function DashboardWidgets({ responses, onFilterChange, language }: DashboardWidgetsProps) {
   const { weddingId } = useParams();
+  const nls = getAppNls(language === "en" ? "en" : "fr");
   const stats = {
     total: responses.length,
     confirmed: responses.filter((r) => r.availability === "confirmed").length,
@@ -37,24 +40,24 @@ export function DashboardWidgets({ responses, onFilterChange }: DashboardWidgets
   };
 
   const availabilityData = [
-    { name: "Présents", value: stats.confirmed, color: "hsl(var(--chart-2))" },
-    { name: "Absents", value: stats.declined, color: "hsl(var(--chart-5))" },
-    { name: "En attente", value: stats.pending, color: "hsl(var(--chart-4))" },
+    { name: nls.widgets.availability.present, value: stats.confirmed, color: "hsl(var(--chart-2))" },
+    { name: nls.widgets.availability.absent, value: stats.declined, color: "hsl(var(--chart-5))" },
+    { name: nls.widgets.availability.pending, value: stats.pending, color: "hsl(var(--chart-4))" },
   ];
 
   const partySizeData = [
-    { name: "Solo (1)", value: stats.solo, fill: "hsl(var(--chart-1))" },
-    { name: "Couple (2)", value: stats.couple, fill: "hsl(var(--chart-2))" },
+    { name: nls.widgets.partySize.solo, value: stats.solo, fill: "hsl(var(--chart-1))" },
+    { name: nls.widgets.partySize.couple, value: stats.couple, fill: "hsl(var(--chart-2))" },
   ];
 
   const tableAssignmentData = [
     {
-      name: "Attribués",
+      name: nls.widgets.tablePlan.assigned,
       value: stats.assigned,
       fill: "hsl(var(--chart-2))",
     },
     {
-      name: "Non attribués",
+      name: nls.widgets.tablePlan.unassigned,
       value: stats.total - stats.assigned,
       fill: "hsl(var(--muted))",
     },
@@ -66,9 +69,9 @@ export function DashboardWidgets({ responses, onFilterChange }: DashboardWidgets
 
   const statCards = [
     {
-      title: "Total Invités",
+      title: nls.widgets.cards.totalGuests,
       value: stats.totalGuests,
-      description: `${stats.total} réponses`,
+      description: nls.widgets.cards.totalGuestsDesc.replace("{count}", String(stats.total)),
       icon: Users,
       color: "text-primary",
       bgColor: "bg-primary/10",
@@ -77,9 +80,9 @@ export function DashboardWidgets({ responses, onFilterChange }: DashboardWidgets
       clickable: true,
     },
     {
-      title: "Absents",
+      title: nls.widgets.cards.declined,
       value: stats.declined,
-      description: "Invités indisponibles",
+      description: nls.widgets.cards.declinedDesc,
       icon: XCircle,
       color: "text-destructive",
       bgColor: "bg-destructive/10",
@@ -88,9 +91,9 @@ export function DashboardWidgets({ responses, onFilterChange }: DashboardWidgets
       clickable: true,
     },
     {
-      title: "Confirmés",
+      title: nls.widgets.cards.confirmed,
       value: stats.confirmed,
-      description: `${stats.confirmedGuests} personnes totales`,
+      description: nls.widgets.cards.confirmedDesc.replace("{count}", String(stats.confirmedGuests)),
       icon: CheckCircle,
       color: "text-chart-2",
       bgColor: "bg-chart-2/10",
@@ -99,9 +102,9 @@ export function DashboardWidgets({ responses, onFilterChange }: DashboardWidgets
       clickable: true,
     },
     {
-      title: "Site & Design",
-      value: "Personnaliser",
-      description: "Éditez votre site",
+      title: nls.widgets.cards.siteDesign,
+      value: nls.widgets.cards.siteDesignValue,
+      description: nls.widgets.cards.siteDesignDesc,
       icon: Palette,
       color: "text-primary",
       bgColor: "bg-primary/10",
@@ -136,7 +139,7 @@ export function DashboardWidgets({ responses, onFilterChange }: DashboardWidgets
                   <p className="text-sm font-sans text-muted-foreground mb-1">
                     {stat.title}
                     {isClickable && (
-                      <span className="ml-2 text-[10px] text-primary opacity-70">(cliquer pour filtrer)</span>
+                      <span className="ml-2 text-[10px] text-primary opacity-70">{nls.widgets.cards.clickToFilter}</span>
                     )}
                   </p>
                   <p
@@ -160,11 +163,11 @@ export function DashboardWidgets({ responses, onFilterChange }: DashboardWidgets
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card className="p-6 col-span-1 border-0 shadow-sm rounded-2xl">
-          <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-2 mb-6">
             <div className="p-2 rounded-lg bg-primary/10">
               <TrendingUp className="h-5 w-5 text-primary" />
             </div>
-            <h3 className="font-serif font-semibold text-lg">Répartition Disponibilité</h3>
+            <h3 className="font-serif font-semibold text-lg">{nls.widgets.charts.availability}</h3>
           </div>
           <div className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -190,11 +193,11 @@ export function DashboardWidgets({ responses, onFilterChange }: DashboardWidgets
         </Card>
 
         <Card className="p-6 col-span-1 border-0 shadow-sm rounded-2xl">
-          <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-2 mb-6">
             <div className="p-2 rounded-lg bg-chart-4/10">
               <Users className="h-5 w-5 text-chart-4" />
             </div>
-            <h3 className="font-serif font-semibold text-lg">Taille des groupes</h3>
+            <h3 className="font-serif font-semibold text-lg">{nls.widgets.charts.groupSize}</h3>
           </div>
           <div className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -217,11 +220,11 @@ export function DashboardWidgets({ responses, onFilterChange }: DashboardWidgets
         </Card>
 
         <Card className="p-6 col-span-1 border-0 shadow-sm rounded-2xl">
-          <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-2 mb-6">
             <div className="p-2 rounded-lg bg-chart-2/10">
               <Table2 className="h-5 w-5 text-chart-2" />
             </div>
-            <h3 className="font-serif font-semibold text-lg">Plan de table</h3>
+            <h3 className="font-serif font-semibold text-lg">{nls.widgets.charts.tablePlan}</h3>
           </div>
           <div className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">

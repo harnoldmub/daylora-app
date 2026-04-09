@@ -18,6 +18,7 @@ import {
     QrCode
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 
 const staggerContainer = {
     hidden: { opacity: 0 },
@@ -36,6 +37,13 @@ const fadeInUp = {
 };
 
 export default function LandingPage() {
+    useEffect(() => {
+        document.title = "Daylora — Site de mariage, RSVP, invitations et cagnotte";
+        return () => {
+            document.title = "Daylora — Créez votre site de mariage";
+        };
+    }, []);
+
     return (
         <div className="min-h-screen bg-[#050505] text-white selection:bg-primary/30">
             {/* Premium Navbar */}
@@ -86,14 +94,14 @@ export default function LandingPage() {
                         </motion.div>
 
                         <motion.h1 variants={fadeInUp} className="text-6xl md:text-8xl font-serif font-bold leading-[1.1] tracking-tight">
-                            La nouvelle génération de sites de mariage
+                            Créez un site de mariage élégant et facile à partager
                         </motion.h1>
 
                         <motion.p variants={fadeInUp} className="text-lg md:text-xl text-white/60 max-w-xl leading-relaxed">
-                            Créez. Personnalisez. Publiez.
+                            Créez votre site de mariage, centralisez vos invitations, vos RSVP, votre liste de mariage et votre cagnotte sur une seule plateforme.
                         </motion.p>
                         <motion.p variants={fadeInUp} className="text-sm md:text-base text-white/55 max-w-xl leading-relaxed">
-                            Beautiful weddings, effortlessly online.
+                            Un site mariage premium pour présenter votre journée, envoyer vos invitations et suivre vos invités sans complexité.
                         </motion.p>
 
                         <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4">
@@ -150,31 +158,31 @@ export default function LandingPage() {
             <section id="features" className="py-32 px-6">
                 <div className="max-w-7xl mx-auto space-y-24">
                     <div className="text-center space-y-4">
-                        <h2 className="text-4xl md:text-5xl font-serif font-bold">Pour un mariage connecté</h2>
-                        <p className="text-white/40 max-w-2xl mx-auto">Tout a été conçu pour simplifier votre organisation et éblouir vos invités.</p>
+                        <h2 className="text-4xl md:text-5xl font-serif font-bold">Le site de mariage qui centralise tout</h2>
+                        <p className="text-white/40 max-w-2xl mx-auto">Présentez votre événement, gérez vos invités, recevez les RSVP et partagez les informations importantes depuis un seul site.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                         {[
                             {
                                 icon: <MousePointerClick className="h-10 w-10" />,
-                                title: "RSVP Intelligent",
-                                desc: "Suivi des présences et allergies en temps réel. Plus besoin de relancer."
+                                title: "RSVP mariage",
+                                desc: "Suivez les présences, les réponses et les informations importantes de vos invités en temps réel."
                             },
                             {
                                 icon: <QrCode className="h-10 w-10" />,
-                                title: "QR Code Personnel",
-                                desc: "Chaque invité reçoit son invitation PDF avec un QR Code unique pour le check-in."
+                                title: "Invitation mariage",
+                                desc: "Chaque invité reçoit une invitation personnalisée avec son lien, son QR code et son programme."
                             },
                             {
                                 icon: <Zap className="h-10 w-10" />,
-                                title: "Cagnotte Live",
-                                desc: "Affichez les contributions sur écran géant avec des animations élégantes."
+                                title: "Cagnotte mariage",
+                                desc: "Activez une cagnotte élégante et recevez les contributions de vos proches simplement."
                             },
                             {
                                 icon: <Layout className="h-10 w-10" />,
-                                title: "Templates Deluxe",
-                                desc: "Choisissez parmi des designs exclusifs qui s'adaptent à tous les styles."
+                                title: "Templates de site mariage",
+                                desc: "Choisissez un design premium et personnalisez votre site selon votre univers."
                             }
                         ].map((feature, i) => (
                             <motion.div
@@ -254,13 +262,13 @@ export default function LandingPage() {
             {/* FAQ Section */}
             <section id="faq" className="py-32 px-6">
                 <div className="max-w-4xl mx-auto space-y-16">
-                    <h2 className="text-4xl font-serif font-bold text-center">Questions fréquentes</h2>
+                    <h2 className="text-4xl font-serif font-bold text-center">Questions fréquentes sur votre site de mariage</h2>
                     <div className="space-y-6">
                         {[
-                            { q: "Est-ce vraiment gratuit au début ?", a: "Oui, vous pouvez créer votre site et gérer vos 50 premiers invités sans sortir votre carte bleue." },
-                            { q: "Puis-je changer de template après avoir commencé ?", a: "Absolument. Votre contenu s'adapte automatiquement au nouveau style choisi." },
-                            { q: "Comment fonctionne la cagnotte ?", a: "Nous utilisons Stripe, le leader mondial du paiement sécurisé. L'argent arrive directement sur votre compte bancaire." },
-                            { q: "Mes données sont-elles sécurisées ?", a: "Oui, nous utilisons un cryptage de grade bancaire et vos listes d'invités restent strictement privées." }
+                            { q: "Comment créer un site de mariage avec Daylora ?", a: "Vous choisissez un template, ajoutez vos informations, personnalisez le design puis publiez votre site en quelques étapes." },
+                            { q: "Puis-je envoyer mes invitations depuis le site ?", a: "Oui. Daylora permet de partager des invitations personnalisées, des liens invités et de gérer les RSVP mariage au même endroit." },
+                            { q: "Comment fonctionne la cagnotte de mariage ?", a: "Vous pouvez activer une cagnotte sur votre site de mariage et permettre à vos proches de contribuer facilement en ligne." },
+                            { q: "Puis-je gérer mes invités et le jour J ?", a: "Oui. Vous pouvez suivre les réponses, afficher les tables et utiliser le check-in invité directement depuis Daylora." }
                         ].map((faq, i) => (
                             <div key={i} className="p-8 rounded-3xl glass-morphism border-white/5 space-y-3">
                                 <h4 className="font-serif font-bold text-xl">{faq.q}</h4>
@@ -277,7 +285,7 @@ export default function LandingPage() {
                 <div className="max-w-4xl mx-auto space-y-12 relative z-10">
                     <h2 className="text-6xl md:text-8xl font-serif font-bold italic text-gradient leading-tight">Prêt à dire Oui ?</h2>
                     <p className="text-xl text-white/50 max-w-xl mx-auto leading-relaxed">
-                        Daylora : votre mariage, sublimé en ligne. Élégant, fluide, sans complexité.
+                        Daylora vous aide à créer un site de mariage élégant, bien référencé et facile à partager avec vos invités.
                     </p>
                     <div className="pt-8">
                         <Link href="/onboarding" title="Créer mon site">

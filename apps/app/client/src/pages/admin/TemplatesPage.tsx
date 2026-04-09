@@ -14,6 +14,7 @@ const TEMPLATES = [
         { id: 'classic', name: 'Classique', description: 'Élégant et intemporel', image: '/previews/template_classic_preview_v2.png', premium: false },
         { id: 'modern', name: 'Moderne', description: 'Éditorial et lumineux', image: '/previews/template_modern_preview_v2.png', premium: true },
         { id: 'minimal', name: 'Minimal', description: 'Graphique et épuré', image: '/previews/template_minimal_preview_v2.png', premium: true },
+        { id: 'avantgarde', name: 'Avant-Garde', description: 'Expérience immersive & luxe', image: '/previews/template_avantgarde_preview.png', premium: true },
 ];
 
 export default function TemplatesPage() {
@@ -66,6 +67,9 @@ export default function TemplatesPage() {
         const base = typeof window !== "undefined" ? window.location.origin : "https://daylora.app";
         const slug = wedding.slug || wedding.id;
         const previewUrl = `${base}/preview/${slug}?t=${previewToken}`;
+        const previewScale = 0.72;
+        const previewFrameHeight = 720;
+        const previewScaledHeight = Math.round(previewFrameHeight * previewScale);
 
         return (
                 <div className="space-y-8">
@@ -85,6 +89,32 @@ export default function TemplatesPage() {
                                         )
                                 }
                         />
+
+                        <Card className="p-5 border-border/70">
+                                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                                        <div>
+                                                <div className="flex items-center gap-2">
+                                                        <Crown className={`h-4 w-4 ${wedding.currentPlan === "premium" ? "text-amber-600" : "text-muted-foreground"}`} />
+                                                        <p className="text-sm font-semibold">
+                                                                {wedding.currentPlan === "premium" ? "Templates premium débloqués" : "Templates premium disponibles avec Premium"}
+                                                        </p>
+                                                </div>
+                                                <p className="mt-1 text-sm text-muted-foreground">
+                                                        {wedding.currentPlan === "premium"
+                                                                ? "Vous pouvez utiliser Classic, Modern et Minimal."
+                                                                : "Le plan Découverte inclut Classic. Modern et Minimal sont réservés au plan Premium."}
+                                                </p>
+                                        </div>
+                                        {wedding.currentPlan !== "premium" ? (
+                                                <Button asChild variant="outline" className="border-primary/30 text-primary hover:bg-primary/5">
+                                                        <Link href="/billing">
+                                                                <Sparkles className="mr-2 h-4 w-4" />
+                                                                Passer au Premium
+                                                        </Link>
+                                                </Button>
+                                        ) : null}
+                                </div>
+                        </Card>
 
                         <div className={`grid grid-cols-3 gap-4 ${isApplying ? "pointer-events-none" : ""}`} data-tour="templates-grid">
                                 {TEMPLATES.map((tmpl) => {
@@ -164,11 +194,19 @@ export default function TemplatesPage() {
                                                                 </a>
                                                         </div>
                                                         <div className="relative w-full overflow-auto bg-[#F7F3EE]">
-                                                                <div className="origin-top-left scale-[0.72] w-[140%]">
+                                                                <div
+                                                                        className="origin-top-left"
+                                                                        style={{
+                                                                                transform: `scale(${previewScale})`,
+                                                                                width: `${100 / previewScale}%`,
+                                                                                height: `${previewScaledHeight}px`,
+                                                                        }}
+                                                                >
                                                                         <iframe
                                                                                 src={previewUrl}
                                                                                 title="Preview template"
-                                                                                className="w-full h-[720px] border-0"
+                                                                                className="w-full border-0"
+                                                                                style={{ height: `${previewFrameHeight}px` }}
                                                                         />
                                                                 </div>
                                                                 {isApplying ? (

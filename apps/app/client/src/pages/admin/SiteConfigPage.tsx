@@ -37,6 +37,7 @@ type NavigationConfig = {
     live: boolean;
     story: boolean;
     gallery: boolean;
+    accommodation: boolean;
     location: boolean;
     program: boolean;
   };
@@ -52,6 +53,7 @@ const defaultNavigation: NavigationConfig = {
     live: true,
     story: true,
     gallery: true,
+    accommodation: true,
     location: true,
     program: true,
   },
@@ -61,6 +63,7 @@ const defaultNavigation: NavigationConfig = {
     { id: "gifts", label: "Cadeaux", path: "gifts", enabled: true, linkType: "anchor", anchorId: "gifts" },
     { id: "story", label: "Histoire", path: "story", enabled: true, linkType: "anchor", anchorId: "story" },
     { id: "gallery", label: "Photos", path: "gallery", enabled: true, linkType: "anchor", anchorId: "gallery" },
+    { id: "accommodation", label: "Hébergement", path: "accommodation", enabled: true, linkType: "anchor", anchorId: "accommodation" },
     { id: "location", label: "Lieux", path: "location", enabled: true, linkType: "anchor", anchorId: "location" },
     { id: "program", label: "Programme", path: "program", enabled: true, linkType: "anchor", anchorId: "program" },
     { id: "cagnotte", label: "Cagnotte", path: "cagnotte", enabled: true, linkType: "anchor", anchorId: "cagnotte" },
@@ -170,6 +173,7 @@ export default function SiteConfigPage() {
         live: true,
         story: true,
         gallery: true,
+        accommodation: true,
         location: true,
         program: true,
       },
@@ -190,6 +194,7 @@ export default function SiteConfigPage() {
         live: false,
         story: true,
         gallery: true,
+        accommodation: true,
         location: true,
         program: false,
       },
@@ -249,8 +254,6 @@ export default function SiteConfigPage() {
       const normalizedMenuItems = ensureHomeFirst(navigation.menuItems);
       const rsvpLabel = menuById.get("rsvp")?.label || "RSVP";
       const cagnotteLabel = menuById.get("cagnotte")?.label || "Cagnotte";
-      const liveLabel = menuById.get("live")?.label || "Live";
-
       await updateWedding.mutateAsync({
         id: wedding.id,
         config: {
@@ -258,13 +261,12 @@ export default function SiteConfigPage() {
           features: {
             ...wedding.config.features,
             cagnotteEnabled: navigation.pages.cagnotte,
-            liveEnabled: navigation.pages.live,
+            liveEnabled: false,
           },
           texts: {
             ...wedding.config.texts,
             navRsvp: rsvpLabel,
             navCagnotte: cagnotteLabel,
-            navLive: liveLabel,
           },
           payments: {
             ...(wedding.config.payments || {}),
@@ -278,7 +280,11 @@ export default function SiteConfigPage() {
           } as any,
           navigation: {
             ...navigation,
-            menuItems: normalizedMenuItems,
+            pages: {
+              ...navigation.pages,
+              live: false,
+            },
+            menuItems: normalizedMenuItems.filter((item) => item.id !== "live"),
           },
         },
       });
@@ -324,9 +330,9 @@ export default function SiteConfigPage() {
             { key: "rsvp", label: "Page RSVP" },
             { key: "cagnotte", label: "Page Cagnotte" },
             { key: "gifts", label: "Section Cadeaux" },
-            { key: "live", label: "Page Live" },
             { key: "story", label: "Section Histoire" },
             { key: "gallery", label: "Section Galerie" },
+            { key: "accommodation", label: "Section Hébergement" },
             { key: "location", label: "Section Lieux & accès" },
             { key: "program", label: "Section Déroulé" },
           ].map((item) => (

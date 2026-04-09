@@ -5,13 +5,18 @@ import { OnboardingChecklist } from "@/components/onboarding-checklist";
 import { DashboardWidgets } from "@/components/dashboard-widgets";
 import { GuidedTour, useShouldShowTour } from "@/components/guided-tour";
 import { useParams, Link } from "wouter";
-import { Loader2, Users, CheckCircle2, XCircle, Calendar, Link2, Copy, ExternalLink, ArrowRight, Palette, PenLine, UserPlus, Rocket, Heart, Sparkles, LayoutList } from "lucide-react";
+import { Loader2, Users, CheckCircle2, XCircle, Calendar, Link2, Copy, ExternalLink, ArrowRight, Palette, PenLine, UserPlus, Rocket, Heart, Sparkles, LayoutList, Crown, ListChecks, CalendarDays } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { KpiCard } from "@/components/admin/KpiCard";
+import { getAppNls } from "@/lib/nls";
+import { Progress } from "@/components/ui/progress";
+import { useChecklist, useOrganizationProgress, usePlanning } from "@/hooks/use-api";
 
 function EmotionalGreeting({ wedding }: { wedding: Wedding }) {
+    const language = wedding.config?.language === "en" ? "en" : "fr";
+    const nls = getAppNls(language);
     const coupleNames = wedding.config?.texts?.heroTitle || wedding.title;
     const weddingDate = wedding.weddingDate ? new Date(wedding.weddingDate) : null;
     const now = new Date();
@@ -19,9 +24,9 @@ function EmotionalGreeting({ wedding }: { wedding: Wedding }) {
 
     let greeting: string;
     if (isPast) {
-        greeting = `Félicitations ${coupleNames}, votre belle histoire continue.`;
+        greeting = `${coupleNames}, ${nls.dashboard.congratulationsSuffix}`;
     } else {
-        greeting = `${coupleNames}, votre histoire commence ici.`;
+        greeting = `${coupleNames}, ${nls.dashboard.welcomeSuffix}`;
     }
 
     return (
@@ -30,13 +35,15 @@ function EmotionalGreeting({ wedding }: { wedding: Wedding }) {
                 {greeting}
             </p>
             <p className="text-sm text-muted-foreground/60 mt-1 font-light">
-                Bienvenue dans la création de votre journée inoubliable
+                {nls.dashboard.welcomeSubtitle}
             </p>
         </div>
     );
 }
 
 function WeddingCountdown({ wedding }: { wedding: Wedding }) {
+    const language = wedding.config?.language === "en" ? "en" : "fr";
+    const nls = getAppNls(language);
     const weddingDate = wedding.weddingDate ? new Date(wedding.weddingDate) : null;
 
     if (!weddingDate) return null;
@@ -50,7 +57,7 @@ function WeddingCountdown({ wedding }: { wedding: Wedding }) {
             <div className="text-center py-6 animate-slide-up stagger-1">
                 <Heart className="h-6 w-6 mx-auto mb-2 text-rose-300" />
                 <p className="text-lg font-light text-muted-foreground">
-                    Votre mariage a eu lieu — profitez de chaque souvenir.
+                    {nls.dashboard.weddingHappened}
                 </p>
             </div>
         );
@@ -58,45 +65,47 @@ function WeddingCountdown({ wedding }: { wedding: Wedding }) {
 
     return (
         <div className="text-center py-4 animate-slide-up stagger-1">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">Jour J dans</p>
+            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">{nls.dashboard.countdownLabel}</p>
             <p className="text-5xl md:text-6xl font-extralight tracking-tight text-foreground/80">{daysRemaining}</p>
             <p className="text-sm font-light text-muted-foreground/50 mt-0.5">
-                {daysRemaining === 1 ? "jour" : "jours"}
+                {daysRemaining === 1 ? nls.dashboard.countdownDay : nls.dashboard.countdownDays}
             </p>
         </div>
     );
 }
 
 function NextStepCard({ wedding, hasGuests }: { wedding: Wedding; hasGuests: boolean }) {
+    const language = wedding.config?.language === "en" ? "en" : "fr";
+    const nls = getAppNls(language);
     const heroSubtitle = wedding.config?.texts?.heroSubtitle;
 
     let step: { label: string; description: string; href: string; icon: typeof Palette } | null = null;
 
     if (!wedding.templateId) {
         step = {
-            label: "Choisir un design",
-            description: "Sélectionnez un template pour donner vie à votre site.",
+            label: nls.dashboard.steps.chooseDesign,
+            description: nls.dashboard.steps.chooseDesignDesc,
             href: `/${wedding.id}/templates`,
             icon: Palette,
         };
     } else if (!wedding.weddingDate || !heroSubtitle) {
         step = {
-            label: "Compléter les informations",
-            description: "Ajoutez la date et les détails de votre mariage.",
+            label: nls.dashboard.steps.completeInfo,
+            description: nls.dashboard.steps.completeInfoDesc,
             href: `/${wedding.slug}`,
             icon: PenLine,
         };
     } else if (!hasGuests) {
         step = {
-            label: "Ajouter vos invités",
-            description: "Commencez à constituer votre liste d'invités.",
+            label: nls.dashboard.steps.addGuests,
+            description: nls.dashboard.steps.addGuestsDesc,
             href: `/${wedding.id}/guests`,
             icon: UserPlus,
         };
     } else if (!wedding.isPublished) {
         step = {
-            label: "Publier votre site",
-            description: "Votre site est prêt — partagez-le avec vos proches.",
+            label: nls.dashboard.steps.publish,
+            description: nls.dashboard.steps.publishDesc,
             href: `/${wedding.id}/welcome`,
             icon: Rocket,
         };
@@ -115,7 +124,7 @@ function NextStepCard({ wedding, hasGuests }: { wedding: Wedding; hasGuests: boo
                         <Icon className="h-6 w-6 text-amber-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-amber-700/60 font-medium mb-1">Prochaine étape</p>
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-amber-700/60 font-medium mb-1">{nls.dashboard.nextStepLabel}</p>
                         <p className="text-xl font-semibold text-foreground tracking-tight">{step.label}</p>
                         <p className="text-sm text-muted-foreground mt-0.5">{step.description}</p>
                     </div>
@@ -133,6 +142,8 @@ function NextStepCard({ wedding, hasGuests }: { wedding: Wedding; hasGuests: boo
 
 function SiteLink({ wedding }: { wedding: Wedding }) {
     const { toast } = useToast();
+    const language = wedding.config?.language === "en" ? "en" : "fr";
+    const nls = getAppNls(language);
 
     return (
         <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-muted/40 border border-border/40 max-w-sm">
@@ -145,7 +156,7 @@ function SiteLink({ wedding }: { wedding: Wedding }) {
                 onClick={() => {
                     const url = `${window.location.origin}/${wedding.slug}`;
                     navigator.clipboard.writeText(url);
-                    toast({ title: "Lien copié" });
+                    toast({ title: nls.dashboard.linkCopied });
                 }}
             >
                 <Copy className="h-3 w-3" />
@@ -189,6 +200,9 @@ export default function DashboardPage() {
         queryKey: ["/api/guests", weddingId],
         enabled: !!weddingId,
     });
+    const { data: organizationProgress } = useOrganizationProgress();
+    const { data: checklistData } = useChecklist();
+    const { data: planningData } = usePlanning();
 
     if (responsesLoading || weddingLoading) {
         return (
@@ -203,6 +217,8 @@ export default function DashboardPage() {
     const declined = (responses || []).filter((r) => r.availability === "declined").reduce((sum, r) => sum + (r.partySize || 1), 0);
     const pending = total - confirmed - declined;
     const hasGuests = Array.isArray(guests) && guests.length > 0;
+    const language = wedding?.config?.language === "en" ? "en" : "fr";
+    const nls = getAppNls(language);
 
     return (
         <div className="space-y-10 pb-8">
@@ -218,42 +234,134 @@ export default function DashboardPage() {
                     onClick={toggleSimplified}
                 >
                     {simplified ? <Sparkles className="h-3.5 w-3.5" /> : <LayoutList className="h-3.5 w-3.5" />}
-                    <span className="text-xs">{simplified ? "Mode complet" : "Simplifier"}</span>
+                    <span className="text-xs">{simplified ? nls.dashboard.fullMode : nls.dashboard.simplify}</span>
                 </Button>
             </div>
+
+            {wedding && (
+                <Card className="p-5 border-border/70">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <Crown className={`h-4 w-4 ${wedding.currentPlan === "premium" ? "text-amber-600" : "text-muted-foreground"}`} />
+                                <p className="text-sm font-semibold">
+                                    {wedding.currentPlan === "premium" ? "Plan Premium actif" : "Plan Découverte"}
+                                </p>
+                            </div>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                {wedding.currentPlan === "premium"
+                                    ? "Vous avez accès aux invités illimités, aux cadeaux illimités, aux templates premium et aux sites multiples."
+                                    : "Vous pouvez créer 1 site, inviter jusqu'à 10 invités et ajouter jusqu'à 2 cadeaux."}
+                            </p>
+                        </div>
+                        {wedding.currentPlan !== "premium" ? (
+                            <Link href={`/${wedding.id}/billing`}>
+                                <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/5">
+                                    <Sparkles className="mr-2 h-4 w-4" />
+                                    Débloquer Premium
+                                </Button>
+                            </Link>
+                        ) : null}
+                    </div>
+                </Card>
+            )}
 
             {wedding && <WeddingCountdown wedding={wedding} />}
 
             {wedding && <NextStepCard wedding={wedding} hasGuests={hasGuests} />}
 
+            {organizationProgress ? (
+                <Card className="rounded-2xl border-border/70 p-5 shadow-sm">
+                    <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+                        <div>
+                            <div className="flex items-center justify-between gap-4">
+                                <div>
+                                    <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground/60">Progression globale</p>
+                                    <h2 className="mt-1 text-2xl font-semibold tracking-tight">{organizationProgress.score}% organisé</h2>
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                        Votre score se base sur le site, les invités, la communication et l’organisation.
+                                    </p>
+                                </div>
+                                <div className="rounded-2xl bg-primary/10 px-4 py-3 text-right">
+                                    <p className="text-2xl font-semibold text-primary">{organizationProgress.earnedPoints}</p>
+                                    <p className="text-xs uppercase tracking-[0.18em] text-primary/70">sur {organizationProgress.totalPoints} points</p>
+                                </div>
+                            </div>
+                            <Progress value={organizationProgress.score} className="mt-4 h-2.5" />
+                            <div className="mt-4 grid gap-3 md:grid-cols-2">
+                                <KpiCard
+                                    label="Checklist"
+                                    value={checklistData?.totals?.done || 0}
+                                    hint={`${checklistData?.totals?.total || 0} tâches suivies`}
+                                    icon={<ListChecks className="h-4.5 w-4.5" />}
+                                />
+                                <KpiCard
+                                    label="Planning"
+                                    value={planningData?.items?.length || 0}
+                                    hint="Étapes planifiées"
+                                    icon={<CalendarDays className="h-4.5 w-4.5" />}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-border/70 bg-muted/20 p-4">
+                            <p className="text-sm font-semibold">Prochaines actions recommandées</p>
+                            <div className="mt-3 space-y-3">
+                                {organizationProgress.nextActions.length > 0 ? organizationProgress.nextActions.map((action) => (
+                                    <div key={action.key} className="rounded-xl bg-background p-3 shadow-sm">
+                                        <p className="font-medium">{action.label}</p>
+                                        <p className="mt-1 text-sm text-muted-foreground">{action.description}</p>
+                                    </div>
+                                )) : (
+                                    <div className="rounded-xl bg-background p-3 shadow-sm">
+                                        <p className="font-medium">Très bon rythme</p>
+                                        <p className="mt-1 text-sm text-muted-foreground">
+                                            Votre organisation est déjà bien avancée. Continuez à affiner les derniers détails.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="mt-4 flex flex-wrap gap-2">
+                                <Link href={`/${weddingId}/checklist`}>
+                                    <Button variant="outline" size="sm">Ouvrir la checklist</Button>
+                                </Link>
+                                <Link href={`/${weddingId}/planning`}>
+                                    <Button variant="outline" size="sm">Voir le planning</Button>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            ) : null}
+
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 animate-slide-up stagger-3" data-tour="dashboard-kpis">
                 <KpiCard
-                    label="Invités"
+                    label={nls.dashboard.kpis.guests}
                     value={total}
                     icon={<Users className="h-4.5 w-4.5" />}
-                    hint="RSVP reçus"
+                    hint={nls.dashboard.kpis.guestsHint}
                     max={wedding?.currentPlan !== "premium" ? 10 : undefined}
                 />
                 <KpiCard
-                    label="Confirmés"
+                    label={nls.dashboard.kpis.confirmed}
                     value={confirmed}
                     icon={<CheckCircle2 className="h-4.5 w-4.5" />}
-                    hint="Présences"
+                    hint={nls.dashboard.kpis.confirmedHint}
                 />
                 {!simplified && (
                     <KpiCard
-                        label="En attente"
+                        label={nls.dashboard.kpis.pending}
                         value={pending}
                         icon={<Calendar className="h-4.5 w-4.5" />}
-                        hint="À relancer"
+                        hint={nls.dashboard.kpis.pendingHint}
                     />
                 )}
                 {!simplified && (
                     <KpiCard
-                        label="Refusés"
+                        label={nls.dashboard.kpis.declined}
                         value={declined}
                         icon={<XCircle className="h-4.5 w-4.5" />}
-                        hint="Indisponibles"
+                        hint={nls.dashboard.kpis.declinedHint}
                     />
                 )}
             </div>
@@ -265,6 +373,7 @@ export default function DashboardPage() {
             {!simplified && (
                 <DashboardWidgets
                     responses={responses || []}
+                    language={language}
                     onFilterChange={(filter) => {
                         window.location.href = `guests?availability=${filter}`;
                     }}
@@ -275,9 +384,9 @@ export default function DashboardPage() {
                 <GuidedTour
                     tourId="dashboard"
                     steps={[
-                        { target: "dashboard-greeting", title: "Bienvenue sur Daylora !", description: "Ici vous retrouvez un message personnalisé et le lien vers votre site de mariage.", position: "bottom" },
-                        { target: "dashboard-kpis", title: "Vos statistiques", description: "Suivez en un coup d'œil le nombre d'invités, les confirmations et les refus.", position: "bottom" },
-                        { target: "dashboard-checklist", title: "Votre progression", description: "Cette checklist vous guide étape par étape. Suivez-la pour avoir un site parfait !", position: "top" },
+                        { target: "dashboard-greeting", title: nls.dashboard.tour.welcomeTitle, description: nls.dashboard.tour.welcomeDesc, position: "bottom" },
+                        { target: "dashboard-kpis", title: nls.dashboard.tour.statsTitle, description: nls.dashboard.tour.statsDesc, position: "bottom" },
+                        { target: "dashboard-checklist", title: nls.dashboard.tour.progressTitle, description: nls.dashboard.tour.progressDesc, position: "top" },
                     ]}
                 />
             )}

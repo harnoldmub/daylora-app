@@ -189,46 +189,47 @@ export function RSVPSection({
                       )}
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <FormField
-                      control={form.control}
-                      name="partySize"
-                      render={({ field }) => (
-                        <FormItem className={`transition-all duration-300 ${watchedAvailability === "declined" ? "opacity-40 pointer-events-none" : ""}`}>
-                          <FormLabel className={`${labelClass} text-[11px] tracking-wider uppercase font-medium opacity-70`}>Vous venez *</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              className="grid grid-cols-2 gap-3"
-                              value={String(field.value ?? 1)}
-                              onValueChange={(v) => field.onChange(Number(v))}
-                              disabled={watchedAvailability === "declined"}
-                            >
-                              <label
-                                className={`text-left flex items-center gap-3 px-4 py-4 cursor-pointer transition-all duration-200 ${tokens.rsvp.input} ${String(field.value) === "1" ? "ring-2 ring-primary/30 bg-primary/[0.04] scale-[1.01]" : "hover:bg-primary/[0.02]"}`}
+                  {watchedAvailability === "confirmed" && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <FormField
+                        control={form.control}
+                        name="partySize"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`${labelClass} text-[11px] tracking-wider uppercase font-medium opacity-70`}>Vous venez *</FormLabel>
+                            <FormControl>
+                              <RadioGroup
+                                className="grid grid-cols-2 gap-3"
+                                value={String(field.value ?? 1)}
+                                onValueChange={(v) => field.onChange(Number(v))}
                               >
-                                <RadioGroupItem value="1" />
-                                <div className="flex flex-col">
-                                  <span className="text-sm font-semibold">Seul(e)</span>
-                                  <span className="text-xs opacity-50">Je viens seul(e)</span>
-                                </div>
-                              </label>
-                              <label
-                                className={`text-left flex items-center gap-3 px-4 py-4 cursor-pointer transition-all duration-200 ${tokens.rsvp.input} ${String(field.value) === "2" ? "ring-2 ring-primary/30 bg-primary/[0.04] scale-[1.01]" : "hover:bg-primary/[0.02]"}`}
-                              >
-                                <RadioGroupItem value="2" />
-                                <div className="flex flex-col">
-                                  <span className="text-sm font-semibold">Accompagné(e)</span>
-                                  <span className="text-xs opacity-50">Avec mon/ma partenaire</span>
-                                </div>
-                              </label>
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="hidden md:block" />
-                  </div>
+                                <label
+                                  className={`text-left flex items-center gap-3 px-4 py-4 cursor-pointer transition-all duration-200 ${tokens.rsvp.input} ${String(field.value) === "1" ? "ring-2 ring-primary/30 bg-primary/[0.04] scale-[1.01]" : "hover:bg-primary/[0.02]"}`}
+                                >
+                                  <RadioGroupItem value="1" />
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-semibold">Seul(e)</span>
+                                    <span className="text-xs opacity-50">Je viens seul(e)</span>
+                                  </div>
+                                </label>
+                                <label
+                                  className={`text-left flex items-center gap-3 px-4 py-4 cursor-pointer transition-all duration-200 ${tokens.rsvp.input} ${String(field.value) === "2" ? "ring-2 ring-primary/30 bg-primary/[0.04] scale-[1.01]" : "hover:bg-primary/[0.02]"}`}
+                                >
+                                  <RadioGroupItem value="2" />
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-semibold">Accompagné(e)</span>
+                                    <span className="text-xs opacity-50">Avec mon/ma partenaire</span>
+                                  </div>
+                                </label>
+                              </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="hidden md:block" />
+                    </div>
+                  )}
                   <Button type="submit" size="lg" className={`w-full h-16 text-lg font-bold shadow-xl transition-all duration-200 hover:shadow-2xl hover:scale-[1.01] ${buttonRadiusClass}`} style={{ backgroundColor: 'var(--wedding-primary)', borderColor: 'var(--wedding-primary)', color: '#fff' }} disabled={rsvpMutation.isPending}>
                     {rsvpMutation.isPending ? "Envoi..." : rsvpButton}
                   </Button>

@@ -13,6 +13,8 @@ import { usePublicGifts, useWedding, useUpdateWedding } from "@/hooks/use-api";
 import { usePublicEdit } from "@/contexts/public-edit";
 import { compressImageFileToJpegDataUrl } from "@/lib/image";
 import { TemplateRenderer } from "@/features/public-site/templates/TemplateRenderer";
+import { AvantGardeTemplateRenderer } from "@/features/public-site/templates/AvantGardeTemplateRenderer";
+import { ModernTemplateRenderer } from "@/features/public-site/templates/ModernTemplateRenderer";
 import {
   Dialog,
   DialogContent,
@@ -94,7 +96,7 @@ export default function InvitationPage() {
     return (fromQuery || fromRoute) || null;
   }, [queryParams, routeSection]);
 
-  const SECTION_IDS = useMemo(() => ["rsvp", "gifts", "cagnotte", "story", "gallery", "location", "program"] as const, []);
+  const SECTION_IDS = useMemo(() => ["rsvp", "gifts", "cagnotte", "story", "gallery", "accommodation", "location", "program"] as const, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -458,6 +460,8 @@ export default function InvitationPage() {
   const showRsvp = currentWedding.config?.navigation?.pages?.rsvp ?? true;
   const showStory = currentWedding.config?.navigation?.pages?.story ?? true;
   const showGalleryPage = currentWedding.config?.navigation?.pages?.gallery ?? true;
+  const hasAccommodation = ((((currentWedding.config?.sections as any)?.accommodationItems?.length ?? 0) > 0) as boolean);
+  const showAccommodation = (((currentWedding.config?.navigation?.pages as any)?.accommodation ?? true) as boolean) && hasAccommodation;
   const showLocation = currentWedding.config?.navigation?.pages?.location ?? true;
   const showProgram = currentWedding.config?.navigation?.pages?.program ?? true;
 
@@ -465,6 +469,7 @@ export default function InvitationPage() {
     (requestedSection === "rsvp" && !showRsvp) ||
     (requestedSection === "story" && !showStory) ||
     (requestedSection === "gallery" && !showGalleryPage) ||
+    (requestedSection === "accommodation" && !showAccommodation) ||
     (requestedSection === "gifts" && !showGifts) ||
     (requestedSection === "location" && !showLocation) ||
     (requestedSection === "program" && !showProgram)
@@ -480,9 +485,14 @@ export default function InvitationPage() {
     );
   }
 
+  const RendererComponent = 
+    currentWedding.templateId === "avantgarde" ? AvantGardeTemplateRenderer : 
+    currentWedding.templateId === "modern" ? ModernTemplateRenderer : 
+    TemplateRenderer;
+
   return (
     <>
-      <TemplateRenderer
+      <RendererComponent
         wedding={currentWedding}
         draftMedia={draftMedia}
         isUploading={isUploading}

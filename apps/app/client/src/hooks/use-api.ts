@@ -7,7 +7,12 @@ import {
     type InsertWedding,
     type InsertRsvpResponse,
     type InsertGift,
-    type EmailLog
+    type EmailLog,
+    type OrganizationChecklistCategory,
+    type OrganizationChecklistItem,
+    type OrganizationPlanningItem,
+    type OrganizationBudgetCategory,
+    type OrganizationBudgetItem,
 } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -62,15 +67,44 @@ export function useWeddings() {
         },
     });
 }
-export function useUpdateWedding() {
+
+export function useCreateWedding() {
     const queryClient = useQueryClient();
     return useMutation({
+        mutationFn: async (data: Partial<InsertWedding> & Record<string, unknown>): Promise<Wedding> => {
+            const res = await apiRequest("POST", "/api/weddings", data);
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/weddings/list"] });
+        },
+    });
+}
+
+export function useUpdateWedding() {
+  const queryClient = useQueryClient();
+  return useMutation({
         mutationFn: async (data: WeddingPatch) => {
             const res = await apiRequest("PATCH", `/api/weddings/${data.id}`, data);
             return res.json();
         },
-        onSuccess: (data) => {
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/weddings/list"] });
+    },
+  });
+}
+
+export function useDeleteWedding() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id: string) => {
+            await apiRequest("DELETE", `/api/weddings/${id}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/weddings/list"] });
         },
     });
 }
@@ -156,5 +190,224 @@ export function useLiveEvents(weddingId?: string) {
 export function useEmailLogs() {
     return useQuery<EmailLog[]>({
         queryKey: ["/api/admin/email-logs"],
+    });
+}
+
+export type ChecklistCategorySummary = OrganizationChecklistCategory & {
+    items: OrganizationChecklistItem[];
+    total: number;
+    done: number;
+    inProgress: number;
+    progress: number;
+};
+
+export type ChecklistResponse = {
+    categories: ChecklistCategorySummary[];
+    totals: {
+        total: number;
+        done: number;
+        inProgress: number;
+    };
+};
+
+export type PlanningResponse = {
+    items: OrganizationPlanningItem[];
+    suggestedItems: Array<{
+        title: string;
+        description?: string | null;
+        kind: string;
+        dueAt?: string | Date | null;
+    }>;
+};
+
+export type BudgetResponse = {
+    categories: Array<OrganizationBudgetCategory & {
+        items: OrganizationBudgetItem[];
+        plannedAmountCents: number;
+        actualAmountCents: number;
+        remainingAmountCents: number;
+    }>;
+    totals: {
+        plannedAmountCents: number;
+        actualAmountCents: number;
+        remainingAmountCents: number;
+    };
+};
+
+export type OrganizationProgressResponse = {
+    score: number;
+    earnedPoints: number;
+    totalPoints: number;
+    checks: Array<{
+        key: string;
+        label: string;
+        points: number;
+        done: boolean;
+        description: string;
+    }>;
+    nextActions: Array<{
+        key: string;
+        label: string;
+        description: string;
+    }>;
+};
+
+export function useChecklist() {
+    return useQuery<ChecklistResponse>({
+        queryKey: ["/api/organization/checklist"],
+    });
+}
+
+export function usePlanning() {
+    return useQuery<PlanningResponse>({
+        queryKey: ["/api/organization/planning"],
+    });
+}
+
+export function useBudget() {
+    return useQuery<BudgetResponse>({
+        queryKey: ["/api/organization/budget"],
+    });
+}
+
+export function useOrganizationProgress() {
+    return useQuery<OrganizationProgressResponse>({
+        queryKey: ["/api/organization/progress"],
+    });
+}
+
+export function useCreateChecklistCategory() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (data: Partial<OrganizationChecklistCategory>) => {
+            const res = await apiRequest("POST", "/api/organization/checklist/categories", data);
+            return res.json();
+        },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/organization/checklist"] }),
+    });
+}
+
+export function useCreateChecklistItem() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (data: Partial<OrganizationChecklistItem>) => {
+            const res = await apiRequest("POST", "/api/organization/checklist/items", data);
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/checklist"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress"] });
+        },
+    });
+}
+
+export function useUpdateChecklistItem() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, ...data }: Partial<OrganizationChecklistItem> & { id: number }) => {
+            const res = await apiRequest("PATCH", `/api/organization/checklist/items/${id}`, data);
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/checklist"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress"] });
+        },
+    });
+}
+
+export function useDeleteChecklistItem() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id: number) => {
+            await apiRequest("DELETE", `/api/organization/checklist/items/${id}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/checklist"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress"] });
+        },
+    });
+}
+
+export function useCreatePlanningItem() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (data: Partial<OrganizationPlanningItem>) => {
+            const res = await apiRequest("POST", "/api/organization/planning/items", data);
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/planning"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress"] });
+        },
+    });
+}
+
+export function useUpdatePlanningItem() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, ...data }: Partial<OrganizationPlanningItem> & { id: number }) => {
+            const res = await apiRequest("PATCH", `/api/organization/planning/items/${id}`, data);
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/planning"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress"] });
+        },
+    });
+}
+
+export function useDeletePlanningItem() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id: number) => {
+            await apiRequest("DELETE", `/api/organization/planning/items/${id}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/planning"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress"] });
+        },
+    });
+}
+
+export function useCreateBudgetCategory() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (data: Partial<OrganizationBudgetCategory>) => {
+            const res = await apiRequest("POST", "/api/organization/budget/categories", data);
+            return res.json();
+        },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/organization/budget"] }),
+    });
+}
+
+export function useCreateBudgetItem() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (data: Partial<OrganizationBudgetItem>) => {
+            const res = await apiRequest("POST", "/api/organization/budget/items", data);
+            return res.json();
+        },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/organization/budget"] }),
+    });
+}
+
+export function useUpdateBudgetItem() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, ...data }: Partial<OrganizationBudgetItem> & { id: number }) => {
+            const res = await apiRequest("PATCH", `/api/organization/budget/items/${id}`, data);
+            return res.json();
+        },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/organization/budget"] }),
+    });
+}
+
+export function useDeleteBudgetItem() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id: number) => {
+            await apiRequest("DELETE", `/api/organization/budget/items/${id}`);
+        },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/organization/budget"] }),
     });
 }

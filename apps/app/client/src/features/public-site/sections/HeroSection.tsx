@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { InlineEditor } from "@/components/ui/inline-editor";
 import type { HeroSectionProps } from "@/features/public-site/types";
+import { getLogoTextClassName, getLogoTextWrapperClassName } from "@/lib/logo-styles";
 
 const OrnamentDivider = () => (
   <svg viewBox="0 0 200 24" className="w-32 md:w-48 h-6 mx-auto opacity-40" fill="none" stroke="currentColor" strokeWidth="1">
@@ -21,6 +22,7 @@ export function HeroSection({
   heroImage,
   logoUrl,
   logoText,
+  logoTextStyle,
   countdownDate,
   ctaPath,
   buttonToneClass,
@@ -61,6 +63,20 @@ export function HeroSection({
             transition={{ duration: 0.8 }}
           >
             <img src={logoUrl} alt={logoText} className="h-16 md:h-20 object-contain drop-shadow-xl" />
+          </motion.div>
+        ) : logoText ? (
+          <motion.div
+            className="flex justify-center mb-4"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <div
+              className={getLogoTextWrapperClassName(logoTextStyle)}
+              style={{ color: heroImage ? "#FFFFFF" : "var(--wedding-text-dark)" }}
+            >
+              <span className={getLogoTextClassName(logoTextStyle)}>{logoText}</span>
+            </div>
           </motion.div>
         ) : null}
 

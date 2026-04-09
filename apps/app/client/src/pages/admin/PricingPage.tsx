@@ -467,20 +467,20 @@ export default function PricingPage() {
         />
       )}
 
-      <div className="grid md:grid-cols-3 gap-8">
-        <Card className="p-8 relative border-muted">
-          <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2">
-            <span className="bg-muted text-muted-foreground text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-stretch">
+        <Card className="relative flex h-full flex-col overflow-hidden rounded-[28px] border-muted p-7">
+          <div className="absolute right-5 top-5">
+            <span className="bg-muted text-muted-foreground text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-[0.18em]">
               Actuel
             </span>
           </div>
-          <div className="space-y-6">
+          <div className="flex h-full flex-col space-y-6">
             <div>
               <h3 className="text-2xl font-bold">Découverte</h3>
               <p className="text-muted-foreground">L'essentiel pour commencer</p>
             </div>
             <div className="text-4xl font-bold font-serif">0€</div>
-            <ul className="space-y-3">
+            <ul className="space-y-3 flex-1">
               <Feature text="1 template" checked />
               <Feature text="Jusqu'à 10 invités" checked />
               <Feature text="Jusqu'à 2 cadeaux" checked />
@@ -496,17 +496,17 @@ export default function PricingPage() {
           </div>
         </Card>
 
-        <Card className="p-8 relative overflow-hidden border-primary/50 shadow-xl ring-2 ring-primary/30 scale-[1.02]">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-            <span className="bg-primary text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-lg">
+        <Card className="relative flex h-full flex-col overflow-hidden rounded-[28px] border-primary/50 p-7 shadow-xl ring-2 ring-primary/20">
+          <div className="absolute left-6 top-5">
+            <span className="bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-[0.18em] shadow-md">
               Recommandé
             </span>
           </div>
-          <div className="absolute top-4 right-4 text-primary/20">
-            <Crown className="h-24 w-24 rotate-12" />
+          <div className="absolute right-4 top-3 text-primary/10 pointer-events-none">
+            <Crown className="h-20 w-20 rotate-12" />
           </div>
-          <div className="space-y-6">
-            <div>
+          <div className="flex h-full flex-col space-y-6 pt-8">
+            <div className="pr-16">
               <h3 className="text-2xl font-bold">Premium Annuel</h3>
               <p className="text-muted-foreground">Paiement unique — pas d'abonnement</p>
             </div>
@@ -525,7 +525,7 @@ export default function PricingPage() {
               <Feature text="Exports complets" checked />
             </ul>
             <div className="space-y-2">
-              <div className="flex gap-2">
+              <div className="space-y-1.5">
                 <Input
                   placeholder="Code parrainage"
                   value={referralInput}
@@ -537,17 +537,17 @@ export default function PricingPage() {
                   className="h-10 font-mono uppercase"
                 />
                 {referralValid === true && (
-                  <span className="text-green-600 text-xs self-center font-semibold">
+                  <span className="block text-green-600 text-xs font-semibold">
                     -10€
                   </span>
                 )}
                 {referralValid === false && (
-                  <span className="text-red-500 text-xs self-center">
+                  <span className="block text-red-500 text-xs">
                     Invalide
                   </span>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="space-y-1.5">
                 <Input
                   placeholder="Code promo"
                   value={promoInput}
@@ -560,19 +560,19 @@ export default function PricingPage() {
                   className="h-10 font-mono uppercase"
                 />
                 {promoValid === true && (
-                  <span className="text-green-600 text-xs self-center font-semibold">
+                  <span className="block text-green-600 text-xs font-semibold">
                     {formatPromoDiscount()}
                   </span>
                 )}
                 {promoValid === false && (
-                  <span className="text-red-500 text-xs self-center">
+                  <span className="block text-red-500 text-xs">
                     Invalide
                   </span>
                 )}
               </div>
             </div>
             <Button
-              className="w-full h-12 text-base font-bold shadow-md"
+              className="mt-auto w-full min-h-12 whitespace-normal text-center text-base font-bold shadow-md"
               disabled={checkoutMutation.isPending}
               onClick={() => checkoutMutation.mutate("one_time")}
             >
@@ -591,8 +591,8 @@ export default function PricingPage() {
           </div>
         </Card>
 
-        <Card className="p-8 relative overflow-hidden border-dashed">
-          <div className="space-y-6">
+        <Card className="relative flex h-full flex-col overflow-hidden rounded-[28px] border-dashed p-7">
+          <div className="flex h-full flex-col space-y-6">
             <div>
               <h3 className="text-2xl font-bold text-muted-foreground">Mensuel</h3>
               <p className="text-muted-foreground">Option flexible</p>
@@ -601,7 +601,7 @@ export default function PricingPage() {
               <span className="text-4xl font-bold font-serif text-muted-foreground">23,99€</span>
               <span className="text-muted-foreground">/ mois</span>
             </div>
-            <ul className="space-y-3">
+            <ul className="space-y-3 flex-1">
               <Feature text="Tout le Premium inclus" checked />
               <Feature text="Engagement minimum 2 mois" checked />
               <Feature text="Sans engagement après" checked />
@@ -609,7 +609,7 @@ export default function PricingPage() {
             </ul>
             <Button
               variant="outline"
-              className="w-full"
+              className="mt-auto w-full min-h-12 whitespace-normal text-center"
               disabled={checkoutMutation.isPending}
               onClick={() => checkoutMutation.mutate("subscription")}
             >

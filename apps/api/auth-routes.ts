@@ -274,4 +274,38 @@ router.post("/premium-offer-seen", isAuthenticated, async (req, res) => {
     }
 });
 
+router.delete("/account", isAuthenticated, async (req, res) => {
+    try {
+        const userId = (req.user as any)?.id;
+        if (!userId) {
+            return res.status(401).json({ message: "Non authentifié." });
+        }
+
+        const { reason, details } = req.body || {};
+        if (!reason || typeof reason !== "string") {
+            return res.status(400).json({ message: "Merci de sélectionner une raison avant de supprimer le compte." });
+        }
+
+        console.info("Account deletion requested", {
+            userId,
+            reason,
+            details: typeof details === "string" ? details : null,
+        });
+
+        await storage.deleteUserAccount(userId);
+
+        req.logout((err) => {
+            if (err) {
+                return res.status(500).json({ message: "Compte supprimé, mais la déconnexion a échoué." });
+            }
+            req.session?.destroy(() => {
+                res.json({ ok: true });
+            });
+        });
+    } catch (error) {
+        console.error("Delete account error:", error);
+        res.status(500).json({ message: "Impossible de supprimer le compte." });
+    }
+});
+
 export default router;

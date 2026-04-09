@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Wedding } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { getAppNls } from "@/lib/nls";
 
 interface ChecklistItem {
     id: string;
@@ -21,44 +22,46 @@ export function OnboardingChecklist({ wedding }: { wedding: Wedding }) {
         queryKey: [`/api/guests`, wedding.id],
         enabled: !!wedding.id
     });
+    const language = wedding.config?.language === "en" ? "en" : "fr";
+    const nls = getAppNls(language);
 
     const steps: ChecklistItem[] = [
         {
             id: 'template',
-            label: 'Choisir un design',
-            description: 'Sélectionnez le template parfait pour votre mariage',
+            label: nls.checklist.steps.template.label,
+            description: nls.checklist.steps.template.description,
             href: `/templates`,
             isCompleted: !!wedding.templateId,
             icon: Layout
         },
         {
             id: 'info',
-            label: 'Informations clés',
-            description: 'Date, lieu et histoire de votre couple',
+            label: nls.checklist.steps.info.label,
+            description: nls.checklist.steps.info.description,
             href: `/preview/${wedding.slug}`,
             isCompleted: !!wedding.weddingDate && !!wedding.config?.texts?.heroSubtitle,
             icon: Info
         },
         {
             id: 'guests',
-            label: 'Ajouter des invités',
-            description: 'Importez ou ajoutez votre liste d\'invités',
+            label: nls.checklist.steps.guests.label,
+            description: nls.checklist.steps.guests.description,
             href: `/guests`,
             isCompleted: (guests as any[])?.length > 0,
             icon: Users
         },
         {
             id: 'features',
-            label: 'Activer les modules',
-            description: 'Cagnotte, liste de cadeaux, livre d\'or',
+            label: nls.checklist.steps.features.label,
+            description: nls.checklist.steps.features.description,
             href: `/gifts`,
             isCompleted: !!wedding.config?.features?.cagnotteEnabled || !!wedding.config?.features?.giftsEnabled,
             icon: Gift
         },
         {
             id: 'publish',
-            label: 'Publier le site',
-            description: 'Rendez votre site visible pour vos invités',
+            label: nls.checklist.steps.publish.label,
+            description: nls.checklist.steps.publish.description,
             href: `/welcome`,
             isCompleted: wedding.isPublished,
             icon: CheckCircle2
@@ -77,8 +80,8 @@ export function OnboardingChecklist({ wedding }: { wedding: Wedding }) {
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
-                        <CardTitle className="text-xl font-serif">Votre progression</CardTitle>
-                        <CardDescription>{completedCount} sur {steps.length} étapes complétées</CardDescription>
+                        <CardTitle className="text-xl font-serif">{nls.checklist.title}</CardTitle>
+                        <CardDescription>{nls.checklist.completedSteps.replace("{done}", String(completedCount)).replace("{total}", String(steps.length))}</CardDescription>
                     </div>
                     <span className="text-2xl font-bold text-primary">{progress}%</span>
                 </div>
@@ -133,7 +136,7 @@ export function OnboardingChecklist({ wedding }: { wedding: Wedding }) {
                                     className="ml-4"
                                 >
                                     <Link href={step.href}>
-                                        Faire <ArrowRight className="ml-2 h-3 w-3" />
+                                        {nls.checklist.cta} <ArrowRight className="ml-2 h-3 w-3" />
                                     </Link>
                                 </Button>
                             )}

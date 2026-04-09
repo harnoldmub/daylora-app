@@ -23,6 +23,9 @@ import PagesManagerPage from "@/pages/admin/PagesManagerPage";
 import FeedbackPage from "@/pages/admin/FeedbackPage";
 import GuestExperiencePage from "@/pages/admin/GuestExperiencePage";
 import CheckInOpsPage from "@/pages/admin/CheckInOpsPage";
+import ChecklistPage from "@/pages/admin/ChecklistPage";
+import PlanningPage from "@/pages/admin/PlanningPage";
+import BudgetPage from "@/pages/admin/BudgetPage";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
 import VerifyEmail from "@/pages/verify-email";
@@ -78,6 +81,9 @@ function AdminRoutes({ weddingId }: { weddingId: string }) {
         <Route path="/dashboard" component={DashboardPage} />
         <Route path="/welcome" component={WelcomePage} />
         <Route path="/guests" component={GuestsPage} />
+        <Route path="/checklist" component={ChecklistPage} />
+        <Route path="/planning" component={PlanningPage} />
+        <Route path="/budget" component={BudgetPage} />
         <Route path="/gifts" component={GiftsPage} />
         <Route path="/live" component={LiveJokesPage} />
         <Route path="/billing" component={PricingPage} />
