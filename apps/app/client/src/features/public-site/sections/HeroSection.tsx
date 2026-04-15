@@ -62,7 +62,7 @@ export function HeroSection({
       )}
       <div className="absolute inset-0" style={{ background: heroImage ? 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.6) 100%)' : 'transparent' }} />
 
-      <div className={`relative z-10 mx-auto text-center max-w-4xl px-6 py-20 ${heroTopSpacingClass} space-y-8`}>
+      <div className={`relative z-10 mx-auto text-center max-w-4xl px-6 py-12 md:py-20 ${heroTopSpacingClass} space-y-6 md:space-y-8`}>
         {logoUrl ? (
           <motion.div
             className="flex justify-center mb-4"
@@ -114,7 +114,7 @@ export function HeroSection({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, delay: 0.5 }}
         >
-          <h1 className="text-5xl md:text-8xl lg:text-9xl font-serif font-bold leading-[0.95] tracking-tight" style={{
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-serif font-bold leading-[0.95] tracking-tight" style={{
             color: heroImage ? '#FFFFFF' : 'var(--wedding-text-dark)',
             textShadow: heroImage ? '0 4px 30px rgba(0,0,0,0.4)' : 'none'
           }}>
