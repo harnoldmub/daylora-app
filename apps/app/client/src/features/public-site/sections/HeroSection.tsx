@@ -39,6 +39,14 @@ export function HeroSection({
   canEdit,
   editMode,
 }: HeroSectionProps) {
+  const headerSpacing = (wedding.config?.theme as any)?.headerSpacing || "comfortable";
+  const heroTopSpacingClass =
+    headerSpacing === "compact"
+      ? "pt-8 md:pt-10"
+      : headerSpacing === "airy"
+        ? "pt-20 md:pt-28"
+        : "pt-14 md:pt-20";
+
   return (
     <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {heroImage ? (
@@ -54,7 +62,7 @@ export function HeroSection({
       )}
       <div className="absolute inset-0" style={{ background: heroImage ? 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.6) 100%)' : 'transparent' }} />
 
-      <div className="relative z-10 mx-auto text-center max-w-4xl px-6 py-20 space-y-8">
+      <div className={`relative z-10 mx-auto text-center max-w-4xl px-6 py-20 ${heroTopSpacingClass} space-y-8`}>
         {logoUrl ? (
           <motion.div
             className="flex justify-center mb-4"

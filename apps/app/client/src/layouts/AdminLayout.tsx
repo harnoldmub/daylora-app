@@ -17,14 +17,14 @@ import {
     ScanLine,
     Tag,
     ListChecks,
-    CalendarDays,
     Wallet,
     ExternalLink,
     HelpCircle,
     Menu,
     X,
     Languages,
-    Plus
+    Plus,
+    Lock
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreateWedding, useUpdateWedding, useWeddings } from "@/hooks/use-api";
@@ -64,6 +64,7 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
     const [newSiteSlug, setNewSiteSlug] = useState("");
     const [newSiteDate, setNewSiteDate] = useState("");
     const [newSiteSlugEdited, setNewSiteSlugEdited] = useState(false);
+    const canCreateAnotherSite = canManageMultipleSites || ownedWeddings.length === 0;
 
     useEffect(() => {
         setLanguageOverride(null);
@@ -120,6 +121,8 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
         location === "/templates" ? nls.adminLayout.pageLabels.templates :
         location === "/design" ? nls.adminLayout.pageLabels.design :
         location === "/guests" ? nls.adminLayout.pageLabels.guests :
+        location.startsWith("/checklist") ? "Checklist" :
+        location.startsWith("/budget") ? "Budget" :
         location === "/guest-experience" ? nls.adminLayout.pageLabels.guestExperience :
         location === "/billing" ? nls.adminLayout.pageLabels.billing :
         location === "/gifts" ? nls.adminLayout.pageLabels.gifts :
@@ -137,16 +140,17 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
             .replace(/\b\w/g, (letter) => letter.toUpperCase());
     })();
 
+    const isPremium = currentWeddingForModal?.currentPlan === "premium";
+
     const navItems = [
         { name: nls.adminLayout.nav.home, icon: Home, href: "/welcome" },
         { name: nls.adminLayout.nav.dashboard, icon: LayoutDashboard, href: "/dashboard" },
         { name: nls.adminLayout.nav.design, icon: Paintbrush, href: "/design" },
         { name: nls.adminLayout.nav.guests, icon: Users, href: "/guests" },
-        { name: "Checklist", icon: ListChecks, href: "/checklist" },
-        { name: "Planning", icon: CalendarDays, href: "/planning" },
-        { name: "Budget", icon: Wallet, href: "/budget" },
-        { name: nls.adminLayout.nav.guestExperience, icon: Tag, href: "/guest-experience" },
-        { name: nls.adminLayout.nav.checkInOps, icon: ScanLine, href: "/check-in-ops" },
+        { name: "Checklist", icon: ListChecks, href: "/checklist", isPremiumOnly: true },
+        { name: "Budget", icon: Wallet, href: "/budget", isPremiumOnly: true },
+        { name: nls.adminLayout.nav.guestExperience, icon: Tag, href: "/guest-experience", isPremiumOnly: true },
+        { name: nls.adminLayout.nav.checkInOps, icon: ScanLine, href: "/check-in-ops", isPremiumOnly: true },
         { name: nls.adminLayout.nav.templates, icon: Palette, href: "/templates" },
         { name: nls.adminLayout.nav.site, icon: ListTree, href: "/site" },
         { name: nls.adminLayout.nav.gifts, icon: Gift, href: "/gifts" },
@@ -166,11 +170,11 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
             .slice(0, 80);
 
     const handleOpenCreateSite = () => {
-        if (!canManageMultipleSites && ownedWeddings.length >= 1) {
+        if (!canCreateAnotherSite) {
             toast({
-                title: "Fonction Premium",
-                description: "Les sites multiples sont réservés au plan Premium.",
-                variant: "destructive",
+                title: "Un seul site pour le moment",
+                description: "Votre espace actuel inclut déjà un site. Passez au Premium pour en créer plusieurs.",
+                variant: "soft",
             });
             setLocation("/billing");
             return;
@@ -183,12 +187,20 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
         const nextSlug = buildSlug(newSiteSlug || newSiteTitle);
 
         if (nextTitle.length < 3) {
-            toast({ title: "Nom trop court", description: "Ajoutez un nom de site plus clair.", variant: "destructive" });
+            toast({
+                title: "Donnez-lui un nom un peu plus précis",
+                description: "Ajoutez au moins 3 caractères pour que le site soit facile à reconnaître.",
+                variant: "soft",
+            });
             return;
         }
 
         if (nextSlug.length < 3) {
-            toast({ title: "URL invalide", description: "Ajoutez une adresse de site valide.", variant: "destructive" });
+            toast({
+                title: "L'adresse mérite d'être complétée",
+                description: "Choisissez une adresse un peu plus précise pour pouvoir la partager facilement.",
+                variant: "soft",
+            });
             return;
         }
 
@@ -212,11 +224,11 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
         } catch (error: any) {
             const message = String(error?.message || "");
             toast({
-                title: "Création impossible",
+                title: message.includes("Premium") ? "Plusieurs sites, c'est dans Premium" : "Le site n'a pas encore pu être créé",
                 description: message.includes("Premium")
-                    ? "Les sites multiples sont réservés au plan Premium."
-                    : "Réessayez dans quelques secondes.",
-                variant: "destructive",
+                    ? "Activez Premium pour ajouter un autre site à votre espace."
+                    : "Réessayez dans quelques instants. Votre brouillon n'est pas perdu.",
+                variant: "soft",
             });
         }
     };
@@ -311,7 +323,10 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                                     : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                                     }`}>
                                 <item.icon className="h-4 w-4" />
-                                <span>{item.name}</span>
+                                <span className="flex-1">{item.name}</span>
+                                {item.isPremiumOnly && !isPremium && (
+                                    <Crown className="h-3 w-3 text-amber-500/70" />
+                                )}
                             </Link>
                         );
                     })}
@@ -373,7 +388,10 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                                             }`}
                                     >
                                         <item.icon className="h-5 w-5" />
-                                        <span>{item.name}</span>
+                                        <span className="flex-1">{item.name}</span>
+                                        {item.isPremiumOnly && !isPremium && (
+                                            <Lock className="h-4 w-4 text-amber-500/70" />
+                                        )}
                                     </Link>
                                 );
                             })}
@@ -441,15 +459,17 @@ export function AdminLayout({ children, weddingId: weddingIdProp }: { children: 
                                             {w.title}
                                         </SelectItem>
                                     ))}
-                                    <SelectItem
-                                        value="__create__"
-                                        className="rounded-xl py-3 pl-9 pr-3 text-sm font-semibold text-primary"
-                                    >
-                                        <span className="flex items-center gap-2">
-                                            <Plus className="h-4 w-4" />
-                                            Nouveau site
-                                        </span>
-                                    </SelectItem>
+                                    {canCreateAnotherSite ? (
+                                        <SelectItem
+                                            value="__create__"
+                                            className="rounded-xl py-3 pl-9 pr-3 text-sm font-semibold text-primary"
+                                        >
+                                            <span className="flex items-center gap-2">
+                                                <Plus className="h-4 w-4" />
+                                                Nouveau site
+                                            </span>
+                                        </SelectItem>
+                                    ) : null}
                                 </SelectContent>
                             </Select>
                         </div>

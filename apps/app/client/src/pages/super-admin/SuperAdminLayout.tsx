@@ -71,7 +71,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
 
     loadUnread();
 
-    const es = new EventSource("/api/super-admin/conversations/stream", { withCredentials: true });
+    const es = new EventSource("/api/super-admin/conversations/stream");
     const refresh = () => {
       loadUnread();
     };

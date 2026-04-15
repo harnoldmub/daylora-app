@@ -20,6 +20,8 @@ export function ModernTemplateRenderer(props: any) {
 
   const primaryColor = wedding.config?.theme?.primaryColor || "#1A1A1A";
   const secondaryColor = wedding.config?.theme?.secondaryColor || "#F5F3EF";
+  const headerLayout = wedding.config?.theme?.headerLayout || "balanced";
+  const headerSpacing = wedding.config?.theme?.headerSpacing || "comfortable";
   
   const cssVars = {
     "--wedding-primary": primaryColor,
@@ -68,6 +70,18 @@ export function ModernTemplateRenderer(props: any) {
   const [presence, setPresence] = useState<boolean | null>(true);
   const [isCouple, setIsCouple] = useState<boolean>(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const headerPaddingClass =
+    headerSpacing === "compact"
+      ? isScrolled ? "py-3 md:py-4" : "py-5 md:py-7"
+      : headerSpacing === "airy"
+        ? isScrolled ? "py-5 md:py-7" : "py-10 md:py-14"
+        : isScrolled ? "py-4 md:py-6" : "py-8 md:py-12";
+  const heroTopPaddingClass =
+    headerSpacing === "compact"
+      ? "pt-24 md:pt-28"
+      : headerSpacing === "airy"
+        ? "pt-40 md:pt-48"
+        : "pt-32 md:pt-40";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -81,10 +95,10 @@ export function ModernTemplateRenderer(props: any) {
     <div className={`min-h-screen bg-[var(--wedding-secondary)] text-[var(--wedding-primary)] ${fontClass} selection:bg-black selection:text-white pb-20`} style={cssVars}>
       
       {/* Modern Header */}
-      <header className={`fixed top-0 w-full z-50 transition-all duration-500 overflow-hidden ${isScrolled ? "py-4 md:py-6 bg-white/90 backdrop-blur-md shadow-sm text-black" : "py-8 md:py-12 bg-transparent text-white mix-blend-difference"}`}>
-        <div className="max-w-[1800px] mx-auto px-6 md:px-12 flex justify-between items-center">
+      <header className={`fixed top-0 w-full z-50 transition-all duration-500 overflow-hidden ${headerPaddingClass} ${isScrolled ? "bg-white/90 backdrop-blur-md shadow-sm text-black" : "bg-transparent text-white mix-blend-difference"}`}>
+        <div className={`max-w-[1800px] mx-auto px-6 md:px-12 ${headerLayout === "centered" ? "flex flex-col items-center gap-4" : "flex justify-between items-center"}`}>
           <span className="text-xl font-black tracking-tighter uppercase">{wedding.title}</span>
-          <nav className="hidden md:flex gap-10 text-[10px] font-black uppercase tracking-[0.3em]">
+          <nav className={`hidden md:flex text-[10px] font-black uppercase tracking-[0.3em] ${headerLayout === "centered" ? "gap-8 justify-center" : "gap-10"}`}>
              <a href="#story" className="hover:opacity-50 transition-opacity">Story</a>
              <a href="#program" className="hover:opacity-50 transition-opacity">Agenda</a>
              <a href="#gallery" className="hover:opacity-50 transition-opacity">Galerie</a>
@@ -95,7 +109,7 @@ export function ModernTemplateRenderer(props: any) {
 
       {/* Modern Hero - Editorial Split */}
       <section className="relative min-h-screen w-full flex flex-col md:flex-row overflow-hidden">
-        <div className="flex-1 flex flex-col justify-end p-8 md:p-16 z-20 pb-20 md:pb-32 order-2 md:order-1">
+        <div className={`flex-1 flex flex-col justify-end p-8 md:p-16 z-20 pb-20 md:pb-32 ${heroTopPaddingClass} order-2 md:order-1`}>
           <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1 }}>
             <h2 className="text-xs tracking-[0.5em] font-black opacity-40 mb-4">
                 <InlineEditor value={heroSubtitle} onSave={(val) => props.onSaveText("heroSubtitle", val)} canEdit={canEdit && editMode} />

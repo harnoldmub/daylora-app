@@ -13,7 +13,8 @@ import {
   RotateCcw,
   Link,
   ExternalLink,
-  Image,
+  Image as ImageIcon,
+  Lock,
 } from "lucide-react";
 import { useParams } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -335,13 +336,17 @@ export default function GiftsPage() {
             {addSuggestionsMutation.isPending ? (
               <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
             ) : (
-              <Sparkles className="h-4 w-4 mr-1.5" />
+              <>
+                {giftLimitReached && <Lock className="h-4 w-4 mr-1.5" />}
+                <Sparkles className="h-4 w-4 mr-1.5" />
+              </>
             )}
             <span className="hidden sm:inline">Ajouter des </span>Suggestions
           </Button>
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button size="sm" data-tour="gifts-add" disabled={giftLimitReached}>
+              {giftLimitReached && <Lock className="h-4 w-4 mr-1.5" />}
               <Plus className="h-4 w-4 mr-1.5" />
               <span className="hidden sm:inline">Ajouter un </span>Cadeau
             </Button>
@@ -404,7 +409,7 @@ export default function GiftsPage() {
                 <p className="text-[11px] text-muted-foreground">Laissez vide pour un montant libre</p>
               </div>
               <div className="space-y-2">
-                <Label className="flex items-center gap-1.5"><Image className="h-3.5 w-3.5" /> Image (URL)</Label>
+                <Label className="flex items-center gap-1.5"><ImageIcon className="h-3.5 w-3.5" /> Image (URL)</Label>
                 <Input placeholder="https://..." value={form.imageUrl} onChange={(e) => setForm((prev) => ({ ...prev, imageUrl: e.target.value }))} />
                 {form.imageUrl && (
                   <div className="mt-2 rounded-lg overflow-hidden border h-24 w-24">
@@ -737,7 +742,7 @@ export default function GiftsPage() {
               <p className="text-[11px] text-muted-foreground">Laissez vide pour un montant libre</p>
             </div>
             <div className="space-y-2">
-              <Label className="flex items-center gap-1.5"><Image className="h-3.5 w-3.5" /> Image (URL)</Label>
+              <Label className="flex items-center gap-1.5"><ImageIcon className="h-3.5 w-3.5" /> Image (URL)</Label>
               <Input placeholder="https://..." value={form.imageUrl} onChange={(e) => setForm((prev) => ({ ...prev, imageUrl: e.target.value }))} />
               {form.imageUrl && (
                 <div className="mt-2 rounded-lg overflow-hidden border h-24 w-24">

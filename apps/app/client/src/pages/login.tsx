@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -61,12 +61,13 @@ export default function Login() {
       <Card className="w-full max-w-md bg-white border border-[#E6DCCF] shadow-xl rounded-[1.5rem] overflow-hidden relative z-10">
         <CardHeader className="text-center pt-10 pb-2">
           <div className="flex justify-center mb-6">
-            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-md">
-              <Heart className="h-6 w-6 text-white fill-white" />
-            </div>
+            <img
+              src="/logo.png"
+              alt="Daylora"
+              className="h-auto w-[208px] max-w-full object-contain"
+            />
           </div>
-          <CardTitle className="text-4xl font-serif font-bold text-[#2b2320]">Daylora</CardTitle>
-          <CardDescription className="text-[#7A6B5E] italic mt-2">Connectez-vous à votre espace Daylora</CardDescription>
+          <CardDescription className="mt-1 text-[#7A6B5E] italic">Connectez-vous à votre espace Daylora</CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6 p-10 pt-4">

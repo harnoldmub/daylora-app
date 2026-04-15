@@ -9,6 +9,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useWedding } from "@/hooks/use-api";
 import { useParams } from "wouter";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { PremiumAccessGate } from "@/components/admin/PremiumAccessGate";
+import { KpiCard } from "@/components/admin/KpiCard";
 
 type CheckInItem = {
   id: number;
@@ -61,6 +63,9 @@ export default function CheckInOpsPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/checkin/ops"] });
       toast({ title: "Arrivée enregistrée" });
     },
+    onError: (error: Error) => {
+      toast({ title: "Check-in impossible", description: error.message, variant: "destructive" });
+    },
   });
 
   const bulkMutation = useMutation({
@@ -72,6 +77,9 @@ export default function CheckInOpsPage() {
       setSelectedIds([]);
       queryClient.invalidateQueries({ queryKey: ["/api/checkin/ops"] });
       toast({ title: "Check-in de masse effectué" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Check-in de masse impossible", description: error.message, variant: "destructive" });
     },
   });
 
@@ -86,7 +94,12 @@ export default function CheckInOpsPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <PremiumAccessGate
+      isPremium={wedding?.currentPlan === "premium"}
+      featureName="Check-in Jour J"
+      description="Gérez les arrivées de vos invités en temps réel avec une interface mobile-first, recherche éclair et validation de masse."
+    >
+      <div className="space-y-8">
       <AdminPageHeader
         title="Check-in jour J"
         description="Recherche rapide, filtre par invitation ou segment, et validation mobile-first."
@@ -105,10 +118,22 @@ export default function CheckInOpsPage() {
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-5"><div className="flex items-center gap-3"><Users className="h-5 w-5 text-primary" /><div><div className="text-sm text-muted-foreground">Total</div><div className="text-2xl font-semibold">{data?.counts.total ?? 0}</div></div></div></Card>
-        <Card className="p-5"><div className="flex items-center gap-3"><CheckCircle2 className="h-5 w-5 text-green-600" /><div><div className="text-sm text-muted-foreground">Arrivés</div><div className="text-2xl font-semibold">{data?.counts.checkedIn ?? 0}</div></div></div></Card>
-        <Card className="p-5"><div className="flex items-center gap-3"><Clock className="h-5 w-5 text-amber-600" /><div><div className="text-sm text-muted-foreground">En attente</div><div className="text-2xl font-semibold">{data?.counts.pending ?? 0}</div></div></div></Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <KpiCard
+          label="Total"
+          value={data?.counts.total ?? 0}
+          icon={<Users className="h-5 w-5" />}
+        />
+        <KpiCard
+          label="Arrivés"
+          value={data?.counts.checkedIn ?? 0}
+          icon={<CheckCircle2 className="h-5 w-5" />}
+        />
+        <KpiCard
+          label="En attente"
+          value={data?.counts.pending ?? 0}
+          icon={<Clock className="h-5 w-5" />}
+        />
       </div>
 
       <Card className="p-4 space-y-3">
@@ -195,5 +220,6 @@ export default function CheckInOpsPage() {
         ))}
       </div>
     </div>
+  </PremiumAccessGate>
   );
 }

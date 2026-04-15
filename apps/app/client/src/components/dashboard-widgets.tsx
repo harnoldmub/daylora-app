@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { TrendingUp, Users, Calendar, CheckCircle, XCircle, Table2, Palette, ArrowRight } from "lucide-react";
-import { Link, useParams } from "wouter";
+import { Link, useLocation, useParams } from "wouter";
 import {
   PieChart,
   Pie,
@@ -24,6 +24,7 @@ interface DashboardWidgetsProps {
 
 export function DashboardWidgets({ responses, onFilterChange, language }: DashboardWidgetsProps) {
   const { weddingId } = useParams();
+  const [, setLocation] = useLocation();
   const nls = getAppNls(language === "en" ? "en" : "fr");
   const stats = {
     total: responses.length,
@@ -108,7 +109,7 @@ export function DashboardWidgets({ responses, onFilterChange, language }: Dashbo
       icon: Palette,
       color: "text-primary",
       bgColor: "bg-primary/10",
-      href: `/:weddingId/design`,
+      href: `~/${weddingId}/design`,
       clickable: true,
     }
   ];
@@ -126,7 +127,7 @@ export function DashboardWidgets({ responses, onFilterChange, language }: Dashbo
               className={`p-6 border-0 shadow-sm rounded-2xl transition-all duration-300 ${(isClickable || stat.href) ? 'cursor-pointer hover:shadow-md' : ''}`}
               onClick={() => {
                 if (stat.href) {
-                  window.location.href = stat.href.replace(':weddingId', weddingId || '');
+                  setLocation(stat.href);
                   return;
                 }
                 if (isClickable && stat.filter) {

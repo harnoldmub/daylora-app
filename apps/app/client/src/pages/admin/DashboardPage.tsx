@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { Component, type ReactNode, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { type RsvpResponse, type Wedding } from "@shared/schema";
 import { OnboardingChecklist } from "@/components/onboarding-checklist";
 import { DashboardWidgets } from "@/components/dashboard-widgets";
 import { GuidedTour, useShouldShowTour } from "@/components/guided-tour";
-import { useParams, Link } from "wouter";
-import { Loader2, Users, CheckCircle2, XCircle, Calendar, Link2, Copy, ExternalLink, ArrowRight, Palette, PenLine, UserPlus, Rocket, Heart, Sparkles, LayoutList, Crown, ListChecks, CalendarDays } from "lucide-react";
+import { useParams, Link, useLocation } from "wouter";
+import { Loader2, Users, CheckCircle2, XCircle, Calendar, Link2, Copy, ExternalLink, ArrowRight, Palette, PenLine, UserPlus, Rocket, Heart, Sparkles, LayoutList, Crown, ListChecks, CalendarDays, Lock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +13,29 @@ import { KpiCard } from "@/components/admin/KpiCard";
 import { getAppNls } from "@/lib/nls";
 import { Progress } from "@/components/ui/progress";
 import { useChecklist, useOrganizationProgress, usePlanning } from "@/hooks/use-api";
+
+class DashboardSectionErrorBoundary extends Component<
+    { fallback: ReactNode; children: ReactNode },
+    { hasError: boolean }
+> {
+    constructor(props: { fallback: ReactNode; children: ReactNode }) {
+        super(props);
+        this.state = { hasError: false };
+    }
+
+    static getDerivedStateFromError() {
+        return { hasError: true };
+    }
+
+    componentDidCatch(error: unknown) {
+        console.error("Dashboard section crashed:", error);
+    }
+
+    render() {
+        if (this.state.hasError) return this.props.fallback;
+        return this.props.children;
+    }
+}
 
 function EmotionalGreeting({ wedding }: { wedding: Wedding }) {
     const language = wedding.config?.language === "en" ? "en" : "fr";
@@ -85,28 +108,28 @@ function NextStepCard({ wedding, hasGuests }: { wedding: Wedding; hasGuests: boo
         step = {
             label: nls.dashboard.steps.chooseDesign,
             description: nls.dashboard.steps.chooseDesignDesc,
-            href: `/${wedding.id}/templates`,
+            href: `~/${wedding.id}/templates`,
             icon: Palette,
         };
     } else if (!wedding.weddingDate || !heroSubtitle) {
         step = {
             label: nls.dashboard.steps.completeInfo,
             description: nls.dashboard.steps.completeInfoDesc,
-            href: `/${wedding.slug}`,
+            href: `~/${wedding.id}/design`,
             icon: PenLine,
         };
     } else if (!hasGuests) {
         step = {
             label: nls.dashboard.steps.addGuests,
             description: nls.dashboard.steps.addGuestsDesc,
-            href: `/${wedding.id}/guests`,
+            href: `~/${wedding.id}/guests`,
             icon: UserPlus,
         };
     } else if (!wedding.isPublished) {
         step = {
             label: nls.dashboard.steps.publish,
             description: nls.dashboard.steps.publishDesc,
-            href: `/${wedding.id}/welcome`,
+            href: `~/${wedding.id}/welcome`,
             icon: Rocket,
         };
     }
@@ -128,12 +151,12 @@ function NextStepCard({ wedding, hasGuests }: { wedding: Wedding; hasGuests: boo
                         <p className="text-xl font-semibold text-foreground tracking-tight">{step.label}</p>
                         <p className="text-sm text-muted-foreground mt-0.5">{step.description}</p>
                     </div>
-                    <Link href={step.href}>
-                        <Button size="lg" className="rounded-xl gap-2 shrink-0 shadow-sm px-8 text-base">
+                    <Button asChild size="lg" className="rounded-xl gap-2 shrink-0 shadow-sm px-8 text-base">
+                        <Link href={step.href}>
                             {step.label}
                             <ArrowRight className="h-4 w-4" />
-                        </Button>
-                    </Link>
+                        </Link>
+                    </Button>
                 </div>
             </Card>
         </div>
@@ -175,6 +198,7 @@ function SiteLink({ wedding }: { wedding: Wedding }) {
 
 export default function DashboardPage() {
     const { weddingId } = useParams<{ weddingId: string }>();
+    const [, setLocation] = useLocation();
     const showTour = useShouldShowTour("dashboard");
     const [simplified, setSimplified] = useState(() => {
         try { return localStorage.getItem("daylora_simplified") === "true"; } catch { return false; }
@@ -255,12 +279,12 @@ export default function DashboardPage() {
                             </p>
                         </div>
                         {wedding.currentPlan !== "premium" ? (
-                            <Link href={`/${wedding.id}/billing`}>
-                                <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/5">
+                            <Button asChild variant="outline" className="border-primary/30 text-primary hover:bg-primary/5">
+                                <Link href={`~/${wedding.id}/billing`}>
                                     <Sparkles className="mr-2 h-4 w-4" />
                                     Débloquer Premium
-                                </Button>
-                            </Link>
+                                </Link>
+                            </Button>
                         ) : null}
                     </div>
                 </Card>
@@ -296,7 +320,7 @@ export default function DashboardPage() {
                                     icon={<ListChecks className="h-4.5 w-4.5" />}
                                 />
                                 <KpiCard
-                                    label="Planning"
+                                    label="Vue planning"
                                     value={planningData?.items?.length || 0}
                                     hint="Étapes planifiées"
                                     icon={<CalendarDays className="h-4.5 w-4.5" />}
@@ -322,12 +346,18 @@ export default function DashboardPage() {
                                 )}
                             </div>
                             <div className="mt-4 flex flex-wrap gap-2">
-                                <Link href={`/${weddingId}/checklist`}>
-                                    <Button variant="outline" size="sm">Ouvrir la checklist</Button>
-                                </Link>
-                                <Link href={`/${weddingId}/planning`}>
-                                    <Button variant="outline" size="sm">Voir le planning</Button>
-                                </Link>
+                                <Button asChild variant="outline" size="sm">
+                                    <Link href={`~/${weddingId}/checklist`}>
+                                        {wedding?.currentPlan !== "premium" && <Lock className="mr-2 h-3 w-3 text-muted-foreground/60" />}
+                                        Ouvrir la checklist
+                                    </Link>
+                                </Button>
+                                <Button asChild variant="outline" size="sm">
+                                    <Link href={`~/${weddingId}/checklist?view=planning`}>
+                                        {wedding?.currentPlan !== "premium" && <Lock className="mr-2 h-3 w-3 text-muted-foreground/60" />}
+                                        Voir la vue planning
+                                    </Link>
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -367,28 +397,57 @@ export default function DashboardPage() {
             </div>
 
             <div data-tour="dashboard-checklist">
-                {wedding && <OnboardingChecklist wedding={wedding} />}
+                <DashboardSectionErrorBoundary
+                    fallback={
+                        <Card className="rounded-2xl border-border/70 p-5 shadow-sm">
+                            <p className="text-sm font-semibold">Checklist</p>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                Cette zone se recharge encore. Vous pouvez déjà continuer depuis les autres sections du tableau de bord.
+                            </p>
+                            {wedding ? (
+                                <Button asChild className="mt-4">
+                                    <Link href={`~/${wedding.id}/checklist`}>Ouvrir la checklist</Link>
+                                </Button>
+                            ) : null}
+                        </Card>
+                    }
+                >
+                    {wedding && <OnboardingChecklist wedding={wedding} />}
+                </DashboardSectionErrorBoundary>
             </div>
 
             {!simplified && (
-                <DashboardWidgets
-                    responses={responses || []}
-                    language={language}
-                    onFilterChange={(filter) => {
-                        window.location.href = `guests?availability=${filter}`;
-                    }}
-                />
+                <DashboardSectionErrorBoundary
+                    fallback={
+                        <Card className="rounded-2xl border-border/70 p-5 shadow-sm">
+                            <p className="text-sm font-semibold">Statistiques détaillées</p>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                Les graphiques détaillés ne se sont pas chargés cette fois. Les indicateurs principaux restent bien disponibles plus haut.
+                            </p>
+                        </Card>
+                    }
+                >
+                    <DashboardWidgets
+                        responses={responses || []}
+                        language={language}
+                        onFilterChange={(filter) => {
+                            setLocation(`~/${weddingId}/guests?availability=${filter}`);
+                        }}
+                    />
+                </DashboardSectionErrorBoundary>
             )}
 
             {showTour && (
-                <GuidedTour
-                    tourId="dashboard"
-                    steps={[
-                        { target: "dashboard-greeting", title: nls.dashboard.tour.welcomeTitle, description: nls.dashboard.tour.welcomeDesc, position: "bottom" },
-                        { target: "dashboard-kpis", title: nls.dashboard.tour.statsTitle, description: nls.dashboard.tour.statsDesc, position: "bottom" },
-                        { target: "dashboard-checklist", title: nls.dashboard.tour.progressTitle, description: nls.dashboard.tour.progressDesc, position: "top" },
-                    ]}
-                />
+                <DashboardSectionErrorBoundary fallback={null}>
+                    <GuidedTour
+                        tourId="dashboard"
+                        steps={[
+                            { target: "dashboard-greeting", title: nls.dashboard.tour.welcomeTitle, description: nls.dashboard.tour.welcomeDesc, position: "bottom" },
+                            { target: "dashboard-kpis", title: nls.dashboard.tour.statsTitle, description: nls.dashboard.tour.statsDesc, position: "bottom" },
+                            { target: "dashboard-checklist", title: nls.dashboard.tour.progressTitle, description: nls.dashboard.tour.progressDesc, position: "top" },
+                        ]}
+                    />
+                </DashboardSectionErrorBoundary>
             )}
         </div>
     );

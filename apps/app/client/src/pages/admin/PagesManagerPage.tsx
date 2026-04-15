@@ -29,7 +29,14 @@ export default function PagesManagerPage() {
   const navigation = wedding.config?.navigation;
   const pages = navigation?.pages || {};
   const customPages = navigation?.customPages || [];
-  const activeCore = CORE_PAGES.filter((item) => pages[item.key] ?? true).length;
+  const isPageEnabled = (key: (typeof CORE_PAGES)[number]["key"]) => {
+    if (key === "accommodation") {
+      return (pages as Record<string, boolean | undefined>).accommodation ?? true;
+    }
+    return (pages as Record<string, boolean | undefined>)[key] ?? true;
+  };
+
+  const activeCore = CORE_PAGES.filter((item) => isPageEnabled(item.key)).length;
   const activeCustom = customPages.filter((page) => page.enabled).length;
 
   return (
@@ -39,13 +46,13 @@ export default function PagesManagerPage() {
         description="Vue d'ensemble des pages actives et de la navigation publique."
         actions={
           <>
-            <Link href="/design">
+            <Link href={`~/${wedding.id}/design`}>
               <Button variant="outline">
                 <Palette className="h-4 w-4 mr-2" />
                 Studio design
               </Button>
             </Link>
-            <Link href="/site">
+            <Link href={`~/${wedding.id}/site`}>
               <Button>
                 <ListTree className="h-4 w-4 mr-2" />
                 Configurer menus
@@ -83,7 +90,7 @@ export default function PagesManagerPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {CORE_PAGES.map((item) => {
-            const enabled = pages[item.key] ?? true;
+            const enabled = isPageEnabled(item.key);
             const publicPath = `/${wedding.slug}/${item.path}`;
             return (
               <div key={item.key} className="rounded-xl border p-4 flex items-center justify-between">

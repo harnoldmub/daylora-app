@@ -121,7 +121,7 @@ export function InternalSupportChat({
   }, [requestContext]);
 
   useEffect(() => {
-    const es = new EventSource("/api/support/stream", { withCredentials: true });
+    const es = new EventSource("/api/support/stream");
     const refresh = () => {
       fetchConversation(false).catch(() => {});
     };

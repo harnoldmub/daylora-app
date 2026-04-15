@@ -11,7 +11,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useWedding, useUpdateWedding } from "@/hooks/use-api";
 import type { LiveJoke } from "@shared/schema";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { PremiumGate } from "@/components/admin/PremiumGate";
+import { PremiumAccessGate } from "@/components/admin/PremiumAccessGate";
 
 export default function LiveJokesPage() {
   const { weddingId } = useParams<{ weddingId: string }>();
@@ -141,7 +141,11 @@ export default function LiveJokesPage() {
   };
 
   return (
-    <PremiumGate featureName="Les blagues live" isPremium={wedding?.currentPlan === 'premium'}>
+    <PremiumAccessGate 
+      featureName="Cagnotte en Direct" 
+      description="Animez votre soirée avec des blagues automatiques, des remerciements personnalisés et l'affichage des contributions en temps réel."
+      isPremium={wedding?.currentPlan === 'premium'}
+    >
     <div className="space-y-8">
       <AdminPageHeader
         title="Blagues Live"
@@ -276,6 +280,6 @@ export default function LiveJokesPage() {
         )}
       </Card>
     </div>
-    </PremiumGate>
+    </PremiumAccessGate>
   );
 }

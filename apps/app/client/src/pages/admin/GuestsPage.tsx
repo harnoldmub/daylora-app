@@ -22,6 +22,7 @@ import {
     X,
     Sparkles,
     Crown,
+    Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -552,9 +553,36 @@ export default function GuestsPage() {
             <AdminPageHeader
                 title="Invités"
                 description="Gérez vos invités, invitations et relances."
-                actions={
+            />
+
+            {wedding && wedding.currentPlan !== "premium" && (
+                <Card className="p-5 border-border/70">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <Users className="h-4 w-4 text-muted-foreground" />
+                                <p className="text-sm font-semibold">
+                                    Plan Découverte : {responses.length}/10 invités créés
+                                </p>
+                            </div>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                Le plan Découverte est limité à 10 invités. Passez au Premium pour inviter tous vos proches sans limite.
+                            </p>
+                        </div>
+                        <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/5" asChild>
+                            <a href={`~/${wedding.id}/billing`}>
+                                <Sparkles className="mr-2 h-4 w-4" />
+                                Débloquer Premium
+                            </a>
+                        </Button>
+                    </div>
+                </Card>
+            )}
+
+
                     <div className="flex flex-wrap gap-2">
                     <Button variant="outline" size="sm" onClick={handleExportCSV} data-tour="guests-import">
+                        {wedding?.currentPlan !== "premium" && <Lock className="mr-2 h-3.5 w-3.5 text-muted-foreground/60" />}
                         <Download className="h-4 w-4 mr-1.5" />
                         <span className="hidden sm:inline">Exporter</span> CSV
                     </Button>
@@ -565,6 +593,7 @@ export default function GuestsPage() {
                     <Dialog open={addGuestOpen} onOpenChange={setAddGuestOpen}>
                         <DialogTrigger asChild>
                             <Button size="sm" data-tour="guests-add">
+                                {wedding?.currentPlan !== "premium" && <Lock className="mr-2 h-3.5 w-3.5" />}
                                 <Plus className="h-4 w-4 mr-1.5" />
                                 <span className="hidden sm:inline">Ajouter</span>
                             </Button>
@@ -813,9 +842,7 @@ export default function GuestsPage() {
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
-                    </div>
-                }
-            />
+                </div>
 
             <Dialog open={invitationSettingsOpen} onOpenChange={setInvitationSettingsOpen}>
                 <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">

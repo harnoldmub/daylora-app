@@ -71,6 +71,19 @@ export function AvantGardeTemplateRenderer(props: any) {
   const headerModel = wedding.config?.theme?.headerModel || "model1";
   const footerModel = wedding.config?.theme?.footerModel || "model1";
   const rsvpModel = wedding.config?.theme?.rsvpModel || "model1";
+  const headerSpacing = wedding.config?.theme?.headerSpacing || "comfortable";
+  const headerPaddingClass =
+    headerSpacing === "compact"
+      ? isScrolled ? "py-3 md:py-4" : "py-5 md:py-7"
+      : headerSpacing === "airy"
+        ? isScrolled ? "py-5 md:py-7" : "py-10 md:py-14"
+        : isScrolled ? "py-4 md:py-6" : "py-8 md:py-12";
+  const heroTopPaddingClass =
+    headerSpacing === "compact"
+      ? "pt-24 md:pt-28"
+      : headerSpacing === "airy"
+        ? "pt-40 md:pt-48"
+        : "pt-32 md:pt-40";
 
   const rawLocationItems = (wedding.config?.sections?.locationItems?.length ? wedding.config.sections.locationItems : []) as LocationItem[];
   const locationItems = rawLocationItems.length > 0 ? rawLocationItems : [
@@ -103,7 +116,7 @@ export function AvantGardeTemplateRenderer(props: any) {
   const renderHeader = () => {
      if (headerModel === "model1") {
          return (
-            <header className={`fixed top-0 w-full z-50 transition-all duration-500 ${isScrolled ? "py-4 md:py-6 bg-white/80 backdrop-blur-md shadow-sm" : "py-8 md:py-12 bg-transparent"}`}>
+            <header className={`fixed top-0 w-full z-50 transition-all duration-500 ${headerPaddingClass} ${isScrolled ? "bg-white/80 backdrop-blur-md shadow-sm" : "bg-transparent"}`}>
                 <div className="max-w-[1800px] mx-auto px-6 md:px-12 flex justify-between items-center">
                   <span className={`text-xl font-black tracking-tighter uppercase transition-colors duration-500 ${isScrolled ? "text-black" : "text-white"}`}>
                     {wedding.title}
@@ -120,7 +133,7 @@ export function AvantGardeTemplateRenderer(props: any) {
      }
      if (headerModel === "model2") {
          return (
-            <header className="absolute top-0 w-full z-50 p-6 md:px-12 md:py-8 flex text-white justify-between items-center mix-blend-difference">
+            <header className={`absolute top-0 w-full z-50 px-6 md:px-12 flex text-white justify-between items-center mix-blend-difference ${headerSpacing === "compact" ? "py-5 md:py-6" : headerSpacing === "airy" ? "py-10 md:py-12" : "py-7 md:py-8"}`}>
                 <nav className="flex gap-8 text-[10px] md:text-sm uppercase tracking-[0.2em]">
                    <a href="#story" className="hover:italic">Histoire</a>
                    <a href="#program" className="hover:italic">Programme</a>
@@ -295,8 +308,8 @@ export function AvantGardeTemplateRenderer(props: any) {
       {renderHeader()}
 
       <section className="relative h-screen w-full flex flex-col md:flex-row overflow-hidden border-b border-[var(--wedding-primary)]/10">
-        <motion.div style={{ y: yHeroText }} className="flex-1 flex flex-col justify-center p-8 md:p-20 z-10 bg-gradient-to-r from-[var(--wedding-secondary)] via-[var(--wedding-secondary)] to-transparent">
-          <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: "easeOut" }}>
+        <motion.div style={{ y: yHeroText }} className={`flex-1 flex flex-col justify-start p-8 md:p-20 ${heroTopPaddingClass} z-10 bg-gradient-to-r from-[var(--wedding-secondary)] via-[var(--wedding-secondary)] to-transparent`}>
+          <motion.div className="mt-8 md:mt-16" initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: "easeOut" }}>
             <h2 className="text-sm tracking-[0.3em] uppercase opacity-60 mb-6">
                 <InlineEditor value={heroSubtitle} onSave={(val) => props.onSaveText("heroSubtitle", val)} canEdit={canEdit && editMode} />
             </h2>

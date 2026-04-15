@@ -133,19 +133,19 @@ export default function WelcomePage() {
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <Button variant="outline" asChild className="w-full">
-                            <Link href="/dashboard">
+                            <Link href={`~/${wedding.id}/dashboard`}>
                                 <Layout className="h-4 w-4 mr-2" />
                                 {nls.welcome.dashboard}
                             </Link>
                         </Button>
                         <Button asChild className="w-full">
-                            <Link href="/design">
+                            <Link href={`~/${wedding.id}/design`}>
                                 <FileEdit className="h-4 w-4 mr-2" />
                                 {nls.welcome.editInvitation}
                             </Link>
                         </Button>
                         <Button variant="outline" asChild className="w-full">
-                            <Link href="/templates">
+                            <Link href={`~/${wedding.id}/templates`}>
                                 <ExternalLink className="h-4 w-4 mr-2" />
                                 {nls.welcome.templatesAndDesign}
                             </Link>

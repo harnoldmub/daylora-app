@@ -283,12 +283,20 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
     const sectionMenuItems = internalMenu.filter((item) => item.path !== "live");
     const headerMenuItems = sectionMenuItems.filter((item) => primaryHeaderMenuIds.has(item.id));
     const templateId = wedding.templateId || "classic";
+    const headerLayout = (wedding.config?.theme as any)?.headerLayout || "balanced";
+    const headerSpacing = (wedding.config?.theme as any)?.headerSpacing || "comfortable";
     const headerClass =
         templateId === "modern"
             ? "sticky top-0 z-50 w-full border-b border-[#CAD9F8] bg-[#F7FAFF]/95 backdrop-blur"
             : templateId === "minimal"
                 ? "sticky top-0 z-50 w-full border-b border-[#D5DCE8] bg-[#F8FAFC]/96 backdrop-blur"
                 : "sticky top-0 z-50 w-full border-b border-[#DCC9AB] bg-[#FFF9F1]/92 backdrop-blur";
+    const headerHeightClass =
+        headerSpacing === "compact"
+            ? "min-h-[64px]"
+            : headerSpacing === "airy"
+                ? "min-h-[104px]"
+                : "min-h-[82px]";
     const navClass =
         templateId === "modern"
             ? "flex items-center space-x-6 text-sm font-semibold text-[#113366]"
@@ -433,8 +441,14 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
                 <div className="flex flex-col min-h-screen">
                     {shouldShowHeader ? (
                         <header className={headerClass}>
-                            <div className="container mx-auto flex h-16 items-center justify-between">
-                                <div className="flex items-center gap-3">
+                            <div
+                                className={`container mx-auto ${headerHeightClass} ${
+                                    headerLayout === "centered"
+                                        ? "flex flex-col items-center justify-center gap-3 py-4"
+                                        : "flex items-center justify-between gap-6"
+                                }`}
+                            >
+                                <div className={`flex items-center gap-3 ${headerLayout === "centered" ? "justify-center" : ""}`}>
                                     <Link
                                         href="/"
                                         className="flex items-center space-x-2"
@@ -510,8 +524,8 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
                                         </div>
                                     ) : null}
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <nav className={navClass}>
+                                <div className={`flex items-center gap-3 ${headerLayout === "centered" ? "justify-center" : ""}`}>
+                                    <nav className={`${navClass} ${headerLayout === "centered" ? "flex-wrap justify-center text-center" : ""}`}>
                                         {/* On homepage: show all menus. On section routes: show only sections. */}
                                         {headerMenuItems.map((item) => {
                                             const isExternal = item.linkType === "external";

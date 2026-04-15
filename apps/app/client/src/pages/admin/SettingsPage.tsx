@@ -87,15 +87,22 @@ export default function SettingsPage() {
   });
 
   const templates = [
-    { id: "classic", name: "Classique", premium: false },
-    { id: "modern", name: "Moderne", premium: true },
-    { id: "minimal", name: "Minimal", premium: true },
-    { id: "avantgarde", name: "Avant-Garde", premium: true },
+    { id: "classic", name: "Éclat de Tradition", premium: false },
+    { id: "modern", name: "Horizon Minimaliste", premium: true },
+    { id: "boho", name: "Bohème Sauvage", premium: true },
+    { id: "avantgarde", name: "Studio Couture", premium: true },
   ];
   const isPremium = wedding?.currentPlan === "premium";
   const canDeleteWedding = !!wedding && (user?.isAdmin || wedding.ownerId === user?.id);
   const ownedWeddings = weddings.filter((item) => item.ownerId === user?.id);
   const canManageMultipleSites = !!user?.isAdmin || ownedWeddings.some((item) => item.currentPlan === "premium");
+  const goToBilling = () => {
+    if (weddingId) {
+      setLocation(`~/${weddingId}/billing`);
+      return;
+    }
+    setLocation("/billing");
+  };
   const planItems = isPremium
     ? [
         "Sites multiples",
@@ -107,7 +114,7 @@ export default function SettingsPage() {
       ]
     : [
         "1 site",
-        "Template Classic",
+        "Template Éclat de Tradition",
         "10 invités maximum",
         "2 cadeaux maximum",
         "Cagnotte incluse",
@@ -225,6 +232,11 @@ export default function SettingsPage() {
       queryClient.removeQueries({ queryKey: ["/api/weddings", wedding.id] });
       toast({ title: "Site supprimé", description: "Le site a bien été supprimé." });
       setDeleteDialogOpen(false);
+      const remainingOwnedWeddings = ownedWeddings.filter((item) => item.id !== wedding.id);
+      if (remainingOwnedWeddings[0]) {
+        setLocation(`/${remainingOwnedWeddings[0].id}/dashboard`);
+        return;
+      }
       setLocation("/dashboard");
     } catch {
       toast({
@@ -382,7 +394,7 @@ export default function SettingsPage() {
             </p>
           </div>
           {!isPremium ? (
-            <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/5" onClick={() => setLocation("/billing")}>
+            <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/5" onClick={goToBilling}>
               <Sparkles className="mr-2 h-4 w-4" />
               Passer au Premium
             </Button>
@@ -424,7 +436,7 @@ export default function SettingsPage() {
                 <Lock className="h-3.5 w-3.5" />
                 Action Premium
               </div>
-              <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/5" onClick={() => setLocation("/billing")}>
+              <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/5" onClick={goToBilling}>
                 <Sparkles className="mr-2 h-4 w-4" />
                 Débloquer les sites multiples
               </Button>

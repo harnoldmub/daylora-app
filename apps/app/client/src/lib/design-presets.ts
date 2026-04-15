@@ -39,7 +39,7 @@ export const COLOR_TONES = [
 export const TEMPLATE_PRESETS = {
   classic: {
     id: "classic",
-    name: "Classique",
+    name: "Éclat de Tradition",
     description: "Elegant et ceremoniel",
     defaultFont: "serif",
     defaultButtonStyle: "solid",
@@ -47,15 +47,31 @@ export const TEMPLATE_PRESETS = {
   },
   modern: {
     id: "modern",
-    name: "Moderne",
+    name: "Horizon Minimaliste",
     description: "Editorial et dynamique",
+    defaultFont: "sans",
+    defaultButtonStyle: "solid",
+    defaultButtonRadius: "rounded",
+  },
+  boho: {
+    id: "boho",
+    name: "Bohème Sauvage",
+    description: "Naturel et organique",
+    defaultFont: "serif",
+    defaultButtonStyle: "solid",
+    defaultButtonRadius: "pill",
+  },
+  "avantgarde": {
+    id: "avantgarde",
+    name: "Studio Couture",
+    description: "Identité forte et couture",
     defaultFont: "sans",
     defaultButtonStyle: "solid",
     defaultButtonRadius: "rounded",
   },
   minimal: {
     id: "minimal",
-    name: "Minimal",
+    name: "Bohème Sauvage",
     description: "Graphique et epure",
     defaultFont: "sans",
     defaultButtonStyle: "outline",

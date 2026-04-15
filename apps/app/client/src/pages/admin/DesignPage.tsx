@@ -16,6 +16,7 @@ import { LOGO_TEXT_STYLE_OPTIONS, getLogoTextClassName, getLogoTextWrapperClassN
 import { FONT_PROFILE_OPTIONS, resolveFontProfile } from "@/lib/font-profiles";
 import { getSiteLanguagePack, type SiteLanguage } from "@/lib/site-language";
 import { getAppNls } from "@/lib/nls";
+import { PremiumAccessGate } from "@/components/admin/PremiumAccessGate";
 
 const MAX_LOGO_DATA_URL_LENGTH = 220_000;
 const MAX_IMAGE_DATA_URL_LENGTH = 3_000_000;
@@ -23,10 +24,10 @@ const MAX_GALLERY_IMAGE_DATA_URL_LENGTH = 1_200_000;
 const MAX_GALLERY_IMAGES = 10;
 
 const TEMPLATES = [
-  { id: "classic", name: "Classique", premium: false },
-  { id: "modern", name: "Moderne", premium: true },
-  { id: "minimal", name: "Minimal", premium: true },
-  { id: "avantgarde", name: "Avant-Garde", premium: true },
+  { id: "classic", name: "Éclat de Tradition", premium: false },
+  { id: "modern", name: "Horizon Minimaliste", premium: true },
+  { id: "boho", name: "Bohème Sauvage", premium: true },
+  { id: "avantgarde", name: "Studio Couture", premium: true },
 ];
 
 const DEFAULT_LOCATION_ITEMS = [
@@ -65,6 +66,110 @@ const DEFAULT_PROGRAM_ITEMS = [
 const DEFAULT_STORY_BODY =
   "Leur histoire a commencé il y a quelques années, une rencontre simple qui s'est transformée en une belle aventure. Aujourd'hui, ils s'apprêtent à dire 'Oui' entourés de leurs proches.";
 
+type AccommodationItem = {
+  name: string;
+  address: string;
+  url: string;
+};
+
+type DesignLocationItem = {
+  title: string;
+  address: string;
+  description: string;
+  accommodations: AccommodationItem[];
+};
+
+type DesignProgramItem = {
+  time: string;
+  title: string;
+  description: string;
+};
+
+type DesignTextsState = {
+  siteTitle: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  weddingDate: string;
+  heroCta: string;
+  rsvpTitle: string;
+  rsvpDescription: string;
+  rsvpButton: string;
+  navRsvp: string;
+  navCagnotte: string;
+  locationTitle: string;
+  locationDescription: string;
+  accommodationTitle: string;
+  accommodationDescription: string;
+  galleryTitle: string;
+  galleryDescription: string;
+  programTitle: string;
+  programDescription: string;
+  storyTitle: string;
+  storyBody: string;
+  giftsTitle: string;
+  giftsDescription: string;
+  cagnotteTitle: string;
+  cagnotteDescription: string;
+  cagnotteBackLabel: string;
+  cagnotteSubmitLabel: string;
+  dressCode: string;
+  invitationGreeting: string;
+  invitationPrelude: string;
+  invitationMessage: string;
+  invitationSubmessage: string;
+  invitationCagnotteTitle: string;
+  invitationCagnotteDescription: string;
+  invitationCagnotteButton: string;
+  invitationDressCode: string;
+  invitationFooterNote: string;
+};
+
+type DesignThemeState = {
+  primaryColor: string;
+  secondaryColor: string;
+  fontFamily: string;
+  toneId: string;
+  buttonStyle: string;
+  buttonRadius: string;
+  headerLayout: string;
+  headerSpacing: string;
+  headerModel: string;
+  footerModel: string;
+  rsvpModel: string;
+};
+
+type DesignMediaState = {
+  heroImage: string;
+  couplePhoto: string;
+};
+
+type DesignBrandingState = {
+  logoUrl: string;
+  logoText: string;
+  logoTextStyle: string;
+};
+
+type DesignSectionsState = {
+  countdownDate: string;
+  cagnotteSuggestedAmounts: number[];
+  invitationShowDressCode: boolean;
+  locationItems: DesignLocationItem[];
+  programItems: DesignProgramItem[];
+  accommodationItems: AccommodationItem[];
+  galleryImages: string[];
+};
+
+type PageVisibilityState = {
+  rsvp: boolean;
+  gifts: boolean;
+  cagnotte: boolean;
+  story: boolean;
+  gallery: boolean;
+  accommodation: boolean;
+  location: boolean;
+  program: boolean;
+};
+
 export default function DesignPage() {
   const { weddingId } = useParams();
   const { data: wedding, isLoading } = useWedding(weddingId);
@@ -78,7 +183,7 @@ export default function DesignPage() {
 
   const [templateId, setTemplateId] = useState<string>("classic");
 
-  const [texts, setTexts] = useState(() => ({
+  const [texts, setTexts] = useState<DesignTextsState>(() => ({
     siteTitle: "",
     heroTitle: "",
     heroSubtitle: "",
@@ -117,39 +222,41 @@ export default function DesignPage() {
     invitationFooterNote: "",
   }));
 
-  const [theme, setTheme] = useState(() => ({
+  const [theme, setTheme] = useState<DesignThemeState>(() => ({
     primaryColor: "#C8A96A",
     secondaryColor: "#FFFFFF",
     fontFamily: "serif",
     toneId: "golden-ivory",
     buttonStyle: "solid",
     buttonRadius: "pill",
+    headerLayout: "balanced",
+    headerSpacing: "comfortable",
     headerModel: "model1",
     footerModel: "model1",
     rsvpModel: "model1",
   }));
 
-  const [media, setMedia] = useState(() => ({
+  const [media, setMedia] = useState<DesignMediaState>(() => ({
     heroImage: "",
     couplePhoto: "",
   }));
 
-  const [branding, setBranding] = useState(() => ({
+  const [branding, setBranding] = useState<DesignBrandingState>(() => ({
     logoUrl: "",
     logoText: "",
     logoTextStyle: "elegant",
   }));
 
-  const [sections, setSections] = useState(() => ({
+  const [sections, setSections] = useState<DesignSectionsState>(() => ({
     countdownDate: "",
     cagnotteSuggestedAmounts: [20, 50, 100, 150, 200],
     invitationShowDressCode: true,
     locationItems: DEFAULT_LOCATION_ITEMS,
     programItems: DEFAULT_PROGRAM_ITEMS,
-    accommodationItems: [] as Array<{ name: string; address: string; url: string }>,
-    galleryImages: [] as string[],
+    accommodationItems: [],
+    galleryImages: [],
   }));
-  const [pageVisibility, setPageVisibility] = useState(() => ({
+  const [pageVisibility, setPageVisibility] = useState<PageVisibilityState>(() => ({
     rsvp: true,
     gifts: true,
     cagnotte: true,
@@ -164,10 +271,10 @@ export default function DesignPage() {
   const ui = appNls.designPage;
   const templateLabels = useMemo<Record<string, string>>(
     () => ({
-      classic: language === "en" ? "Classic" : "Classique",
-      modern: language === "en" ? "Modern" : "Moderne",
-      minimal: "Minimal",
-      avantgarde: "Avant-Garde",
+      classic: language === "en" ? "Classic Elegance" : "Éclat de Tradition",
+      modern: language === "en" ? "Minimal Horizon" : "Horizon Minimaliste",
+      boho: language === "en" ? "Wild Boho" : "Bohème Sauvage",
+      "avantgarde": language === "en" ? "Studio Couture" : "Studio Couture",
     }),
     [language]
   );
@@ -196,6 +303,55 @@ export default function DesignPage() {
     }),
     [language]
   );
+  const headerLayoutLabels = useMemo<Record<string, string>>(
+    () => ({
+      balanced: language === "en" ? "Logo on the left, menu on the right" : "Logo à gauche, menu à droite",
+      centered: language === "en" ? "Everything centered" : "Tout centré",
+    }),
+    [language]
+  );
+  const headerSpacingLabels = useMemo<Record<string, string>>(
+    () => ({
+      compact: language === "en" ? "Compact" : "Compact",
+      comfortable: language === "en" ? "Comfortable" : "Confortable",
+      airy: language === "en" ? "Airy" : "Aéré",
+    }),
+    [language]
+  );
+  const componentLabels = useMemo(
+    () => ({
+      componentsSection: language === "en" ? "Customize this style" : "Personnaliser ce modèle",
+      componentsSectionDesc:
+        language === "en"
+          ? "Choose the style of the top of the page, the reply form and the bottom of the page."
+          : "Choisissez le style du haut de page, du formulaire de réponse et du bas de page.",
+      headerStyle: language === "en" ? "Top of the page" : "Style du haut de page",
+      headerStyleHint:
+        language === "en"
+          ? "This changes the area with the logo and menu."
+          : "Cela change la zone avec le logo et le menu.",
+      rsvpStyle: language === "en" ? "Reply form" : "Style du formulaire de réponse",
+      rsvpStyleHint:
+        language === "en"
+          ? "This changes how guests send their reply."
+          : "Cela change la façon dont les invités envoient leur réponse.",
+      footerStyle: language === "en" ? "Bottom of the page" : "Style du bas de page",
+      footerStyleHint:
+        language === "en"
+          ? "This changes the final block at the bottom of the website."
+          : "Cela change le dernier bloc affiché en bas du site.",
+      headerModel1: language === "en" ? "Simple menu" : "Menu simple",
+      headerModel2: language === "en" ? "Split menu" : "Menu séparé",
+      headerModel3: language === "en" ? "Vertical menu" : "Menu vertical",
+      rsvpModel1: language === "en" ? "Simple form" : "Formulaire simple",
+      rsvpModel2: language === "en" ? "Reply card" : "Carte de réponse",
+      rsvpModel3: language === "en" ? "Large reply section" : "Grande zone de réponse",
+      footerModel1: language === "en" ? "Simple footer" : "Bas de page simple",
+      footerModel2: language === "en" ? "Footer with initials" : "Bas de page avec initiales",
+      footerModel3: language === "en" ? "Dark footer" : "Bas de page foncé",
+    }),
+    [language]
+  );
 
   useEffect(() => {
     if (!wedding) return;
@@ -203,12 +359,14 @@ export default function DesignPage() {
     const config = wedding.config || ({} as any);
     const resolvedLanguage: SiteLanguage = config.language === "en" ? "en" : "fr";
     const pack = getSiteLanguagePack(resolvedLanguage);
-    const cfgTexts = config.texts || ({} as any);
-    const cfgTheme = config.theme || ({} as any);
-    const cfgMedia = config.media || ({} as any);
-    const cfgBranding = config.branding || ({} as any);
-    const cfgSections = config.sections || ({} as any);
-    const cfgPages = config.navigation?.pages || ({} as any);
+    const packTexts: any = pack.texts || {};
+    const packSections: any = pack.sections || {};
+    const cfgTexts: any = config.texts || {};
+    const cfgTheme: any = config.theme || {};
+    const cfgMedia: any = config.media || {};
+    const cfgBranding: any = config.branding || {};
+    const cfgSections: any = config.sections || {};
+    const cfgPages: any = config.navigation?.pages || {};
 
     const formatWeddingDate = () => {
       const raw = (wedding as any).weddingDate;
@@ -230,42 +388,40 @@ export default function DesignPage() {
     setTexts({
       siteTitle: cfgTexts.siteTitle || wedding.title || "",
       heroTitle: cfgTexts.heroTitle || wedding.title || "",
-      heroSubtitle: cfgTexts.heroSubtitle || pack.texts.heroSubtitle,
+      heroSubtitle: cfgTexts.heroSubtitle || packTexts.heroSubtitle,
       weddingDate: cfgTexts.weddingDate || formatWeddingDate() || "Prochainement",
       heroCta: cfgTexts.heroCta || pack.texts.heroCta,
-      rsvpTitle: cfgTexts.rsvpTitle || pack.texts.rsvpTitle,
-      rsvpDescription: cfgTexts.rsvpDescription || pack.texts.rsvpDescription,
-      rsvpButton: cfgTexts.rsvpButton || pack.texts.rsvpButton,
-      navRsvp: cfgTexts.navRsvp || pack.texts.navRsvp,
-      navCagnotte: cfgTexts.navCagnotte || pack.texts.navCagnotte,
-      locationTitle: cfgTexts.locationTitle || pack.texts.locationTitle,
-      locationDescription: cfgTexts.locationDescription || pack.texts.locationDescription,
-      accommodationTitle: cfgTexts.accommodationTitle || pack.texts.accommodationTitle,
-      accommodationDescription: cfgTexts.accommodationDescription || pack.texts.accommodationDescription,
-      galleryTitle: cfgTexts.galleryTitle || pack.texts.galleryTitle,
-      galleryDescription: cfgTexts.galleryDescription || pack.texts.galleryDescription,
-      programTitle: cfgTexts.programTitle || pack.texts.programTitle,
-      programDescription: cfgTexts.programDescription || pack.texts.programDescription,
-      storyTitle: cfgTexts.storyTitle || pack.texts.storyTitle,
-      storyBody: cfgTexts.storyBody || pack.texts.storyBody,
-      giftsTitle: cfgTexts.giftsTitle || pack.texts.giftsTitle,
-      giftsDescription: cfgTexts.giftsDescription || pack.texts.giftsDescription,
-      cagnotteTitle: cfgTexts.cagnotteTitle || pack.texts.cagnotteTitle,
-      cagnotteDescription:
-        cfgTexts.cagnotteDescription ||
-        pack.texts.cagnotteDescription,
-      cagnotteBackLabel: cfgTexts.cagnotteBackLabel || pack.texts.cagnotteBackLabel,
-      cagnotteSubmitLabel: cfgTexts.cagnotteSubmitLabel || pack.texts.cagnotteSubmitLabel,
+      rsvpTitle: cfgTexts.rsvpTitle || packTexts.rsvpTitle,
+      rsvpDescription: cfgTexts.rsvpDescription || packTexts.rsvpDescription,
+      rsvpButton: cfgTexts.rsvpButton || packTexts.rsvpButton,
+      navRsvp: cfgTexts.navRsvp || packTexts.navRsvp,
+      navCagnotte: cfgTexts.navCagnotte || packTexts.navCagnotte,
+      locationTitle: cfgTexts.locationTitle || packTexts.locationTitle,
+      locationDescription: cfgTexts.locationDescription || packTexts.locationDescription,
+      accommodationTitle: cfgTexts.accommodationTitle || packTexts.accommodationTitle || "",
+      accommodationDescription: cfgTexts.accommodationDescription || packTexts.accommodationDescription || "",
+      galleryTitle: cfgTexts.galleryTitle || packTexts.galleryTitle,
+      galleryDescription: cfgTexts.galleryDescription || packTexts.galleryDescription,
+      programTitle: cfgTexts.programTitle || packTexts.programTitle,
+      programDescription: cfgTexts.programDescription || packTexts.programDescription,
+      storyTitle: cfgTexts.storyTitle || packTexts.storyTitle,
+      storyBody: cfgTexts.storyBody || packTexts.storyBody,
+      giftsTitle: cfgTexts.giftsTitle || packTexts.giftsTitle,
+      giftsDescription: cfgTexts.giftsDescription || packTexts.giftsDescription,
+      cagnotteTitle: cfgTexts.cagnotteTitle || packTexts.cagnotteTitle,
+      cagnotteDescription: cfgTexts.cagnotteDescription || packTexts.cagnotteDescription,
+      cagnotteBackLabel: cfgTexts.cagnotteBackLabel || packTexts.cagnotteBackLabel,
+      cagnotteSubmitLabel: cfgTexts.cagnotteSubmitLabel || packTexts.cagnotteSubmitLabel,
       dressCode: cfgTexts.dressCode || "",
-      invitationGreeting: cfgTexts.invitationGreeting || pack.texts.invitationGreeting,
-      invitationPrelude: cfgTexts.invitationPrelude || pack.texts.invitationPrelude,
-      invitationMessage: cfgTexts.invitationMessage || pack.texts.invitationMessage,
-      invitationSubmessage: cfgTexts.invitationSubmessage || pack.texts.invitationSubmessage,
-      invitationCagnotteTitle: cfgTexts.invitationCagnotteTitle || pack.texts.invitationCagnotteTitle,
-      invitationCagnotteDescription: cfgTexts.invitationCagnotteDescription || pack.texts.invitationCagnotteDescription,
-      invitationCagnotteButton: cfgTexts.invitationCagnotteButton || pack.texts.invitationCagnotteButton,
+      invitationGreeting: cfgTexts.invitationGreeting || packTexts.invitationGreeting || "",
+      invitationPrelude: cfgTexts.invitationPrelude || packTexts.invitationPrelude || "",
+      invitationMessage: cfgTexts.invitationMessage || packTexts.invitationMessage || "",
+      invitationSubmessage: cfgTexts.invitationSubmessage || packTexts.invitationSubmessage || "",
+      invitationCagnotteTitle: cfgTexts.invitationCagnotteTitle || packTexts.invitationCagnotteTitle || "",
+      invitationCagnotteDescription: cfgTexts.invitationCagnotteDescription || packTexts.invitationCagnotteDescription || "",
+      invitationCagnotteButton: cfgTexts.invitationCagnotteButton || packTexts.invitationCagnotteButton || "",
       invitationDressCode: cfgTexts.invitationDressCode || "",
-      invitationFooterNote: cfgTexts.invitationFooterNote || pack.texts.invitationFooterNote,
+      invitationFooterNote: cfgTexts.invitationFooterNote || packTexts.invitationFooterNote || "",
     });
     setTheme({
       primaryColor: cfgTheme.primaryColor || "#C8A96A",
@@ -274,6 +430,8 @@ export default function DesignPage() {
       toneId: cfgTheme.toneId || "golden-ivory",
       buttonStyle: cfgTheme.buttonStyle || "solid",
       buttonRadius: cfgTheme.buttonRadius || "pill",
+      headerLayout: cfgTheme.headerLayout || "balanced",
+      headerSpacing: cfgTheme.headerSpacing || "comfortable",
       headerModel: cfgTheme.headerModel || "model1",
       footerModel: cfgTheme.footerModel || "model1",
       rsvpModel: cfgTheme.rsvpModel || "model1",
@@ -295,10 +453,10 @@ export default function DesignPage() {
       invitationShowDressCode: cfgSections?.invitationShowDressCode ?? true,
       locationItems: cfgSections?.locationItems?.length
         ? cfgSections.locationItems
-        : pack.sections.locationItems,
+        : (packSections.locationItems || []).map((item: any) => ({ ...item, accommodations: item.accommodations || [] })),
       programItems: cfgSections?.programItems?.length
         ? cfgSections.programItems
-        : pack.sections.programItems,
+        : (packSections.programItems || []),
       accommodationItems: cfgSections?.accommodationItems?.length
         ? cfgSections.accommodationItems
         : [],
@@ -367,9 +525,67 @@ export default function DesignPage() {
     }));
     setSections((prev) => ({
       ...prev,
-      locationItems: sameJson(prev.locationItems, previousPack.sections.locationItems) ? nextPack.sections.locationItems : prev.locationItems,
-      programItems: sameJson(prev.programItems, previousPack.sections.programItems) ? nextPack.sections.programItems : prev.programItems,
+      locationItems: sameJson(prev.locationItems, (previousPack.sections as any).locationItems)
+        ? (((nextPack.sections as any).locationItems || []) as any[]).map((item) => ({ ...item, accommodations: item.accommodations || [] }))
+        : prev.locationItems,
+      programItems: sameJson(prev.programItems, (previousPack.sections as any).programItems)
+        ? (((nextPack.sections as any).programItems || []) as DesignProgramItem[])
+        : prev.programItems,
     }));
+  };
+
+  const saveLanguageSelection = async (nextLanguage: SiteLanguage) => {
+    if (!wedding) return;
+    applyLanguageChange(nextLanguage);
+    try {
+      await updateWedding.mutateAsync({
+        id: wedding.id,
+        config: {
+          ...wedding.config,
+          language: nextLanguage,
+        },
+      });
+      setPreviewToken(Date.now());
+    } catch (error: any) {
+      toast({
+        title: nextLanguage === "en" ? "Language not changed" : "Langue non modifiée",
+        description:
+          error?.message ||
+          (nextLanguage === "en"
+            ? "We could not update the site language right now."
+            : "Impossible de mettre à jour la langue du site pour le moment."),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveThemePatch = async (patch: Record<string, string>) => {
+    if (!wedding) return;
+    const nextTheme = { ...theme, ...patch };
+    setTheme(nextTheme);
+    try {
+      await updateWedding.mutateAsync({
+        id: wedding.id,
+        config: {
+          ...wedding.config,
+          theme: {
+            ...wedding.config.theme,
+            ...nextTheme,
+          },
+        },
+      });
+      setPreviewToken(Date.now());
+    } catch (error: any) {
+      toast({
+        title: language === "en" ? "Change not saved" : "Changement non enregistré",
+        description:
+          error?.message ||
+          (language === "en"
+            ? "We could not save this option right now."
+            : "Impossible d'enregistrer ce réglage pour le moment."),
+        variant: "destructive",
+      });
+    }
   };
 
   const toDateInputValue = (value: string) => {
@@ -485,18 +701,19 @@ export default function DesignPage() {
     }
   };
 
-  const applyTemplate = async () => {
-    if (!templateId) return;
+  const applyTemplate = async (nextTemplateId?: string) => {
+    const selectedTemplateId = nextTemplateId || templateId;
+    if (!selectedTemplateId) return;
     setIsApplyingTemplate(true);
     try {
       await updateWedding.mutateAsync({
         id: wedding.id,
-        templateId,
+        templateId: selectedTemplateId,
       });
       setPreviewToken(Date.now());
       toast({
-        title: language === "en" ? "Template applied" : "Template appliqué",
-        description: language === "en" ? "The visual base has been applied." : "La base visuelle a bien été appliquée.",
+        title: language === "en" ? "Style updated" : "Modèle mis à jour",
+        description: language === "en" ? "The visual style has been updated." : "Le style visuel a bien été mis à jour.",
       });
     } catch (_error) {
       toast({
@@ -671,7 +888,7 @@ export default function DesignPage() {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboard">{ui.back}</Link>
+            <Link href={`~/${weddingId}/dashboard`}>{ui.back}</Link>
           </Button>
           <Button variant="outline" size="sm" asChild data-tour="design-preview">
             <a href={previewUrl} target="_blank" rel="noopener noreferrer">{ui.preview}</a>
@@ -693,7 +910,9 @@ export default function DesignPage() {
                     </div>
                     <Select
                       value={language}
-                      onValueChange={(value) => applyLanguageChange((value === "en" ? "en" : "fr") as SiteLanguage)}
+                      onValueChange={(value) => {
+                        void saveLanguageSelection((value === "en" ? "en" : "fr") as SiteLanguage);
+                      }}
                     >
                       <SelectTrigger className="h-10 rounded-xl border-border/70 bg-white/90 text-sm shadow-sm">
                         <SelectValue placeholder={ui.siteLanguage} />
@@ -707,9 +926,6 @@ export default function DesignPage() {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button onClick={saveDesign} disabled={isSaving} size="sm" className="w-full">
-                      {isSaving ? ui.saving : ui.save}
-                    </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -723,6 +939,7 @@ export default function DesignPage() {
                       const tmpl = TEMPLATES.find(t => t.id === value);
                       if (tmpl?.premium && wedding.currentPlan !== "premium") return;
                       setTemplateId(value);
+                      void applyTemplate(value);
                     }}>
                       <SelectTrigger className="h-10">
                         <SelectValue placeholder={ui.chooseTemplate} />
@@ -738,54 +955,147 @@ export default function DesignPage() {
                         })}
                       </SelectContent>
                     </Select>
-                    <Button onClick={applyTemplate} disabled={isApplyingTemplate} size="sm" className="w-full" data-tour="design-publish">
-                      {isApplyingTemplate ? ui.applyingTemplate : ui.applyTemplate}
-                    </Button>
+                    <p className="text-[11px] text-muted-foreground">
+                      {language === "en"
+                        ? "The new template is applied as soon as you choose it."
+                        : "Le nouveau template est appliqué dès que vous le choisissez."}
+                    </p>
                   </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="header" className="border rounded-xl px-4 mb-4">
+                <AccordionTrigger className="hover:no-underline">
+                  {language === "en" ? "Top of the page" : "Haut de page"}
+                </AccordionTrigger>
+                <AccordionContent>
+                  <PremiumAccessGate
+                    isPremium={wedding.currentPlan === "premium"}
+                    featureName={language === "en" ? "top-of-page customization" : "la personnalisation du haut de page"}
+                    description={
+                      language === "en"
+                        ? "Adjust the top menu and the space before the main content for a more polished premium look."
+                        : "Ajustez le menu du haut et l'espace avant le contenu principal pour un rendu plus élégant."
+                    }
+                  >
+                    <div className="space-y-4">
+                      <div className="text-xs text-muted-foreground">
+                        {language === "en"
+                          ? "Use these settings if the top of the page feels too tight or if you want a different layout."
+                          : "Utilisez ces réglages si le haut du site paraît trop serré ou si vous voulez une autre présentation."}
+                      </div>
+
+                      {(templateId === "classic" || templateId === "minimal" || templateId === "modern") && (
+                        <div className="space-y-2">
+                          <label className="text-xs font-medium">
+                            {language === "en" ? "Top area layout" : "Organisation du haut de page"}
+                          </label>
+                          <Select
+                            value={theme.headerLayout}
+                            onValueChange={(value) => {
+                              void saveThemePatch({ headerLayout: value });
+                            }}
+                          >
+                            <SelectTrigger className="h-10 rounded-xl border-border/70 bg-white/90 text-sm shadow-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-2xl border-border/70 bg-white/95 p-2 shadow-2xl backdrop-blur-sm">
+                              <SelectItem value="balanced" className="rounded-xl text-sm font-medium">
+                                {headerLayoutLabels.balanced}
+                              </SelectItem>
+                              <SelectItem value="centered" className="rounded-xl text-sm font-medium">
+                                {headerLayoutLabels.centered}
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <p className="text-[11px] text-muted-foreground">
+                            {language === "en"
+                              ? "Choose how the logo and menu are placed at the top of the page."
+                              : "Choisissez comment le logo et le menu sont placés en haut de la page."}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium">
+                          {language === "en" ? "Space before the content" : "Espace avant le contenu"}
+                        </label>
+                        <Select
+                          value={theme.headerSpacing}
+                          onValueChange={(value) => {
+                            void saveThemePatch({ headerSpacing: value });
+                          }}
+                        >
+                          <SelectTrigger className="h-10 rounded-xl border-border/70 bg-white/90 text-sm shadow-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-2xl border-border/70 bg-white/95 p-2 shadow-2xl backdrop-blur-sm">
+                            <SelectItem value="compact" className="rounded-xl text-sm font-medium">
+                              {headerSpacingLabels.compact}
+                            </SelectItem>
+                            <SelectItem value="comfortable" className="rounded-xl text-sm font-medium">
+                              {headerSpacingLabels.comfortable}
+                            </SelectItem>
+                            <SelectItem value="airy" className="rounded-xl text-sm font-medium">
+                              {headerSpacingLabels.airy}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[11px] text-muted-foreground">
+                          {language === "en"
+                            ? "Increase this if the first block starts too close to the top menu."
+                            : "Augmentez cet espace si le premier bloc démarre trop près du menu du haut."}
+                        </p>
+                      </div>
+                    </div>
+                  </PremiumAccessGate>
                 </AccordionContent>
               </AccordionItem>
 
               {templateId === "avantgarde" && (
                 <AccordionItem value="models" className="border rounded-xl px-4 mb-4">
-                  <AccordionTrigger className="hover:no-underline">Modèles de Composants</AccordionTrigger>
+                  <AccordionTrigger className="hover:no-underline">{componentLabels.componentsSection}</AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-4">
-                      <div className="text-xs text-muted-foreground">Personnalisez la structure spécifique de votre template Avant-Garde.</div>
+                      <div className="text-xs text-muted-foreground">{componentLabels.componentsSectionDesc}</div>
                       
                       <div className="space-y-2">
-                         <label className="text-xs font-medium">Header (En-tête)</label>
-                         <Select value={theme.headerModel} onValueChange={(v) => setTheme({ ...theme, headerModel: v })}>
+                         <label className="text-xs font-medium">{componentLabels.headerStyle}</label>
+                         <Select value={theme.headerModel} onValueChange={(v) => { void saveThemePatch({ headerModel: v }); }}>
                             <SelectTrigger className="h-10 rounded-xl border-border/70"><SelectValue /></SelectTrigger>
                             <SelectContent className="rounded-2xl border-border/70">
-                               <SelectItem value="model1" className="rounded-xl">Classic Centré</SelectItem>
-                               <SelectItem value="model2" className="rounded-xl">Split Menu Éditorial</SelectItem>
-                               <SelectItem value="model3" className="rounded-xl">Minimal Gauche</SelectItem>
+                               <SelectItem value="model1" className="rounded-xl">{componentLabels.headerModel1}</SelectItem>
+                               <SelectItem value="model2" className="rounded-xl">{componentLabels.headerModel2}</SelectItem>
+                               <SelectItem value="model3" className="rounded-xl">{componentLabels.headerModel3}</SelectItem>
                             </SelectContent>
                          </Select>
+                         <p className="text-[11px] text-muted-foreground">{componentLabels.headerStyleHint}</p>
                       </div>
 
                       <div className="space-y-2">
-                         <label className="text-xs font-medium">Section RSVP</label>
-                         <Select value={theme.rsvpModel} onValueChange={(v) => setTheme({ ...theme, rsvpModel: v })}>
+                         <label className="text-xs font-medium">{componentLabels.rsvpStyle}</label>
+                         <Select value={theme.rsvpModel} onValueChange={(v) => { void saveThemePatch({ rsvpModel: v }); }}>
                             <SelectTrigger className="h-10 rounded-xl border-border/70"><SelectValue /></SelectTrigger>
                             <SelectContent className="rounded-2xl border-border/70">
-                               <SelectItem value="model1" className="rounded-xl">RSVP Standard</SelectItem>
-                               <SelectItem value="model2" className="rounded-xl">RSVP Carte Minimaliste</SelectItem>
-                               <SelectItem value="model3" className="rounded-xl">RSVP Luxe Plein Écran</SelectItem>
+                               <SelectItem value="model1" className="rounded-xl">{componentLabels.rsvpModel1}</SelectItem>
+                               <SelectItem value="model2" className="rounded-xl">{componentLabels.rsvpModel2}</SelectItem>
+                               <SelectItem value="model3" className="rounded-xl">{componentLabels.rsvpModel3}</SelectItem>
                             </SelectContent>
                          </Select>
+                         <p className="text-[11px] text-muted-foreground">{componentLabels.rsvpStyleHint}</p>
                       </div>
 
                       <div className="space-y-2">
-                         <label className="text-xs font-medium">Footer (Pied de page)</label>
-                         <Select value={theme.footerModel} onValueChange={(v) => setTheme({ ...theme, footerModel: v })}>
+                         <label className="text-xs font-medium">{componentLabels.footerStyle}</label>
+                         <Select value={theme.footerModel} onValueChange={(v) => { void saveThemePatch({ footerModel: v }); }}>
                             <SelectTrigger className="h-10 rounded-xl border-border/70"><SelectValue /></SelectTrigger>
                             <SelectContent className="rounded-2xl border-border/70">
-                               <SelectItem value="model1" className="rounded-xl">Typographique Épuré</SelectItem>
-                               <SelectItem value="model2" className="rounded-xl">Signature & Initiales</SelectItem>
-                               <SelectItem value="model3" className="rounded-xl">Plein Écran Contrasté</SelectItem>
+                               <SelectItem value="model1" className="rounded-xl">{componentLabels.footerModel1}</SelectItem>
+                               <SelectItem value="model2" className="rounded-xl">{componentLabels.footerModel2}</SelectItem>
+                               <SelectItem value="model3" className="rounded-xl">{componentLabels.footerModel3}</SelectItem>
                             </SelectContent>
                          </Select>
+                         <p className="text-[11px] text-muted-foreground">{componentLabels.footerStyleHint}</p>
                       </div>
                     </div>
                   </AccordionContent>

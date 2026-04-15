@@ -11,10 +11,38 @@ import { GuidedTour, useShouldShowTour } from "@/components/guided-tour";
 import { PremiumTemplateUpsell } from "@/components/admin/PremiumUpsellModal";
 
 const TEMPLATES = [
-        { id: 'classic', name: 'Classique', description: 'Élégant et intemporel', image: '/previews/template_classic_preview_v2.png', premium: false },
-        { id: 'modern', name: 'Moderne', description: 'Éditorial et lumineux', image: '/previews/template_modern_preview_v2.png', premium: true },
-        { id: 'minimal', name: 'Minimal', description: 'Graphique et épuré', image: '/previews/template_minimal_preview_v2.png', premium: true },
-        { id: 'avantgarde', name: 'Avant-Garde', description: 'Expérience immersive & luxe', image: '/previews/template_avantgarde_preview.png', premium: true },
+  {
+    id: "classic",
+    name: "Éclat de Tradition",
+    category: "Royal & Intemporel",
+    image: "/templates/classic.png",
+    description: "L'élégance intemporelle pour un mariage royal sous le signe de la noblesse et de la sérénité.",
+    premium: false
+  },
+  {
+    id: "modern",
+    name: "Horizon Minimaliste",
+    category: "Urban Chic",
+    image: "/templates/modern.png",
+    description: "Un design épuré et audacieux, pour une esthétique urbaine d'exception à l'élégance affirmée.",
+    premium: true
+  },
+  {
+    id: "boho",
+    name: "Bohème Sauvage",
+    category: "Nature & Liberté",
+    image: "/templates/boho.png",
+    description: "L'authenticité de la nature alliée à une élégance décontractée pour un mariage libre et organique.",
+    premium: true
+  },
+  {
+    id: "avantgarde",
+    name: "Studio Couture",
+    category: "Éditorial & Mode",
+    image: "/templates/avantgarde.png",
+    description: "L'avant-garde stylistique pour les couples qui souhaitent briser les codes avec un design éditorial fort.",
+    premium: true
+  }
 ];
 
 export default function TemplatesPage() {
@@ -101,13 +129,13 @@ export default function TemplatesPage() {
                                                 </div>
                                                 <p className="mt-1 text-sm text-muted-foreground">
                                                         {wedding.currentPlan === "premium"
-                                                                ? "Vous pouvez utiliser Classic, Modern et Minimal."
-                                                                : "Le plan Découverte inclut Classic. Modern et Minimal sont réservés au plan Premium."}
+                                                                ? "Vous pouvez utiliser tous les templates, y compris Horizon Minimaliste et Studio Couture."
+                                                                : "Le plan Découverte inclut Éclat de Tradition. Les autres templates sont réservés au plan Premium."}
                                                 </p>
                                         </div>
                                         {wedding.currentPlan !== "premium" ? (
                                                 <Button asChild variant="outline" className="border-primary/30 text-primary hover:bg-primary/5">
-                                                        <Link href="/billing">
+                                                        <Link href={`~/${wedding.id}/billing`}>
                                                                 <Sparkles className="mr-2 h-4 w-4" />
                                                                 Passer au Premium
                                                         </Link>
@@ -159,7 +187,7 @@ export default function TemplatesPage() {
                                                                                                 <Check size={12} /> Actuel
                                                                                         </span>
                                                                                 ) : isLocked ? (
-                                                                                        <Link href="/billing" className="text-xs text-primary hover:underline">Passer en Premium</Link>
+                                                                                        <Link href={`~/${wedding.id}/billing`} className="text-xs text-primary hover:underline">Passer en Premium</Link>
                                                                                 ) : (
                                                                                         <span className="text-xs text-muted-foreground">Sélectionner</span>
                                                                                 )}
@@ -224,12 +252,12 @@ export default function TemplatesPage() {
 
                                 <Card className="p-6 space-y-4 h-fit">
                                         <div className="text-sm font-medium text-muted-foreground">Template actuel</div>
-                                        <div className="text-2xl font-serif font-bold">{TEMPLATES.find((t) => t.id === wedding?.templateId)?.name || "Classique"}</div>
+                                        <div className="text-2xl font-serif font-bold">{TEMPLATES.find((t) => t.id === wedding?.templateId)?.name || "Éclat de Tradition"}</div>
                                         <div className="text-sm text-muted-foreground">
                                                 Le design est synchronisé sur toutes les pages publiques (RSVP, cagnotte, live).
                                         </div>
                                         <Button asChild className="w-full">
-                                                <Link href="/design">Ouvrir l'éditeur visuel</Link>
+                                                <Link href={`~/${wedding.id}/design`}>Ouvrir l'éditeur visuel</Link>
                                         </Button>
                                 </Card>
                         </div>

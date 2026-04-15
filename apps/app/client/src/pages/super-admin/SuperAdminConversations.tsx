@@ -167,7 +167,7 @@ export default function SuperAdminConversations() {
   }, [selectedId]);
 
   useEffect(() => {
-    const es = new EventSource("/api/super-admin/conversations/stream", { withCredentials: true });
+    const es = new EventSource("/api/super-admin/conversations/stream");
     const refresh = () => {
       loadList().catch(() => {});
       if (selectedId) loadDetail(selectedId).catch(() => {});

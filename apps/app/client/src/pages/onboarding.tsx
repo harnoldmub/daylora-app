@@ -49,14 +49,16 @@ import { getSiteLanguagePack, type SiteLanguage } from "@/lib/site-language";
 function getTemplates(language: SiteLanguage) {
   return language === "en"
     ? [
-        { id: "classic", name: "Classic", description: "Elegant and timeless", image: "/previews/template_classic_preview_v2.png", premium: false },
-        { id: "modern", name: "Modern", description: "Clean and minimal", image: "/previews/template_modern_preview_v2.png", premium: true },
-        { id: "minimal", name: "Minimal", description: "Bold and chic", image: "/previews/template_minimal_preview_v2.png", premium: true },
+        { id: "classic", name: "Classic Elegance", description: "Timeless royalty and serenity.", image: "/templates/classic.png", premium: false },
+        { id: "modern", name: "Minimal Horizon", description: "Clean urban sophistication.", image: "/templates/modern.png", premium: true },
+        { id: "boho", name: "Wild Boho", description: "Organic and laid-back elegance.", image: "/templates/boho.png", premium: true },
+        { id: "avantgarde", name: "Studio Couture", description: "High-fashion editorial design.", image: "/templates/avantgarde.png", premium: true },
       ]
     : [
-        { id: "classic", name: "Classique", description: "Élégant et intemporel", image: "/previews/template_classic_preview_v2.png", premium: false },
-        { id: "modern", name: "Moderne", description: "Épuré et minimaliste", image: "/previews/template_modern_preview_v2.png", premium: true },
-        { id: "minimal", name: "Minimal", description: "Audacieux et chic", image: "/previews/template_minimal_preview_v2.png", premium: true },
+        { id: "classic", name: "Éclat de Tradition", description: "L'élégance intemporelle et royale.", image: "/templates/classic.png", premium: false },
+        { id: "modern", name: "Horizon Minimaliste", description: "Esthétique urbaine d'exception.", image: "/templates/modern.png", premium: true },
+        { id: "boho", name: "Bohème Sauvage", description: "Authenticité naturelle et décontractée.", image: "/templates/boho.png", premium: true },
+        { id: "avantgarde", name: "Studio Couture", description: "L'avant-garde stylistique audacieuse.", image: "/templates/avantgarde.png", premium: true },
       ];
 }
 

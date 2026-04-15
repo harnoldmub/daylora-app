@@ -41,7 +41,7 @@ export const radius = {
   full: "rounded-full",
 } as const;
 
-export type TemplateId = "classic" | "modern" | "minimal";
+export type TemplateId = "classic" | "modern" | "boho" | "avantgarde" | "minimal";
 
 export interface TemplateTokens {
   id: TemplateId;
@@ -122,7 +122,7 @@ export interface TemplateTokens {
 export const templateTokens: Record<TemplateId, TemplateTokens> = {
   classic: {
     id: "classic",
-    name: "Classique",
+    name: "Éclat de Tradition",
     font: "serif",
     page: {
       bg: "bg-[#FAF7F2]",
@@ -197,7 +197,7 @@ export const templateTokens: Record<TemplateId, TemplateTokens> = {
   },
   modern: {
     id: "modern",
-    name: "Moderne",
+    name: "Horizon Minimaliste",
     font: "sans",
     page: {
       bg: "bg-[#F5F3EF]",
@@ -272,7 +272,7 @@ export const templateTokens: Record<TemplateId, TemplateTokens> = {
   },
   minimal: {
     id: "minimal",
-    name: "Minimal",
+    name: "Bohème Sauvage",
     font: "sans",
     page: {
       bg: "bg-white",
@@ -343,6 +343,156 @@ export const templateTokens: Record<TemplateId, TemplateTokens> = {
     },
     footer: {
       section: "bg-[#2D2D2D] text-white/80",
+    },
+  },
+  boho: {
+    id: "boho",
+    name: "Bohème Sauvage",
+    font: "serif",
+    page: {
+      bg: "bg-[#FDFBF7]",
+    },
+    hero: {
+      overlay: "from-black/40 via-transparent to-[#FDFBF7]",
+      wrapper: "text-center max-w-4xl space-y-8",
+      title: "text-6xl md:text-8xl font-serif italic text-white leading-tight drop-shadow-md",
+      subtitle: "text-xs tracking-[0.5em] uppercase text-white/80 mb-4",
+      date: "text-lg md:text-xl font-light text-white/90 mt-6 border-b border-white/40 pb-4 inline-block tracking-widest",
+      button: "px-12 py-6 text-xs tracking-widest uppercase font-semibold transition-all hover:scale-105 rounded-full",
+      shell: "",
+      imageOpacity: "opacity-95",
+      alignment: "center",
+      decoration: "floral",
+    },
+    rsvp: {
+      section: "bg-[#FDFBF7] py-32",
+      card: "border-none shadow-[0_15px_50px_rgba(0,0,0,0.04)] bg-white rounded-[2.5rem] p-12 md:p-16",
+      label: "text-xs uppercase tracking-widest font-medium text-[#7A6B5E]",
+      input: "h-14 rounded-2xl bg-[#F7F3EE] border-none text-[#2b2320] placeholder:text-[#A69585] focus:ring-primary/20",
+      title: "text-4xl md:text-5xl font-serif text-[#2b2320]",
+      description: "text-[#7A6B5E]",
+    },
+    story: {
+      title: "text-5xl md:text-7xl font-serif italic text-[#2b2320] text-center mb-16",
+      layout: "grid grid-cols-1 lg:grid-cols-2 gap-20 items-center",
+      image: "rounded-[3rem] shadow-xl hover:scale-[1.02] transition-transform duration-1000",
+      container: "max-w-6xl mx-auto px-6",
+      body: "text-lg text-[#7A6B5E] leading-relaxed font-light",
+    },
+    gallery: {
+      section: "bg-white",
+      imageRadius: "rounded-[2rem]",
+      title: "text-[#2b2320]",
+    },
+    location: {
+      section: "bg-[#F7F3EE]/50",
+      card: "bg-white border-none rounded-3xl p-8 shadow-sm",
+      title: "text-[#2b2320]",
+    },
+    schedule: {
+      section: "",
+      card: "border-none rounded-3xl p-8 bg-white",
+      title: "text-[#2b2320]",
+      time: "text-primary",
+    },
+    gifts: {
+      section: "",
+      card: "rounded-3xl border-none bg-white shadow-sm",
+      title: "text-[#2b2320]",
+      text: "text-[#2b2320]",
+      description: "text-[#7A6B5E]",
+      badge: "bg-[#F7F3EE] text-[#7A6B5E]",
+      progress: "bg-primary",
+      progressTrack: "bg-[#F7F3EE]",
+    },
+    cagnotte: {
+      section: "bg-[#F7F3EE]/40",
+      title: "text-[#2b2320]",
+      icon: "text-primary/60",
+    },
+    countdown: {
+      section: "bg-[#FDFBF7]",
+      box: "w-20 h-20 rounded-2xl bg-white shadow-sm",
+      number: "text-3xl font-serif text-primary",
+      label: "text-[10px] text-[#A69585] mt-2 uppercase tracking-widest",
+    },
+    footer: {
+      section: "bg-[#2b2320] text-white/80",
+    },
+  },
+  "avantgarde": {
+    id: "avantgarde",
+    name: "Studio Couture",
+    font: "sans",
+    page: {
+      bg: "bg-[#0A0A0A]",
+    },
+    hero: {
+      overlay: "from-black/80 via-black/20 to-black/80",
+      wrapper: "text-center max-w-full h-full flex flex-col justify-center items-center py-40",
+      title: "text-7xl md:text-[14rem] font-black text-white leading-[0.8] tracking-tighter uppercase",
+      subtitle: "text-xs md:text-sm font-bold tracking-[0.8em] uppercase text-primary mb-12",
+      date: "text-xl md:text-2xl font-bold text-white/40 mt-12 tracking-[0.5em] uppercase border-t border-white/10 pt-8",
+      button: "px-16 py-8 text-sm tracking-[0.5em] uppercase font-black transition-all bg-white text-black hover:bg-primary hover:text-white rounded-none",
+      shell: "mix-blend-difference",
+      imageOpacity: "opacity-70",
+      alignment: "center",
+      decoration: "none",
+    },
+    rsvp: {
+      section: "bg-black py-40",
+      card: "bg-[#111] border border-white/5 rounded-none p-16 md:p-24",
+      label: "text-[10px] uppercase tracking-[0.4em] font-bold text-white/30",
+      input: "h-16 rounded-none bg-black border-white/10 text-white placeholder:text-white/20 focus:border-white/40 focus:ring-0",
+      title: "text-5xl md:text-8xl font-black text-white tracking-tighter uppercase leading-none mb-4",
+      description: "text-white/40 text-lg",
+    },
+    story: {
+      title: "text-7xl md:text-[12rem] font-black text-white leading-none tracking-tighter mb-24 px-6",
+      layout: "flex flex-col gap-0",
+      image: "rounded-none h-[80vh] object-cover grayscale brightness-75 hover:grayscale-0 transition-all duration-1000",
+      container: "max-w-full px-0",
+      body: "text-2xl text-white/50 leading-relaxed font-light max-w-4xl mx-auto py-24 px-6 text-center italic",
+    },
+    gallery: {
+      section: "bg-black p-4",
+      imageRadius: "rounded-none",
+      title: "text-white text-center pb-20",
+    },
+    location: {
+      section: "bg-[#0A0A0A]",
+      card: "bg-[#111] border border-white/5 rounded-none p-10",
+      title: "text-white",
+    },
+    schedule: {
+      section: "bg-black",
+      card: "border border-white/5 rounded-none p-10 bg-[#111]",
+      title: "text-white",
+      time: "text-primary",
+    },
+    gifts: {
+      section: "bg-[#0A0A0A]",
+      card: "rounded-none border border-white/5 bg-[#111]",
+      title: "text-white",
+      text: "text-white",
+      description: "text-white/40",
+      badge: "bg-black text-primary",
+      progress: "bg-white",
+      progressTrack: "bg-white/10",
+    },
+    cagnotte: {
+      section: "bg-black",
+      title: "text-white",
+      icon: "text-white/20",
+    },
+    countdown: {
+      section: "bg-black",
+      box: "w-24 h-24 rounded-none bg-white/5 border border-white/10",
+      number: "text-4xl font-black text-white",
+      label: "text-[10px] text-white/30 mt-3 uppercase tracking-[0.3em]",
+    },
+    footer: {
+      section: "bg-white text-black",
     },
   },
 };

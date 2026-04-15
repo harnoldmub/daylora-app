@@ -30,7 +30,7 @@ export function OnboardingChecklist({ wedding }: { wedding: Wedding }) {
             id: 'template',
             label: nls.checklist.steps.template.label,
             description: nls.checklist.steps.template.description,
-            href: `/templates`,
+            href: `~/${wedding.id}/templates`,
             isCompleted: !!wedding.templateId,
             icon: Layout
         },
@@ -38,7 +38,7 @@ export function OnboardingChecklist({ wedding }: { wedding: Wedding }) {
             id: 'info',
             label: nls.checklist.steps.info.label,
             description: nls.checklist.steps.info.description,
-            href: `/preview/${wedding.slug}`,
+            href: `~/${wedding.id}/design`,
             isCompleted: !!wedding.weddingDate && !!wedding.config?.texts?.heroSubtitle,
             icon: Info
         },
@@ -46,7 +46,7 @@ export function OnboardingChecklist({ wedding }: { wedding: Wedding }) {
             id: 'guests',
             label: nls.checklist.steps.guests.label,
             description: nls.checklist.steps.guests.description,
-            href: `/guests`,
+            href: `~/${wedding.id}/guests`,
             isCompleted: (guests as any[])?.length > 0,
             icon: Users
         },
@@ -54,7 +54,7 @@ export function OnboardingChecklist({ wedding }: { wedding: Wedding }) {
             id: 'features',
             label: nls.checklist.steps.features.label,
             description: nls.checklist.steps.features.description,
-            href: `/gifts`,
+            href: `~/${wedding.id}/gifts`,
             isCompleted: !!wedding.config?.features?.cagnotteEnabled || !!wedding.config?.features?.giftsEnabled,
             icon: Gift
         },
@@ -62,7 +62,7 @@ export function OnboardingChecklist({ wedding }: { wedding: Wedding }) {
             id: 'publish',
             label: nls.checklist.steps.publish.label,
             description: nls.checklist.steps.publish.description,
-            href: `/welcome`,
+            href: `~/${wedding.id}/welcome`,
             isCompleted: wedding.isPublished,
             icon: CheckCircle2
         }

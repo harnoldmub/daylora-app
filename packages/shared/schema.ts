@@ -155,6 +155,11 @@ export const weddings = pgTable("weddings", {
       toneId: string;
       buttonStyle: string;
       buttonRadius: string;
+      headerLayout?: string;
+      headerSpacing?: string;
+      headerModel?: string;
+      footerModel?: string;
+      rsvpModel?: string;
     };
     seo: {
       title: string;
@@ -293,7 +298,12 @@ export const weddings = pgTable("weddings", {
       fontFamily: 'serif',
       toneId: 'golden-ivory',
       buttonStyle: 'solid',
-      buttonRadius: 'pill'
+      buttonRadius: 'pill',
+      headerLayout: 'balanced',
+      headerSpacing: 'comfortable',
+      headerModel: 'model1',
+      footerModel: 'model1',
+      rsvpModel: 'model1',
     },
     seo: { title: 'Notre Mariage', description: 'Rejoignez-nous pour célébrer notre union' },
     features: { jokesEnabled: true, giftsEnabled: true, cagnotteEnabled: true, liveEnabled: true },
