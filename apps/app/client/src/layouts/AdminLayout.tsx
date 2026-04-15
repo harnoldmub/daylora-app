@@ -24,7 +24,8 @@ import {
     X,
     Languages,
     Plus,
-    Lock
+    Lock,
+    Crown
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreateWedding, useUpdateWedding, useWeddings } from "@/hooks/use-api";
