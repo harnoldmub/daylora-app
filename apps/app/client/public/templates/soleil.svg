@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="280" viewBox="0 0 400 280">
+  <!-- Split layout: left text, right photo -->
+  <rect width="400" height="280" fill="#F9F6F1"/>
+  <!-- Right photo area -->
+  <rect x="200" y="0" width="200" height="280" fill="#D4C9B8"/>
+  <rect x="200" y="0" width="200" height="280" fill="url(#sgrad)"/>
+  <defs>
+    <linearGradient id="sgrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#B8A898"/>
+      <stop offset="100%" stop-color="#8A7B6A"/>
+    </linearGradient>
+  </defs>
+  <!-- Corner ornament on photo -->
+  <path d="M368 252 L384 252 L384 268" fill="none" stroke="white" stroke-width="1.5" opacity="0.6"/>
+  <!-- Left: text content -->
+  <rect x="24" y="78" width="50" height="16" rx="8" fill="#2D4A3E" opacity="0.1"/>
+  <text x="49" y="90" font-family="sans-serif" font-size="8" fill="#2D4A3E" text-anchor="middle" opacity="0.7">21 SEPT 2026</text>
+  <text x="24" y="126" font-family="Georgia, serif" font-size="18" fill="#2D4A3E" font-weight="300">Sophie</text>
+  <text x="24" y="148" font-family="Georgia, serif" font-size="14" fill="#2D4A3E" font-weight="300" opacity="0.5">&amp;</text>
+  <text x="24" y="170" font-family="Georgia, serif" font-size="18" fill="#2D4A3E" font-weight="300">Thomas</text>
+  <!-- Subtitle -->
+  <text x="24" y="196" font-family="sans-serif" font-size="9" fill="#2D4A3E" opacity="0.5" letter-spacing="1">Mariage à Lyon</text>
+  <!-- CTA button -->
+  <rect x="24" y="210" width="100" height="26" rx="13" fill="#2D4A3E"/>
+  <text x="74" y="227" font-family="sans-serif" font-size="8" fill="white" text-anchor="middle" letter-spacing="1">NOUS REJOINDRE</text>
+  <!-- Premium badge -->
+  <rect x="310" y="12" width="74" height="18" rx="9" fill="#2D4A3E" opacity="0.15"/>
+  <text x="347" y="24" font-family="sans-serif" font-size="8" fill="#2D4A3E" text-anchor="middle" letter-spacing="1">PREMIUM</text>
+</svg>

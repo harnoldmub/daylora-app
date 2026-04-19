@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
     Users,
@@ -62,6 +62,7 @@ import { compressImageFileToJpegDataUrl } from "@/lib/image";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { KpiCard } from "@/components/admin/KpiCard";
 import { GuidedTour, useShouldShowTour } from "@/components/guided-tour";
+import { COLOR_TONES } from "@/lib/design-presets";
 
 export default function GuestsPage() {
     const { weddingId } = useParams<{ weddingId: string }>();
@@ -86,6 +87,7 @@ export default function GuestsPage() {
     const [deleteGuestTarget, setDeleteGuestTarget] = useState<RsvpResponse | null>(null);
     const [invitationSettingsOpen, setInvitationSettingsOpen] = useState(false);
     const [invitationDraft, setInvitationDraft] = useState({
+        invitationStyle: "" as "" | "romantic" | "modern" | "noir",
         invitationGreeting: "",
         invitationPrelude: "",
         invitationMessage: "",
@@ -96,6 +98,8 @@ export default function GuestsPage() {
         invitationDressCode: "",
         invitationFooterNote: "",
         invitationImage: "",
+        invitationPrimaryColor: "",
+        invitationSecondaryColor: "",
         invitationShowProgramme: true,
         invitationShowLocations: true,
         invitationShowDressCode: true,
@@ -103,6 +107,52 @@ export default function GuestsPage() {
         invitationShowQrCode: true,
     });
     const [invitationSaving, setInvitationSaving] = useState(false);
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+
+    // Send draft overrides to the preview iframe in real time
+    useEffect(() => {
+        if (!invitationSettingsOpen) return;
+        const iframe = iframeRef.current;
+        if (!iframe) return;
+        const payload = {
+            texts: {
+                invitationGreeting: invitationDraft.invitationGreeting,
+                invitationPrelude: invitationDraft.invitationPrelude,
+                invitationMessage: invitationDraft.invitationMessage,
+                invitationSubmessage: invitationDraft.invitationSubmessage,
+                invitationCagnotteTitle: invitationDraft.invitationCagnotteTitle,
+                invitationCagnotteDescription: invitationDraft.invitationCagnotteDescription,
+                invitationCagnotteButton: invitationDraft.invitationCagnotteButton,
+                invitationDressCode: invitationDraft.invitationDressCode,
+                invitationFooterNote: invitationDraft.invitationFooterNote,
+            },
+            theme: {
+                invitationPrimaryColor: invitationDraft.invitationPrimaryColor || undefined,
+                invitationSecondaryColor: invitationDraft.invitationSecondaryColor || undefined,
+            },
+            sections: {
+                invitationStyle: invitationDraft.invitationStyle || undefined,
+                invitationShowProgramme: invitationDraft.invitationShowProgramme,
+                invitationShowLocations: invitationDraft.invitationShowLocations,
+                invitationShowDressCode: invitationDraft.invitationShowDressCode,
+                invitationShowCagnotte: invitationDraft.invitationShowCagnotte,
+                invitationShowQrCode: invitationDraft.invitationShowQrCode,
+            },
+            media: {
+                invitationImage: invitationDraft.invitationImage,
+            },
+        };
+        const send = () => {
+            iframe.contentWindow?.postMessage(
+                { type: "INVITATION_PREVIEW_OVERRIDE", payload },
+                "*"
+            );
+        };
+        // Try immediately, and also on load in case the iframe just loaded
+        send();
+        iframe.addEventListener("load", send);
+        return () => iframe.removeEventListener("load", send);
+    }, [invitationDraft, invitationSettingsOpen]);
     const [newGuest, setNewGuest] = useState({
         firstName: "",
         lastName: "",
@@ -465,7 +515,9 @@ export default function GuestsPage() {
         const texts = (wedding as any)?.config?.texts || {};
         const media = (wedding as any)?.config?.media || {};
         const sections = (wedding as any)?.config?.sections || {};
+        const theme = (wedding as any)?.config?.theme || {};
         setInvitationDraft({
+            invitationStyle: (sections.invitationStyle || "") as "" | "romantic" | "modern" | "noir",
             invitationGreeting: texts.invitationGreeting || "Nous avons l'honneur de vous convier",
             invitationPrelude: texts.invitationPrelude || "à célébrer l'union de",
             invitationMessage: texts.invitationMessage || "Ce jour ne serait pas le même sans votre présence à nos côtés.",
@@ -476,6 +528,8 @@ export default function GuestsPage() {
             invitationDressCode: texts.invitationDressCode || texts.dressCode || "",
             invitationFooterNote: texts.invitationFooterNote || "Merci de confirmer votre présence avant la date indiquée. Nous avons hâte de vous retrouver.",
             invitationImage: media.invitationImage || media.couplePhoto || "",
+            invitationPrimaryColor: theme.invitationPrimaryColor || "",
+            invitationSecondaryColor: theme.invitationSecondaryColor || "",
             invitationShowProgramme: (sections.invitationShowProgramme ?? true) as boolean,
             invitationShowLocations: (sections.invitationShowLocations ?? true) as boolean,
             invitationShowDressCode: (sections.invitationShowDressCode ?? true) as boolean,
@@ -493,6 +547,11 @@ export default function GuestsPage() {
                 id: wedding.id,
                 config: {
                     ...wedding.config,
+                    theme: {
+                        ...(wedding.config.theme || {}),
+                        invitationPrimaryColor: invitationDraft.invitationPrimaryColor || undefined,
+                        invitationSecondaryColor: invitationDraft.invitationSecondaryColor || undefined,
+                    } as any,
                     texts: {
                         ...(wedding.config.texts || {}),
                         invitationGreeting: invitationDraft.invitationGreeting,
@@ -511,6 +570,7 @@ export default function GuestsPage() {
                     } as any,
                     sections: {
                         ...(wedding.config.sections || {}),
+                        invitationStyle: invitationDraft.invitationStyle || undefined,
                         invitationShowProgramme: invitationDraft.invitationShowProgramme,
                         invitationShowLocations: invitationDraft.invitationShowLocations,
                         invitationShowDressCode: invitationDraft.invitationShowDressCode,
@@ -582,7 +642,7 @@ export default function GuestsPage() {
 
                     <div className="flex flex-wrap gap-2">
                     <Button variant="outline" size="sm" onClick={handleExportCSV} data-tour="guests-import">
-                        {wedding?.currentPlan !== "premium" && <Lock className="mr-2 h-3.5 w-3.5 text-muted-foreground/60" />}
+                        {wedding?.currentPlan !== "premium" && <Crown className="mr-2 h-3.5 w-3.5 text-amber-500/70" />}
                         <Download className="h-4 w-4 mr-1.5" />
                         <span className="hidden sm:inline">Exporter</span> CSV
                     </Button>
@@ -593,7 +653,7 @@ export default function GuestsPage() {
                     <Dialog open={addGuestOpen} onOpenChange={setAddGuestOpen}>
                         <DialogTrigger asChild>
                             <Button size="sm" data-tour="guests-add">
-                                {wedding?.currentPlan !== "premium" && <Lock className="mr-2 h-3.5 w-3.5" />}
+                                {wedding?.currentPlan !== "premium" && <Crown className="mr-2 h-3.5 w-3.5 text-amber-500/70" />}
                                 <Plus className="h-4 w-4 mr-1.5" />
                                 <span className="hidden sm:inline">Ajouter</span>
                             </Button>
@@ -859,6 +919,144 @@ export default function GuestsPage() {
                         <ScrollArea className="max-h-[60vh] border-r">
                             <div className="p-6 space-y-5">
 
+                                <div className="rounded-xl border bg-card p-4 space-y-3">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                                            <span className="text-primary text-xs font-bold">✦</span>
+                                        </div>
+                                        <span className="text-sm font-semibold">Style de l'invitation</span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {([
+                                            {
+                                                value: "romantic",
+                                                label: "Romantique",
+                                                desc: "Organique & chaleureux",
+                                                preview: (
+                                                    <div className="w-full h-14 rounded-md overflow-hidden" style={{ background: "#F7F3EE" }}>
+                                                        <div className="h-full flex flex-col items-center justify-center gap-0.5 px-2">
+                                                            <div className="h-0.5 w-6 rounded-full" style={{ background: "#C8A96A" }} />
+                                                            <div className="text-[7px] font-serif italic text-center" style={{ color: "#6B5B45", fontFamily: "Georgia,serif" }}>Sophie &amp; Lucas</div>
+                                                            <div className="h-0.5 w-6 rounded-full" style={{ background: "#C8A96A" }} />
+                                                        </div>
+                                                    </div>
+                                                ),
+                                            },
+                                            {
+                                                value: "modern",
+                                                label: "Moderne",
+                                                desc: "Épuré & contemporain",
+                                                preview: (
+                                                    <div className="w-full h-14 rounded-md overflow-hidden" style={{ background: "#FAFAFA" }}>
+                                                        <div className="h-1/2 w-full" style={{ background: "#1A1A1A" }} />
+                                                        <div className="px-2 pt-1">
+                                                            <div className="text-[7px] font-bold tracking-wide" style={{ color: "#1A1A1A", fontFamily: "sans-serif" }}>SOPHIE &amp; LUCAS</div>
+                                                            <div className="text-[6px] mt-0.5" style={{ color: "#999", fontFamily: "sans-serif" }}>12 • 07 • 2025</div>
+                                                        </div>
+                                                    </div>
+                                                ),
+                                            },
+                                            {
+                                                value: "noir",
+                                                label: "Noir",
+                                                desc: "Luxe & sombre",
+                                                preview: (
+                                                    <div className="w-full h-14 rounded-md overflow-hidden" style={{ background: "#0C0B09" }}>
+                                                        <div className="h-full flex flex-col items-center justify-center gap-0.5 px-2">
+                                                            <div className="h-px w-8 rounded-full" style={{ background: "#C8A96A", opacity: 0.5 }} />
+                                                            <div className="text-[7px] text-center" style={{ color: "#F5EFE0", fontFamily: "Georgia,serif" }}>Sophie &amp; Lucas</div>
+                                                            <div className="h-px w-8 rounded-full" style={{ background: "#C8A96A", opacity: 0.5 }} />
+                                                        </div>
+                                                    </div>
+                                                ),
+                                            },
+                                        ] as const).map((style) => (
+                                            <button
+                                                key={style.value}
+                                                type="button"
+                                                onClick={() => setInvitationDraft((p) => ({ ...p, invitationStyle: p.invitationStyle === style.value ? "" : style.value }))}
+                                                className={`rounded-xl border-2 overflow-hidden text-left transition-all ${invitationDraft.invitationStyle === style.value ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/40"}`}
+                                            >
+                                                {style.preview}
+                                                <div className="px-2 py-1.5">
+                                                    <p className="text-xs font-semibold leading-tight">{style.label}</p>
+                                                    <p className="text-[10px] text-muted-foreground leading-tight">{style.desc}</p>
+                                                    {invitationDraft.invitationStyle === style.value && (
+                                                        <p className="text-[10px] text-primary font-semibold mt-0.5">✓ Sélectionné</p>
+                                                    )}
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <p className="text-[11px] text-muted-foreground/70">Par défaut, le style suit automatiquement le template du site.</p>
+                                </div>
+
+                                <div className="rounded-xl border bg-card p-4 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                                                <span className="text-primary text-xs font-bold">🎨</span>
+                                            </div>
+                                            <span className="text-sm font-semibold">Couleurs de l'invitation</span>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            {COLOR_TONES.map((tone) => (
+                                                <button
+                                                    key={tone.id}
+                                                    type="button"
+                                                    onClick={() => setInvitationDraft(p => ({
+                                                        ...p,
+                                                        invitationPrimaryColor: tone.primaryColor,
+                                                        invitationSecondaryColor: tone.secondaryColor
+                                                    }))}
+                                                    className="group relative w-6 h-6 rounded-full border border-border/50 overflow-hidden transition-transform hover:scale-110 active:scale-95 shadow-sm"
+                                                    title={tone.name}
+                                                >
+                                                    <div className="absolute inset-0 flex">
+                                                        <div className="w-1/2 h-full" style={{ backgroundColor: tone.primaryColor }} />
+                                                        <div className="w-1/2 h-full" style={{ backgroundColor: tone.secondaryColor }} />
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4 pt-1">
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Couleur Primaire</Label>
+                                            <div className="flex gap-2 items-center">
+                                                <input
+                                                    type="color"
+                                                    value={invitationDraft.invitationPrimaryColor || (wedding?.config?.theme?.primaryColor || "#D4AF37")}
+                                                    onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationPrimaryColor: e.target.value }))}
+                                                    className="w-10 h-10 rounded-lg border cursor-pointer p-1 bg-background"
+                                                />
+                                                <Input
+                                                    value={invitationDraft.invitationPrimaryColor || (wedding?.config?.theme?.primaryColor || "#D4AF37")}
+                                                    onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationPrimaryColor: e.target.value }))}
+                                                    className="h-10 text-xs font-mono"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Couleur de Fond</Label>
+                                            <div className="flex gap-2 items-center">
+                                                <input
+                                                    type="color"
+                                                    value={invitationDraft.invitationSecondaryColor || (wedding?.config?.theme?.secondaryColor || "#FFFFFF")}
+                                                    onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationSecondaryColor: e.target.value }))}
+                                                    className="w-10 h-10 rounded-lg border cursor-pointer p-1 bg-background"
+                                                />
+                                                <Input
+                                                    value={invitationDraft.invitationSecondaryColor || (wedding?.config?.theme?.secondaryColor || "#FFFFFF")}
+                                                    onChange={(e) => setInvitationDraft((p) => ({ ...p, invitationSecondaryColor: e.target.value }))}
+                                                    className="h-10 text-xs font-mono"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground/60 italic">Laissez tel quel pour utiliser les couleurs du thème principal.</p>
+                                </div>
+
                                 <div className="rounded-xl border bg-card p-4 space-y-4">
                                     <div className="flex items-center gap-2">
                                         <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
@@ -1099,6 +1297,7 @@ export default function GuestsPage() {
                             <div className="flex-1 min-h-0">
                                 {sampleToken ? (
                                     <iframe
+                                        ref={iframeRef}
                                         title="Aperçu invitation"
                                         src={`${publicBasePath}/guest/${sampleToken}`}
                                         className="w-full h-full min-h-[400px] bg-background"

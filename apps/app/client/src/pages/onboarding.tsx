@@ -53,12 +53,14 @@ function getTemplates(language: SiteLanguage) {
         { id: "modern", name: "Minimal Horizon", description: "Clean urban sophistication.", image: "/templates/modern.png", premium: true },
         { id: "boho", name: "Wild Boho", description: "Organic and laid-back elegance.", image: "/templates/boho.png", premium: true },
         { id: "avantgarde", name: "Studio Couture", description: "High-fashion editorial design.", image: "/templates/avantgarde.png", premium: true },
+        { id: "echo", name: "Echo", description: "Pure immersive visual experience.", image: "/templates/echo.png", premium: true },
       ]
     : [
         { id: "classic", name: "Éclat de Tradition", description: "L'élégance intemporelle et royale.", image: "/templates/classic.png", premium: false },
         { id: "modern", name: "Horizon Minimaliste", description: "Esthétique urbaine d'exception.", image: "/templates/modern.png", premium: true },
         { id: "boho", name: "Bohème Sauvage", description: "Authenticité naturelle et décontractée.", image: "/templates/boho.png", premium: true },
         { id: "avantgarde", name: "Studio Couture", description: "L'avant-garde stylistique audacieuse.", image: "/templates/avantgarde.png", premium: true },
+        { id: "echo", name: "Écho", description: "Expérience visuelle immersive et pure.", image: "/templates/echo.png", premium: true },
       ];
 }
 

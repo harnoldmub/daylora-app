@@ -54,7 +54,7 @@ type HelpChatbotProps = {
 export function HelpChatbot({ isOpen: isOpenProp, onOpenChange, hideTrigger = false, language }: HelpChatbotProps = {}) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
   const nls = getAppNls(language);
   const faqItems: FAQItem[] = nls.helpCenter.items.map((item) => ({
     category: nls.helpCenter.categories[item.category as keyof typeof nls.helpCenter.categories],
@@ -135,7 +135,7 @@ export function HelpChatbot({ isOpen: isOpenProp, onOpenChange, hideTrigger = fa
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);
-                    setExpandedIndex(null);
+                    setExpandedQuestion(null);
                   }}
                   className="w-full h-10 pl-9 pr-4 rounded-lg border bg-muted/50 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
@@ -163,18 +163,17 @@ export function HelpChatbot({ isOpen: isOpenProp, onOpenChange, hideTrigger = fa
                         </h3>
                       </div>
                       <div className="space-y-1">
-                        {groupedItems[category].map((item) => {
-                          const globalIndex = faqItems.indexOf(item);
-                          const isExpanded = expandedIndex === globalIndex;
+                        {groupedItems[category].map((item, idx) => {
+                          const isExpanded = expandedQuestion === item.question;
                           return (
                             <div
-                              key={globalIndex}
+                              key={`${category}-${idx}`}
                               className="rounded-lg border bg-card overflow-hidden"
                             >
                               <button
                                 onClick={() =>
-                                  setExpandedIndex(
-                                    isExpanded ? null : globalIndex,
+                                  setExpandedQuestion(
+                                    isExpanded ? null : item.question,
                                   )
                                 }
                                 className="w-full flex items-center gap-2 p-3 text-left text-sm font-medium hover:bg-muted/50 transition-colors"
@@ -188,7 +187,7 @@ export function HelpChatbot({ isOpen: isOpenProp, onOpenChange, hideTrigger = fa
                               </button>
                               {isExpanded && (
                                 <div className="px-3 pb-3 pt-0 ml-6">
-                                  <p className="text-sm text-muted-foreground leading-relaxed">
+                                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                                     {item.answer}
                                   </p>
                                   {item.link && (

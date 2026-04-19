@@ -151,6 +151,8 @@ export const weddings = pgTable("weddings", {
     theme: {
       primaryColor: string;
       secondaryColor: string;
+      invitationPrimaryColor?: string;
+      invitationSecondaryColor?: string;
       fontFamily: string;
       toneId: string;
       buttonStyle: string;

@@ -175,13 +175,13 @@ export function ModernTemplateRenderer(props: any) {
         </div>
       </section>
 
-      {/* Program & Places - Bold Dark Interface */}
-      <section id="program" className="bg-black text-white py-32 rounded-[3rem] mx-4 md:mx-10 shadow-[0_50px_100px_rgba(0,0,0,0.4)]">
+      {/* Program & Places - Dynamic High Contrast Interface */}
+      <section id="program" className="py-32 rounded-[3rem] mx-4 md:mx-10 shadow-[0_50px_100px_rgba(0,0,0,0.15)]" style={{ backgroundColor: primaryColor, color: secondaryColor }}>
         <div className="max-w-7xl mx-auto px-6 md:px-20">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32">
                 <div className="space-y-16">
                     <div className="flex items-center justify-between">
-                         <h2 className="text-5xl font-black tracking-tighter uppercase border-b-8 border-white/20 pb-2">Agenda</h2>
+                         <h2 className="text-5xl font-black tracking-tighter uppercase border-b-8 pb-2" style={{ borderColor: `${secondaryColor}20` }}>Agenda</h2>
                          {canEdit && editMode && (
                             <button onClick={props.onAddProgramItem} className="bg-white/10 p-3 rounded-full hover:bg-white/20 transition-colors">
                                 <Plus className="w-5 h-5" />
@@ -190,7 +190,7 @@ export function ModernTemplateRenderer(props: any) {
                     </div>
                     <div className="space-y-10">
                         {programItems.map((item, idx) => (
-                            <div key={idx} className="flex gap-10 group relative border-l-2 border-white/10 pl-10 hover:border-white transition-colors">
+                            <div key={idx} className="flex gap-10 group relative border-l-2 pl-10 transition-colors" style={{ borderColor: `${secondaryColor}10` }}>
                                 <div className="text-3xl font-black opacity-30 group-hover:opacity-100 transition-opacity w-24">
                                     <InlineEditor value={item.time} onSave={(val) => props.onUpdateProgramItem(idx.toString(), { time: val })} canEdit={canEdit && editMode} />
                                 </div>
@@ -212,7 +212,7 @@ export function ModernTemplateRenderer(props: any) {
                 
                 <div className="space-y-16">
                     <div className="flex items-center justify-between">
-                         <h2 className="text-5xl font-black tracking-tighter uppercase border-b-8 border-white/20 pb-2">Lieux</h2>
+                         <h2 className="text-5xl font-black tracking-tighter uppercase border-b-8 pb-2" style={{ borderColor: `${secondaryColor}20` }}>Lieux</h2>
                          {canEdit && editMode && (
                             <button onClick={props.onAddLocationItem} className="bg-white/10 p-3 rounded-full hover:bg-white/20 transition-colors">
                                 <Plus className="w-5 h-5" />
@@ -221,11 +221,11 @@ export function ModernTemplateRenderer(props: any) {
                     </div>
                     <div className="grid grid-cols-1 gap-8">
                         {locationItems.map((item, idx) => (
-                            <div key={idx} className="bg-white/5 border border-white/10 p-10 group relative hover:bg-white/10 transition-colors">
+                            <div key={idx} className="border p-10 group relative transition-colors" style={{ backgroundColor: `${secondaryColor}08`, borderColor: `${secondaryColor}10` }}>
                                 <h4 className="text-2xl font-black mb-4">
                                     <InlineEditor value={item.title} onSave={(val) => props.onUpdateLocationItem(idx.toString(), { title: val })} canEdit={canEdit && editMode} />
                                 </h4>
-                                <div className="flex gap-3 text-xs font-bold tracking-widest text-white/40 mb-6 bg-white/5 w-max p-2 px-4 uppercase">
+                                <div className="flex gap-3 text-xs font-bold tracking-widest mb-6 w-max p-2 px-4 uppercase" style={{ backgroundColor: `${secondaryColor}10`, color: `${secondaryColor}60` }}>
                                     <MapPin className="w-4 h-4" />
                                     <InlineEditor value={item.address} onSave={(val) => props.onUpdateLocationItem(idx.toString(), { address: val })} canEdit={canEdit && editMode} />
                                 </div>
@@ -345,7 +345,7 @@ export function ModernTemplateRenderer(props: any) {
       </section>
 
       {/* Footer */}
-      <footer className="py-32 text-center border-t border-black/5 bg-black text-white rounded-t-[3rem] -mt-10 relative z-20">
+      <footer className="py-32 text-center border-t rounded-t-[3rem] -mt-10 relative z-20" style={{ backgroundColor: primaryColor, color: secondaryColor, borderColor: `${secondaryColor}10` }}>
          <h4 className="text-4xl font-black tracking-tighter mb-4 uppercase">{wedding.title}</h4>
          <p className="text-sm font-bold tracking-[0.5em] mb-12 opacity-50">{heroDate}</p>
          <div className="w-16 h-1 bg-white/20 mx-auto mb-12" />

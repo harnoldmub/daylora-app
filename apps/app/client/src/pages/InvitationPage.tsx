@@ -14,7 +14,11 @@ import { usePublicEdit } from "@/contexts/public-edit";
 import { compressImageFileToJpegDataUrl } from "@/lib/image";
 import { TemplateRenderer } from "@/features/public-site/templates/TemplateRenderer";
 import { AvantGardeTemplateRenderer } from "@/features/public-site/templates/AvantGardeTemplateRenderer";
+import { ParallaxTemplateRenderer } from "@/features/public-site/templates/ParallaxTemplateRenderer";
 import { ModernTemplateRenderer } from "@/features/public-site/templates/ModernTemplateRenderer";
+import { VeloursTemplateRenderer } from "@/features/public-site/templates/VeloursTemplateRenderer";
+import { SoleilTemplateRenderer } from "@/features/public-site/templates/SoleilTemplateRenderer";
+import { GraphikTemplateRenderer } from "@/features/public-site/templates/GraphikTemplateRenderer";
 import {
   Dialog,
   DialogContent,
@@ -485,9 +489,13 @@ export default function InvitationPage() {
     );
   }
 
-  const RendererComponent = 
-    currentWedding.templateId === "avantgarde" ? AvantGardeTemplateRenderer : 
-    currentWedding.templateId === "modern" ? ModernTemplateRenderer : 
+  const RendererComponent =
+    currentWedding.templateId === "avantgarde" ? AvantGardeTemplateRenderer :
+    currentWedding.templateId === "modern" ? ModernTemplateRenderer :
+    currentWedding.templateId === "echo" ? ParallaxTemplateRenderer :
+    currentWedding.templateId === "velours" ? VeloursTemplateRenderer :
+    currentWedding.templateId === "soleil" ? SoleilTemplateRenderer :
+    currentWedding.templateId === "graphik" ? GraphikTemplateRenderer :
     TemplateRenderer;
 
   return (

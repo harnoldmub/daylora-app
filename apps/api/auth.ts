@@ -15,13 +15,21 @@ export function setupAuth(app: Express) {
         (process.env.NODE_ENV === "production" && !!process.env.DATABASE_URL);
 
     if (useDbStore && process.env.DATABASE_URL) {
-        const PostgresStore = connectPg(session);
-        sessionStore = new PostgresStore({
-            conString: process.env.DATABASE_URL,
-            createTableIfMissing: true,
-            ttl: sessionTtl / 1000,
-            tableName: "sessions",
-        });
+        try {
+            const PostgresStore = connectPg(session);
+            // Strip channel_binding param — connect-pg-simple uses plain pg which doesn't support it
+            const dbUrl = new URL(process.env.DATABASE_URL);
+            dbUrl.searchParams.delete("channel_binding");
+            sessionStore = new PostgresStore({
+                conString: dbUrl.toString(),
+                createTableIfMissing: true,
+                ttl: sessionTtl / 1000,
+                tableName: "sessions",
+            });
+        } catch (_e) {
+            const MemoryStore = createMemoryStore(session);
+            sessionStore = new MemoryStore({ checkPeriod: sessionTtl });
+        }
     } else {
         const MemoryStore = createMemoryStore(session);
         sessionStore = new MemoryStore({
@@ -76,9 +84,8 @@ export function setupAuth(app: Express) {
     passport.deserializeUser(async (id: string, done) => {
         try {
             const user = await storage.getUser(id);
-            done(null, user || null);
+            done(null, user ?? null);
         } catch (_err) {
-            // Avoid crashing auth flow on transient DB errors
             done(null, null);
         }
     });

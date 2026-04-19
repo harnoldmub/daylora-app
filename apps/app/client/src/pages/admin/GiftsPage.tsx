@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Image as ImageIcon,
   Lock,
+  Crown,
 } from "lucide-react";
 import { useParams } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -337,7 +338,7 @@ export default function GiftsPage() {
               <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
             ) : (
               <>
-                {giftLimitReached && <Lock className="h-4 w-4 mr-1.5" />}
+                {giftLimitReached && <Crown className="h-4 w-4 mr-1.5 text-amber-500/70" />}
                 <Sparkles className="h-4 w-4 mr-1.5" />
               </>
             )}
@@ -346,7 +347,7 @@ export default function GiftsPage() {
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button size="sm" data-tour="gifts-add" disabled={giftLimitReached}>
-              {giftLimitReached && <Lock className="h-4 w-4 mr-1.5" />}
+              {giftLimitReached && <Crown className="h-4 w-4 mr-1.5 text-amber-500/70" />}
               <Plus className="h-4 w-4 mr-1.5" />
               <span className="hidden sm:inline">Ajouter un </span>Cadeau
             </Button>

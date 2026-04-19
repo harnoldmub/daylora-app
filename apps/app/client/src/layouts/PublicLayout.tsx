@@ -145,7 +145,7 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
     }, [routePath, slug]);
 
     const shouldShowHeader = useMemo(() => {
-        if (wedding?.templateId === "avantgarde" || wedding?.templateId === "modern") return false;
+        if (wedding?.templateId === "avantgarde" || wedding?.templateId === "modern" || wedding?.templateId === "echo") return false;
         // Header is only for the one-page landing (sections).
         const withoutBase = routePath.startsWith(basePath) ? routePath.slice(basePath.length) : routePath;
         const sub = (withoutBase || "").replace(/^\//, "");
@@ -155,7 +155,7 @@ export function PublicLayout({ children, slug: slugProp, isPreview: isPreviewPro
     }, [routePath, basePath, wedding?.templateId]);
 
     const shouldShowFooter = useMemo(() => {
-        if (wedding?.templateId === "avantgarde" || wedding?.templateId === "modern") return false;
+        if (wedding?.templateId === "avantgarde" || wedding?.templateId === "modern" || wedding?.templateId === "echo") return false;
         // Footer is part of the one-page experience: show it on home and section routes.
         const withoutBase = routePath.startsWith(basePath) ? routePath.slice(basePath.length) : routePath;
         const sub = (withoutBase || "").replace(/^\//, "");

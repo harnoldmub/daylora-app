@@ -91,6 +91,7 @@ export default function SettingsPage() {
     { id: "modern", name: "Horizon Minimaliste", premium: true },
     { id: "boho", name: "Bohème Sauvage", premium: true },
     { id: "avantgarde", name: "Studio Couture", premium: true },
+    { id: "echo", name: "Écho", premium: true },
   ];
   const isPremium = wedding?.currentPlan === "premium";
   const canDeleteWedding = !!wedding && (user?.isAdmin || wedding.ownerId === user?.id);

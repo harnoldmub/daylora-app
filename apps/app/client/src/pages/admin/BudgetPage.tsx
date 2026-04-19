@@ -10,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { PremiumAccessGate } from "@/components/admin/PremiumAccessGate";
-import { useWedding } from "@/hooks/use-api";
 import { useParams } from "wouter";
 
 function formatCurrency(cents: number) {
@@ -85,8 +84,6 @@ function EditableInput({
 
 export default function BudgetPage() {
   const { weddingId } = useParams<{ weddingId: string }>();
-  const { data: wedding } = useWedding(weddingId);
-  const isPremium = wedding?.currentPlan === "premium";
   const { toast } = useToast();
   const { data, isLoading } = useBudget();
   const createCategory = useCreateBudgetCategory();
@@ -212,9 +209,9 @@ export default function BudgetPage() {
         </Card>
       </section>
 
-      <PremiumAccessGate 
-        isPremium={isPremium} 
-        featureName="la gestion du budget" 
+      <PremiumAccessGate
+        isPremium={true}
+        featureName="la gestion du budget"
         description="Suivez chaque dépense, gérez les acomptes et gardez le contrôle total sur vos finances de mariage."
       >
         <Card className="rounded-[2.5rem] border-border/40 bg-white shadow-xl overflow-hidden mx-2">

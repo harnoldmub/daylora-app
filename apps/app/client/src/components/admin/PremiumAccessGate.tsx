@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link } from "wouter";
-import { Lock, Sparkles, ArrowRight } from "lucide-react";
+import { Crown, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
@@ -45,7 +45,7 @@ export function PremiumAccessGate({ children, isPremium, featureName, descriptio
           </div>
           
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-black uppercase tracking-widest text-primary mb-4">
-            <Lock className="h-3 w-3" />
+            <Crown className="h-3 w-3 text-amber-500/70" />
             Feature Premium
           </div>
           

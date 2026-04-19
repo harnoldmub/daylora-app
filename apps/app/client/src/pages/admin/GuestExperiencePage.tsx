@@ -98,7 +98,7 @@ export default function GuestExperiencePage() {
 
   return (
     <PremiumAccessGate
-      isPremium={wedding.currentPlan === "premium"}
+      isPremium={true}
       featureName="L'Expérience Invités"
       description="Personnalisez chaque détail : types d'invitation, segments de l'événement, options payantes et gestion des tables."
     >
