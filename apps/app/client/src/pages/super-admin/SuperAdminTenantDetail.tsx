@@ -47,10 +47,19 @@ export default function SuperAdminTenantDetail() {
   const fetchDetail = async () => {
     try {
       const res = await fetch(`/api/super-admin/tenants/${params.id}`, { credentials: "include" });
+      if (!res.ok) {
+        setData(null);
+        return;
+      }
       const d = await res.json();
+      if (!d || !d.wedding) {
+        setData(null);
+        return;
+      }
       setData(d);
       setNewSlug(d.wedding?.slug || "");
     } catch {
+      setData(null);
     } finally {
       setLoading(false);
     }

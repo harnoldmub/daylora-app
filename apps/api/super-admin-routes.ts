@@ -264,8 +264,8 @@ export function registerSuperAdminRoutes(app: Express) {
 
   app.get("/api/super-admin/tenants/:id", isSuperAdmin, async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) return res.status(400).json({ message: "ID invalide." });
+      const id = req.params.id;
+      
       const [wedding] = await db.select().from(weddings).where(eq(weddings.id, id));
       if (!wedding) {
         return res.status(404).json({ message: "Mariage introuvable." });
@@ -304,8 +304,8 @@ export function registerSuperAdminRoutes(app: Express) {
 
   app.patch("/api/super-admin/tenants/:id/status", isSuperAdmin, async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) return res.status(400).json({ message: "ID invalide." });
+      const id = req.params.id;
+      
       const { status, isPublished } = req.body;
       const updates: any = {};
       if (status !== undefined) updates.status = status;
@@ -328,8 +328,8 @@ export function registerSuperAdminRoutes(app: Express) {
 
   app.patch("/api/super-admin/tenants/:id/plan", isSuperAdmin, async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) return res.status(400).json({ message: "ID invalide." });
+      const id = req.params.id;
+      
       const { plan } = req.body;
       if (!["free", "premium"].includes(plan)) {
         return res.status(400).json({ message: "Plan invalide." });
@@ -355,8 +355,8 @@ export function registerSuperAdminRoutes(app: Express) {
 
   app.patch("/api/super-admin/tenants/:id/slug", isSuperAdmin, async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) return res.status(400).json({ message: "ID invalide." });
+      const id = req.params.id;
+      
       const { slug } = req.body;
       if (!slug || slug.length < 3) {
         return res.status(400).json({ message: "Le slug doit contenir au moins 3 caractères." });
