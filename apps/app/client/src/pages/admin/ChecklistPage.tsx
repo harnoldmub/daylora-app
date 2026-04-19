@@ -460,32 +460,46 @@ export default function ChecklistPage() {
     const finalItem = localItems.find(i => i.id === active.id);
     if (!finalItem) return;
 
-    // Calculate sort order within the target column
-    const colItems = localItems.filter(i => i.status === finalItem.status);
-    const newSortOrder = colItems.findIndex(i => i.id === active.id);
+    const originalItem = items.find(i => i.id === active.id);
+    const sourceStatus = originalItem?.status;
+    const targetStatus = finalItem.status;
 
-    // Persist to API
+    const affectedStatuses = new Set<string>([targetStatus]);
+    if (sourceStatus && sourceStatus !== targetStatus) affectedStatuses.add(sourceStatus);
+
+    const updates: Array<{ id: number; status: string; sortOrder: number }> = [];
+    affectedStatuses.forEach((st) => {
+      const colItems = localItems.filter(i => i.status === st);
+      colItems.forEach((it, index) => {
+        const prev = items.find(p => p.id === it.id);
+        if (!prev || prev.status !== it.status || prev.sortOrder !== index) {
+          updates.push({ id: it.id as number, status: st, sortOrder: index });
+        }
+      });
+    });
+
+    if (updates.length === 0) return;
+
+    queryClient.setQueryData<ChecklistResponse>(["/api/organization/checklist", weddingId], (old) => {
+      if (!old) return old;
+      const updateMap = new Map(updates.map(u => [u.id, u]));
+      return {
+        ...old,
+        categories: old.categories.map(cat => ({
+          ...cat,
+          items: cat.items.map(item => {
+            const u = updateMap.get(item.id);
+            return u ? { ...item, status: u.status as any, sortOrder: u.sortOrder } : item;
+          }),
+        })),
+      };
+    });
+
     try {
-      await updateItem.mutateAsync({ 
-        id: finalItem.id as number, 
-        status: finalItem.status as any,
-        sortOrder: newSortOrder
-      });
-      // Force sync local items with the final state from server
-      queryClient.setQueryData<ChecklistResponse>(["/api/organization/checklist", weddingId], (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          categories: old.categories.map(cat => ({
-            ...cat,
-            items: cat.items.map(item => 
-              item.id === finalItem.id ? { ...item, status: finalItem.status as any, sortOrder: newSortOrder } : item
-            )
-          }))
-        };
-      });
+      await Promise.all(
+        updates.map(u => updateItem.mutateAsync({ id: u.id, status: u.status as any, sortOrder: u.sortOrder }))
+      );
     } catch (error: any) {
-      // Rollback local state on error
       setLocalItems(items);
       toast({ title: "Erreur lors du déplacement", description: error.message, variant: "destructive" });
     }
