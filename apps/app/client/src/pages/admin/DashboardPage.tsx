@@ -348,13 +348,13 @@ export default function DashboardPage() {
                             <div className="mt-4 flex flex-wrap gap-2">
                                 <Button asChild variant="outline" size="sm">
                                     <Link href={`~/${weddingId}/checklist`}>
-                                        {wedding?.currentPlan !== "premium" && <Lock className="mr-2 h-3 w-3 text-muted-foreground/60" />}
+                                        {wedding?.currentPlan !== "premium" && <Crown className="mr-2 h-3 w-3 text-amber-500/70" />}
                                         Ouvrir la checklist
                                     </Link>
                                 </Button>
                                 <Button asChild variant="outline" size="sm">
                                     <Link href={`~/${weddingId}/checklist?view=planning`}>
-                                        {wedding?.currentPlan !== "premium" && <Lock className="mr-2 h-3 w-3 text-muted-foreground/60" />}
+                                        {wedding?.currentPlan !== "premium" && <Crown className="mr-2 h-3 w-3 text-amber-500/70" />}
                                         Voir la vue planning
                                     </Link>
                                 </Button>

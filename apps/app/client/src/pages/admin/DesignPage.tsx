@@ -28,6 +28,7 @@ const TEMPLATES = [
   { id: "modern", name: "Horizon Minimaliste", premium: true },
   { id: "boho", name: "Bohème Sauvage", premium: true },
   { id: "avantgarde", name: "Studio Couture", premium: true },
+  { id: "echo", name: "Écho", premium: true },
 ];
 
 const DEFAULT_LOCATION_ITEMS = [

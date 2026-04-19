@@ -1,5 +1,5 @@
 import { useWedding, useUpdateWedding } from "@/hooks/use-api";
-import { useParams, useLocation } from "wouter";
+import { useParams } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, Loader2, Lock, Sparkles, Crown } from "lucide-react";
@@ -42,7 +42,15 @@ const TEMPLATES = [
     image: "/templates/avantgarde.png",
     description: "L'avant-garde stylistique pour les couples qui souhaitent briser les codes avec un design éditorial fort.",
     premium: true
-  }
+  },
+  {
+    id: "echo",
+    name: "Écho",
+    category: "Immersif & Parallax",
+    image: "/templates/echo.png",
+    description: "Une expérience visuelle audacieuse et pure, sublimée par de doux effets de parallax.",
+    premium: true
+  },
 ];
 
 export default function TemplatesPage() {

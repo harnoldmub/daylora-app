@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useParams } from "wouter";
 import {
     type Wedding,
     type RsvpResponse,
@@ -253,41 +254,51 @@ export type OrganizationProgressResponse = {
 };
 
 export function useChecklist() {
+    const { weddingId } = useParams<{ weddingId: string }>();
     return useQuery<ChecklistResponse>({
-        queryKey: ["/api/organization/checklist"],
+        queryKey: ["/api/organization/checklist", weddingId],
+        enabled: !!weddingId,
     });
 }
 
 export function usePlanning() {
+    const { weddingId } = useParams<{ weddingId: string }>();
     return useQuery<PlanningResponse>({
-        queryKey: ["/api/organization/planning"],
+        queryKey: ["/api/organization/planning", weddingId],
+        enabled: !!weddingId,
     });
 }
 
 export function useBudget() {
+    const { weddingId } = useParams<{ weddingId: string }>();
     return useQuery<BudgetResponse>({
-        queryKey: ["/api/organization/budget"],
+        queryKey: ["/api/organization/budget", weddingId],
+        enabled: !!weddingId,
     });
 }
 
 export function useOrganizationProgress() {
+    const { weddingId } = useParams<{ weddingId: string }>();
     return useQuery<OrganizationProgressResponse>({
-        queryKey: ["/api/organization/progress"],
+        queryKey: ["/api/organization/progress", weddingId],
+        enabled: !!weddingId,
     });
 }
 
 export function useCreateChecklistCategory() {
+    const { weddingId } = useParams<{ weddingId: string }>();
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (data: Partial<OrganizationChecklistCategory>) => {
             const res = await apiRequest("POST", "/api/organization/checklist/categories", data);
             return res.json();
         },
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/organization/checklist"] }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/organization/checklist", weddingId] }),
     });
 }
 
 export function useCreateChecklistItem() {
+    const { weddingId } = useParams<{ weddingId: string }>();
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (data: Partial<OrganizationChecklistItem>) => {
@@ -295,13 +306,14 @@ export function useCreateChecklistItem() {
             return res.json();
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["/api/organization/checklist"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/checklist", weddingId] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress", weddingId] });
         },
     });
 }
 
 export function useUpdateChecklistItem() {
+    const { weddingId } = useParams<{ weddingId: string }>();
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ id, ...data }: Partial<OrganizationChecklistItem> & { id: number }) => {
@@ -309,26 +321,28 @@ export function useUpdateChecklistItem() {
             return res.json();
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["/api/organization/checklist"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/checklist", weddingId] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress", weddingId] });
         },
     });
 }
 
 export function useDeleteChecklistItem() {
+    const { weddingId } = useParams<{ weddingId: string }>();
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (id: number) => {
             await apiRequest("DELETE", `/api/organization/checklist/items/${id}`);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["/api/organization/checklist"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/checklist", weddingId] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress", weddingId] });
         },
     });
 }
 
 export function useCreatePlanningItem() {
+    const { weddingId } = useParams<{ weddingId: string }>();
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (data: Partial<OrganizationPlanningItem>) => {
@@ -336,13 +350,14 @@ export function useCreatePlanningItem() {
             return res.json();
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["/api/organization/planning"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/planning", weddingId] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress", weddingId] });
         },
     });
 }
 
 export function useUpdatePlanningItem() {
+    const { weddingId } = useParams<{ weddingId: string }>();
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ id, ...data }: Partial<OrganizationPlanningItem> & { id: number }) => {
@@ -350,64 +365,69 @@ export function useUpdatePlanningItem() {
             return res.json();
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["/api/organization/planning"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/planning", weddingId] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress", weddingId] });
         },
     });
 }
 
 export function useDeletePlanningItem() {
+    const { weddingId } = useParams<{ weddingId: string }>();
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (id: number) => {
             await apiRequest("DELETE", `/api/organization/planning/items/${id}`);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["/api/organization/planning"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/planning", weddingId] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress", weddingId] });
         },
     });
 }
 
 export function useCreateBudgetCategory() {
+    const { weddingId } = useParams<{ weddingId: string }>();
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (data: Partial<OrganizationBudgetCategory>) => {
             const res = await apiRequest("POST", "/api/organization/budget/categories", data);
             return res.json();
         },
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/organization/budget"] }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/organization/budget", weddingId] }),
     });
 }
 
 export function useCreateBudgetItem() {
+    const { weddingId } = useParams<{ weddingId: string }>();
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (data: Partial<OrganizationBudgetItem>) => {
             const res = await apiRequest("POST", "/api/organization/budget/items", data);
             return res.json();
         },
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/organization/budget"] }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/organization/budget", weddingId] }),
     });
 }
 
 export function useUpdateBudgetItem() {
+    const { weddingId } = useParams<{ weddingId: string }>();
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ id, ...data }: Partial<OrganizationBudgetItem> & { id: number }) => {
             const res = await apiRequest("PATCH", `/api/organization/budget/items/${id}`, data);
             return res.json();
         },
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/organization/budget"] }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/organization/budget", weddingId] }),
     });
 }
 
 export function useDeleteBudgetItem() {
+    const { weddingId } = useParams<{ weddingId: string }>();
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (id: number) => {
             await apiRequest("DELETE", `/api/organization/budget/items/${id}`);
         },
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/organization/budget"] }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/organization/budget", weddingId] }),
     });
 }

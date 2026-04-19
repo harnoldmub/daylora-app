@@ -874,7 +874,7 @@ export async function registerRoutes(app: Express) {
         }
       }
 
-      const premiumTemplates = ["modern", "minimal"];
+      const premiumTemplates = ["modern", "minimal", "boho", "avantgarde", "echo", "velours", "soleil", "graphik"];
       const resolvedTemplateId = (premiumTemplates.includes(templateId) && currentPlan !== "premium") ? "classic" : (templateId || "classic");
       const config = applyTemplateConfig(resolvedTemplateId, DEFAULT_WEDDING_CONFIG);
       const tone = resolveTone(toneId);
@@ -1090,8 +1090,12 @@ export async function registerRoutes(app: Express) {
         };
       }
 
+      if (updates.weddingDate && typeof updates.weddingDate === "string") {
+        updates.weddingDate = new Date(updates.weddingDate) as any;
+      }
+
       if (updates.templateId) {
-        const premiumTemplates = ["modern", "minimal"];
+        const premiumTemplates = ["modern", "minimal", "boho", "avantgarde", "echo", "velours", "soleil", "graphik"];
         if (premiumTemplates.includes(updates.templateId) && wedding.currentPlan !== "premium") {
           return res.status(403).json({ message: "Ce template est réservé au plan Premium." });
         }
@@ -1203,6 +1207,10 @@ export async function registerRoutes(app: Express) {
 
   app.post("/api/organization/checklist/items", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor"]), validateRequest(insertOrganizationChecklistItemSchema), async (req, res) => {
     const wedding = (req as any).wedding;
+    const currentCount = await storage.countChecklistItems(wedding.id);
+    if (currentCount >= 10) {
+      return res.status(402).json({ message: "Limite de 10 tâches personnalisées atteinte. Passez au Premium pour en ajouter davantage." });
+    }
     const created = await storage.createChecklistItem(wedding.id, req.body);
     res.status(201).json(created);
   });
@@ -1274,6 +1282,10 @@ export async function registerRoutes(app: Express) {
 
   app.post("/api/organization/budget/items", isAuthenticated, withWedding, requireRole(["owner", "admin", "editor"]), validateRequest(insertOrganizationBudgetItemSchema), async (req, res) => {
     const wedding = (req as any).wedding;
+    const currentCount = await storage.countBudgetItems(wedding.id);
+    if (currentCount >= 10) {
+      return res.status(402).json({ message: "Limite de 10 lignes budgétaires atteinte. Passez au Premium pour en ajouter davantage." });
+    }
     const created = await storage.createBudgetItem(wedding.id, req.body);
     res.status(201).json(created);
   });

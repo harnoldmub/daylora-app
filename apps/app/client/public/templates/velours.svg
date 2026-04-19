@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="280" viewBox="0 0 400 280">
+  <rect width="400" height="280" fill="#0D0B09"/>
+  <rect x="0" y="0" width="400" height="280" fill="url(#vgrad)"/>
+  <defs>
+    <radialGradient id="vgrad" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#C8A96A" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#0D0B09" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Gold lines -->
+  <line x1="80" y1="90" x2="160" y2="90" stroke="#C8A96A" stroke-width="0.5" opacity="0.4"/>
+  <line x1="240" y1="90" x2="320" y2="90" stroke="#C8A96A" stroke-width="0.5" opacity="0.4"/>
+  <!-- Title -->
+  <text x="200" y="100" font-family="Georgia, serif" font-size="11" fill="#F5EFE0" text-anchor="middle" letter-spacing="3" opacity="0.5">CAMILLE</text>
+  <text x="200" y="118" font-family="Georgia, serif" font-size="22" fill="#F5EFE0" text-anchor="middle" font-weight="300">&amp;</text>
+  <text x="200" y="140" font-family="Georgia, serif" font-size="11" fill="#F5EFE0" text-anchor="middle" letter-spacing="3" opacity="0.5">JULIEN</text>
+  <!-- Date box -->
+  <rect x="158" y="155" width="84" height="36" fill="none" stroke="#C8A96A" stroke-width="0.8" opacity="0.5"/>
+  <text x="200" y="170" font-family="Georgia, serif" font-size="9" fill="#C8A96A" text-anchor="middle" letter-spacing="2">SAMEDI</text>
+  <text x="200" y="183" font-family="Georgia, serif" font-size="13" fill="#C8A96A" text-anchor="middle">14 JUIN 2027</text>
+  <!-- Subtitle dots -->
+  <circle cx="160" cy="210" r="1.5" fill="#C8A96A" opacity="0.3"/>
+  <circle cx="200" cy="210" r="1.5" fill="#C8A96A" opacity="0.3"/>
+  <circle cx="240" cy="210" r="1.5" fill="#C8A96A" opacity="0.3"/>
+  <!-- Badge -->
+  <rect x="310" y="12" width="74" height="18" rx="9" fill="#C8A96A" opacity="0.15"/>
+  <text x="347" y="24" font-family="sans-serif" font-size="8" fill="#C8A96A" text-anchor="middle" letter-spacing="1">PREMIUM</text>
+</svg>

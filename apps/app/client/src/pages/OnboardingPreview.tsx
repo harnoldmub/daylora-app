@@ -6,6 +6,11 @@ import type { Wedding } from "@shared/schema";
 import { PublicEditProvider } from "@/contexts/public-edit";
 import { TemplateRenderer } from "@/features/public-site/templates/TemplateRenderer";
 import { AvantGardeTemplateRenderer } from "@/features/public-site/templates/AvantGardeTemplateRenderer";
+import { ModernTemplateRenderer } from "@/features/public-site/templates/ModernTemplateRenderer";
+import { ParallaxTemplateRenderer } from "@/features/public-site/templates/ParallaxTemplateRenderer";
+import { VeloursTemplateRenderer } from "@/features/public-site/templates/VeloursTemplateRenderer";
+import { SoleilTemplateRenderer } from "@/features/public-site/templates/SoleilTemplateRenderer";
+import { GraphikTemplateRenderer } from "@/features/public-site/templates/GraphikTemplateRenderer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { resolveTone, getTemplatePreset } from "@/lib/design-presets";
 import { WhatsAppSupportButton } from "@/components/support/WhatsAppSupportButton";
@@ -151,67 +156,48 @@ export default function OnboardingPreview() {
           </Button>
         </div>
 
-        {data.templateId === "avantgarde" ? (
-          <AvantGardeTemplateRenderer
-            wedding={wedding}
-            draftMedia={{ heroImage: data.heroImage || "", couplePhoto: data.couplePhoto || "" }}
-            isUploading={{ heroImage: false, couplePhoto: false }}
-            ctaPath="rsvp"
-            gifts={[]}
-            slug={data.slug || "preview"}
-            basePath=""
-            onSaveText={noopSave}
-            onHeroCtaClick={handleScrollTo}
-            onMediaUpload={() => () => {}}
-            onUpdateMedia={noopStr as any}
-            onSaveCountdownDate={noopStr}
-            onSaveCtaPath={noopStr}
-            onUpdateLocationItem={noopAsync as any}
-            onDeleteLocationItem={noopAsync as any}
-            onAddLocationItem={noopAsync}
-            onUpdateProgramItem={noopAsync as any}
-            onDeleteProgramItem={noopAsync as any}
-            onAddProgramItem={noopAsync}
-            onGalleryFilesSelected={noopAsync as any}
-            onRemoveGalleryImage={noopAsync as any}
-            onResetGallery={noopAsync}
-            onCreateGift={noop}
-            onEditGift={noop}
-            onDeleteGift={noop}
-            toDateInputValue={(v: any) => v}
-            fromDateInputValue={(v: any) => v}
-          />
-        ) : (
-          <TemplateRenderer
-            wedding={wedding}
-            draftMedia={{ heroImage: data.heroImage || "", couplePhoto: data.couplePhoto || "" }}
-            isUploading={{ heroImage: false, couplePhoto: false }}
-            ctaPath="rsvp"
-            gifts={[]}
-            slug={data.slug || "preview"}
-            basePath=""
-            onSaveText={noopSave}
-            onHeroCtaClick={handleScrollTo}
-            onMediaUpload={() => () => {}}
-            onUpdateMedia={noopStr as any}
-            onSaveCountdownDate={noopStr}
-            onSaveCtaPath={noopStr}
-            onUpdateLocationItem={noopAsync as any}
-            onDeleteLocationItem={noopAsync as any}
-            onAddLocationItem={noopAsync}
-            onUpdateProgramItem={noopAsync as any}
-            onDeleteProgramItem={noopAsync as any}
-            onAddProgramItem={noopAsync}
-            onGalleryFilesSelected={noopAsync as any}
-            onRemoveGalleryImage={noopAsync as any}
-            onResetGallery={noopAsync}
-            onCreateGift={noop}
-            onEditGift={noop}
-            onDeleteGift={noop}
-            toDateInputValue={(v: any) => v}
-            fromDateInputValue={(v: any) => v}
-          />
-        )}
+        {(() => {
+          const RendererComponent =
+            data.templateId === "avantgarde" ? AvantGardeTemplateRenderer :
+            data.templateId === "modern" ? ModernTemplateRenderer :
+            data.templateId === "echo" ? ParallaxTemplateRenderer :
+            data.templateId === "velours" ? VeloursTemplateRenderer :
+            data.templateId === "soleil" ? SoleilTemplateRenderer :
+            data.templateId === "graphik" ? GraphikTemplateRenderer :
+            TemplateRenderer;
+
+          return (
+            <RendererComponent
+              wedding={wedding}
+              draftMedia={{ heroImage: data.heroImage || "", couplePhoto: data.couplePhoto || "" }}
+              isUploading={{ heroImage: false, couplePhoto: false }}
+              ctaPath="rsvp"
+              gifts={[]}
+              slug={data.slug || "preview"}
+              basePath=""
+              onSaveText={noopSave}
+              onHeroCtaClick={handleScrollTo}
+              onMediaUpload={() => () => {}}
+              onUpdateMedia={noopStr as any}
+              onSaveCountdownDate={noopStr}
+              onSaveCtaPath={noopStr}
+              onUpdateLocationItem={noopAsync as any}
+              onDeleteLocationItem={noopAsync as any}
+              onAddLocationItem={noopAsync}
+              onUpdateProgramItem={noopAsync as any}
+              onDeleteProgramItem={noopAsync as any}
+              onAddProgramItem={noopAsync}
+              onGalleryFilesSelected={noopAsync as any}
+              onRemoveGalleryImage={noopAsync as any}
+              onResetGallery={noopAsync}
+              onCreateGift={noop}
+              onEditGift={noop}
+              onDeleteGift={noop}
+              toDateInputValue={(v: any) => v}
+              fromDateInputValue={(v: any) => v}
+            />
+          );
+        })()}
         <WhatsAppSupportButton
           pageLabel={isEnglish ? "Onboarding preview" : "Aperçu onboarding"}
           weddingName={data.title || null}

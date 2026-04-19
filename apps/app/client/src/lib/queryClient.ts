@@ -21,11 +21,12 @@ async function throwIfResNotOk(res: Response) {
     const text = (await res.text()) || "";
     try {
       const json = JSON.parse(text);
-      if (json.message) {
+      if (json?.message) {
         throw new Error(json.message);
       }
     } catch (e) {
-      if (e instanceof Error && e.message !== text) throw e;
+      // Re-throw only deliberate errors (not JSON parse failures)
+      if (e instanceof Error && !(e instanceof SyntaxError)) throw e;
     }
     throw new Error(FRIENDLY_ERRORS[res.status] || "Une erreur est survenue. Réessayez plus tard.");
   }

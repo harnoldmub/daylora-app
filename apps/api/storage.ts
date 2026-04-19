@@ -59,7 +59,7 @@ import {
   type InsertOrganizationBudgetItem,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, ne, sql, desc } from "drizzle-orm";
+import { eq, and, ne, sql, desc, count } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -167,6 +167,7 @@ export interface IStorage {
   updateChecklistCategory(weddingId: string, id: number, data: Partial<OrganizationChecklistCategory>): Promise<OrganizationChecklistCategory>;
   deleteChecklistCategory(weddingId: string, id: number): Promise<void>;
   getChecklistItems(weddingId: string): Promise<OrganizationChecklistItem[]>;
+  countChecklistItems(weddingId: string): Promise<number>;
   createChecklistItem(weddingId: string, data: InsertOrganizationChecklistItem): Promise<OrganizationChecklistItem>;
   updateChecklistItem(weddingId: string, id: number, data: Partial<OrganizationChecklistItem>): Promise<OrganizationChecklistItem>;
   deleteChecklistItem(weddingId: string, id: number): Promise<void>;
@@ -183,6 +184,7 @@ export interface IStorage {
   updateBudgetCategory(weddingId: string, id: number, data: Partial<OrganizationBudgetCategory>): Promise<OrganizationBudgetCategory>;
   deleteBudgetCategory(weddingId: string, id: number): Promise<void>;
   getBudgetItems(weddingId: string): Promise<OrganizationBudgetItem[]>;
+  countBudgetItems(weddingId: string): Promise<number>;
   createBudgetItem(weddingId: string, data: InsertOrganizationBudgetItem): Promise<OrganizationBudgetItem>;
   updateBudgetItem(weddingId: string, id: number, data: Partial<OrganizationBudgetItem>): Promise<OrganizationBudgetItem>;
   deleteBudgetItem(weddingId: string, id: number): Promise<void>;
@@ -789,6 +791,14 @@ export class DatabaseStorage implements IStorage {
       .orderBy(organizationChecklistItems.sortOrder, organizationChecklistItems.id);
   }
 
+  async countChecklistItems(weddingId: string): Promise<number> {
+    const [row] = await db
+      .select({ total: count() })
+      .from(organizationChecklistItems)
+      .where(and(eq(organizationChecklistItems.weddingId, weddingId), eq(organizationChecklistItems.isDefault, false)));
+    return row?.total ?? 0;
+  }
+
   async createChecklistItem(weddingId: string, data: InsertOrganizationChecklistItem): Promise<OrganizationChecklistItem> {
     const values = {
       ...data,
@@ -888,6 +898,14 @@ export class DatabaseStorage implements IStorage {
       .from(organizationBudgetItems)
       .where(eq(organizationBudgetItems.weddingId, weddingId))
       .orderBy(organizationBudgetItems.createdAt, organizationBudgetItems.id);
+  }
+
+  async countBudgetItems(weddingId: string): Promise<number> {
+    const [row] = await db
+      .select({ total: count() })
+      .from(organizationBudgetItems)
+      .where(eq(organizationBudgetItems.weddingId, weddingId));
+    return row?.total ?? 0;
   }
 
   async createBudgetItem(weddingId: string, data: InsertOrganizationBudgetItem): Promise<OrganizationBudgetItem> {

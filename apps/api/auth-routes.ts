@@ -12,6 +12,11 @@ import { isAuthenticated } from "./auth";
 
 const router = Router();
 
+function sanitizeUser(user: Record<string, unknown>) {
+    const { passwordHash: _ph, ...safe } = user;
+    return safe;
+}
+
 // Rate limiters for auth safety
 const isDev = process.env.NODE_ENV !== "production";
 const signupLimiter = rateLimit({ windowMs: 60 * 1000, max: isDev ? 100 : 5, message: "Trop de tentatives d'inscription. Réessayez dans une minute." });
@@ -96,10 +101,10 @@ router.post("/login", loginLimiter, validateRequest(loginSchema), (req, res, nex
             });
         }
 
-        req.login(user, async (err) => {
+        req.login(user, (err) => {
             if (err) return next(err);
-            await storage.updateUser(user.id, { lastLoginAt: new Date() });
-            return res.json({ message: "Connexion réussie.", user });
+            storage.updateUser(user.id, { lastLoginAt: new Date() }).catch(() => {});
+            return res.json({ message: "Connexion réussie.", user: sanitizeUser(user as any) });
         });
     })(req, res, next);
 });
@@ -256,7 +261,7 @@ router.post("/logout", (req, res) => {
 router.get("/me", (req, res) => {
     try {
         if (typeof req.isAuthenticated !== "function" || !req.isAuthenticated()) return res.json(null);
-        res.json(req.user);
+        res.json(sanitizeUser(req.user as any));
     } catch (_err) {
         res.json(null);
     }

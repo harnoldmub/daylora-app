@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { PremiumAccessGate } from "@/components/admin/PremiumAccessGate";
-import { useWedding } from "@/hooks/use-api";
 import { useParams } from "wouter";
 import {
   DropdownMenu,
@@ -38,6 +37,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   DragStartEvent,
@@ -51,6 +51,7 @@ import {
   useDroppable,
   type CollisionDetection,
 } from "@dnd-kit/core";
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -174,8 +175,6 @@ const forgivingCollisionDetection: CollisionDetection = (args) => {
 
 export default function ChecklistPage() {
   const { weddingId } = useParams<{ weddingId: string }>();
-  const { data: wedding } = useWedding(weddingId);
-  const isPremium = wedding?.currentPlan === "premium";
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { data, isLoading } = useChecklist();
@@ -192,12 +191,10 @@ export default function ChecklistPage() {
   const categories = data?.categories || [];
   const items = useMemo(() => categories.flatMap(c => c.items.map(i => ({ ...i, categoryLabel: c.label }))), [categories]);
 
-  // Sync local items with API data when it loads/changes
+  // Sync local items whenever API data changes, but never during an active drag
   useEffect(() => {
-    if (items.length > 0 && localItems.length === 0) {
+    if (!activeId) {
       setLocalItems(items);
-    } else if (items.length === 0) {
-      setLocalItems([]);
     }
   }, [items]);
 
@@ -208,11 +205,8 @@ export default function ChecklistPage() {
   };
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -281,7 +275,7 @@ export default function ChecklistPage() {
         sortOrder: newSortOrder
       });
       // Force sync local items with the final state from server
-      queryClient.setQueryData<ChecklistResponse>(["/api/organization/checklist"], (old) => {
+      queryClient.setQueryData<ChecklistResponse>(["/api/organization/checklist", weddingId], (old) => {
         if (!old) return old;
         return {
           ...old,
@@ -349,9 +343,9 @@ export default function ChecklistPage() {
       />
 
       {/* Kanban Board */}
-      <PremiumAccessGate 
-        isPremium={isPremium} 
-        featureName="la checklist intelligente" 
+      <PremiumAccessGate
+        isPremium={true}
+        featureName="la checklist intelligente"
         description="Organisez chaque détail de votre mariage avec un tableau Kanban intuitif, déplacez vos tâches et suivez votre progression en temps réel."
       >
         <DndContext
@@ -443,17 +437,15 @@ export default function ChecklistPage() {
                                      <div className="flex -space-x-1">
                                         <div className="h-6 w-6 rounded-full border-2 border-white bg-slate-100" />
                                      </div>
-                                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button
-                                          type="button"
-                                          className="cursor-grab active:cursor-grabbing rounded-md p-1 text-muted-foreground/50 hover:bg-muted/60 hover:text-foreground transition-colors"
-                                          aria-label="Déplacer la tâche"
-                                          {...attributes}
-                                          {...listeners}
-                                        >
-                                          <GripHorizontal className="h-4 w-4" />
-                                        </button>
-                                     </div>
+                                     <button
+                                       type="button"
+                                       className="cursor-grab active:cursor-grabbing rounded-md p-1 text-muted-foreground/20 hover:text-muted-foreground/70 hover:bg-muted/40 transition-colors"
+                                       aria-label="Déplacer la tâche"
+                                       {...attributes}
+                                       {...listeners}
+                                     >
+                                       <GripHorizontal className="h-4 w-4" />
+                                     </button>
                                   </div>
                                </div>
                              </motion.div>
