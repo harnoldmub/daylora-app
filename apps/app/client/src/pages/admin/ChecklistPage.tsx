@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, forwardRef } from "react";
 import {
   CheckCircle2,
   Clock,
@@ -8,8 +8,13 @@ import {
   Trash2,
   GripHorizontal,
   ChevronRight,
+  ChevronDown,
   MoreVertical,
   CalendarDays,
+  Tag,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card } from "@/components/ui/card";
@@ -45,6 +50,8 @@ import {
   useChecklist,
   type ChecklistResponse,
   useCreateChecklistCategory,
+  useUpdateChecklistCategory,
+  useDeleteChecklistCategory,
   useCreateChecklistItem,
   useDeleteChecklistItem,
   useUpdateChecklistItem,
@@ -126,15 +133,11 @@ const dropAnimation: DropAnimation = {
   }),
 };
 
-function SortableItem({
-  id,
-  className,
-  children,
-}: {
+const SortableItem = forwardRef<HTMLDivElement, {
   id: string | number;
   className?: string;
   children: (dragHandleProps: { attributes: any; listeners: any }) => React.ReactNode;
-}) {
+}>(function SortableItem({ id, className, children }, _ref) {
   const {
     attributes,
     listeners,
@@ -151,10 +154,10 @@ function SortableItem({
 
   if (isDragging) {
     return (
-      <div 
-        ref={setNodeRef} 
-        style={style} 
-        className="border-2 border-dashed border-primary/20 bg-primary/5 rounded-2xl h-[120px] transition-all" 
+      <div
+        ref={setNodeRef}
+        style={style}
+        className="border-2 border-dashed border-primary/20 bg-primary/5 rounded-2xl h-[120px] transition-all"
       />
     );
   }
@@ -164,7 +167,20 @@ function SortableItem({
       {children({ attributes, listeners })}
     </div>
   );
-}
+});
+
+const COLOR_PALETTE: Record<string, { dot: string; bg: string; text: string; border: string; ring: string }> = {
+  rose: { dot: "bg-rose-400", bg: "bg-rose-50", text: "text-rose-700", border: "border-rose-200", ring: "ring-rose-300" },
+  amber: { dot: "bg-amber-400", bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200", ring: "ring-amber-300" },
+  emerald: { dot: "bg-emerald-400", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", ring: "ring-emerald-300" },
+  sky: { dot: "bg-sky-400", bg: "bg-sky-50", text: "text-sky-700", border: "border-sky-200", ring: "ring-sky-300" },
+  violet: { dot: "bg-violet-400", bg: "bg-violet-50", text: "text-violet-700", border: "border-violet-200", ring: "ring-violet-300" },
+  pink: { dot: "bg-pink-400", bg: "bg-pink-50", text: "text-pink-700", border: "border-pink-200", ring: "ring-pink-300" },
+  slate: { dot: "bg-slate-400", bg: "bg-slate-50", text: "text-slate-700", border: "border-slate-200", ring: "ring-slate-300" },
+};
+
+const COLOR_KEYS = Object.keys(COLOR_PALETTE);
+const colorOf = (key?: string | null) => COLOR_PALETTE[key || "rose"] || COLOR_PALETTE.rose;
 
 function DroppableColumn({ id, children, className }: { id: string; children: React.ReactNode; className?: string }) {
   const { setNodeRef, isOver } = useDroppable({ id });
@@ -191,6 +207,154 @@ const forgivingCollisionDetection: CollisionDetection = (args) => {
   return closestCorners(args);
 };
 
+function CategoryRow({ category }: { category: any }) {
+  const updateCategory = useUpdateChecklistCategory();
+  const deleteCategory = useDeleteChecklistCategory();
+  const { toast } = useToast();
+  const [editing, setEditing] = useState(false);
+  const [label, setLabel] = useState(category.label);
+  const itemCount = category.items?.length ?? 0;
+  const color = category.color || "rose";
+  const c = colorOf(color);
+
+  useEffect(() => { setLabel(category.label); }, [category.label]);
+
+  const save = async () => {
+    const trimmed = label.trim();
+    if (!trimmed || trimmed === category.label) {
+      setEditing(false);
+      setLabel(category.label);
+      return;
+    }
+    try {
+      await updateCategory.mutateAsync({ id: category.id, label: trimmed });
+      setEditing(false);
+    } catch (e: any) {
+      toast({ title: "Erreur", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (itemCount > 0) {
+      toast({ title: "Impossible de supprimer", description: "Cette catégorie contient des tâches.", variant: "destructive" });
+      return;
+    }
+    if (!confirm(`Supprimer la catégorie "${category.label}" ?`)) return;
+    try {
+      await deleteCategory.mutateAsync(category.id);
+      toast({ title: "Catégorie supprimée" });
+    } catch (e: any) {
+      toast({ title: "Erreur", description: e.message, variant: "destructive" });
+    }
+  };
+
+  return (
+    <div className={`group flex items-center gap-3 px-4 py-3 rounded-2xl border ${c.border} ${c.bg} transition-all`}>
+      <span className={`h-3 w-3 rounded-full ${c.dot} shrink-0`} />
+      {editing ? (
+        <Input
+          value={label}
+          autoFocus
+          onChange={(e) => setLabel(e.target.value)}
+          onBlur={save}
+          onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setLabel(category.label); setEditing(false); } }}
+          className="h-8 flex-1 text-sm font-bold bg-white/70 border-border/40 rounded-lg"
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className={`flex-1 text-left text-sm font-bold ${c.text} truncate`}
+        >
+          {category.label}
+        </button>
+      )}
+      <Badge variant="secondary" className="bg-white/70 text-[10px] font-bold rounded-full shrink-0">{itemCount}</Badge>
+      <div className="flex items-center gap-1 shrink-0">
+        {COLOR_KEYS.map((k) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => updateCategory.mutate({ id: category.id, color: k })}
+            aria-label={`Couleur ${k}`}
+            className={`h-4 w-4 rounded-full ${COLOR_PALETTE[k].dot} transition-all ${color === k ? "ring-2 ring-offset-1 ring-offset-white " + COLOR_PALETTE[k].ring + " scale-110" : "opacity-60 hover:opacity-100"}`}
+          />
+        ))}
+      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={handleDelete}
+        disabled={deleteCategory.isPending || itemCount > 0}
+        className="h-7 w-7 rounded-lg text-muted-foreground hover:text-destructive disabled:opacity-30 shrink-0"
+        aria-label="Supprimer la catégorie"
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  );
+}
+
+function CategoriesPanel({
+  categories,
+  newCategoryLabel,
+  setNewCategoryLabel,
+  onCreate,
+  isCreating,
+}: {
+  categories: any[];
+  newCategoryLabel: string;
+  setNewCategoryLabel: (v: string) => void;
+  onCreate: () => void;
+  isCreating: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mb-6 rounded-3xl border border-border/40 bg-white/60 backdrop-blur-sm overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-6 py-4 hover:bg-muted/20 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <Tag className="h-4 w-4 text-primary" />
+          </div>
+          <div className="text-left">
+            <h3 className="font-black text-sm uppercase tracking-widest">Catégories</h3>
+            <p className="text-xs text-muted-foreground">{categories.length} catégorie{categories.length > 1 ? "s" : ""} · couleur, renommer, supprimer</p>
+          </div>
+        </div>
+        {open ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+      </button>
+      {open && (
+        <div className="px-6 pb-6 pt-2 space-y-3 border-t border-border/30">
+          <div className="space-y-2">
+            {categories.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic py-4 text-center">Aucune catégorie pour l'instant.</p>
+            ) : (
+              categories.map((cat) => <CategoryRow key={cat.id} category={cat} />)
+            )}
+          </div>
+          <div className="flex gap-2 pt-2">
+            <Input
+              value={newCategoryLabel}
+              onChange={(e) => setNewCategoryLabel(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && onCreate()}
+              placeholder="Nouvelle catégorie (ex. Décoration, Logistique...)"
+              className="rounded-xl flex-1"
+            />
+            <Button onClick={onCreate} disabled={isCreating || !newCategoryLabel.trim()} className="rounded-xl shrink-0">
+              <Plus className="h-4 w-4 mr-1" />
+              Ajouter
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ChecklistPage() {
   const { weddingId } = useParams<{ weddingId: string }>();
   const queryClient = useQueryClient();
@@ -215,7 +379,14 @@ export default function ChecklistPage() {
   });
 
   const categories = data?.categories || [];
-  const items = useMemo(() => categories.flatMap(c => c.items.map(i => ({ ...i, categoryLabel: c.label }))), [categories]);
+  const items = useMemo(
+    () => categories.flatMap(c => c.items.map(i => ({
+      ...i,
+      categoryLabel: c.label,
+      categoryColor: (c as any).color || "rose",
+    }))),
+    [categories]
+  );
 
   // Sync local items whenever API data changes, but never during an active drag
   useEffect(() => {
@@ -420,6 +591,14 @@ export default function ChecklistPage() {
         featureName="la checklist intelligente"
         description="Organisez chaque détail de votre mariage avec un tableau Kanban intuitif, déplacez vos tâches et suivez votre progression en temps réel."
       >
+        <CategoriesPanel
+          categories={categories}
+          newCategoryLabel={newCategoryLabel}
+          setNewCategoryLabel={setNewCategoryLabel}
+          onCreate={handleCreateCategory}
+          isCreating={createCategory.isPending}
+        />
+
         <DndContext
           sensors={sensors}
           collisionDetection={forgivingCollisionDetection}
@@ -471,8 +650,9 @@ export default function ChecklistPage() {
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, scale: 0.95 }}
                               onClick={() => handleOpenItem(item)}
-                              className="group relative bg-white border border-border/40 p-5 rounded-2xl shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all cursor-pointer"
+                              className="group relative bg-white border border-border/40 p-5 pl-6 rounded-2xl shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all cursor-pointer overflow-hidden"
                              >
+                               <span className={`absolute left-0 top-0 bottom-0 w-1.5 ${colorOf(item.categoryColor).dot}`} aria-hidden="true" />
                                <div className="flex flex-col gap-3">
                                   <div className="flex items-start justify-between gap-2">
                                      <h4 className="text-[15px] font-bold leading-snug flex-1 line-clamp-2">{item.title}</h4>

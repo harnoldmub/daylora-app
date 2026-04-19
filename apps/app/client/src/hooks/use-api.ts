@@ -297,6 +297,32 @@ export function useCreateChecklistCategory() {
     });
 }
 
+export function useUpdateChecklistCategory() {
+    const { weddingId } = useParams<{ weddingId: string }>();
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, ...data }: Partial<OrganizationChecklistCategory> & { id: number }) => {
+            const res = await apiRequest("PATCH", `/api/organization/checklist/categories/${id}`, data);
+            return res.json();
+        },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/organization/checklist", weddingId] }),
+    });
+}
+
+export function useDeleteChecklistCategory() {
+    const { weddingId } = useParams<{ weddingId: string }>();
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id: number) => {
+            await apiRequest("DELETE", `/api/organization/checklist/categories/${id}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/checklist", weddingId] });
+            queryClient.invalidateQueries({ queryKey: ["/api/organization/progress", weddingId] });
+        },
+    });
+}
+
 export function useCreateChecklistItem() {
     const { weddingId } = useParams<{ weddingId: string }>();
     const queryClient = useQueryClient();

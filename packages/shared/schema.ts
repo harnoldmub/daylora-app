@@ -890,6 +890,7 @@ export const organizationChecklistCategories = pgTable("organization_checklist_c
   weddingId: uuid("wedding_id").references(() => weddings.id).notNull(),
   key: varchar("key", { length: 80 }),
   label: varchar("label", { length: 255 }).notNull(),
+  color: varchar("color", { length: 20 }).default("rose"),
   sortOrder: integer("sort_order").notNull().default(0),
   isDefault: boolean("is_default").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
