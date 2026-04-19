@@ -9,12 +9,30 @@ import {
   GripHorizontal,
   ChevronRight,
   MoreVertical,
+  CalendarDays,
 } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PremiumAccessGate } from "@/components/admin/PremiumAccessGate";
 import { useParams } from "wouter";
 import {
@@ -187,6 +205,14 @@ export default function ChecklistPage() {
   const [quickAddTitles, setQuickAddTitles] = useState<Record<string, string>>({ todo: "", in_progress: "", done: "" });
   const [activeId, setActiveId] = useState<string | number | null>(null);
   const [localItems, setLocalItems] = useState<any[]>([]);
+  const [openItemId, setOpenItemId] = useState<number | null>(null);
+  const [draftItem, setDraftItem] = useState<{ title: string; description: string; status: string; categoryId: number | null; dueDate: string }>({
+    title: "",
+    description: "",
+    status: "todo",
+    categoryId: null,
+    dueDate: "",
+  });
 
   const categories = data?.categories || [];
   const items = useMemo(() => categories.flatMap(c => c.items.map(i => ({ ...i, categoryLabel: c.label }))), [categories]);
@@ -295,6 +321,52 @@ export default function ChecklistPage() {
   };
 
   const activeItem = activeId ? localItems.find(i => i.id === activeId) : null;
+  const openItem = openItemId ? localItems.find(i => i.id === openItemId) : null;
+
+  const handleOpenItem = (item: any) => {
+    setOpenItemId(item.id);
+    setDraftItem({
+      title: item.title || "",
+      description: item.description || "",
+      status: item.status || "todo",
+      categoryId: item.categoryId ?? null,
+      dueDate: item.dueDate ? new Date(item.dueDate).toISOString().slice(0, 10) : "",
+    });
+  };
+
+  const handleSaveItem = async () => {
+    if (!openItem) return;
+    const title = draftItem.title.trim();
+    if (!title) {
+      toast({ title: "Le titre est requis", variant: "destructive" });
+      return;
+    }
+    try {
+      await updateItem.mutateAsync({
+        id: openItem.id as number,
+        title,
+        description: draftItem.description.trim() || null,
+        status: draftItem.status as any,
+        categoryId: draftItem.categoryId ?? undefined,
+        dueDate: draftItem.dueDate ? new Date(draftItem.dueDate).toISOString() : null,
+      } as any);
+      toast({ title: "Tâche mise à jour" });
+      setOpenItemId(null);
+    } catch (error: any) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleDeleteFromDialog = async () => {
+    if (!openItem) return;
+    try {
+      await deleteItem.mutateAsync(openItem.id as number);
+      toast({ title: "Tâche supprimée" });
+      setOpenItemId(null);
+    } catch (error: any) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    }
+  };
 
   const handleCreateCategory = async () => {
     const label = newCategoryLabel.trim();
@@ -398,18 +470,27 @@ export default function ChecklistPage() {
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, scale: 0.95 }}
-                              className="group relative bg-white border border-border/40 p-5 rounded-2xl shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/10 transition-all cursor-default"
+                              onClick={() => handleOpenItem(item)}
+                              className="group relative bg-white border border-border/40 p-5 rounded-2xl shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all cursor-pointer"
                              >
                                <div className="flex flex-col gap-3">
-                                  <div className="flex items-start justify-between">
-                                     <div /> {/* Spacer if needed */}
+                                  <div className="flex items-start justify-between gap-2">
+                                     <h4 className="text-[15px] font-bold leading-snug flex-1 line-clamp-2">{item.title}</h4>
                                      <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100">
+                                           <Button
+                                             variant="ghost"
+                                             size="icon"
+                                             onClick={(e) => e.stopPropagation()}
+                                             className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 shrink-0"
+                                           >
                                               <MoreVertical className="h-4 w-4 text-muted-foreground" />
                                            </Button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="rounded-2xl border-border/30">
+                                        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()} className="rounded-2xl border-border/30">
+                                           <DropdownMenuItem onClick={() => handleOpenItem(item)} className="rounded-xl font-bold text-xs">
+                                              Ouvrir la tâche
+                                           </DropdownMenuItem>
                                            {Object.entries(STATUS_CONFIG).map(([k, v]) => (
                                               status !== k && (
                                                  <DropdownMenuItem key={k} onClick={() => updateItem.mutate({ id: item.id, status: k as any })} className="rounded-xl font-bold text-xs">
@@ -417,7 +498,7 @@ export default function ChecklistPage() {
                                                  </DropdownMenuItem>
                                               )
                                            ))}
-                                           <DropdownMenuItem 
+                                           <DropdownMenuItem
                                               onClick={() => deleteItem.mutate(item.id)}
                                               className="text-destructive font-bold text-xs rounded-xl"
                                            >
@@ -427,18 +508,24 @@ export default function ChecklistPage() {
                                      </DropdownMenu>
                                   </div>
 
-                                  <EditableInput
-                                    initialValue={item.title}
-                                    onSave={(val) => updateItem.mutate({ id: item.id, title: val })}
-                                    className="text-[15px] font-bold border-none shadow-none p-0 focus-visible:ring-0 bg-transparent h-auto leading-tight"
-                                  />
-                                  
+                                  {item.description && (
+                                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{item.description}</p>
+                                  )}
+
                                   <div className="flex items-center justify-between pt-1">
-                                     <div className="flex -space-x-1">
-                                        <div className="h-6 w-6 rounded-full border-2 border-white bg-slate-100" />
+                                     <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                                        {item.dueDate ? (
+                                          <span className="inline-flex items-center gap-1 font-medium">
+                                            <CalendarDays className="h-3 w-3" />
+                                            {new Date(item.dueDate).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                                          </span>
+                                        ) : (
+                                          <span className="opacity-0">·</span>
+                                        )}
                                      </div>
                                      <button
                                        type="button"
+                                       onClick={(e) => e.stopPropagation()}
                                        className="cursor-grab active:cursor-grabbing rounded-md p-1 text-muted-foreground/20 hover:text-muted-foreground/70 hover:bg-muted/40 transition-colors"
                                        aria-label="Déplacer la tâche"
                                        {...attributes}
@@ -473,14 +560,8 @@ export default function ChecklistPage() {
             {activeItem ? (
               <div className="group relative bg-white border border-primary/20 p-5 rounded-2xl shadow-2xl scale-105 cursor-grabbing">
                  <div className="flex flex-col gap-3">
-                  <div className="flex items-start justify-between">
-                    <div />
-                  </div>
                     <div className="text-[15px] font-bold leading-tight">{activeItem.title}</div>
-                    <div className="flex items-center justify-between pt-1">
-                       <div className="flex -space-x-1">
-                          <div className="h-6 w-6 rounded-full border-2 border-white bg-slate-100" />
-                       </div>
+                    <div className="flex items-center justify-end pt-1">
                        <GripHorizontal className="h-4 w-4 text-primary/40" />
                     </div>
                  </div>
@@ -488,6 +569,103 @@ export default function ChecklistPage() {
             ) : null}
           </DragOverlay>
         </DndContext>
+
+        <Dialog open={openItemId !== null} onOpenChange={(o) => !o && setOpenItemId(null)}>
+          <DialogContent className="sm:max-w-[560px] rounded-3xl">
+            <DialogHeader>
+              <DialogTitle className="font-serif text-2xl">Détails de la tâche</DialogTitle>
+              <DialogDescription>
+                Modifiez le titre, la description, le statut ou la date d'échéance.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-5 py-2">
+              <div className="space-y-2">
+                <Label htmlFor="task-title" className="text-xs font-bold uppercase tracking-wider">Titre</Label>
+                <Input
+                  id="task-title"
+                  value={draftItem.title}
+                  onChange={(e) => setDraftItem(d => ({ ...d, title: e.target.value }))}
+                  placeholder="Ex. Choisir le traiteur"
+                  className="rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="task-description" className="text-xs font-bold uppercase tracking-wider">Description</Label>
+                <Textarea
+                  id="task-description"
+                  value={draftItem.description}
+                  onChange={(e) => setDraftItem(d => ({ ...d, description: e.target.value }))}
+                  placeholder="Notes, détails, liens utiles..."
+                  rows={4}
+                  className="rounded-xl resize-none"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider">Statut</Label>
+                  <Select value={draftItem.status} onValueChange={(v) => setDraftItem(d => ({ ...d, status: v }))}>
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(STATUS_CONFIG).map(([k, v]) => (
+                        <SelectItem key={k} value={k}>{v.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="task-due" className="text-xs font-bold uppercase tracking-wider">Échéance</Label>
+                  <Input
+                    id="task-due"
+                    type="date"
+                    value={draftItem.dueDate}
+                    onChange={(e) => setDraftItem(d => ({ ...d, dueDate: e.target.value }))}
+                    className="rounded-xl"
+                  />
+                </div>
+              </div>
+              {categories.length > 1 && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider">Catégorie</Label>
+                  <Select
+                    value={draftItem.categoryId ? String(draftItem.categoryId) : ""}
+                    onValueChange={(v) => setDraftItem(d => ({ ...d, categoryId: Number(v) }))}
+                  >
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue placeholder="Choisir une catégorie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(c => (
+                        <SelectItem key={c.id} value={String(c.id)}>{c.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+            <DialogFooter className="flex sm:justify-between gap-2">
+              <Button
+                variant="ghost"
+                onClick={handleDeleteFromDialog}
+                disabled={deleteItem.isPending}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Supprimer
+              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setOpenItemId(null)} className="rounded-xl">
+                  Annuler
+                </Button>
+                <Button onClick={handleSaveItem} disabled={updateItem.isPending} className="rounded-xl">
+                  {updateItem.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                  Enregistrer
+                </Button>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </PremiumAccessGate>
     </div>
   );
