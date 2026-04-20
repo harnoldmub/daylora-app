@@ -142,6 +142,8 @@ function InvitationRomantic({ guest, wedding, primaryColor, secondaryColor, qrDa
   const invCagnotteButton = texts.invitationCagnotteButton || languagePack.texts.invitationCagnotteButton;
   const invDressCode = texts.invitationDressCode || texts.dressCode || "";
 
+  const invBtnShadow = `color-mix(in srgb, ${primaryColor} 40%, transparent)`;
+
   const showProgramme = sections.invitationShowProgramme ?? true;
   const showLocations = sections.invitationShowLocations ?? true;
   const showDressCode = sections.invitationShowDressCode ?? true;
@@ -204,7 +206,7 @@ function InvitationRomantic({ guest, wedding, primaryColor, secondaryColor, qrDa
         <div className="w-full max-w-lg mx-auto text-center space-y-12 relative z-10">
           {logoUrl && (
             <div className="ia0">
-              <img src={logoUrl} alt="" className="mx-auto h-24 w-24 object-contain rounded-full bg-white/30 backdrop-blur-sm p-4 shadow-sm" />
+              <img src={logoUrl} alt="" className="mx-auto h-24 w-24 object-contain rounded-full backdrop-blur-sm p-4 shadow-sm" style={{ backgroundColor: `color-mix(in srgb, ${secondaryColor} 30%, white)` }} />
             </div>
           )}
 
@@ -249,8 +251,8 @@ function InvitationRomantic({ guest, wedding, primaryColor, secondaryColor, qrDa
           {dateObj && (
             <div className="ia4 pt-6">
               <div className="inline-block relative">
-                <div className="absolute -inset-6 rounded-full border border-dashed border-primary/10 animate-spin-slow" style={{ animationDuration: "20s" }} />
-                <div className="px-12 py-10 rounded-full relative flex flex-col items-center justify-center space-y-1" style={{ border: `1px solid ${borderMedium}`, background: "rgba(255,255,255,0.2)" }}>
+                <div className="absolute -inset-6 rounded-full border border-dashed animate-spin-slow" style={{ animationDuration: "20s", borderColor: `color-mix(in srgb, ${primaryColor} 10%, transparent)` }} />
+                <div className="px-12 py-10 rounded-full relative flex flex-col items-center justify-center space-y-1" style={{ border: `1px solid ${borderMedium}`, background: `color-mix(in srgb, ${secondaryColor} 20%, transparent)` }}>
                   <p className="text-[10px] tracking-[0.5em] uppercase inv-serif font-bold" style={{ color: primaryColor }}>{dayName}</p>
                   <p className="text-6xl inv-display font-extra-light leading-none" style={{ color: primaryColor }}>{dayNum}</p>
                   <p className="text-[10px] tracking-[0.4em] uppercase inv-serif font-bold" style={{ color: primaryColor }}>{monthName} {yearNum}</p>
@@ -284,9 +286,9 @@ function InvitationRomantic({ guest, wedding, primaryColor, secondaryColor, qrDa
 
       <FadeIn className="text-center max-w-2xl mx-auto space-y-8">
         <div className="flex items-center justify-center gap-8">
-          <div className="h-px flex-1" style={{ backgroundColor: primaryColor, opacity: 0.15 }} />
-          <Heart className="h-5 w-5 fill-primary/10" style={{ color: primaryColor }} />
-          <div className="h-px flex-1" style={{ backgroundColor: primaryColor, opacity: 0.15 }} />
+          <div className="h-px flex-1" style={{ backgroundColor: `color-mix(in srgb, ${primaryColor} 15%, transparent)` }} />
+          <Heart className="h-5 w-5" style={{ color: primaryColor, fill: `color-mix(in srgb, ${primaryColor} 10%, transparent)` }} />
+          <div className="h-px flex-1" style={{ backgroundColor: `color-mix(in srgb, ${primaryColor} 15%, transparent)` }} />
         </div>
         <div className="space-y-6">
           <p className="text-2xl md:text-3xl inv-serif italic font-light leading-relaxed px-4" style={{ color: textDark }}>
@@ -299,9 +301,9 @@ function InvitationRomantic({ guest, wedding, primaryColor, secondaryColor, qrDa
           )}
         </div>
         <div className="flex items-center justify-center gap-8">
-          <div className="h-px flex-1" style={{ backgroundColor: primaryColor, opacity: 0.15 }} />
-          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: primaryColor, opacity: 0.3 }} />
-          <div className="h-px flex-1" style={{ backgroundColor: primaryColor, opacity: 0.15 }} />
+          <div className="h-px flex-1" style={{ backgroundColor: `color-mix(in srgb, ${primaryColor} 15%, transparent)` }} />
+          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: `color-mix(in srgb, ${primaryColor} 30%, transparent)` }} />
+          <div className="h-px flex-1" style={{ backgroundColor: `color-mix(in srgb, ${primaryColor} 15%, transparent)` }} />
         </div>
       </FadeIn>
       </section>
@@ -317,7 +319,7 @@ function InvitationRomantic({ guest, wedding, primaryColor, secondaryColor, qrDa
 
             </div>
             <div className="relative">
-              <div className="absolute left-[23px] md:left-1/2 top-0 bottom-0 w-px -translate-x-px" style={{ background: `linear-gradient(to bottom, transparent, ${primaryColor}40, ${primaryColor}40, transparent)` }} />
+              <div className="absolute left-[23px] md:left-1/2 top-0 bottom-0 w-px -translate-x-px" style={{ background: `linear-gradient(to bottom, transparent, color-mix(in srgb, ${primaryColor} 40%, transparent), color-mix(in srgb, ${primaryColor} 40%, transparent), transparent)` }} />
               <div className="space-y-4">
                 {programItems.map((item: any, idx: number) => {
                   const isRight = idx % 2 === 1;
@@ -362,8 +364,8 @@ function InvitationRomantic({ guest, wedding, primaryColor, secondaryColor, qrDa
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {locations.map((loc: any, idx: number) => (
                 <FadeIn key={idx} delay={idx * 0.15}>
-                  <div className="h-full rounded-2xl p-10 text-center space-y-4 relative overflow-hidden transition-all hover:translate-y-[-4px]" style={{ backgroundColor: cardBg, border: `1px solid ${borderMedium}`, boxShadow: "0 10px 30px -10px rgba(0,0,0,0.05)" }}>
-                    <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center bg-white/50 backdrop-blur-sm" style={{ border: `1px solid ${borderMedium}` }}>
+                  <div className="h-full rounded-2xl p-10 text-center space-y-4 relative overflow-hidden transition-all hover:translate-y-[-4px]" style={{ backgroundColor: cardBg, border: `1px solid ${borderMedium}`, boxShadow: `0 10px 30px -10px color-mix(in srgb, ${primaryColor} 5%, transparent)` }}>
+                    <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center backdrop-blur-sm" style={{ backgroundColor: `color-mix(in srgb, ${secondaryColor} 50%, white)`, border: `1px solid ${borderMedium}` }}>
                       <MapPin className="h-5 w-5" style={{ color: primaryColor }} />
                     </div>
                     <h3 className="text-sm tracking-[0.25em] uppercase font-bold" style={{ color: textDark }}>{loc.title}</h3>
@@ -407,7 +409,7 @@ function InvitationRomantic({ guest, wedding, primaryColor, secondaryColor, qrDa
             <div className="space-y-4">
               {allowedOptions.map((option: any, i) => (
                 <FadeIn key={option.id} delay={i * 0.1}>
-                  <div className="rounded-2xl p-6 text-center space-y-2 border border-primary/10 bg-white/10 backdrop-blur-sm transition-colors hover:bg-primary/5">
+                  <div className="rounded-2xl p-6 text-center space-y-2 border backdrop-blur-sm transition-colors hover:bg-primary/5" style={{ borderColor: `color-mix(in srgb, ${primaryColor} 10%, transparent)`, backgroundColor: `color-mix(in srgb, ${secondaryColor} 10%, transparent)` }}>
                     <p className="text-sm tracking-[0.25em] uppercase font-bold" style={{ color: primaryColor }}>{option.label}</p>
                     <p className="text-[13px] inv-serif italic opacity-70" style={{ color: textSubtle }}>{[option.time, option.venueLabel].filter(Boolean).join(" • ")}</p>
                     {typeof option.priceCents === "number" && <p className="text-xs font-bold inv-serif" style={{ color: textSubtle }}>{(option.priceCents / 100).toFixed(2)} EUR / {languagePack.invitation.person}</p>}
@@ -426,7 +428,7 @@ function InvitationRomantic({ guest, wedding, primaryColor, secondaryColor, qrDa
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 relative z-10">
           {showDressCode && invDressCode && (
             <FadeIn className="text-center space-y-6 flex flex-col items-center justify-center">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center bg-white/50" style={{ border: `1px solid ${borderMedium}` }}>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: `color-mix(in srgb, ${secondaryColor} 50%, white)`, border: `1px solid ${borderMedium}` }}>
                  <Sparkles className="h-6 w-6" style={{ color: primaryColor }} />
               </div>
               <h3 className="text-xs tracking-[0.3em] uppercase font-bold" style={{ color: textDark }}>{languagePack.language === "en" ? "Dress code" : "Dress Code"}</h3>
@@ -436,12 +438,12 @@ function InvitationRomantic({ guest, wedding, primaryColor, secondaryColor, qrDa
 
           {showCagnotte && cagnotteHref && (
             <FadeIn className="text-center space-y-6 flex flex-col items-center justify-center">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center bg-white/50" style={{ border: `1px solid ${borderMedium}` }}>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: `color-mix(in srgb, ${secondaryColor} 50%, white)`, border: `1px solid ${borderMedium}` }}>
                  <Gift className="h-6 w-6" style={{ color: primaryColor }} />
               </div>
               <h3 className="text-xs tracking-[0.3em] uppercase font-bold" style={{ color: textDark }}>{invCagnotteTitle}</h3>
               <p className="text-sm inv-serif leading-relaxed max-w-sm" style={{ color: textSubtle }}>{invCagnotteDesc}</p>
-              <a href={cagnotteHref} target={cagnotteMode === "external" && cagnotteExternalUrl ? "_blank" : undefined} rel={cagnotteMode === "external" && cagnotteExternalUrl ? "noopener noreferrer" : undefined} className="inline-flex items-center gap-3 px-10 py-4 text-[11px] tracking-[0.3em] uppercase font-bold text-white rounded-full transition-all hover:scale-105 active:scale-95 shadow-lg" style={{ backgroundColor: primaryColor, boxShadow: `0 10px 20px -5px ${primaryColor}40` }}>
+              <a href={cagnotteHref} target={cagnotteMode === "external" && cagnotteExternalUrl ? "_blank" : undefined} rel={cagnotteMode === "external" && cagnotteExternalUrl ? "noopener noreferrer" : undefined} className="inline-flex items-center gap-3 px-10 py-4 text-[11px] tracking-[0.3em] uppercase font-bold rounded-full transition-all hover:scale-105 active:scale-95 shadow-lg" style={{ backgroundColor: primaryColor, color: secondaryColor, boxShadow: `0 10px 20px -5px ${invBtnShadow}` }}>
                 <Gift className="h-4 w-4" /> {invCagnotteButton}
               </a>
             </FadeIn>
@@ -454,9 +456,9 @@ function InvitationRomantic({ guest, wedding, primaryColor, secondaryColor, qrDa
 
         {showQrCode && qrDataUrl && (
           <FadeIn className="space-y-6">
-            <div className="inline-block p-8 rounded-[40px] relative transition-transform hover:scale-105" style={{ backgroundColor: "white", border: `1px solid ${borderMedium}`, boxShadow: "0 20px 40px -15px rgba(0,0,0,0.08)" }}>
+            <div className="inline-block p-8 rounded-[40px] relative transition-transform hover:scale-105" style={{ backgroundColor: "white", border: `1px solid ${borderMedium}`, boxShadow: `0 20px 40px -15px color-mix(in srgb, ${primaryColor} 8%, transparent)` }}>
               <img src={qrDataUrl} alt="QR check-in" className="h-32 w-32 mx-auto mix-blend-multiply" />
-              <div className="absolute -inset-2 border-2 border-primary/5 rounded-[48px] pointer-events-none" />
+              <div className="absolute -inset-2 border-2 rounded-[48px] pointer-events-none" style={{ borderColor: `color-mix(in srgb, ${primaryColor} 5%, transparent)` }} />
             </div>
             <p className="text-[11px] tracking-[0.3em] uppercase inv-serif font-bold" style={{ color: textSubtle }}>
               {languagePack.language === "en" ? "Scan for day-of check-in" : "Scannez pour votre check-in jour J"}
@@ -551,7 +553,7 @@ function InvitationModern({ guest, wedding, primaryColor, secondaryColor, qrData
           {couplePhoto ? (
             <img src={couplePhoto} alt={heroTitle} className="w-full h-full object-cover" style={{ filter: "brightness(0.92)" }} />
           ) : (
-            <div className="w-full h-full" style={{ background: `linear-gradient(135deg, ${accent}20 0%, ${accent}08 100%)` }} />
+            <div className="w-full h-full" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${accent} 20%, transparent) 0%, color-mix(in srgb, ${accent} 8%, transparent) 100%)` }} />
           )}
           {/* Greeting badge */}
           <div className="absolute bottom-6 left-6 right-6">
@@ -597,17 +599,17 @@ function InvitationModern({ guest, wedding, primaryColor, secondaryColor, qrData
 
           {dateObj && (
             <div className="im4 text-center">
-              <div className="inline-grid grid-cols-3 divide-x text-center" style={{ border: `1px solid ${accent}20`, borderRadius: "12px", overflow: "hidden", divideColor: `${accent}20` }}>
+              <div className="inline-grid grid-cols-3 divide-x text-center" style={{ border: `1px solid color-mix(in srgb, ${accent} 20%, transparent)`, borderRadius: "12px", overflow: "hidden", divideColor: `color-mix(in srgb, ${accent} 20%, transparent)` }}>
                 <div className="px-6 py-4">
-                  <p className="text-[10px] uppercase tracking-widest im-sans mb-1" style={{ color: `${accent}80` }}>{dayName}</p>
+                  <p className="text-[10px] uppercase tracking-widest im-sans mb-1" style={{ color: `color-mix(in srgb, ${accent} 80%, transparent)` }}>{dayName}</p>
                   <p className="text-3xl font-bold im-sans" style={{ color: textBase }}>{dayNum}</p>
                 </div>
                 <div className="px-6 py-4" style={{ backgroundColor: accent }}>
-                  <p className="text-[10px] uppercase tracking-widest im-sans mb-1" style={{ color: "rgba(255,255,255,0.7)" }}>{monthName}</p>
-                  <p className="text-3xl font-bold im-sans text-white">{yearNum}</p>
+                  <p className="text-[10px] uppercase tracking-widest im-sans mb-1" style={{ color: `color-mix(in srgb, ${secondaryColor} 80%, white)` }}>{monthName}</p>
+                  <p className="text-3xl font-bold im-sans" style={{ color: secondaryColor }}>{yearNum}</p>
                 </div>
                 <div className="px-6 py-4">
-                  <p className="text-[10px] uppercase tracking-widest im-sans mb-1" style={{ color: `${accent}80` }}>{languagePack.language === "en" ? "Day" : "Jour"}</p>
+                  <p className="text-[10px] uppercase tracking-widest im-sans mb-1" style={{ color: `color-mix(in srgb, ${accent} 80%, transparent)` }}>{languagePack.language === "en" ? "Day" : "Jour"}</p>
                   <p className="text-3xl font-bold im-sans" style={{ color: textBase }}>J</p>
                 </div>
               </div>
@@ -623,13 +625,13 @@ function InvitationModern({ guest, wedding, primaryColor, secondaryColor, qrData
           )}
 
           <div className="im5 pt-2 text-center">
-            <ChevronDown className="h-5 w-5 mx-auto" style={{ color: `${accent}50` }} />
+            <ChevronDown className="h-5 w-5 mx-auto" style={{ color: `color-mix(in srgb, ${accent} 50%, transparent)` }} />
           </div>
         </div>
       </section>
 
       {/* Message */}
-      <FadeIn className="py-16 px-6" style={{ backgroundColor: `${accent}08` }}>
+      <FadeIn className="py-16 px-6" style={{ backgroundColor: `color-mix(in srgb, ${accent} 8%, transparent)` }}>
         <div className="max-w-sm mx-auto text-center space-y-4">
           <div className="w-10 h-0.5 mx-auto" style={{ backgroundColor: accent }} />
           <p className="text-lg leading-relaxed im-display italic" style={{ color: textBase }}>{invMessage}</p>
@@ -679,7 +681,7 @@ function InvitationModern({ guest, wedding, primaryColor, secondaryColor, qrData
             </div>
             <div className="space-y-3">
               {allowedOptions.map((option: any) => (
-                <div key={option.id} className="p-5 rounded-xl space-y-1" style={{ backgroundColor: bg, border: `1px solid ${accent}20` }}>
+                <div key={option.id} className="p-5 rounded-xl space-y-1" style={{ backgroundColor: bg, border: `1px solid color-mix(in srgb, ${accent} 20%, transparent)` }}>
                   <p className="font-semibold text-sm im-sans" style={{ color: accent }}>{option.label}</p>
                   <p className="text-xs im-sans" style={{ color: textMuted }}>{[option.time, option.venueLabel].filter(Boolean).join(" · ")}</p>
                   {typeof option.priceCents === "number" && <p className="text-xs im-sans" style={{ color: textSubtle }}>{(option.priceCents / 100).toFixed(2)} EUR / {languagePack.invitation.person}</p>}
@@ -710,7 +712,7 @@ function InvitationModern({ guest, wedding, primaryColor, secondaryColor, qrData
                       </div>
                       {loc.address && (
                         <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.address)}`} target="_blank" rel="noopener noreferrer" className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-opacity hover:opacity-80" style={{ backgroundColor: accent }}>
-                          <MapPin className="h-4 w-4 text-white" />
+                          <MapPin className="h-4 w-4" style={{ color: secondaryColor }} />
                         </a>
                       )}
                     </div>
@@ -725,7 +727,7 @@ function InvitationModern({ guest, wedding, primaryColor, secondaryColor, qrData
       {/* Dress code */}
       {showDressCode && invDressCode && (
         <FadeIn className="py-12 px-6">
-          <div className="max-w-sm mx-auto p-6 rounded-2xl text-center space-y-3" style={{ backgroundColor: `${accent}08`, border: `1px solid ${accent}20` }}>
+          <div className="max-w-sm mx-auto p-6 rounded-2xl text-center space-y-3" style={{ backgroundColor: `color-mix(in srgb, ${accent} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${accent} 20%, transparent)` }}>
             <Sparkles className="h-5 w-5 mx-auto" style={{ color: accent }} />
             <p className="text-xs font-bold uppercase tracking-widest im-sans" style={{ color: accent }}>Dress Code</p>
             <p className="text-sm im-sans">{invDressCode}</p>
@@ -735,14 +737,14 @@ function InvitationModern({ guest, wedding, primaryColor, secondaryColor, qrData
 
       {/* Cagnotte */}
       {showCagnotte && cagnotteHref && (
-        <FadeIn className="py-16 px-6" style={{ backgroundColor: `${accent}08` }}>
+        <FadeIn className="py-16 px-6" style={{ backgroundColor: `color-mix(in srgb, ${accent} 8%, transparent)` }}>
           <div className="max-w-sm mx-auto text-center space-y-5">
             <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center" style={{ backgroundColor: accent }}>
-              <Gift className="h-5 w-5 text-white" />
+              <Gift className="h-5 w-5" style={{ color: secondaryColor }} />
             </div>
             <h2 className="text-2xl im-display">{invCagnotteTitle}</h2>
             <p className="text-sm im-sans leading-relaxed" style={{ color: textMuted }}>{invCagnotteDesc}</p>
-            <a href={cagnotteHref} target={cagnotteMode === "external" && cagnotteExternalUrl ? "_blank" : undefined} rel={cagnotteMode === "external" && cagnotteExternalUrl ? "noopener noreferrer" : undefined} className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-sm font-bold im-sans text-white hover:opacity-90 transition-opacity" style={{ backgroundColor: accent }}>
+            <a href={cagnotteHref} target={cagnotteMode === "external" && cagnotteExternalUrl ? "_blank" : undefined} rel={cagnotteMode === "external" && cagnotteExternalUrl ? "noopener noreferrer" : undefined} className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-sm font-bold im-sans hover:opacity-90 transition-opacity" style={{ backgroundColor: accent, color: secondaryColor }}>
               <Gift className="h-4 w-4" /> {invCagnotteButton}
             </a>
           </div>
@@ -820,7 +822,7 @@ function InvitationNoir({ guest, wedding, primaryColor, secondaryColor, qrDataUr
   const cream = `color-mix(in srgb, ${secondaryColor} 10%, white)`;
   const muted = `color-mix(in srgb, ${secondaryColor} 40%, white)`;
   const cardBg = `color-mix(in srgb, ${gold} 12%, ${secondaryColor})`;
-  const border = `${gold}22`;
+  const border = `color-mix(in srgb, ${gold} 22%, transparent)`;
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: bg, color: cream }}>
@@ -868,9 +870,9 @@ function InvitationNoir({ guest, wedding, primaryColor, secondaryColor, qrDataUr
 
           {/* Gold rule */}
           <div className="in2 flex items-center justify-center gap-4">
-            <div className="h-px w-14" style={{ backgroundColor: gold, opacity: 0.35 }} />
-            <div className="w-1 h-1 rounded-full" style={{ backgroundColor: gold, opacity: 0.5 }} />
-            <div className="h-px w-14" style={{ backgroundColor: gold, opacity: 0.35 }} />
+            <div className="h-px w-14" style={{ backgroundColor: `color-mix(in srgb, ${gold} 35%, transparent)` }} />
+            <div className="w-1 h-1 rounded-full" style={{ backgroundColor: `color-mix(in srgb, ${gold} 50%, transparent)` }} />
+            <div className="h-px w-14" style={{ backgroundColor: `color-mix(in srgb, ${gold} 35%, transparent)` }} />
           </div>
 
           {/* Prelude */}
@@ -911,7 +913,7 @@ function InvitationNoir({ guest, wedding, primaryColor, secondaryColor, qrDataUr
           )}
 
           <div className="in5">
-            <ChevronDown className="h-4 w-4 mx-auto in-float" style={{ color: `${gold}50` }} />
+            <ChevronDown className="h-4 w-4 mx-auto in-float" style={{ color: `color-mix(in srgb, ${gold} 50%, transparent)` }} />
           </div>
         </div>
       </section>
@@ -927,7 +929,7 @@ function InvitationNoir({ guest, wedding, primaryColor, secondaryColor, qrDataUr
       )}
 
       {/* Message */}
-      <FadeIn className="py-16 px-6 text-center" style={{ borderTop: `1px solid ${gold}15`, borderBottom: `1px solid ${gold}15` }}>
+      <FadeIn className="py-16 px-6 text-center" style={{ borderTop: `1px solid color-mix(in srgb, ${gold} 15%, transparent)`, borderBottom: `1px solid color-mix(in srgb, ${gold} 15%, transparent)` }}>
         <div className="max-w-sm mx-auto space-y-4">
           <p className="text-xl in-serif italic leading-relaxed" style={{ color: cream }}>{invMessage}</p>
           <p className="text-sm in-serif" style={{ color: muted }}>{invSubmessage}</p>
@@ -936,17 +938,17 @@ function InvitationNoir({ guest, wedding, primaryColor, secondaryColor, qrDataUr
 
       {/* Programme */}
       {showProgramme && programItems.length > 0 && (
-        <section className="py-16 px-6" style={{ borderTop: `1px solid ${gold}15` }}>
+        <section className="py-16 px-6" style={{ borderTop: `1px solid color-mix(in srgb, ${gold} 15%, transparent)` }}>
           <FadeIn className="max-w-md mx-auto">
             <div className="flex items-center gap-4 mb-12">
-              <div className="h-px flex-1" style={{ backgroundColor: `${gold}25` }} />
+              <div className="h-px flex-1" style={{ backgroundColor: `color-mix(in srgb, ${gold} 25%, transparent)` }} />
               <h2 className="text-[9px] tracking-[0.4em] uppercase in-sans" style={{ color: gold }}>{ui.scheduleTitle}</h2>
-              <div className="h-px flex-1" style={{ backgroundColor: `${gold}25` }} />
+              <div className="h-px flex-1" style={{ backgroundColor: `color-mix(in srgb, ${gold} 25%, transparent)` }} />
             </div>
             <div className="space-y-0">
               {programItems.map((item: any, i: number) => (
                 <FadeIn key={i} delay={i * 0.08}>
-                  <div className="grid grid-cols-[64px_1fr] gap-4 py-5" style={{ borderBottom: `1px solid ${gold}10` }}>
+                  <div className="grid grid-cols-[64px_1fr] gap-4 py-5" style={{ borderBottom: `1px solid color-mix(in srgb, ${gold} 10%, transparent)` }}>
                     <p className="text-sm font-mono" style={{ color: gold }}>{(item.time || "").replace(":", "h")}</p>
                     <div>
                       <p className="text-xs tracking-widest uppercase in-sans font-semibold" style={{ color: cream }}>{item.title}</p>
@@ -1023,8 +1025,8 @@ function InvitationNoir({ guest, wedding, primaryColor, secondaryColor, qrDataUr
 
       {/* Dress code */}
       {showDressCode && invDressCode && (
-        <FadeIn className="py-12 px-6" style={{ borderTop: `1px solid ${gold}15` }}>
-          <div className="max-w-sm mx-auto p-7 text-center space-y-3" style={{ backgroundColor: cardBg, border: `1px solid ${gold}25` }}>
+        <FadeIn className="py-12 px-6" style={{ borderTop: `1px solid color-mix(in srgb, ${gold} 15%, transparent)` }}>
+          <div className="max-w-sm mx-auto p-7 text-center space-y-3" style={{ backgroundColor: cardBg, border: `1px solid color-mix(in srgb, ${gold} 25%, transparent)` }}>
             <Sparkles className="h-4 w-4 mx-auto" style={{ color: gold }} />
             <p className="text-[9px] uppercase tracking-widest in-sans" style={{ color: gold }}>Dress Code</p>
             <p className="text-sm in-serif" style={{ color: cream }}>{invDressCode}</p>
@@ -1037,9 +1039,9 @@ function InvitationNoir({ guest, wedding, primaryColor, secondaryColor, qrDataUr
         <FadeIn className="py-16 px-6 text-center" style={{ borderTop: `1px solid ${gold}15` }}>
           <div className="max-w-sm mx-auto space-y-6">
             <div className="flex items-center justify-center gap-4">
-              <div className="h-px w-12" style={{ backgroundColor: `${gold}30` }} />
+              <div className="h-px w-12" style={{ backgroundColor: `color-mix(in srgb, ${gold} 30%, transparent)` }} />
               <Gift className="h-5 w-5" style={{ color: gold }} />
-              <div className="h-px w-12" style={{ backgroundColor: `${gold}30` }} />
+              <div className="h-px w-12" style={{ backgroundColor: `color-mix(in srgb, ${gold} 30%, transparent)` }} />
             </div>
             <p className="text-[9px] uppercase tracking-widest in-sans" style={{ color: gold }}>{ui.fundIntro}</p>
             <h2 className="text-2xl in-serif italic" style={{ color: cream }}>{invCagnotteTitle}</h2>
@@ -1052,8 +1054,8 @@ function InvitationNoir({ guest, wedding, primaryColor, secondaryColor, qrDataUr
       )}
 
       {showQrCode && qrDataUrl && (
-        <FadeIn className="py-14 px-6 text-center" style={{ borderTop: `1px solid ${gold}15` }}>
-          <div className="inline-block p-5" style={{ border: `1px solid ${gold}25` }}>
+        <FadeIn className="py-14 px-6 text-center" style={{ borderTop: `1px solid color-mix(in srgb, ${gold} 15%, transparent)` }}>
+          <div className="inline-block p-5" style={{ border: `1px solid color-mix(in srgb, ${gold} 25%, transparent)` }}>
             <img src={qrDataUrl} alt="QR check-in" className="h-28 w-28 mx-auto" />
           </div>
           <p className="mt-4 text-[9px] uppercase tracking-widest in-sans" style={{ color: muted }}>
@@ -1062,12 +1064,12 @@ function InvitationNoir({ guest, wedding, primaryColor, secondaryColor, qrDataUr
         </FadeIn>
       )}
 
-      <footer className="py-12 px-6 text-center" style={{ borderTop: `1px solid ${gold}15` }}>
+      <footer className="py-12 px-6 text-center" style={{ borderTop: `1px solid color-mix(in srgb, ${gold} 15%, transparent)` }}>
         {logoUrl && <img src={logoUrl} alt="" className="mx-auto h-12 w-12 object-contain mb-4" />}
         <div className="flex items-center justify-center gap-4">
-          <div className="h-px w-10" style={{ backgroundColor: `${gold}30` }} />
+          <div className="h-px w-10" style={{ backgroundColor: `color-mix(in srgb, ${gold} 30%, transparent)` }} />
           <p className="text-[9px] tracking-[0.3em] uppercase in-sans" style={{ color: muted }}>{heroTitle}</p>
-          <div className="h-px w-10" style={{ backgroundColor: `${gold}30` }} />
+          <div className="h-px w-10" style={{ backgroundColor: `color-mix(in srgb, ${gold} 30%, transparent)` }} />
         </div>
       </footer>
     </div>

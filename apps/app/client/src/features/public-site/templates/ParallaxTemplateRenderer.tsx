@@ -52,10 +52,10 @@ export function ParallaxTemplateRenderer(props: any) {
     
   const cardBg = isMainDark
     ? `color-mix(in srgb, ${primaryColor} 12%, ${secondaryColor})`
-    : "#FFFFFF";
+    : `color-mix(in srgb, ${primaryColor} 4%, white)`;
     
   const cardBorder = isMainDark
-    ? `${primaryColor}30`
+    ? `color-mix(in srgb, ${primaryColor} 30%, transparent)`
     : `color-mix(in srgb, ${primaryColor} 15%, transparent)`;
 
   const cssVars = {
@@ -240,9 +240,9 @@ export function ParallaxTemplateRenderer(props: any) {
             : "py-8 bg-transparent"
         }`}
         style={{
-          backgroundColor: isScrolled ? `${secondaryColor}ee` : "transparent",
+          backgroundColor: isScrolled ? `color-mix(in srgb, ${secondaryColor} 92%, transparent)` : "transparent",
           backdropFilter: isScrolled ? "blur(16px)" : "none",
-          borderColor: isScrolled ? `${primaryColor}15` : "transparent",
+          borderColor: isScrolled ? `color-mix(in srgb, ${primaryColor} 15%, transparent)` : "transparent",
         }}
       >
         <div className="max-w-[1800px] mx-auto px-8 md:px-14 flex items-center justify-between gap-6">
@@ -281,7 +281,7 @@ export function ParallaxTemplateRenderer(props: any) {
                 }`}
                 style={{
                   color: primaryColor,
-                  ...(item.id === "rsvp" ? { borderColor: `${primaryColor}40` } : {}),
+                  ...(item.id === "rsvp" ? { borderColor: `color-mix(in srgb, ${primaryColor} 40%, transparent)` } : {}),
                 }}
               >
                 {item.label}
@@ -306,7 +306,7 @@ export function ParallaxTemplateRenderer(props: any) {
             className="md:hidden absolute top-full left-0 right-0 border-t py-6 px-8 flex flex-col gap-5"
             style={{
               backgroundColor: secondaryColor,
-              borderColor: `${primaryColor}15`,
+              borderColor: `color-mix(in srgb, ${primaryColor} 15%, transparent)`,
             }}
           >
             {navItems.map((item) => (
@@ -333,7 +333,7 @@ export function ParallaxTemplateRenderer(props: any) {
         >
           <img src={heroImage} alt="Hero" className="w-full h-full object-cover" />
           {/* Subtle overlay to ensure text readability */}
-          <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, ${secondaryColor}55 0%, transparent 30%, transparent 60%, ${secondaryColor}88 100%)` }} />
+          <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, color-mix(in srgb, ${secondaryColor} 35%, transparent) 0%, transparent 30%, transparent 60%, color-mix(in srgb, ${secondaryColor} 55%, transparent) 100%)` }} />
         </motion.div>
 
         {/* Upload button (edit mode) */}
@@ -488,7 +488,7 @@ export function ParallaxTemplateRenderer(props: any) {
             {/* Programme */}
             {pageVisibility.program && (
               <div className="space-y-12">
-                <div className="flex items-center justify-between pb-6" style={{ borderBottom: `1px solid ${primaryColor}20` }}>
+                <div className="flex items-center justify-between pb-6" style={{ borderBottom: `1px solid color-mix(in srgb, ${primaryColor} 20%, transparent)` }}>
                   <h2 className="text-4xl font-light tracking-tight" style={{ color: primaryColor }}>
                     <InlineEditor value={programTitle} onSave={(val) => props.onSaveText?.("programTitle", val)} canEdit={canEdit && editMode} />
                   </h2>
@@ -530,7 +530,7 @@ export function ParallaxTemplateRenderer(props: any) {
             {/* Lieux */}
             {pageVisibility.location && (
               <div id="location" className="space-y-12">
-                <div className="flex items-center justify-between pb-6" style={{ borderBottom: `1px solid ${primaryColor}20` }}>
+                <div className="flex items-center justify-between pb-6" style={{ borderBottom: `1px solid color-mix(in srgb, ${primaryColor} 20%, transparent)` }}>
                   <h2 className="text-4xl font-light tracking-tight" style={{ color: primaryColor }}>
                     <InlineEditor value={locationTitle} onSave={(val) => props.onSaveText?.("locationTitle", val)} canEdit={canEdit && editMode} />
                   </h2>
